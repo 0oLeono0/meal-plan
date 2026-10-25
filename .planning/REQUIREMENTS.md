@@ -149,7 +149,76 @@
 
 ## Traceability
 
-Заполняется roadmap: Requirement | Phase | Status. Каждый v1-ID должен встречаться в таблице ровно один раз; P1/P2 туда не включаются.
+Каждый атомарный v1-ID назначен ровно одной фазе; P0-агрегаты, AC и NEXT-ID в эту таблицу не включаются. Связь с P0-01–P0-16 и AC-01–AC-18 находится в ROADMAP.md, Source Crosswalk. Повторная сквозная проверка не меняет владельца требования.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| APP-01 | Phase 1 | Pending |
+| APP-02 | Phase 1 | Pending |
+| APP-03 | Phase 1 | Pending |
+| APP-04 | Phase 2 | Pending |
+| WIZ-01 | Phase 1 | Pending |
+| WIZ-02 | Phase 1 | Pending |
+| WIZ-03 | Phase 1 | Pending |
+| WIZ-04 | Phase 1 | Pending |
+| WIZ-05 | Phase 1 | Pending |
+| WIZ-06 | Phase 1 | Pending |
+| WIZ-07 | Phase 1 | Pending |
+| WIZ-08 | Phase 2 | Pending |
+| WIZ-09 | Phase 1 | Pending |
+| DATA-01 | Phase 2 | Pending |
+| DATA-02 | Phase 2 | Pending |
+| DATA-03 | Phase 2 | Pending |
+| DATA-04 | Phase 3 | Pending |
+| CALC-01 | Phase 2 | Pending |
+| CALC-02 | Phase 4 | Pending |
+| CALC-03 | Phase 2 | Pending |
+| CALC-04 | Phase 2 | Pending |
+| CALC-05 | Phase 2 | Pending |
+| CALC-06 | Phase 2 | Pending |
+| CALC-07 | Phase 2 | Pending |
+| GEN-01 | Phase 2 | Pending |
+| GEN-02 | Phase 2 | Pending |
+| GEN-03 | Phase 2 | Pending |
+| GEN-04 | Phase 2 | Pending |
+| GEN-05 | Phase 2 | Pending |
+| GEN-06 | Phase 3 | Pending |
+| GEN-07 | Phase 3 | Pending |
+| GEN-08 | Phase 5 | Pending |
+| MENU-01 | Phase 2 | Pending |
+| MENU-02 | Phase 3 | Pending |
+| MENU-03 | Phase 3 | Pending |
+| MENU-04 | Phase 2 | Pending |
+| MENU-05 | Phase 7 | Pending |
+| MEAL-01 | Phase 4 | Pending |
+| MEAL-02 | Phase 4 | Pending |
+| MEAL-03 | Phase 4 | Pending |
+| REC-01 | Phase 3 | Pending |
+| REC-02 | Phase 3 | Pending |
+| REC-03 | Phase 4 | Pending |
+| REC-04 | Phase 3 | Pending |
+| HOME-01 | Phase 5 | Pending |
+| HOME-02 | Phase 5 | Pending |
+| HOME-03 | Phase 5 | Pending |
+| SHOP-01 | Phase 2 | Pending |
+| SHOP-02 | Phase 6 | Pending |
+| SHOP-03 | Phase 6 | Pending |
+| SHOP-04 | Phase 2 | Pending |
+| SHOP-05 | Phase 6 | Pending |
+| SHOP-06 | Phase 6 | Pending |
+| SHOP-07 | Phase 6 | Pending |
+| SHOP-08 | Phase 6 | Pending |
+| PDF-01 | Phase 7 | Pending |
+| PDF-02 | Phase 7 | Pending |
+| PDF-03 | Phase 7 | Pending |
+| PDF-04 | Phase 7 | Pending |
+| PDF-05 | Phase 7 | Pending |
+| UX-01 | Phase 1 | Pending |
+| UX-02 | Phase 7 | Pending |
+| UX-03 | Phase 7 | Pending |
+| UX-04 | Phase 7 | Pending |
+
+**Coverage:** 64/64 v1 requirements mapped (100%); orphaned: 0; duplicated: 0. Все 64 имеют статус Pending; реализовано и проверено: 0. Нерешённые C/Q остаются воротами зависимого поведения, а не основанием удалить требование.
 
 ---
 *Last updated: 2026-10-25 after requirements extraction from PRD and research*

@@ -106,6 +106,7 @@ Recovery warning/reset проверены в потоке при 360px и удв
 1. **[Rule 3 — Blocking]** Существующий storage lifecycle находится в `src/app/App.tsx`, а Wizard получает draft/onChange. Минимальная интеграция reset/saved/retry/revision в App необходима; маршруты и порты сохранены. Commits `98fb892`, `404c231`.
 2. **[Rule 3 — Blocking]** `test:unit: vitest --dir src` вместе с config include `src/**/*.test.ts` не находил ни одного теста. Убран повторный `--dir src`, config сохраняет src-only include. `package.json`, commit `5fef96c`; реальные 28 unit tests подтверждены.
 3. Shared fixtures созданы в Task 1 для storage failure doubles, затем использованы Task 2; новых production toggles и зависимостей нет.
+4. **[Rule 3 — Blocking]** SDK `state.update-progress` снова вернул `phase scope is unscoped, not complete`; после успешных advance/metrics/session/roadmap обновлён только фактический прогресс этой фазы 3/8 (37.5%), без выдуманной готовности будущих фаз.
 
 Временная typecheck ошибка тестового `node:child_process` устранена typed dynamic import чистого validator, без установки @types/node. Итоговые проверки успешны; production contract не менялся из-за harness.
 

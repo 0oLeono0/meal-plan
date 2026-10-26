@@ -90,6 +90,7 @@ test('navigation does not clear the saved draft or create a plan', async ({ page
 });
 
 test('late presence completion cannot pull the user away from a new route', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
   await page.goto('/');
   await expect(page.getByRole('heading')).toBeVisible();
   await page.evaluate(async () => {
@@ -106,6 +107,7 @@ test('late presence completion cannot pull the user away from a new route', asyn
     const host = document.createElement('div');
     document.body.append(host);
     createRoot(host).render(createElement(App, {
+      brand: 'ОченьДлинноеКириллическоеНазвание'.repeat(6) + ' ₽ <img src=x onerror=alert(1)>',
       planPresencePort: { load: () => new Promise(resolve => setTimeout(() => resolve({ status: 'valid', planId: 'late' }), 700)) },
     }));
   });
@@ -115,6 +117,10 @@ test('late presence completion cannot pull the user away from a new route', asyn
   await page.waitForTimeout(850);
   await expect(page).toHaveURL('/shopping');
   await expect(page.getByRole('heading', { name: 'Сначала составьте меню' })).toBeVisible();
+  await expect(page.locator('.brand-link')).toContainText('<img src=x onerror=alert(1)>');
+  await expect(page.locator('img')).toHaveCount(0);
+  await page.addStyleTag({ content: ':root { font-size: 32px; }' });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
 test('shared type scale lets navigation labels grow with the user text size', async ({ page }) => {

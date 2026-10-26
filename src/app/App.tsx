@@ -5,6 +5,7 @@ import { createDraft, draftReducer, type DraftAction, type SettingsDraft } from 
 import { createGuestDraftAdapter, type GuestDraftPort } from '../adapters/guestDraft';
 import { Wizard } from '../features/wizard/Wizard';
 import { Button, ConfirmDialog, Status } from '../shared/ui';
+import '../shared/styles/tokens.css';
 
 export const appConfig = { brand: 'MealPlan' };
 
@@ -171,7 +172,6 @@ function AppLayout({ brand, loading, children }: { brand: string; loading: boole
     return () => observer.disconnect();
   }, [fullscreen]);
   return <div className={`app-shell${fullscreen ? ' fullscreen' : ''}`} ref={shell}>
-    <style>{navigationStyles}</style>
     <a className="skip-link" href="#main">К содержимому</a>
     {!fullscreen && <>
       <header className="app-header">{pathname !== '/' && <Link className="brand brand-link" to="/" translate="no">{brand}</Link>}<Link className="new-menu" to="/plan/new"><span aria-hidden="true">+ </span>Новое меню</Link></header>
@@ -188,12 +188,6 @@ function AppLayout({ brand, loading, children }: { brand: string; loading: boole
     }} />}
   </div>;
 }
-
-// This temporary shell layer keeps initial tracer CSS active until the token task.
-const navigationStyles = `
-.app-header{max-width:960px;margin:auto;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand-link{min-width:0;text-decoration:none;margin:0}.new-menu{display:flex;align-items:center;min-height:44px;min-width:44px;flex-shrink:0}.app-nav{position:fixed;bottom:0;left:0;right:0;z-index:10;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:white;border-top:1px solid var(--border)}.app-nav a,.app-nav button{min-width:0;min-height:44px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;text-decoration:none;font-size:14px;line-height:1.5;overflow-wrap:anywhere;border:0;border-radius:12px;background:transparent;font-weight:400}.app-nav svg{flex-shrink:0}.app-nav [aria-current=page]{background:#E5EFE8;color:#1C7C50;font-weight:600}.app-shell main{padding-bottom:calc(var(--nav-height,88px) + 32px);scroll-margin-bottom:calc(var(--nav-height,88px) + 16px)}.fullscreen main{padding-bottom:48px}.action-link{display:flex;align-items:center;justify-content:center;min-height:48px;padding:12px 16px;border-radius:12px;text-align:center;text-decoration:none;overflow-wrap:anywhere;font-weight:600}.dialog-overlay{position:fixed;inset:0;z-index:100;background:#172B2166;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto}.confirm-dialog{background:white;border-radius:20px;padding:24px;max-width:480px;width:100%;max-height:calc(100vh - 32px);overflow-y:auto;box-shadow:0 8px 24px #172B2126}.confirm-dialog h2{font-size:24px;font-weight:600;line-height:1.2;margin:0 0 16px;overflow-wrap:anywhere}.dialog-actions{display:flex;flex-direction:column;gap:8px}.app-shell :is(a,button,input){scroll-margin-bottom:calc(var(--nav-height,88px) + 16px)}
-@media(min-width:1200px){.app-shell:not(.fullscreen){padding-left:240px}.app-nav{top:0;right:auto;bottom:0;width:240px;grid-template-columns:minmax(0,1fr);align-content:start;padding:24px 16px;border-top:0;border-right:1px solid var(--border)}.app-nav a,.app-nav button{flex-direction:row;justify-content:flex-start;padding:12px 16px;font-size:16px;gap:8px}.app-shell:not(.fullscreen) main{max-width:960px;padding:32px;padding-bottom:48px}.app-shell :is(a,button,input){scroll-margin-bottom:16px}}
-`;
 
 function StartPage({ brand }: { brand: string }) {
   // A single route instance owns the draft; repeat activation never creates a second wizard.

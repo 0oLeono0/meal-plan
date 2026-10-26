@@ -4,8 +4,8 @@ milestone: v1.0
 milestone_name: P0 MVP
 current_phase: 1
 current_phase_name: Гостевой старт и сохраняемые настройки
-status: Планы Phase 1 проверены; исполнение ожидает разрешения и checkpoints
-stopped_at: Phase 1 planning verified; 8 plans, 7 waves; execution not started
+status: Исполнение разрешено; 01-01-01 ожидает подтверждения точных версий пакетов
+stopped_at: Phase 1 install preflight prepared; blocking-human approval pending; no packages installed
 last_updated: "2026-10-26T07:13:25.827Z"
 last_activity: 2026-10-26
 last_activity_desc: проверены 8 планов, 12 требований и 17 решений; приложение не реализовано
@@ -24,13 +24,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-25)
 
 **Core value:** Допустимое меню с прозрачным бюджетом и согласованные покупки с количественным учётом домашних запасов.
-**Current focus:** Phase 1 — планирование завершено: 8 планов, 7 волн; следующий шаг разрешение исполнения, затем install preflight и C-04/Q-03
+**Current focus:** Phase 1 — исполнение разрешено командой пользователя; подготовлен docs/qa/phase01-install-preflight.md, подтверждение набора ещё не получено.
 
 ## Current Position
 
 Phase: 1 (Гостевой старт и сохраняемые настройки) — READY TO EXECUTE
-Plan: 0 of TBD in current phase
-Status: Планы Phase 1 проверены; исполнение ожидает разрешения и checkpoints
+Plan: 01-01 of 8; task 01-01-01 pending human approval (0/2 tasks complete)
+Status: Ожидается подтверждение точных версий; зависимости не установлены, приложение не создано
 Last activity: 2026-10-26 — проверены 8 планов, 12 требований и 17 решений; приложение не реализовано
 
 Progress: [░░░░░░░░░░] 0%
@@ -66,7 +66,7 @@ Progress: [░░░░░░░░░░] 0%
 
 ### Pending Todos
 
-Отдельных todo нет; ближайшее действие — контекст Phase 1 и разрешение её зависимых C/Q.
+Ближайшее действие — ответ пользователя по набору из 16 версий в docs/qa/phase01-install-preflight.md, затем продолжение 01-01-02. Запись approved и завершение задачи до ответа запрещены.
 
 ### Blockers/Concerns
 
@@ -85,5 +85,5 @@ Progress: [░░░░░░░░░░] 0%
 ## Session Continuity
 
 Last session: 2026-10-26T07:13:25.283Z
-Stopped at: Phase 1 planning verified; 8 plans, 7 waves; execution not started
+Stopped at: Phase 1 install preflight prepared; blocking-human approval pending; no packages installed
 Resume file: .planning/phases/01-gostevoy-start-i-sohranyaemye-nastroyki/01-01-PLAN.md

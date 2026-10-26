@@ -117,6 +117,17 @@ test('late presence completion cannot pull the user away from a new route', asyn
   await expect(page.getByRole('heading', { name: 'Сначала составьте меню' })).toBeVisible();
 });
 
+test('shared type scale lets navigation labels grow with the user text size', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto('/menu');
+  const label = page.getByRole('navigation').getByRole('link', { name: 'Покупки' });
+  const before = await label.evaluate(element => parseFloat(getComputedStyle(element).fontSize));
+  await page.addStyleTag({ content: ':root { font-size: 32px; }' });
+  const after = await label.evaluate(element => parseFloat(getComputedStyle(element).fontSize));
+  expect(after).toBe(before * 2);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
 for (const width of [360, 390, 430, 768, 1280]) {
   test(`navigation targets, focus and content remain reachable at ${width}px with doubled text`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });

@@ -38,6 +38,7 @@ export function createGuestDraftAdapter(getStorage: () => DraftStorage = () => w
       } catch { return { status: 'error' }; }
     },
     async reset() {
+      writable = false;
       try { getStorage().removeItem(DRAFT_KEY); writable = true; return { status: 'saved' }; }
       catch { return { status: 'error' }; }
     },

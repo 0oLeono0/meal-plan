@@ -50,6 +50,7 @@ export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand =
   const revision = useRef(0);
   const saveQueue = useRef<Promise<void>>(Promise.resolve());
   const mounted = useRef(false);
+  const resetting = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -81,6 +82,7 @@ export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand =
     const request = ++revision.current;
     setSaveState('saving');
     saveQueue.current = saveQueue.current.catch(() => undefined).then(async () => {
+      if (!mounted.current || resetting.current || request !== revision.current) return;
       try {
         const result = await draftPort.save(next);
         if (mounted.current && revision.current === request) setSaveState(result.status === 'saved' ? 'saved' : 'error');
@@ -89,6 +91,7 @@ export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand =
   }
 
   function change(action: DraftAction) {
+    if (resetting.current || loadState === 'loading') return;
     const next = draftReducer(currentDraft.current, action);
     currentDraft.current = next;
     setDraft(next);
@@ -96,6 +99,7 @@ export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand =
   }
 
   async function retry() {
+    if (resetting.current) return;
     setSaveState('saving');
     if (loadState === 'error') {
       try {
@@ -112,19 +116,39 @@ export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand =
     persist(currentDraft.current);
   }
 
+  async function resetDraft() {
+    resetting.current = true;
+    revision.current++;
+    setSaveState('saving');
+    // Let an already-started write finish before deleting this exact key.
+    await saveQueue.current.catch(() => undefined);
+    try {
+      const result = await draftPort.reset();
+      if (!mounted.current) return false;
+      if (result.status !== 'saved') { setSaveState('error'); return false; }
+      const next = createDraft();
+      currentDraft.current = next;
+      setDraft(next);
+      setLoadState('ready');
+      setSaveState('idle');
+      return true;
+    } catch { if (mounted.current) setSaveState('error'); return false; }
+    finally { resetting.current = false; }
+  }
+
   const loading = loadState === 'loading' || presence.status === 'pending';
   return <BrowserRouter>
     <AppLayout brand={brand} loading={loading}>
       {loading ? <Status>Восстанавливаем настройки…</Status> : <>
         {loadState === 'corrupt' && <div className="notice"><p>Не удалось восстановить настройки. Сохранённые данные повреждены или имеют другую версию</p><p>Можно продолжить в памяти. Исходная запись останется без изменений.</p><Link to="/">На главную</Link></div>}
         {(loadState === 'error' || saveState !== 'idle') && <div className="notice">
-          <p role="status">{loadState === 'error' ? 'Не удалось прочитать настройки. Изменения доступны до закрытия страницы' : saveState === 'saving' ? 'Сохраняем настройки…' : saveState === 'saved' ? 'Сохранено на этом устройстве' : 'Не удалось сохранить на этом устройстве. Изменения доступны до закрытия страницы'}</p>
+          <p role="status">{saveState === 'saving' ? 'Сохраняем настройки…' : loadState === 'error' ? 'Не удалось прочитать настройки. Изменения доступны до закрытия страницы' : saveState === 'saved' ? 'Сохранено на этом устройстве' : 'Не удалось сохранить на этом устройстве. Изменения доступны до закрытия страницы'}</p>
           {(loadState === 'error' || saveState === 'error') && <button type="button" disabled={saveState === 'saving'} onClick={() => void retry()}>Повторить сохранение</button>}
         </div>}
         {presence.status === 'error' && <p className="notice">Не удалось проверить наличие меню. Настройки доступны.</p>}
         <Routes>
           <Route path="/" element={presence.status === 'valid' ? <Navigate replace to="/menu" /> : <StartPage brand={brand} />} />
-          <Route path="/plan/new" element={<Wizard draft={draft} onChange={change} />} />
+          <Route path="/plan/new" element={<Wizard draft={draft} onChange={change} recovery={loadState === 'corrupt' || loadState === 'error'} onReset={resetDraft} />} />
           <Route path="/plan/generating" element={<RouteStatePage title="Генерация не запущена" description="Откройте настройки питания, чтобы подготовить меню." to="/plan/new" action="К настройкам" />} />
           <Route path="/menu" element={<GuestSectionPage section="menu" />} />
           <Route path="/shopping" element={<GuestSectionPage section="shopping" />} />

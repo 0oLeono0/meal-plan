@@ -43,6 +43,7 @@ const nonempty = (value: unknown): value is string => typeof value === 'string' 
 const ids = (value: unknown): value is string[] => Array.isArray(value) && value.every(nonempty) && new Set(value).size === value.length;
 export const isStep = (value: unknown): value is Step => value === 1 || value === 2 || value === 3 || value === 4;
 const isUnit = (value: unknown): value is Unit => typeof value === 'string' && ['g', 'kg', 'ml', 'l', 'pcs'].includes(value);
+const isGoal = (value: unknown): value is Goal => typeof value === 'string' && ['maintain', 'lose', 'gain'].includes(value);
 
 /** Structural validity deliberately permits unfinished/raw input. Readiness is separate. */
 export function isSettingsDraft(value: unknown): value is SettingsDraft {
@@ -76,7 +77,7 @@ export function draftReducer(draft: SettingsDraft, action: DraftAction): Setting
   switch (action.type) {
     case 'set': return { ...draft, [action.field]: action.value };
     case 'step': return isStep(action.value) ? { ...draft, step: action.value } : draft;
-    case 'goal': return { ...draft, goal: action.value };
+    case 'goal': return isGoal(action.value) ? { ...draft, goal: action.value } : draft;
     case 'cookingTime': return { ...draft, cookingTime: action.value };
     case 'variety': return { ...draft, variety: action.value };
     case 'restrictions': return { ...draft, restrictions: [...action.value] };
@@ -89,7 +90,7 @@ export function draftReducer(draft: SettingsDraft, action: DraftAction): Setting
   }
 }
 
-export type StepErrors = Partial<Record<'people' | 'days' | 'budget' | 'manualNutrition' | 'home', string>>;
+export type StepErrors = Partial<Record<'people' | 'days' | 'goal' | 'budget' | 'manualNutrition' | 'home', string>>;
 const integerBetween = (raw: string, min: number, max: number) => /^\d+$/.test(raw) && Number.isSafeInteger(Number(raw)) && Number(raw) >= min && Number(raw) <= max;
 const finiteNumber = (raw: string) => /^\d+(?:[.,]\d+)?$/.test(raw.trim()) && Number.isFinite(Number(raw.replace(',', '.')));
 
@@ -98,6 +99,7 @@ export function validateStep(draft: SettingsDraft, step: Step = draft.step): Ste
   if (step === 1) {
     if (!integerBetween(draft.people, 1, 10)) errors.people = 'Укажите от 1 до 10 человек';
     if (!integerBetween(draft.days, 1, 7)) errors.days = 'Укажите от 1 до 7 дней';
+    if (!isGoal(draft.goal)) errors.goal = 'Выберите цель питания';
     const values = Object.values(draft.manualNutrition);
     if (values.some(value => value !== '')) {
       if (values.some(value => value === '')) errors.manualNutrition = 'Заполните все поля нормы или очистите их';

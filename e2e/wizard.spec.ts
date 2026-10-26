@@ -40,8 +40,8 @@ test('D-08 partial/error: raw text reload, first invalid focus and no double-nex
   await page.getByLabel('Число дней', { exact: true }).fill('3');
   await page.getByRole('button', { name: 'Далее' }).dblclick();
   await expect(page.getByText('Шаг 2 из 4')).toBeVisible();
-  await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
   await page.getByRole('button', { name: 'Назад', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
   await expect(page.getByLabel('Число людей', { exact: true })).toHaveValue('4');
   await expect(page.getByLabel('Число дней', { exact: true })).toHaveValue('3');
 });
@@ -63,7 +63,7 @@ test('D-04 navigation slots progress 1–4 preserve values and exit cancel/accep
   await expect(page.getByRole('radio', { name: 'Снизить вес' })).toBeChecked();
   await page.getByRole('link', { name: 'На главную' }).click();
   await page.getByRole('button', { name: 'Выйти из мастера', exact: true }).click();
-  await page.getByRole('link', { name: 'Создать меню' }).click();
+  await page.getByRole('link', { name: 'Новое меню' }).click();
   await expect(page.getByRole('radio', { name: 'Снизить вес' })).toBeChecked();
 });
 

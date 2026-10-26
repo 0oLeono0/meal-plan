@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: P0 MVP
 current_phase: 1
 current_phase_name: Гостевой старт и сохраняемые настройки
-current_plan: 6
+current_plan: 8
 status: executing
-stopped_at: Completed docs-only 01-07-PLAN.md; next 01-06; final QA 01-08 pending
-last_updated: "2026-10-26T17:21:56.582Z"
+stopped_at: Completed 01-06-PLAN.md; next 01-08 final QA
+last_updated: "2026-10-26T17:35:14.142Z"
 last_activity: 2026-10-26
-last_activity_desc: 01-07 docs-only выполнен, 2/2 задачи; обе node-проверки и diff check passed; следующий 01-06
-state_head: f5736fcf0be143136badbd3b1c33856ea8efb0e5
+last_activity_desc: 01-06 завершён, 2/2 задачи; products 13 и regressions 19 Chromium, unit 65, typecheck/lint/build passed; следующий 01-08
+state_head: eb65717bea96a1dbeba2a6665f181d28a86322a3
 progress:
   total_phases: 7
   completed_phases: 0
   total_plans: 8
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -25,34 +25,34 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-25)
 
 **Core value:** Допустимое меню с прозрачным бюджетом и согласованные покупки с количественным учётом домашних запасов.
-**Current focus:** Phase 1 — планы 01–05 и docs-only 01-07 завершены (6/8). C-04: человек выбрал scope-amendment, record docs/decisions/nutrition-calculator.json, replanStatus executed. Автокалькулятор NEXT-10 — P1; WIZ-09 manual P0 Pending. Следующий план 01-06; итоговая проверка 01-08 ещё не выполнена.
+**Current focus:** Phase 1 — планы 01–07 завершены (7/8). Ограничения, продукты дома и честная проверка draft работают. C-04 scope-amendment исполнен; автокалькулятор NEXT-10 — P1, WIZ-09 manual P0 Pending до QA. Следующий и единственный незавершённый план 01-08.
 
 ## Current Position
 
 Phase: 1 (Гостевой старт и сохраняемые настройки)
-Current Plan: 6 (next incomplete plan; docs-only 01-07 complete, 2/2 tasks)
+Current Plan: 8 (next incomplete plan; 01-06 and docs-only 01-07 complete)
 Total Plans in Phase: 8
-Status: Executing; human-confirmed scope-amendment verified and executed; 01-06/08 pending
-Last activity: 2026-10-26 — 01-07: 2/2 docs-only tasks; both node assertions and diff check passed; formula remains locked with expected REPLAN_REQUIRED
+Status: Executing; 7/8 plans complete; final QA 01-08 pending
+Last activity: 2026-10-26 — 01-06: 2/2 tasks; 13 products + 19 regression Chromium cases and 65 unit tests passed; typecheck/lint/build passed
 
-Progress: [████████░░] 75% текущей фазы (6/8); будущие фазы ещё не имеют планов исполнения
+Progress: [█████████░] 87.5% текущей фазы (7/8); будущие фазы ещё не имеют планов исполнения
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: 10.7 min
-- Total execution time: 1.07 hours
+- Total plans completed: 7
+- Average duration: 10.9 min
+- Total execution time: 1.27 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01 | 6 | 64 min | 10.7 min |
+| 01 | 7 | 76 min | 10.9 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (13 min), 01-03 (14 min), 01-04 (11 min), 01-05 (9 min), 01-07 (5 min, docs-only)
-- Trend: шесть завершённых планов; 01-06 и итоговая QA 01-08 ожидают исполнения
+- Last 5 plans: 01-03 (14 min), 01-04 (11 min), 01-05 (9 min), 01-07 (5 min, docs-only), 01-06 (12 min)
+- Trend: семь завершённых планов; итоговая QA 01-08 ожидает исполнения
 
 **Per-Plan Metrics:**
 
@@ -64,6 +64,7 @@ Progress: [████████░░] 75% текущей фазы (6/8); б
 | Phase 01 P04 | 11 min | 2 tasks | 9 files |
 | Phase 01 P05 | 9 min | 2 tasks | 6 files |
 | Phase 01 P07 | 5min | 2 tasks | 18 files |
+| Phase 01 P06 | 12 min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -82,10 +83,11 @@ Progress: [████████░░] 75% текущей фазы (6/8); б
 - [Phase 01]: 01-04 raw text counters and derived manual person-day target retain partial strings; calculator C-04/Q-03 remains gated in 01-07
 - [Phase 01]: 01-05 exact budget >=500 is canonical; slider projection and person-day hint are derived; time/variety use existing draft actions
 - [Phase 01]: 01-07 docs-only executed: human-confirmed C-04 keeps optional manual WIZ-09 P0/Pending until QA; automatic NEXT-10 and four calculator states deferred P1; Q-03 partially open.
+- [Phase 01]: 01-06: names-only product IDs and raw positive quantities; review validates draft only, without confirmed settings/pantry mutation or generation.
 
 ### Pending Todos
 
-Продолжить 01-06 (ограничения и домашние продукты), затем 01-08. Docs-only 01-07 выполнен. WIZ-03/WIZ-04/WIZ-05 закрыты; общие APP-01/APP-02/APP-03/WIZ-01/WIZ-02/UX-01 остаются открыты до завершения остальных планов-владельцев. WIZ-09 manual остаётся Pending до QA; прежний calculator scope перенесён в NEXT-10 P1 и не выполнен. C-04 по приоритету подтверждён, Q-03 частично открыт.
+Продолжить 01-08: итоговая QA. 01-06 и docs-only 01-07 выполнены. WIZ-03/WIZ-04/WIZ-05/WIZ-06/WIZ-07 закрыты; общие APP-01/APP-02/APP-03/WIZ-01/WIZ-02/UX-01 и WIZ-09 manual остаются Pending до итоговой приёмки. Прежний calculator scope перенесён в NEXT-10 P1 и не выполнен. C-04 по приоритету подтверждён, Q-03 частично открыт.
 
 ### Blockers/Concerns
 
@@ -104,6 +106,6 @@ Progress: [████████░░] 75% текущей фазы (6/8); б
 
 ## Session Continuity
 
-Last session: 2026-10-26T17:21:56.527Z
-Stopped at: Completed docs-only 01-07-PLAN.md; next 01-06; final QA 01-08 pending
+Last session: 2026-10-26T17:35:14.094Z
+Stopped at: Completed 01-06-PLAN.md; next 01-08 final QA
 Resume file: None

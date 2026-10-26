@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 2
+open_count: 1
 waived_count: 0
-fixed_count: 1
+fixed_count: 2
 total_count: 3
-last_updated: 2026-10-26T16:48:52.249Z
+last_updated: 2026-10-26T17:33:50.510Z
 ---
 
 # Broken Windows Ledger
@@ -16,7 +16,7 @@ last_updated: 2026-10-26T16:48:52.249Z
 | id | phase | kind | file | line | description | status | reason | recorded_at | resolved_at |
 |----|-------|------|------|------|-------------|--------|--------|-------------|-------------|
 | 1 | 01 | lint-warning | package.json |  | Vite build succeeds but upstream react-router use-client directive produces MODULE_LEVEL_DIRECTIVE warning in client SPA | open |  | 2026-10-26T16:04:55.085Z |  |
-| 2 | 01 | stub | src/features/wizard/Wizard.tsx |  | Steps 2-4 expose intentional navigation slots; budget controls belong to 01-05 and product/restriction controls to 01-06 | open |  | 2026-10-26T16:47:42.892Z |  |
+| 2 | 01 | stub | src/features/wizard/Wizard.tsx |  | Steps 2-4 expose intentional navigation slots; budget controls belong to 01-05 and product/restriction controls to 01-06 | fixed |  | 2026-10-26T16:47:42.892Z | 2026-10-26T17:33:50.510Z |
 | 3 | 01 | deviation | src/domain/nutritionTarget.test.ts |  | Task 2 GREEN was briefly applied before malformed TAP rejection was inspected; own settings change reverted, actual TAP-flat RED validated, then GREEN restored | fixed |  | 2026-10-26T16:47:43.528Z | 2026-10-26T16:48:52.249Z |
 
 ````json
@@ -41,10 +41,10 @@ last_updated: 2026-10-26T16:48:52.249Z
     "file": "src/features/wizard/Wizard.tsx",
     "line": null,
     "description": "Steps 2-4 expose intentional navigation slots; budget controls belong to 01-05 and product/restriction controls to 01-06",
-    "status": "open",
+    "status": "fixed",
     "reason": "",
     "recorded_at": "2026-10-26T16:47:42.892Z",
-    "resolved_at": null,
+    "resolved_at": "2026-10-26T17:33:50.510Z",
     "milestone": "v1.0"
   },
   {

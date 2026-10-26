@@ -4,9 +4,9 @@ milestone: v1.0
 milestone_name: P0 MVP
 current_phase: 1
 current_phase_name: Гостевой старт и сохраняемые настройки
-current_plan: 6
-status: executing
-stopped_at: Completed 01-05-PLAN.md; next 01-06
+current_plan: 7
+status: awaiting-human-decision
+stopped_at: 01-07-01 blocking-human; C-04/Q-03 proposal prepared; 5/8 plans complete
 last_updated: "2026-10-26T16:59:16.824Z"
 last_activity: 2026-10-26
 last_activity_desc: 01-05 выполнен; 96 unit, 30 Chromium и 18 после error-scroll fix; typecheck/lint/build passed
@@ -25,14 +25,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-25)
 
 **Core value:** Допустимое меню с прозрачным бюджетом и согласованные покупки с количественным учётом домашних запасов.
-**Current focus:** Phase 1 — 01-05 завершён: точный бюджет, время и разнообразие. Следующий план 01-06; калькулятор остаётся за gate 01-07.
+**Current focus:** Phase 1 — планы 01–05 завершены. Волна 5 ожидает решения 01-07-01 по C-04/Q-03: docs/decisions/nutrition-calculator-proposal.md. Ни один вариант не утверждён. План 01-06 и итоговая проверка 01-08 ещё не выполнены.
 
 ## Current Position
 
 Phase: 1 (Гостевой старт и сохраняемые настройки)
-Current Plan: 6
+Current Plan: 7 (checkpoint 01-07-01; 0/2 tasks)
 Total Plans in Phase: 8
-Status: Ready to execute
+Status: Awaiting human decision — keep-p0 research or explicit scope-amendment; no calculator implementation permitted yet
 Last activity: 2026-10-26 — 01-05: 2/2 tasks, 96 unit + 30 Chromium; после error-scroll fix 18 budget/wizard passed; typecheck/lint/build passed
 
 Progress: [██████░░░░] 62.5% текущей фазы (5/8); будущие фазы ещё не имеют планов исполнения

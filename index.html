@@ -4,9 +4,49 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#1C7C50" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231C7C50'/%3E%3Cpath d='M8 21V11l8 8 8-8v10' fill='none' stroke='white' stroke-width='3'/%3E%3C/svg%3E" />
     <title>MealPlan — планирование питания</title>
+    <style>
+      :root { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #172B21; background: #F4F6F1; font-size: 16px; line-height: 1.5; --accent: #1C7C50; --border: #718277; --muted: #53665B; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-width: 0; }
+      main { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; padding-bottom: max(48px, env(safe-area-inset-bottom)); }
+      h1 { font-size: 32px; line-height: 1.2; font-weight: 600; margin: 24px 0 16px; overflow-wrap: anywhere; }
+      p { margin: 0 0 16px; overflow-wrap: anywhere; }
+      a { color: inherit; text-underline-offset: 4px; }
+      button, input { font: inherit; border: 1px solid var(--border); border-radius: 12px; background: white; color: inherit; min-height: 48px; min-width: 0; }
+      button { padding: 12px 16px; font-weight: 600; cursor: pointer; touch-action: manipulation; overflow-wrap: anywhere; transition: background-color 120ms; }
+      button:hover { background: #E5EFE8; }
+      button:disabled { cursor: default; background: #E1E7E2; color: var(--muted); }
+      :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+      .primary { width: 100%; background: var(--accent); color: white; border-color: var(--accent); }
+      .primary:hover { background: #16633F; }
+      .primary:focus-visible { outline-color: #172B21; }
+      .brand { font-size: 24px; font-weight: 600; overflow-wrap: anywhere; }
+      .welcome { padding-top: 24px; }
+      .welcome .brand { margin-bottom: 48px; }
+      .eyebrow, .hint { font-size: 14px; color: var(--muted); }
+      .hint { margin: 16px 0 0; }
+      .journey { margin: 32px 0; }
+      .card { border-radius: 20px; background: #FFFFFF; padding: 24px; margin: 24px 0; }
+      label { display: block; margin-bottom: 16px; font-weight: 600; }
+      .stepper { display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; gap: 8px; align-items: center; }
+      .stepper button { padding: 8px; font-size: 24px; }
+      input { width: 100%; padding: 8px; text-align: center; font-variant-numeric: tabular-nums; }
+      .notice { border: 1px solid var(--border); border-radius: 12px; padding: 16px; background: white; margin-bottom: 24px; overflow-wrap: anywhere; }
+      .notice p:last-child { margin-bottom: 0; }
+      .steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 16px 0 32px; }
+      .steps span { height: 4px; border-radius: 12px; background: #E1E7E2; }
+      .steps .filled { background: var(--accent); }
+      .back { display: inline-flex; min-height: 44px; align-items: center; margin-bottom: 24px; }
+      .skip-link { position: absolute; top: -100px; left: 16px; background: white; padding: 12px; z-index: 1; }
+      .skip-link:focus { top: 8px; }
+      @media (min-width: 768px) { main { padding: 48px 24px; } }
+      @media (prefers-reduced-motion: reduce) { button { transition: none; } }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <script type="module" src="/src/app/App.tsx"></script>
   </body>
 </html>

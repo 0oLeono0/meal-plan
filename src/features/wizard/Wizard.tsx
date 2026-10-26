@@ -4,6 +4,7 @@ import { createDraft, validateStep, type DraftAction, type SettingsDraft, type S
 import { Button, ConfirmDialog } from '../../shared/ui';
 import { PeopleStep } from './PeopleStep';
 import { BudgetStep } from './BudgetStep';
+import { ExclusionsStep } from './ExclusionsStep';
 
 export function Wizard({ draft, onChange, recovery = false, saved = false, onReset }: { draft: SettingsDraft; onChange(action: DraftAction): void; recovery?: boolean; saved?: boolean; onReset?(): Promise<boolean> }) {
   const [resetOpen, setResetOpen] = useState(false);
@@ -67,7 +68,7 @@ export function Wizard({ draft, onChange, recovery = false, saved = false, onRes
     <div ref={content} className="has-sticky-actions">
       {draft.step === 1 && <PeopleStep draft={draft} onChange={change} errors={errors} disabled={resetPending} />}
       {draft.step === 2 && <BudgetStep draft={draft} onChange={change} errors={errors} disabled={resetPending} />}
-      {draft.step === 3 && <p>Здесь будут предпочтения и исключения продуктов. Этот шаг ещё в разработке.</p>}
+      {draft.step === 3 && <ExclusionsStep draft={draft} onChange={change} disabled={resetPending} />}
       {draft.step === 4 && <p>Здесь можно будет указать домашние продукты. Создание меню ещё недоступно.</p>}
     </div>
     <div ref={footer} className="sticky-actions grid grid-cols-2 gap-2">

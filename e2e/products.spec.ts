@@ -47,7 +47,7 @@ test('exclusions empty/partial: unknown text never creates an ID, Escape closes 
   await page.getByRole('combobox').press('Enter');
   await page.getByRole('combobox').press(',');
   await expect(page.getByRole('button', { name: /^Удалить исключение/ })).toHaveCount(0);
-  await page.getByRole('combobox').fill('я');
+  await page.getByRole('combobox').fill('яй');
   await expect(page.getByRole('option')).toHaveCount(1);
   await page.getByRole('combobox').press('Escape');
   await expect(page.getByRole('combobox')).toHaveAttribute('aria-expanded', 'false');
@@ -56,7 +56,8 @@ test('exclusions empty/partial: unknown text never creates an ID, Escape closes 
 
 // Replace only the catalog port in a standalone real component. No production switches.
 async function searchFixture(page: Page) {
-  await exclusions(page);
+  await page.goto('/plan/new');
+  await expect(page.getByLabel('Число людей', { exact: true })).toBeVisible();
   await page.evaluate(async () => {
     const resources = performance.getEntriesByType('resource').map(entry => entry.name);
     const reactUrl = resources.find(url => /\/react\.js\?/.test(url))!;
@@ -81,7 +82,7 @@ async function searchFixture(page: Page) {
       return searchProducts(query);
     } };
     function Fixture() {
-      const [selected, setSelected] = React.useState<string[]>([]);
+      const [selected, setSelected] = React.useState([] as string[]);
       return React.createElement('div', { className: 'app-shell' }, React.createElement('main', null,
         React.createElement(ProductCombobox, { label: 'Поиск', port, onSelect: (product: { id: string }) => setSelected((old: string[]) => [...old, product.id]) }),
         React.createElement('output', null, selected.join(','))));

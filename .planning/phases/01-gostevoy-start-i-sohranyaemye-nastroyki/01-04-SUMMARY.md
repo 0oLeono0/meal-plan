@@ -102,6 +102,7 @@ No Firefox/WebKit or full phase release run here; 01-08 owns release verificatio
 - **[Rule 3 — Blocking]** Task 2 also modifies settings.ts/Wizard.tsx to route validation through one parser and clear validation after explicit clear-all; these files are already plan-owned. No duplicate target storage.
 - **[Rule 1 — Bug]** First browser run proved sticky footer overlap at doubled text. Centered invalid-field scrolling fixed it; final three-width assertions pass. Double-click moved physical pointer focus after layout change, so double-click asserts step retention; normal step navigation separately asserts h1 focus.
 - **Process correction:** malformed TAP/rejected RED sequencing described above, not hidden as a passing gate.
+- **[Rule 3 — Blocking]** SDK state.update-progress again skipped with `phase scope is unscoped, not complete`; after successful advance/metric/session/roadmap commands, only factual phase progress was corrected to 4/8 (50%).
 
 ## Known Stubs and Remaining Gates
 

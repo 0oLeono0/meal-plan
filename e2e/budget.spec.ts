@@ -79,6 +79,8 @@ for (const width of [360, 768, 1280]) test(`budget overflow/long-text ${width}px
   const field = await page.getByLabel('Бюджет на неделю', { exact: true }).boundingBox();
   const footer = await page.locator('.sticky-actions').boundingBox();
   expect(field!.y + field!.height).toBeLessThanOrEqual(footer!.y);
+  const error = await page.getByText('Введите целое число рублей от 500').boundingBox();
+  expect(error!.y + error!.height).toBeLessThanOrEqual(footer!.y);
   await page.screenshot({ path: `.tmp/01-05-budget-${width}.png`, fullPage: true });
 });
 
@@ -137,7 +139,8 @@ test('time-variety concurrency: latest rapid choices survive back and reload', a
 for (const field of ['cookingTime', 'variety'] as const) test(`time-variety empty/recovery: unknown restored ${field} never silently defaults`, async ({ page }) => {
   const raw = JSON.stringify({ schemaVersion: 1, draft: { ...createDraft(), step: 2, [field]: 'unknown' } });
   await mountAppFixture(page, { raw });
-  await expect(page.getByText('Не удалось прочитать сохранённый черновик')).toBeVisible();
-  await expect(page.getByRole('radio')).toHaveCount(0);
+  await expect(page.getByText('Не удалось восстановить настройки. Сохранённые данные повреждены или имеют другую версию')).toBeVisible();
+  await expect(page.getByText('Можно продолжить в памяти. Исходная запись останется без изменений.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Сбросить черновик', exact: true })).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:draft:v1'))).toBe(raw);
 });

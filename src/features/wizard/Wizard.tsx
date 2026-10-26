@@ -44,7 +44,7 @@ export function Wizard({ draft, onChange, recovery = false, saved = false, onRes
     if (Object.keys(found).length) {
       const invalid = document.getElementById(Object.keys(found)[0]);
       invalid?.focus();
-      invalid?.scrollIntoView({ block: 'center' });
+      (invalid?.closest('.field') ?? invalid)?.scrollIntoView({ block: 'center' });
       return;
     }
     nextLock.current = setTimeout(() => { nextLock.current = null; }, 250);

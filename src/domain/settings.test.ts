@@ -1,5 +1,4 @@
 import { expect, it } from 'vitest';
-import { spawnSync } from 'node:child_process';
 import { createDraft, draftReducer, isSettingsDraft, isStep, validateStep, type Step } from './settings';
 
 it('accepts structurally valid unfinished strings without declaring them ready', () => {
@@ -23,21 +22,22 @@ function decisionFixture() {
     independentExamples: [{ input: { value: 1 }, expected: { value: 10 }, provenance: 'independent fixture A' }, { input: { value: 2 }, expected: { value: 20 }, provenance: 'independent fixture B' }],
   };
 }
-it('calculator gate accepts only a complete confirmed keep-p0 record and rejects missing contracts', () => {
-  const run = (record: unknown) => spawnSync(process.execPath, ['scripts/verify-calculator-decision.mjs', '-'], { input: JSON.stringify(record), encoding: 'utf8' });
-  expect(run(decisionFixture()).status).toBe(0);
+it('calculator gate accepts only a complete confirmed keep-p0 record and rejects missing contracts', async () => {
+  const modulePath = '../../scripts/verify-calculator-decision.mjs';
+  const { verifyCalculatorDecision: run } = await import(modulePath) as { verifyCalculatorDecision(record: unknown): { ok: boolean; reason: string } };
+  expect(run(decisionFixture()).ok).toBe(true);
   for (const field of Object.keys(decisionFixture())) {
     const invalid: Record<string, unknown> = { ...decisionFixture() };
     delete invalid[field];
-    expect(run(invalid).status, field).not.toBe(0);
+    expect(run(invalid).ok, field).toBe(false);
   }
-  expect(run({ ...decisionFixture(), status: 'proposed' }).status).not.toBe(0);
-  expect(run({ ...decisionFixture(), humanConfirmedAt: 'not a date' }).status).not.toBe(0);
-  expect(run({ ...decisionFixture(), independentExamples: [decisionFixture().independentExamples[0], decisionFixture().independentExamples[0]] }).status).not.toBe(0);
-  expect(run({ ...decisionFixture(), inputContract: {} }).status).not.toBe(0);
+  expect(run({ ...decisionFixture(), status: 'proposed' }).ok).toBe(false);
+  expect(run({ ...decisionFixture(), humanConfirmedAt: 'not a date' }).ok).toBe(false);
+  expect(run({ ...decisionFixture(), independentExamples: [decisionFixture().independentExamples[0], decisionFixture().independentExamples[0]] }).ok).toBe(false);
+  expect(run({ ...decisionFixture(), inputContract: {} }).ok).toBe(false);
   const amendment = run({ ...decisionFixture(), decision: 'scope-amendment', amendmentReferences: ['scoped replan'] });
-  expect(amendment.status).not.toBe(0);
-  expect(amendment.stderr).toContain('REPLAN_REQUIRED');
+  expect(amendment.ok).toBe(false);
+  expect(amendment.reason).toContain('REPLAN_REQUIRED');
 });
 it.each([0, 5, 1.5, '2', null, Infinity])('rejects step outside exact 1–4: %s', value => {
   expect(isStep(value)).toBe(false);

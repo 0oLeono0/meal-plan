@@ -66,6 +66,7 @@ export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand =
           currentDraft.current = result.draft;
           setDraft(result.draft);
           setLoadState('ready');
+          if (result.status === 'loaded') setSaveState('saved');
         } else setLoadState(result.status);
       } catch { if (active) setLoadState('error'); }
     };
@@ -148,7 +149,7 @@ export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand =
         {presence.status === 'error' && <p className="notice">Не удалось проверить наличие меню. Настройки доступны.</p>}
         <Routes>
           <Route path="/" element={presence.status === 'valid' ? <Navigate replace to="/menu" /> : <StartPage brand={brand} />} />
-          <Route path="/plan/new" element={<Wizard draft={draft} onChange={change} recovery={loadState === 'corrupt' || loadState === 'error'} onReset={resetDraft} />} />
+          <Route path="/plan/new" element={<Wizard draft={draft} onChange={change} recovery={loadState === 'corrupt' || loadState === 'error'} saved={loadState === 'ready' && saveState === 'saved'} onReset={resetDraft} />} />
           <Route path="/plan/generating" element={<RouteStatePage title="Генерация не запущена" description="Откройте настройки питания, чтобы подготовить меню." to="/plan/new" action="К настройкам" />} />
           <Route path="/menu" element={<GuestSectionPage section="menu" />} />
           <Route path="/shopping" element={<GuestSectionPage section="shopping" />} />

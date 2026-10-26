@@ -1,4 +1,5 @@
 import { parseManualTarget } from './nutritionTarget';
+import { parseBudget } from './budget';
 
 export type Step = 1 | 2 | 3 | 4;
 export type Goal = 'maintain' | 'lose' | 'gain';
@@ -110,7 +111,7 @@ export function validateStep(draft: SettingsDraft, step: Step = draft.step): Ste
       errors.manualNutrition = nutrition.message;
     }
   }
-  if (step === 2 && !integerBetween(draft.budget, 500, Number.MAX_SAFE_INTEGER)) errors.budget = 'Введите целое число рублей от 500';
+  if (step === 2 && parseBudget(draft.budget) === null) errors.budget = 'Введите целое число рублей от 500';
   if (step === 4 && draft.home.some(row => row.quantity !== '' && (!finiteNumber(row.quantity) || Number(row.quantity.replace(',', '.')) <= 0 || !row.unit))) errors.home = 'Укажите количество больше 0 и подходящую единицу или оставьте количество пустым';
   return errors;
 }

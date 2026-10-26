@@ -4,6 +4,8 @@ async function openBudget(page: Page) {
   await page.goto('/plan/new');
   await page.getByRole('button', { name: 'Далее' }).click();
   await expect(page.getByText('Шаг 2 из 4')).toBeVisible();
+  // The wizard intentionally suppresses double-next clicks for 250ms.
+  await page.waitForTimeout(260);
 }
 
 test('budget exact field and truthful range projection preserve manual amounts', async ({ page }) => {
@@ -55,6 +57,7 @@ test('budget period: changing people/days changes only the hint and label', asyn
   await page.getByRole('button', { name: 'Назад', exact: true }).click();
   await page.getByLabel('Число людей', { exact: true }).fill('4');
   await page.getByLabel('Число дней', { exact: true }).fill('3');
+  await page.waitForTimeout(260);
   await page.getByRole('button', { name: 'Далее' }).click();
   await expect(page.getByLabel('Бюджет на 3 дня', { exact: true })).toHaveValue('20000');
   await expect(page.getByText('≈ 1 667 ₽ на человека в день')).toBeVisible();

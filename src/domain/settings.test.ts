@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { createDraft, draftReducer, isSettingsDraft, isStep, validateStep, type Step } from './settings';
+import { createDraft, draftReducer, isSettingsDraft, isStep, validateStep, type Goal, type Step } from './settings';
 
 it('accepts structurally valid unfinished strings without declaring them ready', () => {
   const draft = { ...createDraft(), people: '', budget: '1,', manualNutrition: { calories: '0,', protein: '', fat: '', carbohydrates: '' } };
@@ -7,6 +7,27 @@ it('accepts structurally valid unfinished strings without declaring them ready',
   expect(validateStep(draft, 1).people).toBeDefined();
   expect(validateStep(draft, 1).manualNutrition).toBeDefined();
   expect(validateStep(draft, 2).budget).toBeDefined();
+});
+
+it('WIZ-03 precision: runtime goal validation cannot be bypassed by a typed cast', () => {
+  expect(validateStep({ ...createDraft(), goal: 'other' as Goal }, 1)).toHaveProperty('goal');
+  const draft = createDraft();
+  expect(draftReducer(draft, { type: 'goal', value: 'other' as Goal })).toBe(draft);
+});
+it.each(['0', '11', '1.5', 'Infinity', 'NaN', '1e0', '1,', '', ' 2 '])('WIZ-03 boundary/precision rejects people raw %s', people => {
+  expect(validateStep({ ...createDraft(), people }, 1).people).toBeDefined();
+});
+it.each(['0', '8', '1.5', 'Infinity', 'NaN', '1e0', '1,', ''])('WIZ-03 boundary/precision rejects days raw %s', days => {
+  expect(validateStep({ ...createDraft(), days }, 1).days).toBeDefined();
+});
+it.each([{ people: '1', days: '1' }, { people: '10', days: '7' }])('WIZ-03 accepts exact count limits %j', patch => {
+  expect(validateStep({ ...createDraft(), ...patch }, 1)).toEqual({});
+});
+it('D-06 defaults are applied once and reducer preserves raw strings across steps', () => {
+  const draft = createDraft();
+  expect(draft).toMatchObject({ people: '2', days: '7', goal: 'maintain', budget: '3000', cookingTime: '30', variety: 'medium', restrictions: [] });
+  const raw = draftReducer(draft, { type: 'set', field: 'people', value: '1,' });
+  expect(draftReducer(draftReducer(raw, { type: 'step', value: 2 }), { type: 'step', value: 1 }).people).toBe('1,');
 });
 
 // Synthetic contract checks schema only; these numbers are not nutrition recommendations.

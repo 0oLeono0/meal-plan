@@ -5,8 +5,8 @@ milestone_name: P0 MVP
 current_phase: 1
 current_phase_name: Гостевой старт и сохраняемые настройки
 current_plan: 7
-status: awaiting-human-decision
-stopped_at: 01-07-01 blocking-human; C-04/Q-03 proposal prepared; 5/8 plans complete
+status: scoped-replan-prepared
+stopped_at: C-04 human-confirmed scope-amendment; docs-only 01-07 prepared for checker/executor; 5/8 plans complete
 last_updated: "2026-10-26T16:59:16.824Z"
 last_activity: 2026-10-26
 last_activity_desc: 01-05 выполнен; 96 unit, 30 Chromium и 18 после error-scroll fix; typecheck/lint/build passed
@@ -25,14 +25,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-25)
 
 **Core value:** Допустимое меню с прозрачным бюджетом и согласованные покупки с количественным учётом домашних запасов.
-**Current focus:** Phase 1 — планы 01–05 завершены. Волна 5 ожидает решения 01-07-01 по C-04/Q-03: docs/decisions/nutrition-calculator-proposal.md. Ни один вариант не утверждён. План 01-06 и итоговая проверка 01-08 ещё не выполнены.
+**Current focus:** Phase 1 — планы 01–05 завершены. C-04: человек выбрал scope-amendment, record docs/decisions/nutrition-calculator.json. Автокалькулятор NEXT-10 — P1; WIZ-09 manual P0 Pending. Scoped docs-only replan 01-07 подготовлен для checker и исполнения, не завершён. План 01-06 и итоговая проверка 01-08 ещё не выполнены.
 
 ## Current Position
 
 Phase: 1 (Гостевой старт и сохраняемые настройки)
-Current Plan: 7 (checkpoint 01-07-01; 0/2 tasks)
+Current Plan: 7 (docs-only scoped amendment prepared; 0/2 tasks)
 Total Plans in Phase: 8
-Status: Awaiting human decision — keep-p0 research or explicit scope-amendment; no calculator implementation permitted yet
+Status: Human-confirmed scope-amendment; replan prepared, checker/execution pending; no calculator implementation in P0
 Last activity: 2026-10-26 — 01-05: 2/2 tasks, 96 unit + 30 Chromium; после error-scroll fix 18 budget/wizard passed; typecheck/lint/build passed
 
 Progress: [██████░░░░] 62.5% текущей фазы (5/8); будущие фазы ещё не имеют планов исполнения
@@ -83,11 +83,11 @@ Progress: [██████░░░░] 62.5% текущей фазы (5/8); 
 
 ### Pending Todos
 
-Продолжить 01-06 (ограничения и домашние продукты). WIZ-03/WIZ-04/WIZ-05 закрыты; общие APP-01/APP-02/APP-03/WIZ-01/WIZ-02/UX-01 остаются открыты до завершения остальных планов-владельцев. WIZ-09 требует отдельного решения C-04/Q-03.
+Продолжить 01-06 (ограничения и домашние продукты), проверить и исполнить docs-only 01-07, затем 01-08. WIZ-03/WIZ-04/WIZ-05 закрыты; общие APP-01/APP-02/APP-03/WIZ-01/WIZ-02/UX-01 остаются открыты до завершения остальных планов-владельцев. WIZ-09 manual остаётся Pending до QA; прежний calculator scope перенесён в NEXT-10 P1 и не выполнен. C-04 по приоритету подтверждён, Q-03 частично открыт.
 
 ### Blockers/Concerns
 
-- Phase 1: C-04/Q-03 требуют решения в 01-07; полная приёмка и QA 01-08 ещё не выполнены. Исторический запрет разработки снят запуском исполнения пользователем.
+- Phase 1: C-04 по приоритету решён человеком; scoped replan 01-07 prepared, checker/исполнение и QA 01-08 ещё не выполнены. Формулы/средние нормы и роль nutrition targets в генерации Q-03 остаются открыты; это не разрешение калькулятора P0. Исторический запрет разработки снят запуском исполнения пользователем.
 - Build: upstream react-router MODULE_LEVEL_DIRECTIVE warning; сборка прошла, предупреждение зарегистрировано в WINDOWS.md.
 - Phase 2–4: базы бюджета/КБЖУ/порций, варианты/отказы, Q-14 о данных и Q-16 об округлении остаются воротами.
 - Phase 5–7: C-03 (pantry), Q-09/Q-12 (ручные покупки/категории), Q-13 (PDF), Q-17 (QA) не закрыты.
@@ -97,7 +97,7 @@ Progress: [██████░░░░] 62.5% текущей фазы (5/8); 
 
 | Category | Item | Status | Deferred At | Milestone |
 |----------|------|--------|-------------|-----------|
-| P1 | NEXT-01–NEXT-09 | После приёмки всего P0 | 2026-10-25 | После v1.0 |
+| P1 | NEXT-01–NEXT-10 (NEXT-10 по human-confirmed amendment C-04 от 26.10.2026) | После приёмки всего P0 | 2026-10-25 / amendment 2026-10-26 | После v1.0 |
 | P2 | Семья/realtime, экономия за период, персонаж, drag-and-drop, свои рецепты, сохранённые приёмы, штрихкоды | Только отдельный запрос | 2026-10-25 | Не назначен |
 
 ## Session Continuity

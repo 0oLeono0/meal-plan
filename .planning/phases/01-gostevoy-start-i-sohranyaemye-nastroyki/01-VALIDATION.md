@@ -9,7 +9,7 @@ created: "2026-10-26"
 
 # Phase 01 — Validation Strategy
 
-Это контракт будущего исполнения, а не отчёт о прошедших тестах. В проекте ещё нет package.json, приложения и тестовых конфигураций. Task-ID распределены по восьми планам; разработка пока не разрешена. Все строки pending/gated, ни одна не доказывает прохождение приложения.
+Это контракт проверки, а не отчёт о прошедших тестах. Историческая исходная точка была без приложения; планы 01–05 уже исполнены и их фактические результаты находятся в неизменённых SUMMARY. Разработка разрешена. Поправка человека C-04/D-10 от 26.10.2026: автоматический калькулятор NEXT-10 и его четыре состояния deferred P1; P0/WIZ-09 — необязательная ручная цель. Ни подготовка replan, ни строки таблицы ниже не доказывают приёмку 01-07/08.
 
 ## Test Infrastructure
 
@@ -46,8 +46,8 @@ created: "2026-10-26"
 |01-05-02|01-05|5|WIZ-05|T-01-04|Latest time/variety preserves budget/raw|e2e|npm run test:e2e -- e2e/budget.spec.ts --project=chromium --grep time-variety|No, expanded here|pending|
 |01-06-01|01-06|6|WIZ-06|T-01-06,T-01-07,T-01-08|Literal labels/IDs/stale response|e2e|npm run test:e2e -- e2e/products.spec.ts --project=chromium --grep exclusions|No, created here|pending|
 |01-06-02|01-06|6|WIZ-01,WIZ-02,WIZ-07,UX-01|T-01-07,T-01-08|Unknown quantity≠0;global sentinel unchanged|unit/e2e|npm run test:unit -- --run src/domain/settings.test.ts; npm run test:e2e -- e2e/products.spec.ts --project=chromium --grep home-products|No, expanded here|pending|
-|01-07-01|01-07|5|WIZ-09 calculator|T-01-09|Human source-backed decision;amendment→replan|decision|node scripts/verify-calculator-decision.mjs docs/decisions/nutrition-calculator.json|No, validator03/record here|gated|
-|01-07-02|01-07|5|WIZ-09 calculator|T-01-09,T-01-10|Independent expected values;explicit Use;no unapproved demographics|unit/e2e|npm run test:unit -- --run src/domain/nutritionCalculator.test.ts; npm run test:e2e -- e2e/calculator.spec.ts --project=chromium|No, conditional keep-p0|gated|
+|01-07-01|01-07|5|WIZ-09 scope / NEXT-10 deferred|T-01-09|Exact human response/source/timestamp;validator exit 1 with REPLAN_REQUIRED retained|record/docs|01-07 task01 automated node assertion: human-confirmed scope-amendment plus expected fail-closed validator|Yes, record/archive verified; tracer recheck passed|passed docs-only 26.10.2026; no formula approval|
+|01-07-02|01-07|5|WIZ-09 manual / NEXT-10 deferred|T-01-09,T-01-10|Manual Pending;calculator and four states P1;no invented norms;Q-03 partial|docs|01-07 task02 automated node assertion plus git diff --check; amendment affected-path review|Yes, scope documents checked; no calculator source changed|passed docs-only 26.10.2026; WIZ-09 Pending QA|
 |01-08-01|01-08|7|APP-01,APP-02,APP-03,WIZ-01,WIZ-02,UX-01|T-01-12|Responsive real flow;honest evidence|smoke/e2e|npm run test:e2e -- e2e/presentation.spec.ts --project=chromium --grep smoke; then full focused spec|No, created here|gated|
 |01-08-02|01-08|7|WIZ-01,WIZ-02,WIZ-09,UX-01|T-01-12|Keyboard/aria/focus;no fabricated acceptance|smoke/e2e/release|npm run test:e2e -- e2e/accessibility.spec.ts --project=chromium --grep smoke; then full focused spec and release commands below|No, created here|gated|
 
@@ -63,10 +63,10 @@ Every runnable automated command has immediate fails_when in PLAN; nonzero/No te
 |12 people/manual UI +4 count/norm edges|01-04-01/02|wizard/nutrition specs,settings/nutritionTarget unit|
 |6 budget UI +7 financial/options edges|01-05-01/02|budget.spec,budget unit|
 |16 products UI +10 exclusion/home edges|01-06-01/02|products.spec,settings unit|
-|2 calculator layout UI +4 unresolved calculator assumptions|01-07-01/02|human record then calculator.spec/unit|
-|All12REQ/17D/54UI/45edges evidence|01-08-01/02|presentation/accessibility smoke,matrix,actual QA record|
+|Historical 2 calculator layout UI +4 calculator assumptions|NEXT-10 P1 by human-confirmed D-10|All six rows deferred; not implemented and excluded from P0 formula/UI tests|
+|Applicable P0 requirement/decision/UI/edge evidence|01-08-01/02|presentation/accessibility smoke,matrix,actual QA record; WIZ-09 manual only|
 
-45 edges=44 explicit +1 flat backstop(WIZ-02/concurrency two tabs); no dismissals. Four calculator states remain unresolved until actual decision. Safety prohibitions04/06 remain flagged-unverified without fabricated check descriptors.
+Historical baseline before amendment: 45 edges=44 explicit +1 flat backstop(WIZ-02/concurrency two tabs). No new aggregate count is claimed without a fresh audit; applicable named P0 criteria retain coverage. Calculator empty/loading/error/partial and overflow/long-text explicitly deferred P1/NEXT-10 by D-10, not passed or implemented. Safety prohibitions04/06 remain flagged-unverified without fabricated check descriptors.
 
 ## Release Verification
 
@@ -99,7 +99,7 @@ After each meaningful focused smoke/spec passes,01-08 runs all: npm run test:uni
 | Визуальное соответствие PDF | UX-01, APP-02 | DOM assertions не доказывают визуальное качество | Посмотреть screenshots всех размеров, макет, ошибки и sticky footer |
 | Виртуальная клавиатура/safe area | APP-02, WIZ-01 | Desktop viewport не повторяет реальное устройство | Проверить реальный iOS при доступности; недоступность записать |
 | Именно Safari 15 | Совместимость PRD | Современный Playwright WebKit — другой браузер | Проверить историческую версию отдельно или указать непроведённую проверку |
-| C-04/Q-03 | WIZ-09 | Нет согласованной формулы/приоритета | Явное решение с основанием до зависимой реализации, затем обновить тестовые ожидания |
+| C-04/Q-03 | WIZ-09 manual / NEXT-10 P1 | Приоритет подтверждён человеком; формулы/средние нормы и жёсткость nutrition targets не определены | 01-07 проверяет docs-only amendment; 01-08 принимает manual WIZ-09. Автокалькулятор/четыре состояния deferred P1; Q-03 остаётся частично открытым для будущего контракта и генерации |
 
 ## Validation Sign-Off
 
@@ -107,8 +107,8 @@ After each meaningful focused smoke/spec passes,01-08 runs all: npm run test:uni
 - [ ] Нет трёх последовательных исполняемых задач без автоматической проверки.
 - [ ] Tracer создаёт scripts/Playwright;02 добавляет strict/shared configs,03 unit fixtures; последующие команды используют реально созданные ранее пути.
 - [ ] Нет watch-mode flags и проверок с нулём найденных тестов как успехом.
-- [ ] Покрыты все 12 требований; ручная часть не закрывает калькулятор WIZ-09.
+- [ ] Применимые требования P0 подтверждены; WIZ-09 принят только по обновлённому manual-контракту. Прежнее вычисление отдельно NEXT-10 P1 и не выполнено.
 - [ ] Фактически выполненные проверки и ограничения записаны отдельно.
 - [ ] `nyquist_compliant: true` устанавливается только после проверки контрактов; execution readiness не заявляется при открытом decision checkpoint.
 
-**Approval:** pending. Все тесты/сборка ещё не выполнялись. Открытые C-04/Q-03 не замаскированы статусом планирования.
+**Approval:** pending. Фактические тесты/сборка планов 01–05 записаны в их исторических SUMMARY; docs-only 01-07 проверен и исполнен, приёмка 01-08 ещё не выполнена. C-04 закрыт по приоритету human-confirmed amendment, Q-03 в оставшемся объёме открыт. Документальное исполнение не означает принятую WIZ-09 или завершённую фазу.

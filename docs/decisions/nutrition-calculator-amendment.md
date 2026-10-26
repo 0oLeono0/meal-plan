@@ -1,6 +1,6 @@
 # Поправка C-04: персональный автокалькулятор перенесён в P1
 
-**Источник:** [human-confirmed record](nutrition-calculator.json), `decision=scope-amendment`, ответ человека «тогда выбираем второй» от 26.10.2026. Это явная поправка объёма, а не автоматический выбор агента. **Replan: prepared; независимый checker и исполнение 01-07/08 ещё не завершены.**
+**Источник:** [human-confirmed record](nutrition-calculator.json), `decision=scope-amendment`, ответ человека «тогда выбираем второй» от 26.10.2026. Это явная поправка объёма, а не автоматический выбор агента. **Replan: executed; docs-only 01-07 проверен и исполнен 26.10.2026. Фактическая QA 01-08 ещё не выполнена; WIZ-09 Pending.**
 
 | Было | Применимый контракт | Статус |
 |---|---|---|
@@ -23,7 +23,7 @@ Affected paths: docs/decisions/nutrition-calculator.json, nutrition-calculator-p
 | RESEARCH | Исторические рекомендации/цитаты сохранены, сверху явный notice о принятом scope |
 | CONTEXT | D-09 manual сохранён; D-10 заменён точной человеческой поправкой с provenance |
 
-Проверка при исполнении 01-07:
+Проверка при исполнении 01-07 (выполнена 26.10.2026; результаты в 01-07-SUMMARY.md):
 
 1. Выполнить оба `<automated>` node-check из PLAN 01-07: точные decision/status/response/source/timestamp; сохранение WIZ-09 Pending и новый NEXT-10; все четыре UI calculator-состояния deferred P1; 01-08 содержит применимую ручную приёмку.
 2. Существующий `node scripts/verify-calculator-decision.mjs docs/decisions/nutrition-calculator.json` обязан вернуть **exit 1 / REPLAN_REQUIRED**. Это ожидаемый запрет реализации формулы, его нельзя чинить для обхода gate.

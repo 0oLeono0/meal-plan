@@ -7,7 +7,7 @@ requirements: [WIZ-09]
 
 # Калькулятор нормы: предложение для решения C-04/Q-03
 
-**Решение принято 26.10.2026:** человек ответил «тогда выбираем второй» и подтвердил **scope-amendment**. Основание: [human-confirmed record](nutrition-calculator.json); применимый mapping: [amendment](nutrition-calculator-amendment.md). Автоматический калькулятор и empty/loading/error/partial — P1/NEXT-10; P0/WIZ-09 — необязательная ручная цель. Scoped replan подготовлен, checker и исполнение docs-only 01-07 ещё не завершены; 0/2 задачи, WIZ-09 Pending. Ни формула, ни средние нормы не утверждены. Текст предложения ниже сохраняется исторически и больше не запрашивает выбор.
+**Решение принято 26.10.2026:** человек ответил «тогда выбираем второй» и подтвердил **scope-amendment**. Основание: [human-confirmed record](nutrition-calculator.json); применимый mapping: [amendment](nutrition-calculator-amendment.md). Автоматический калькулятор и empty/loading/error/partial — P1/NEXT-10; P0/WIZ-09 — необязательная ручная цель. Scoped docs-only replan 01-07 проверен и исполнен: 2/2 документальные задачи; WIZ-09 Pending до QA 01-08. Ни формула, ни средние нормы не утверждены. Текст предложения ниже сохраняется исторически и больше не запрашивает выбор.
 
 ## Основание
 

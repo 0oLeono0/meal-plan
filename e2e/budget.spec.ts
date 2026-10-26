@@ -1,4 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
+import { mountAppFixture } from './fixtures';
+import { createDraft } from '../src/domain/settings';
 
 async function openBudget(page: Page) {
   await page.goto('/plan/new');
@@ -78,4 +80,64 @@ for (const width of [360, 768, 1280]) test(`budget overflow/long-text ${width}px
   const footer = await page.locator('.sticky-actions').boundingBox();
   expect(field!.y + field!.height).toBeLessThanOrEqual(footer!.y);
   await page.screenshot({ path: `.tmp/01-05-budget-${width}.png`, fullPage: true });
+});
+
+test('time-variety defaults and stable radio order', async ({ page }) => {
+  await openBudget(page);
+  const time = page.getByRole('group', { name: 'Время приготовления' });
+  const variety = page.getByRole('group', { name: 'Разнообразие' });
+  expect(await time.getByRole('radio').count()).toBe(4);
+  await expect(time.locator('label')).toHaveText(['до 15 мин', 'до 30 мин', 'до 60 мин', 'любое']);
+  await expect(variety.locator('label')).toHaveText(['Одно и то же каждый день', 'Среднее', 'Каждый день разное']);
+  await expect(time.getByRole('radio', { name: 'до 30 мин', exact: true })).toBeChecked();
+  await expect(variety.getByRole('radio', { name: 'Среднее', exact: true })).toBeChecked();
+});
+
+test('time-variety adjacency keyboard and idempotency keep independent values', async ({ page }) => {
+  await openBudget(page);
+  await page.getByLabel('Бюджет на неделю', { exact: true }).fill('1050');
+  const time = page.getByRole('group', { name: 'Время приготовления' });
+  const variety = page.getByRole('group', { name: 'Разнообразие' });
+  await time.getByRole('radio', { name: 'до 15 мин', exact: true }).check();
+  await time.getByRole('radio', { name: 'до 15 мин', exact: true }).press('ArrowRight');
+  await expect(time.getByRole('radio', { name: 'до 30 мин', exact: true })).toBeChecked();
+  await time.getByRole('radio', { name: 'до 30 мин', exact: true }).press('ArrowRight');
+  await expect(time.getByRole('radio', { name: 'до 60 мин', exact: true })).toBeChecked();
+  await time.getByRole('radio', { name: 'до 60 мин', exact: true }).press('ArrowRight');
+  await expect(time.getByRole('radio', { name: 'любое', exact: true })).toBeChecked();
+  for (const name of ['Одно и то же каждый день', 'Среднее', 'Каждый день разное']) {
+    await variety.getByRole('radio', { name, exact: true }).check();
+    await variety.getByRole('radio', { name, exact: true }).check();
+    await expect(variety.locator('input:checked')).toHaveCount(1);
+    await expect(time.locator('input:checked')).toHaveCount(1);
+    await expect(time.getByRole('radio', { name: 'любое', exact: true })).toBeChecked();
+    await expect(page.getByLabel('Бюджет на неделю', { exact: true })).toHaveValue('1050');
+    await expect(page.getByText('Точная сумма введена вручную')).toBeVisible();
+  }
+  await variety.getByRole('radio', { name: 'Каждый день разное', exact: true }).press('ArrowLeft');
+  await expect(variety.getByRole('radio', { name: 'Среднее', exact: true })).toBeChecked();
+  const targets = await page.locator('fieldset label').evaluateAll(labels => labels.map(label => ({ height: label.getBoundingClientRect().height, width: label.getBoundingClientRect().width })));
+  expect(targets.every(rect => rect.height >= 44 && rect.width >= 44)).toBe(true);
+});
+
+test('time-variety concurrency: latest rapid choices survive back and reload', async ({ page }) => {
+  await openBudget(page);
+  await page.getByLabel('Бюджет на неделю', { exact: true }).fill('20000');
+  for (const name of ['до 15 мин', 'до 60 мин', 'любое']) await page.getByRole('radio', { name, exact: true }).check();
+  for (const name of ['Одно и то же каждый день', 'Каждый день разное']) await page.getByRole('radio', { name, exact: true }).check();
+  await page.getByRole('button', { name: 'Назад', exact: true }).click();
+  await expect(page.getByRole('status')).toHaveText('Сохранено на этом устройстве');
+  await page.reload();
+  await page.getByRole('button', { name: 'Далее' }).click();
+  await expect(page.getByRole('radio', { name: 'любое', exact: true })).toBeChecked();
+  await expect(page.getByRole('radio', { name: 'Каждый день разное', exact: true })).toBeChecked();
+  await expect(page.getByLabel('Бюджет на неделю', { exact: true })).toHaveValue('20000');
+});
+
+for (const field of ['cookingTime', 'variety'] as const) test(`time-variety empty/recovery: unknown restored ${field} never silently defaults`, async ({ page }) => {
+  const raw = JSON.stringify({ schemaVersion: 1, draft: { ...createDraft(), step: 2, [field]: 'unknown' } });
+  await mountAppFixture(page, { raw });
+  await expect(page.getByText('Не удалось прочитать сохранённый черновик')).toBeVisible();
+  await expect(page.getByRole('radio')).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:draft:v1'))).toBe(raw);
 });

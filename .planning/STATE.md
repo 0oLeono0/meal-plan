@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: P0 MVP
 current_phase: 1
 current_phase_name: Гостевой старт и сохраняемые настройки
-current_plan: 2
+current_plan: 3
 status: executing
-stopped_at: Completed 01-01-PLAN.md; next 01-02
-last_updated: "2026-10-26T16:08:31.664Z"
+stopped_at: Completed 01-02-PLAN.md; next 01-03
+last_updated: "2026-10-26T16:22:41.426Z"
 last_activity: 2026-10-26
-last_activity_desc: 01-01 выполнен; 69 browser tests, typecheck и build passed
-state_head: 60e18995aa1dbedd24e45ee06518cd581dc04e3d
+last_activity_desc: 01-02 выполнен; 35 Chromium tests, typecheck, lint и build passed
+state_head: 429fc401773e92c7d259763b4581a5b9c2870edd
 progress:
   total_phases: 7
   completed_phases: 0
   total_plans: 8
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -25,40 +25,41 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-25)
 
 **Core value:** Допустимое меню с прозрачным бюджетом и согласованные покупки с количественным учётом домашних запасов.
-**Current focus:** Phase 1 — 01-01 завершён: русский welcome и реальный guest draft save/reload. Следующий план 01-02.
+**Current focus:** Phase 1 — 01-02 завершён: гостевые маршруты, адаптивная навигация, доступный профиль и общие токены. Следующий план 01-03.
 
 ## Current Position
 
 Phase: 1 (Гостевой старт и сохраняемые настройки)
-Current Plan: 2
+Current Plan: 3
 Total Plans in Phase: 8
 Status: Ready to execute
-Last activity: 2026-10-26 — 01-01: 2/2 tasks, 69/69 Chromium/Firefox/WebKit tests; typecheck/build passed
+Last activity: 2026-10-26 — 01-02: 2/2 tasks, 35/35 Chromium tests; typecheck/lint/build passed
 
-Progress: [█░░░░░░░░░] 12.5% текущей фазы (1/8); будущие фазы ещё не имеют планов исполнения
+Progress: [██░░░░░░░░] 25% текущей фазы (2/8); будущие фазы ещё не имеют планов исполнения
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 12 min
-- Total execution time: 0.2 hours
+- Total plans completed: 2
+- Average duration: 12.5 min
+- Total execution time: 0.42 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01 | 1 | 12 min | 12 min |
+| 01 | 2 | 25 min | 12.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (12 min)
-- Trend: один завершённый план
+- Last 5 plans: 01-01 (12 min), 01-02 (13 min)
+- Trend: два завершённых плана
 
 **Per-Plan Metrics:**
 
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 01 P01 | 12 min | 2 tasks | 10 files |
+| Phase 01 P02 | 13 min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -70,12 +71,13 @@ Progress: [█░░░░░░░░░] 12.5% текущей фазы (1/8); 
 - Гостевой сценарий, локальные mock-адаптеры и детерминированные расчёты; без платных API и обязательного Firebase.
 - Подробное frontend-ТЗ первично, включая F §12.1; макеты не повышают P1/P2 до P0.
 - C/Q остаются открытыми до решения с основанием; рекомендация исследования не равна принятому бизнес-правилу.
-- Пользователь разрешил разработку и явно подтвердил 16 exact pins; provenance записан. 01-01 реализован и проверен, следующие планы ещё не исполнены.
+- Пользователь разрешил разработку и явно подтвердил 16 exact pins; provenance записан. 01-01 и 01-02 реализованы и проверены, следующие планы ещё не исполнены.
 - [Phase 01]: 01-01 uses versioned guest draft separate from confirmed settings and global pantry; corrupt records retained until explicit reset
+- [Phase 01]: 01-02 uses one CSS-responsive navigation DOM and Safari15-compatible custom modal; tokens override index fallback without new dependencies
 
 ### Pending Todos
 
-Продолжить 01-02 (навигационный каркас и общие UI-токены). Общие APP-01/APP-03/WIZ-02/UX-01 остаются открыты до завершения остальных планов-владельцев.
+Продолжить 01-03 (следующий план мастера). Общие APP-01/APP-02/APP-03/WIZ-02/UX-01 остаются открыты до завершения остальных планов-владельцев.
 
 ### Blockers/Concerns
 
@@ -94,6 +96,6 @@ Progress: [█░░░░░░░░░] 12.5% текущей фазы (1/8); 
 
 ## Session Continuity
 
-Last session: 2026-10-26T16:07:37.055Z
-Stopped at: Completed 01-01-PLAN.md; next 01-02
+Last session: 2026-10-26T16:22:41.380Z
+Stopped at: Completed 01-02-PLAN.md; next 01-03
 Resume file: None

@@ -1,8 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router';
+import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router';
 import { createDraft, draftReducer, type DraftAction, type SettingsDraft } from '../domain/settings';
 import { createGuestDraftAdapter, type GuestDraftPort } from '../adapters/guestDraft';
+import { Wizard } from '../features/wizard/Wizard';
+import { Button, ConfirmDialog, Status } from '../shared/ui';
+
+export const appConfig = { brand: 'MealPlan' };
 
 export type PlanPresence = { status: 'absent' } | { status: 'valid'; planId: string } | { status: 'pending' } | { status: 'error' };
 export interface PlanPresencePort { load(): Promise<unknown> }
@@ -16,37 +20,15 @@ function parsePresence(value: unknown): PlanPresence {
   return { status: 'absent' };
 }
 
-export function WelcomePage({ brand = 'MealPlan', onStart }: { brand?: string; onStart(): void }) {
+export function WelcomePage({ brand = appConfig.brand, onStart }: { brand?: string; onStart(): void }) {
   return <section className="welcome" aria-labelledby="welcome-title">
     <p className="brand" translate="no">{brand}</p>
     <p className="eyebrow">Питание в вашем ритме</p>
-    <h1 id="welcome-title">Меню с учётом ваших привычек</h1>
+    <h1 id="welcome-title" tabIndex={-1}>Меню с учётом ваших привычек</h1>
     <p>Выберите бюджет, ограничения и продукты дома</p>
     <p className="journey">Настройки → Меню → Покупки</p>
-    <button className="primary" type="button" onClick={onStart}>Составить меню</button>
+    <Button variant="primary" onClick={onStart}>Составить меню</Button>
     <p className="hint">Без регистрации. Черновик хранится на этом устройстве.</p>
-  </section>;
-}
-
-export function Wizard({ draft, onChange }: { draft: SettingsDraft; onChange(action: DraftAction): void }) {
-  const people = Number(draft.people);
-  return <section className="wizard" aria-labelledby="wizard-title">
-    <Link className="back" to="/">На главную</Link>
-    <p className="eyebrow">Шаг {draft.step} из 4</p>
-    <div className="steps" role="progressbar" aria-label="Настройка меню" aria-valuemin={0} aria-valuemax={4} aria-valuenow={draft.step}>
-      {[1, 2, 3, 4].map(step => <span key={step} className={step <= draft.step ? 'filled' : ''} />)}
-    </div>
-    <h1 id="wizard-title">Для кого составляем меню</h1>
-    <p>Укажите, сколько человек будет за столом.</p>
-    <div className="card">
-      <label htmlFor="people">Число людей</label>
-      <div className="stepper">
-        <button type="button" aria-label="Уменьшить число людей" disabled={!Number.isInteger(people) || people <= 1} onClick={() => onChange({ type: 'set', field: 'people', value: String(Math.max(1, people - 1)) })}>−</button>
-        <input id="people" name="people" type="number" inputMode="numeric" autoComplete="off" min={1} max={10} value={draft.people} onChange={event => onChange({ type: 'set', field: 'people', value: event.target.value })} aria-describedby="people-hint" />
-        <button type="button" aria-label="Увеличить число людей" disabled={!Number.isInteger(people) || people >= 10} onClick={() => onChange({ type: 'set', field: 'people', value: String(Math.min(10, people + 1)) })}>+</button>
-      </div>
-      <p id="people-hint" className="hint">От 1 до 10 человек. Значение сохраняется автоматически.</p>
-    </div>
   </section>;
 }
 
@@ -58,7 +40,7 @@ interface AppProps {
 type LoadState = 'loading' | 'ready' | 'corrupt' | 'error';
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
-export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand = 'MealPlan' }: AppProps) {
+export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand = appConfig.brand }: AppProps) {
   const [draft, setDraft] = useState(createDraft);
   const currentDraft = useRef(draft);
   const [loadState, setLoadState] = useState<LoadState>('loading');
@@ -131,9 +113,8 @@ export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand =
 
   const loading = loadState === 'loading' || presence.status === 'pending';
   return <BrowserRouter>
-    <a className="skip-link" href="#main">К содержимому</a>
-    <main id="main">
-      {loading ? <p role="status">Восстанавливаем настройки…</p> : <>
+    <AppLayout brand={brand} loading={loading}>
+      {loading ? <Status>Восстанавливаем настройки…</Status> : <>
         {loadState === 'corrupt' && <div className="notice"><p>Не удалось восстановить настройки. Сохранённые данные повреждены или имеют другую версию</p><p>Можно продолжить в памяти. Исходная запись останется без изменений.</p><Link to="/">На главную</Link></div>}
         {(loadState === 'error' || saveState !== 'idle') && <div className="notice">
           <p role="status">{loadState === 'error' ? 'Не удалось прочитать настройки. Изменения доступны до закрытия страницы' : saveState === 'saving' ? 'Сохраняем настройки…' : saveState === 'saved' ? 'Сохранено на этом устройстве' : 'Не удалось сохранить на этом устройстве. Изменения доступны до закрытия страницы'}</p>
@@ -143,13 +124,76 @@ export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand =
         <Routes>
           <Route path="/" element={presence.status === 'valid' ? <Navigate replace to="/menu" /> : <StartPage brand={brand} />} />
           <Route path="/plan/new" element={<Wizard draft={draft} onChange={change} />} />
-          <Route path="/menu" element={<section><h1>Меню пока нет</h1><p>Начните с настроек питания</p><Link to="/plan/new">Составить меню</Link></section>} />
-          <Route path="*" element={<section><h1>Страница не найдена</h1><Link to="/">На главную</Link></section>} />
+          <Route path="/plan/generating" element={<RouteStatePage title="Генерация не запущена" description="Откройте настройки питания, чтобы подготовить меню." to="/plan/new" action="К настройкам" />} />
+          <Route path="/menu" element={<GuestSectionPage section="menu" />} />
+          <Route path="/shopping" element={<GuestSectionPage section="shopping" />} />
+          <Route path="/pantry" element={<GuestSectionPage section="pantry" />} />
+          <Route path="/recipe/:id" element={<RouteStatePage title="Такого рецепта нет" description="Рецепт не найден. Вы можете вернуться к своему меню." to="/menu" action="Вернуться к меню" />} />
+          <Route path="*" element={<RouteStatePage title="Страница не найдена" description="Проверьте адрес или начните с главной страницы." to="/" action="На главную" />} />
         </Routes>
       </>}
-    </main>
+    </AppLayout>
   </BrowserRouter>;
 }
+
+export function RouteStatePage({ title, description, to, action }: { title: string; description: string; to: string; action: string }) {
+  return <section className="route-state"><h1 tabIndex={-1}>{title}</h1><p>{description}</p><Link className="primary action-link" to={to}>{action}</Link></section>;
+}
+
+export function GuestSectionPage({ section }: { section: 'menu' | 'shopping' | 'pantry' }) {
+  const title = section === 'menu' ? 'Меню пока нет' : section === 'shopping' ? 'Сначала составьте меню' : 'Добавьте, что есть дома, и мы не купим лишнего';
+  return <RouteStatePage title={title} description={section === 'pantry' ? 'Продукты можно указать при настройке меню. Складские запасы пока не ведутся.' : 'Начните с настроек питания'} to="/plan/new" action={section === 'pantry' ? 'Указать продукты в мастере' : 'Составить меню'} />;
+}
+
+const navItems = [{ to: '/menu', label: 'Меню', path: 'M4 3v18M8 3v7H4m4-7v7m5-7v18m0-18c7 1 7 9 0 10' }, { to: '/shopping', label: 'Покупки', path: 'M3 3h2l3 12h10l3-9H6m3 14h.01M18 20h.01' }, { to: '/pantry', label: 'Дома', path: 'm3 10 9-7 9 7M5 9v12h14V9m-10 12v-7h6v7' }];
+function NavIcon({ path }: { path: string }) {
+  return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={path} /></svg>;
+}
+
+function AppLayout({ brand, loading, children }: { brand: string; loading: boolean; children: React.ReactNode }) {
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const shell = useRef<HTMLDivElement>(null);
+  const nav = useRef<HTMLElement>(null);
+  const fullscreen = pathname === '/plan/new' || pathname === '/plan/generating';
+  useEffect(() => {
+    if (!loading) shell.current?.querySelector<HTMLElement>('h1')?.focus();
+  }, [pathname, loading]);
+  useEffect(() => {
+    const element = nav.current;
+    const host = shell.current;
+    if (!element || !host) return;
+    const measure = () => host.style.setProperty('--nav-height', `${element.getBoundingClientRect().height}px`);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [fullscreen]);
+  return <div className={`app-shell${fullscreen ? ' fullscreen' : ''}`} ref={shell}>
+    <style>{navigationStyles}</style>
+    <a className="skip-link" href="#main">К содержимому</a>
+    {!fullscreen && <>
+      <header className="app-header">{pathname !== '/' && <Link className="brand brand-link" to="/" translate="no">{brand}</Link>}<Link className="new-menu" to="/plan/new"><span aria-hidden="true">+ </span>Новое меню</Link></header>
+      <nav className="app-nav" aria-label="Основные разделы" ref={nav}>
+        {navItems.map(item => <NavLink key={item.to} to={item.to} end><NavIcon path={item.path} /><span>{item.label}</span></NavLink>)}
+        <button type="button" onClick={() => setProfileOpen(true)} aria-haspopup="dialog"><NavIcon path="M20 21v-2a7 7 0 0 0-14 0v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8" /><span>Профиль</span></button>
+      </nav>
+    </>}
+    <main id="main" tabIndex={-1}>{children}</main>
+    {profileOpen && <ConfirmDialog title="Гостевой профиль" description="Вы пользуетесь гостевым режимом. Профиль появится позже" cancelLabel="Закрыть пояснение" confirmLabel="Вернуться к меню" onCancel={() => setProfileOpen(false)} onConfirm={() => {
+      setProfileOpen(false);
+      navigate('/menu');
+      requestAnimationFrame(() => shell.current?.querySelector<HTMLElement>('h1')?.focus());
+    }} />}
+  </div>;
+}
+
+// This temporary shell layer keeps initial tracer CSS active until the token task.
+const navigationStyles = `
+.app-header{max-width:960px;margin:auto;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand-link{min-width:0;text-decoration:none;margin:0}.new-menu{display:flex;align-items:center;min-height:44px;min-width:44px;flex-shrink:0}.app-nav{position:fixed;bottom:0;left:0;right:0;z-index:10;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:white;border-top:1px solid var(--border)}.app-nav a,.app-nav button{min-width:0;min-height:44px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;text-decoration:none;font-size:14px;line-height:1.5;overflow-wrap:anywhere;border:0;border-radius:12px;background:transparent;font-weight:400}.app-nav svg{flex-shrink:0}.app-nav [aria-current=page]{background:#E5EFE8;color:#1C7C50;font-weight:600}.app-shell main{padding-bottom:calc(var(--nav-height,88px) + 32px);scroll-margin-bottom:calc(var(--nav-height,88px) + 16px)}.fullscreen main{padding-bottom:48px}.action-link{display:flex;align-items:center;justify-content:center;min-height:48px;padding:12px 16px;border-radius:12px;text-align:center;text-decoration:none;overflow-wrap:anywhere;font-weight:600}.dialog-overlay{position:fixed;inset:0;z-index:100;background:#172B2166;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto}.confirm-dialog{background:white;border-radius:20px;padding:24px;max-width:480px;width:100%;max-height:calc(100vh - 32px);overflow-y:auto;box-shadow:0 8px 24px #172B2126}.confirm-dialog h2{font-size:24px;font-weight:600;line-height:1.2;margin:0 0 16px;overflow-wrap:anywhere}.dialog-actions{display:flex;flex-direction:column;gap:8px}.app-shell :is(a,button,input){scroll-margin-bottom:calc(var(--nav-height,88px) + 16px)}
+@media(min-width:1200px){.app-shell:not(.fullscreen){padding-left:240px}.app-nav{top:0;right:auto;bottom:0;width:240px;grid-template-columns:minmax(0,1fr);align-content:start;padding:24px 16px;border-top:0;border-right:1px solid var(--border)}.app-nav a,.app-nav button{flex-direction:row;justify-content:flex-start;padding:12px 16px;font-size:16px;gap:8px}.app-shell:not(.fullscreen) main{max-width:960px;padding:32px;padding-bottom:48px}.app-shell :is(a,button,input){scroll-margin-bottom:16px}}
+`;
 
 function StartPage({ brand }: { brand: string }) {
   // A single route instance owns the draft; repeat activation never creates a second wizard.

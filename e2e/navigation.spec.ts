@@ -94,8 +94,10 @@ test('late presence completion cannot pull the user away from a new route', asyn
   await expect(page.getByRole('heading')).toBeVisible();
   await page.evaluate(async () => {
     // Match the existing Vite test harness without requiring test-only app routes.
-    const reactUrl = '/node_modules/.vite/deps/react.js';
-    const rootUrl = '/node_modules/.vite/deps/react-dom_client.js';
+    const resources = performance.getEntriesByType('resource').map(entry => entry.name);
+    const reactUrl = resources.find(url => /\/react\.js\?/.test(url));
+    const rootUrl = resources.find(url => /\/react-dom_client\.js\?/.test(url));
+    if (!reactUrl || !rootUrl) throw new Error('Actual React module URLs were not observed');
     const appUrl = '/src/app/App.tsx';
     const { default: { createElement } } = await import(reactUrl);
     const { default: { createRoot } } = await import(rootUrl);
@@ -133,7 +135,7 @@ for (const width of [360, 390, 430, 768, 1280]) {
     const actionBox = await action.boundingBox();
     const navBox = await nav.boundingBox();
     if (width < 1200) expect(actionBox!.y + actionBox!.height).toBeLessThanOrEqual(navBox!.y);
-    await page.keyboard.press('Tab');
+    await page.keyboard.press('Shift+Tab');
     const focus = await page.locator(':focus-visible').count();
     expect(focus).toBe(1);
   });

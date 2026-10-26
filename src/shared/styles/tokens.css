@@ -138,4 +138,4 @@ body { margin: 0; min-width: 0; }
   .app-shell:not(.fullscreen) main { max-width: 960px; padding: var(--space-xl); padding-bottom: var(--space-2xl); }
   .app-shell :is(a, button, input, select, textarea, h1) { scroll-margin-bottom: var(--space-md); }
 }
-@media (prefers-reduced-motion: reduce) { .app-shell *, .app-shell *::before, .app-shell *::after { transition: none; animation: none; scroll-behavior: auto; } }
+@media (prefers-reduced-motion: reduce) { .app-shell :is(*, button), .app-shell *::before, .app-shell *::after { transition: none; animation: none; scroll-behavior: auto; } }

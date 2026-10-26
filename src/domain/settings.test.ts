@@ -80,3 +80,27 @@ it('reducers keep original data and reset calculated provenance only after manua
   rows[0].quantity = '5';
   expect(home.home[0].quantity).toBe('');
 });
+
+it('WIZ-07 precision: product-specific units reject incompatible dimensions', () => {
+  expect(Boolean(validateStep({ ...createDraft(), home: [{ productId: 'rice', quantity: '10', unit: 'ml', expiresSoon: false }] }, 4).home)).toBe(true);
+});
+
+it.each(['0', '-1', 'NaN', 'Infinity', '1e2', '1,', '1.2.3', '1 000', '0.000' ])('WIZ-07 boundary: rejects supplied quantity %s without changing raw text', quantity => {
+  const draft = { ...createDraft(), home: [{ productId: 'rice', quantity, unit: 'g' as const, expiresSoon: false }] };
+  expect(Boolean(validateStep(draft, 4).home)).toBe(true);
+  expect(draft.home[0].quantity).toBe(quantity);
+});
+it.each(['0.00000000000000000001', '0,00000000000000000001', '1.25', ' 1,25 '])('WIZ-07 precision: positive full decimal %s stays valid', quantity => {
+  expect(validateStep({ ...createDraft(), home: [{ productId: 'rice', quantity, unit: 'kg', expiresSoon: true }] }, 4)).toEqual({});
+});
+it('WIZ-07 empty: blank is unknown and needs no unit; known quantity needs one', () => {
+  expect(validateStep({ ...createDraft(), home: [{ productId: 'rice', quantity: '   ', expiresSoon: false }] }, 4)).toEqual({});
+  expect(Boolean(validateStep({ ...createDraft(), home: [{ productId: 'rice', quantity: '1', expiresSoon: false }] }, 4).home)).toBe(true);
+});
+it('WIZ-06/07 readiness rejects unknown IDs, duplicate products and unknown restrictions', () => {
+  expect(Object.keys(validateStep({ ...createDraft(), restrictions: ['invented'] }, 3)).length > 0).toBe(true);
+  expect(Object.keys(validateStep({ ...createDraft(), exclusionIds: ['invented'] }, 3)).length > 0).toBe(true);
+  const row = { productId: 'rice', quantity: '', expiresSoon: false };
+  expect(Object.keys(validateStep({ ...createDraft(), home: [row, row] }, 4)).length > 0).toBe(true);
+  expect(Object.keys(validateStep({ ...createDraft(), home: [{ ...row, productId: 'invented' }] }, 4)).length > 0).toBe(true);
+});

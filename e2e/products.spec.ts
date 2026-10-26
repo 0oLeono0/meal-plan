@@ -143,3 +143,101 @@ test('exclusions zero-one-many expiry: undo disappears after five seconds and fo
   await expect(page.getByRole('button', { name: 'Отменить удаление' })).toHaveCount(0);
   await expect(page.getByRole('combobox')).toBeFocused();
 });
+
+async function home(page: Page) {
+  await mountAppFixture(page, { draft: { step: 4, restrictions: ['no-fish'], exclusionIds: ['egg'] } });
+  await expect(page.getByRole('heading', { name: 'Продукты дома', exact: true })).toBeVisible();
+}
+test('home-products populated/partial/ordering: six popular IDs, unknown amount, duplicates focus, expiry and reload', async ({ page }) => {
+  await home(page);
+  await expect(page.getByText('Домашних продуктов пока нет')).toBeVisible();
+  const popular = page.getByRole('group', { name: 'Популярные продукты' });
+  await expect(popular.getByRole('button')).toHaveText(['Яйца', 'Курица', 'Помидоры', 'Творог', 'Рис', 'Картофель']);
+  await popular.getByRole('button', { name: 'Рис', exact: true }).click();
+  await expect(page.getByText('Количество не указано')).toBeVisible();
+  await page.getByLabel('Количество Рис', { exact: true }).fill('1,25');
+  await page.getByLabel('Единица Рис', { exact: true }).selectOption('kg');
+  await page.getByLabel('Скоро испортится Рис', { exact: true }).check();
+  await popular.getByRole('button', { name: 'Рис', exact: true }).click();
+  await expect(page.getByLabel('Количество Рис', { exact: true })).toBeFocused();
+  await choose(page, 'рис', 'Рис');
+  await expect(page.getByLabel('Количество Рис', { exact: true })).toBeFocused();
+  await expect(page.getByRole('button', { name: /^Удалить продукт/ })).toHaveCount(1);
+  await popular.getByRole('button', { name: 'Яйца', exact: true }).click();
+  await page.getByRole('button', { name: 'Удалить продукт Рис', exact: true }).click();
+  await page.getByRole('button', { name: 'Отменить удаление', exact: true }).click();
+  await expect(page.getByRole('button', { name: /^Удалить продукт/ })).toHaveText(['Удалить Рис', 'Удалить Яйца']);
+  await expect(page.getByLabel('Количество Рис', { exact: true })).toBeFocused();
+  await expect.poll(() => page.evaluate(key => JSON.parse(localStorage.getItem(key)!).draft.home.length, draftKey)).toBe(2);
+  await page.reload();
+  await expect(page.getByLabel('Количество Рис', { exact: true })).toHaveValue('1,25');
+  await expect(page.getByLabel('Единица Рис', { exact: true })).toHaveValue('kg');
+  await expect(page.getByLabel('Скоро испортится Рис', { exact: true })).toBeChecked();
+  await page.getByRole('button', { name: 'Назад', exact: true }).click();
+  await expect(page.getByRole('checkbox', { name: 'Без рыбы', exact: true })).toBeChecked();
+  await expect(page.getByRole('button', { name: 'Удалить исключение Яйца', exact: true })).toBeVisible();
+});
+
+test('home-products boundary/precision/error: invalid raw persists, unit mandatory only for known quantity', async ({ page }) => {
+  await home(page);
+  await page.getByRole('button', { name: 'Рис', exact: true }).click();
+  const amount = page.getByLabel('Количество Рис', { exact: true });
+  await amount.fill('0');
+  await page.getByRole('button', { name: 'Проверить настройки' }).click();
+  await expect(amount).toBeFocused();
+  await expect(amount).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.getByText('Настройки подготовлены', { exact: true })).toHaveCount(0);
+  await expect.poll(() => page.evaluate(key => JSON.parse(localStorage.getItem(key)!).draft.home[0].quantity, draftKey)).toBe('0');
+  await page.reload();
+  await expect(amount).toHaveValue('0');
+  await amount.fill('0.00000000000000000001');
+  await page.getByRole('button', { name: 'Проверить настройки' }).click();
+  await expect(page.getByLabel('Единица Рис', { exact: true })).toBeFocused();
+  await page.getByLabel('Единица Рис', { exact: true }).selectOption('g');
+  await page.getByRole('button', { name: 'Проверить настройки' }).click();
+  await expect(page.getByRole('heading', { name: 'Настройки подготовлены' })).toBeVisible();
+  await expect(page.getByText('0.00000000000000000001 г', { exact: true })).toBeVisible();
+});
+
+test('home-products honest review: all four steps validated, no confirmed or pantry mutation', async ({ page }) => {
+  await mountAppFixture(page, { draft: { step: 4, people: '', budget: '0' } });
+  await page.getByRole('button', { name: 'Проверить настройки' }).click();
+  await expect(page.getByLabel('Число людей', { exact: true })).toBeFocused();
+  await page.getByLabel('Число людей', { exact: true }).fill('2');
+  await page.getByRole('button', { name: 'Далее', exact: true }).click();
+  await expect(page.getByLabel('Бюджет на неделю', { exact: true })).toBeVisible();
+  await page.getByLabel('Бюджет на неделю', { exact: true }).fill('3000');
+  await expect(page.getByRole('status').filter({ hasText: 'Сохранено на этом устройстве' })).toBeVisible();
+  await page.waitForTimeout(260);
+  await page.getByRole('button', { name: 'Далее', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Предпочтения и ограничения' })).toBeVisible();
+  await page.waitForTimeout(260);
+  await page.getByRole('button', { name: 'Далее', exact: true }).click();
+  await page.getByRole('button', { name: 'Проверить настройки' }).click();
+  await expect(page.getByRole('heading', { name: 'Настройки подготовлены' })).toBeFocused();
+  await expect(page.getByText('Запуск меню будет доступен на следующем этапе')).toBeVisible();
+  await expect(page.getByText('Цель КБЖУ не указана', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Составить меню', exact: true })).toHaveCount(0);
+  expect(await page.evaluate(() => [localStorage.getItem('mealplan:confirmed'), localStorage.getItem('mealplan:pantry')])).toEqual(['confirmed', 'pantry']);
+  await page.getByRole('button', { name: 'Назад', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Предпочтения и ограничения' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Настройки подготовлены' })).toHaveCount(0);
+});
+
+test('home-products zero-one-many/overflow: all rows wrap at 360, last removal and undo preserve unknown quantity', async ({ page }) => {
+  await home(page);
+  await page.setViewportSize({ width: 360, height: 800 });
+  for (const name of ['Яйца', 'Курица', 'Помидоры', 'Творог', 'Рис', 'Картофель']) await page.getByRole('group', { name: 'Популярные продукты' }).getByRole('button', { name, exact: true }).click();
+  await expect(page.getByRole('button', { name: /^Удалить продукт/ })).toHaveCount(6);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const last = page.getByRole('button', { name: 'Удалить продукт Картофель', exact: true });
+  await last.focus();
+  const bounds = await last.boundingBox();
+  const footer = await page.locator('.sticky-actions').boundingBox();
+  expect(bounds!.y + bounds!.height <= footer!.y).toBe(true);
+  for (const name of ['Яйца', 'Курица', 'Помидоры', 'Творог', 'Рис', 'Картофель']) await page.getByRole('button', { name: `Удалить продукт ${name}`, exact: true }).click();
+  await expect(page.getByText('Домашних продуктов пока нет')).toBeVisible();
+  await page.getByRole('button', { name: 'Отменить удаление', exact: true }).click();
+  await expect(page.getByLabel('Количество Картофель', { exact: true })).toHaveValue('');
+  await expect(page.getByText('Количество не указано')).toBeVisible();
+});

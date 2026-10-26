@@ -26,7 +26,11 @@ export function Wizard({ draft, onChange, recovery = false, saved = false, onRes
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
-  function change(action: DraftAction) { touched.current = true; onChange(action); }
+  function change(action: DraftAction) {
+    touched.current = true;
+    if (action.type === 'clearManualNutrition') setErrors({});
+    onChange(action);
+  }
   function exit() {
     if (touched.current || JSON.stringify(draft) !== JSON.stringify(createDraft())) setExitOpen(true);
     else navigate('/');

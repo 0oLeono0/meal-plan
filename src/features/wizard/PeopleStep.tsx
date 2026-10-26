@@ -1,5 +1,6 @@
 import type { DraftAction, SettingsDraft, StepErrors } from '../../domain/settings';
 import { Button, Field } from '../../shared/ui';
+import { NutritionFields } from './NutritionFields';
 
 export interface PeopleStepProps {
   draft: SettingsDraft;
@@ -45,5 +46,6 @@ export function PeopleStep({ draft, onChange, errors, disabled = false }: People
       {errors.goal && <p className="field-error" id="goal-error">{errors.goal}</p>}
     </fieldset>
     <div className="card">{counter('days', 'Число дней', 7)}</div>
+    <NutritionFields draft={draft} onChange={onChange} errors={errors} disabled={disabled} />
   </>;
 }

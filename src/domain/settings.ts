@@ -1,3 +1,5 @@
+import { parseManualTarget } from './nutritionTarget';
+
 export type Step = 1 | 2 | 3 | 4;
 export type Goal = 'maintain' | 'lose' | 'gain';
 export type Unit = 'g' | 'kg' | 'ml' | 'l' | 'pcs';
@@ -71,6 +73,7 @@ export type DraftAction =
   | { type: 'exclusions'; value: string[] }
   | { type: 'home'; value: HomeDraftRow[] }
   | { type: 'manualNutrition'; field: keyof ManualNutrition; value: string }
+  | { type: 'clearManualNutrition' }
   | { type: 'calculatedNutrition'; value: ManualNutrition; formulaVersion: string; sourceRef: string };
 
 export function draftReducer(draft: SettingsDraft, action: DraftAction): SettingsDraft {
@@ -84,13 +87,14 @@ export function draftReducer(draft: SettingsDraft, action: DraftAction): Setting
     case 'exclusions': return { ...draft, exclusionIds: [...action.value] };
     case 'home': return { ...draft, home: action.value.map(row => ({ ...row })) };
     case 'manualNutrition': return { ...draft, manualNutrition: { ...draft.manualNutrition, [action.field]: action.value }, targetSource: { kind: 'manual' } };
+    case 'clearManualNutrition': return { ...draft, manualNutrition: { calories: '', protein: '', fat: '', carbohydrates: '' }, targetSource: { kind: 'manual' } };
     case 'calculatedNutrition': return action.formulaVersion.trim() && action.sourceRef.trim()
       ? { ...draft, manualNutrition: { ...action.value }, targetSource: { kind: 'calculated', formulaVersion: action.formulaVersion, sourceRef: action.sourceRef } }
       : draft;
   }
 }
 
-export type StepErrors = Partial<Record<'people' | 'days' | 'goal' | 'budget' | 'manualNutrition' | 'home', string>>;
+export type StepErrors = Partial<Record<'people' | 'days' | 'goal' | 'budget' | 'manualNutrition' | 'home' | keyof ManualNutrition, string>>;
 const integerBetween = (raw: string, min: number, max: number) => /^\d+$/.test(raw) && Number.isSafeInteger(Number(raw)) && Number(raw) >= min && Number(raw) <= max;
 const finiteNumber = (raw: string) => /^\d+(?:[.,]\d+)?$/.test(raw.trim()) && Number.isFinite(Number(raw.replace(',', '.')));
 
@@ -100,10 +104,10 @@ export function validateStep(draft: SettingsDraft, step: Step = draft.step): Ste
     if (!integerBetween(draft.people, 1, 10)) errors.people = 'Укажите от 1 до 10 человек';
     if (!integerBetween(draft.days, 1, 7)) errors.days = 'Укажите от 1 до 7 дней';
     if (!isGoal(draft.goal)) errors.goal = 'Выберите цель питания';
-    const values = Object.values(draft.manualNutrition);
-    if (values.some(value => value !== '')) {
-      if (values.some(value => value === '')) errors.manualNutrition = 'Заполните все поля нормы или очистите их';
-      else if (values.some(value => !finiteNumber(value)) || Number(draft.manualNutrition.calories.replace(',', '.')) <= 0) errors.manualNutrition = 'Калории должны быть больше 0, Б/Ж/У — не меньше 0. Введите конечные числа';
+    const nutrition = parseManualTarget(draft.manualNutrition);
+    if (nutrition.status === 'invalid') {
+      Object.assign(errors, nutrition.errors);
+      errors.manualNutrition = nutrition.message;
     }
   }
   if (step === 2 && !integerBetween(draft.budget, 500, Number.MAX_SAFE_INTEGER)) errors.budget = 'Введите целое число рублей от 500';

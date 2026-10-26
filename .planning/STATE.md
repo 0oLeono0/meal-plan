@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: P0 MVP
 current_phase: 1
 current_phase_name: Гостевой старт и сохраняемые настройки
-current_plan: 5
+current_plan: 6
 status: executing
-stopped_at: Completed 01-04-PLAN.md; next 01-05
-last_updated: "2026-10-26T16:49:10.409Z"
+stopped_at: Completed 01-05-PLAN.md; next 01-06
+last_updated: "2026-10-26T16:59:16.824Z"
 last_activity: 2026-10-26
-last_activity_desc: 01-04 выполнен; 71 unit, 15 wizard/nutrition и 3 storage Chromium tests, typecheck/lint/build passed
-state_head: be5d526080322351ba1ef46baf3f72d0245d7fa8
+last_activity_desc: 01-05 выполнен; 96 unit, 30 Chromium и 18 после error-scroll fix; typecheck/lint/build passed
+state_head: 0c231d2d607988535da319ee976050a4a0d2dcf6
 progress:
   total_phases: 7
   completed_phases: 0
   total_plans: 8
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -25,34 +25,34 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-25)
 
 **Core value:** Допустимое меню с прозрачным бюджетом и согласованные покупки с количественным учётом домашних запасов.
-**Current focus:** Phase 1 — 01-04 завершён: люди/дни/цель, сохраняемая навигация и ручная норма. Следующий план 01-05; калькулятор остаётся за gate 01-07.
+**Current focus:** Phase 1 — 01-05 завершён: точный бюджет, время и разнообразие. Следующий план 01-06; калькулятор остаётся за gate 01-07.
 
 ## Current Position
 
 Phase: 1 (Гостевой старт и сохраняемые настройки)
-Current Plan: 5
+Current Plan: 6
 Total Plans in Phase: 8
 Status: Ready to execute
-Last activity: 2026-10-26 — 01-04: 2/2 tasks, 71 unit + 15 wizard/nutrition Chromium + 3 storage regressions; typecheck/lint/build passed
+Last activity: 2026-10-26 — 01-05: 2/2 tasks, 96 unit + 30 Chromium; после error-scroll fix 18 budget/wizard passed; typecheck/lint/build passed
 
-Progress: [█████░░░░░] 50% текущей фазы (4/8); будущие фазы ещё не имеют планов исполнения
+Progress: [██████░░░░] 62.5% текущей фазы (5/8); будущие фазы ещё не имеют планов исполнения
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 12.5 min
-- Total execution time: 0.83 hours
+- Total plans completed: 5
+- Average duration: 11.8 min
+- Total execution time: 0.98 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01 | 4 | 50 min | 12.5 min |
+| 01 | 5 | 59 min | 11.8 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (12 min), 01-02 (13 min), 01-03 (14 min), 01-04 (11 min)
-- Trend: четыре завершённых плана
+- Last 5 plans: 01-01 (12 min), 01-02 (13 min), 01-03 (14 min), 01-04 (11 min), 01-05 (9 min)
+- Trend: пять завершённых планов
 
 **Per-Plan Metrics:**
 
@@ -62,6 +62,7 @@ Progress: [█████░░░░░] 50% текущей фазы (4/8); б
 | Phase 01 P02 | 13 min | 2 tasks | 9 files |
 | Phase 01 P03 | 14 min | 2 tasks | 10 files |
 | Phase 01 P04 | 11 min | 2 tasks | 9 files |
+| Phase 01 P05 | 9 min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -73,15 +74,16 @@ Progress: [█████░░░░░] 50% текущей фазы (4/8); б
 - Гостевой сценарий, локальные mock-адаптеры и детерминированные расчёты; без платных API и обязательного Firebase.
 - Подробное frontend-ТЗ первично, включая F §12.1; макеты не повышают P1/P2 до P0.
 - C/Q остаются открытыми до решения с основанием; рекомендация исследования не равна принятому бизнес-правилу.
-- Пользователь разрешил разработку и явно подтвердил 16 exact pins; provenance записан. 01-01–01-04 реализованы и проверены, следующие планы ещё не исполнены.
+- Пользователь разрешил разработку и явно подтвердил 16 exact pins; provenance записан. 01-01–01-05 реализованы и проверены, следующие планы ещё не исполнены.
 - [Phase 01]: 01-01 uses versioned guest draft separate from confirmed settings and global pantry; corrupt records retained until explicit reset
 - [Phase 01]: 01-02 uses one CSS-responsive navigation DOM and Safari15-compatible custom modal; tokens override index fallback without new dependencies
 - [Phase 01]: 01-03 exact-key reset waits for started writes; two tabs retain independent memory; calculator gate validates completeness without selecting a decision
 - [Phase 01]: 01-04 raw text counters and derived manual person-day target retain partial strings; calculator C-04/Q-03 remains gated in 01-07
+- [Phase 01]: 01-05 exact budget >=500 is canonical; slider projection and person-day hint are derived; time/variety use existing draft actions
 
 ### Pending Todos
 
-Продолжить 01-05 (бюджет/время/разнообразие). WIZ-03 закрыт; общие APP-01/APP-02/APP-03/WIZ-01/WIZ-02/UX-01 остаются открыты до завершения остальных планов-владельцев. WIZ-09 требует отдельного решения C-04/Q-03.
+Продолжить 01-06 (ограничения и домашние продукты). WIZ-03/WIZ-04/WIZ-05 закрыты; общие APP-01/APP-02/APP-03/WIZ-01/WIZ-02/UX-01 остаются открыты до завершения остальных планов-владельцев. WIZ-09 требует отдельного решения C-04/Q-03.
 
 ### Blockers/Concerns
 
@@ -100,6 +102,6 @@ Progress: [█████░░░░░] 50% текущей фазы (4/8); б
 
 ## Session Continuity
 
-Last session: 2026-10-26T16:49:10.354Z
-Stopped at: Completed 01-04-PLAN.md; next 01-05
+Last session: 2026-10-26T16:59:16.771Z
+Stopped at: Completed 01-05-PLAN.md; next 01-06
 Resume file: None

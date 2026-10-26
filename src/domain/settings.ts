@@ -1,5 +1,6 @@
 import { parseManualTarget } from './nutritionTarget';
 import { parseBudget } from './budget';
+import { productNames } from '../adapters/products';
 
 export type Step = 1 | 2 | 3 | 4;
 export type Goal = 'maintain' | 'lose' | 'gain';
@@ -95,9 +96,26 @@ export function draftReducer(draft: SettingsDraft, action: DraftAction): Setting
   }
 }
 
-export type StepErrors = Partial<Record<'people' | 'days' | 'goal' | 'budget' | 'manualNutrition' | 'home' | keyof ManualNutrition, string>>;
+export const dietaryRestrictions = [
+  { id: 'no-fish', label: 'Без рыбы' }, { id: 'gluten-free', label: 'Без глютена' }, { id: 'lactose-free', label: 'Без лактозы' },
+  { id: 'vegetarian', label: 'Вегетарианство' }, { id: 'halal', label: 'Халяль' },
+] as const;
+export type StepErrors = Partial<Record<'people' | 'days' | 'goal' | 'budget' | 'manualNutrition' | 'home' | 'restrictions' | 'exclusion-search' | `quantity-${string}` | `unit-${string}` | keyof ManualNutrition, string>>;
 const integerBetween = (raw: string, min: number, max: number) => /^\d+$/.test(raw) && Number.isSafeInteger(Number(raw)) && Number(raw) >= min && Number(raw) <= max;
-const finiteNumber = (raw: string) => /^\d+(?:[.,]\d+)?$/.test(raw.trim()) && Number.isFinite(Number(raw.replace(',', '.')));
+export function parseHomeQuantity(raw: string): { status: 'unknown' } | { status: 'invalid' } | { status: 'known'; value: number } {
+  const text = raw.trim();
+  if (!text) return { status: 'unknown' };
+  const value = Number(text.replace(',', '.'));
+  return /^\d+(?:[.,]\d+)?$/.test(text) && Number.isFinite(value) && value > 0 ? { status: 'known', value } : { status: 'invalid' };
+}
+export function validateHomeRow(row: HomeDraftRow): StepErrors {
+  const product = productNames.find(product => product.id === row.productId);
+  if (!product) return { [`quantity-${row.productId}`]: 'Продукт отсутствует в справочнике. Удалите строку и выберите продукт заново' };
+  const quantity = parseHomeQuantity(row.quantity);
+  if (quantity.status === 'invalid') return { [`quantity-${row.productId}`]: 'Введите количество больше 0 или оставьте поле пустым' };
+  if (quantity.status === 'known' && (!row.unit || !product.allowedUnits.includes(row.unit))) return { [`unit-${row.productId}`]: 'Выберите подходящую единицу количества' };
+  return {};
+}
 
 export function validateStep(draft: SettingsDraft, step: Step = draft.step): StepErrors {
   const errors: StepErrors = {};
@@ -112,6 +130,13 @@ export function validateStep(draft: SettingsDraft, step: Step = draft.step): Ste
     }
   }
   if (step === 2 && parseBudget(draft.budget) === null) errors.budget = 'Введите целое число рублей от 500';
-  if (step === 4 && draft.home.some(row => row.quantity !== '' && (!finiteNumber(row.quantity) || Number(row.quantity.replace(',', '.')) <= 0 || !row.unit))) errors.home = 'Укажите количество больше 0 и подходящую единицу или оставьте количество пустым';
+  if (step === 3) {
+    if (draft.restrictions.some(id => !dietaryRestrictions.some(option => option.id === id)) || new Set(draft.restrictions).size !== draft.restrictions.length) errors.restrictions = 'Сохранённое ограничение неизвестно. Выберите ограничения из списка заново';
+    if (draft.exclusionIds.some(id => !productNames.some(product => product.id === id)) || new Set(draft.exclusionIds).size !== draft.exclusionIds.length) errors['exclusion-search'] = 'Проверьте исключения: удалите неизвестные продукты и выберите их из справочника';
+  }
+  if (step === 4) {
+    draft.home.forEach(row => Object.assign(errors, validateHomeRow(row)));
+    if (Object.keys(errors).length || new Set(draft.home.map(row => row.productId)).size !== draft.home.length) errors.home = 'Проверьте количество, единицы и повторяющиеся продукты';
+  }
   return errors;
 }

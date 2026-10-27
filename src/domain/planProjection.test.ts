@@ -88,4 +88,27 @@ describe('whole-period exact projection', () => {
     expect(result.rows[0].required.amount).toEqual(rational(100n, 3n));
     expect(result.familyNutrition.calories).toEqual(decimal('40'));
   });
+  it('spends the same product stock only once across distinct profiles', () => {
+    const other = { ...food, profileId: 'second' };
+    const data = fixture(stock('300'), [food, other]);
+    const secondRecipe = { ...data.inputs.catalog.recipes[1], ingredients: [{ productId: 'rice', profileId: 'second', quantity: { amount: decimal('300'), unit: 'g' as const } }] };
+    const inputs = createPlanInputs(data.inputs.appliedSettings, { ...data.inputs.catalog, recipes: [data.inputs.catalog.recipes[0], secondRecipe] }, { seed: 'test', now: () => new Date(2026, 9, 27), pantrySnapshot: stock('300') });
+    const result = projected({ inputs, variant: { ...data.variant, instances: [data.variant.instances[0], { ...data.variant.instances[1], recipeSnapshot: secondRecipe }] } });
+    expect(result.rows.map(row => formatExact(row.covered.amount))).toEqual(['200', '100']);
+    expect(result.costs.exact.purchase).toEqual(decimal('40'));
+  });
+  it('uses evidenced product conversion to cover mass with volume stock', () => {
+    const converted = { ...food, conversions: [{ productId: 'rice', profileId: 'raw', from: { amount: decimal('1'), unit: 'ml' as const }, to: { amount: decimal('2'), unit: 'g' as const }, evidence: source }] };
+    const result = projected(fixture(stock('100', 'ml'), [converted]));
+    expect(result.rows[0].covered.amount).toEqual(decimal('200'));
+    expect(result.costs.exact.purchase).toEqual(decimal('60'));
+    expect(result.pantryIssues).toEqual([]);
+  });
+  it('rejects forged snapshots, duplicate sources and nonpositive portions', () => {
+    const data = fixture(); const first = data.variant.instances[0];
+    for (const instance of [{ ...first, recipeSnapshot: { ...first.recipeSnapshot, baseServings: decimal('1') } }, { ...first, selectedServings: decimal('0') }, { ...first, date: '2027-01-01' }]) {
+      expect(projection.projectPlan(data.inputs, { id: 'bad', instances: [instance] }).status).toBe('invalid');
+    }
+    expect(projection.projectPlan(data.inputs, { id: 'bad', instances: [first, first] }).status).toBe('invalid');
+  });
 });

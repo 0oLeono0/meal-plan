@@ -84,3 +84,22 @@ Typecheck первоначально вернул TS2550: тест исполь�
 Полные Chromium/Firefox 112+112 относятся к запуску до узкого исправления фокуса; после него повторены все navigation/storage/accessibility этих браузеров. Остальные неизменённые сценарии не выдаются за повторный полный прогон. Полный финальный WebKit проверяет все 112 кейсов после исправления.
 
 WIZ-09 принимается только как фактически проверенный amended manual P0: optional absence, partial/correction/clear, full values/raw reload/manual origin. Остальные общие IDs плана сохраняют Pending до итогового verifier и обязательных human gates; перечисленный выше automated coverage не равен полной приёмке. Всего выполнено 8/8 планов, но **Phase 1 awaiting verification**, приложение и весь P0 ещё не приняты. Шесть групп непроведённых проверок также записаны в `.planning/WINDOWS.md` (entries 4–9).
+
+## UI contract remediation — 2026-10-27
+
+Commit `6ebde75` устраняет три priority findings из `01-UI-REVIEW.md`: общие choice-label теперь flex/center/gap8/margin0 и ≥44px; бюджет 32px/600 с видимым ₽, raw value/slider aria сохранены; mobile footer до 768px имеет отдельные полные строки. Footer по-прежнему измеряется ResizeObserver. Дополнительный scroll-margin всего field учитывает его высоту и сохраняет ошибку над панелью при 200% CSS text. Общий accent, label400, spacing8/16 и общий словарь целей также выровнены с контрактом. Подпись поиска — «Найти продукт»; отдельная кнопка «Добавить продукт» остаётся открытым C1 interaction finding, выбор результата сразу добавляет ID.
+
+| Выполненный запуск | Фактический результат |
+|---|---|
+| `npx playwright test e2e/presentation.spec.ts --project=chromium --grep 'contract 360px' --reporter=list` до исправления | **3 failed**, ожидаемые RED: block/16px/CTA144px вместо296px |
+| Та же команда после исходного исправления | **3 passed** |
+| `npx playwright test e2e/presentation.spec.ts e2e/accessibility.spec.ts e2e/wizard.spec.ts e2e/budget.spec.ts e2e/products.spec.ts --project=chromium --reporter=list` | **68 passed / 1 failed**; ошибка бюджета 360px/200% перекрывалась новой высокой панелью, затем исправлена scroll-margin |
+| `npx playwright test e2e/budget.spec.ts e2e/accessibility.spec.ts e2e/presentation.spec.ts --project=chromium --grep 'overflow/long-text\|contract\|sticky errors' --reporter=list` после последнего CSS fix | **23 passed**, 31.1s; 12 contract cases, 7 all-step200% cases, 3 budget overflow и manual journey |
+| `npx playwright test e2e/presentation.spec.ts e2e/accessibility.spec.ts e2e/budget.spec.ts e2e/wizard.spec.ts --project=webkit --grep 'presentation\|accessibility\|overflow/long-text\|WIZ-03 boundary\|D-04 navigation\|budget exact field' --reporter=list` на окончательном коде | **47 passed**, 1.6min; вся presentation/accessibility, бюджет 500/1050/20000, overflow, критические navigation/persistence cases |
+| `npm run test:unit -- --run`, `npm run typecheck`, `npm run lint`, `npm run build` на окончательном коде | **134 passed / 4 files**, остальные **exit 0**; build 561ms |
+
+Browser versions: Chromium 156.0.8078.4, WebKit 27.2. Исходные 112-case браузерные проверки выше не повторены целиком и не суммируются с этими targeted runs как новый full-suite pass. Устаревшее визуальное замечание выше об обычном input бюджета относится к кадрам до remediation.
+
+Фактически просмотрены обновлённые screenshots `.tmp/phase01-qa/chromium-360-step2.png`, `chromium-390-step1.png`, `chromium-768-step4.png`, `chromium-1280-step2.png`; сопоставлены PDF reference pages 1/6. Виден крупный бюджет/₽, выровненные подписи, зелёный выбор и полная мобильная ширина primary. Full-page положение sticky не используется как доказательство постоянного перекрытия; видимость поля/ошибки подтверждают geometry assertions. Артефакты локальны и gitignored, production data не использовались. Ни новые баллы UI-аудита, ни human acceptance не объявлялись.
+
+Открытые проверки real iOS/keyboard/safe-area, Safari15, native zoom, screen reader/полный contrast, визуальное одобрение, LCP и judgement backstops сохраняются. Phase 1 всё ещё awaiting verification/acceptance; Phase 2 не запускалась.

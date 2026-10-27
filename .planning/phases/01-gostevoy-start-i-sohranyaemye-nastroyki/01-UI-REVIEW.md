@@ -85,3 +85,28 @@ Web Design Guidelines получены 2026-10-27 из [официального
 - Перечисленные выше фактически открытые QA/PDF PNG.
 
 Recommendation count: 3 priority fixes; 5 дополнительных рекомендаций (C1, C2, CO1, T2, S2). V1/T1 и V2/S1 — разные аспекты тех же исправлений, не искусственно увеличенное число задач.
+
+## Remediation — 2026-10-27
+
+Исправление `6ebde75` выполнено после аудита. Исходные findings и 15/24 выше сохранены как историческая baseline; новые баллы не выставлялись. Это targeted remediation, не повтор всей приёмки фазы.
+
+| Finding | Disposition | Реальное изменение / evidence |
+|---|---|---|
+| V2 / S1, priority 1 | fixed | Choice-label имеет явные flex/center/gap 8px/margin 0/min-height 44px; у целей добавлен gap 8px между строками. Browser computed styles проверены на шагах 1–4 при 360/390/768/1280. |
+| V1 / T1, priority 2 | fixed | Редактируемое поле бюджета — 32px/600/tabular-nums, рядом виден ₽. Raw input и truthful slider aria не менялись; проверены пробелы, 1050→1100, длинное значение и невалидная частичная строка. |
+| E1, priority 3 | fixed | До 768px CTA занимает отдельную полную строку; с 768px остаются две колонки. ResizeObserver сохраняет реальную высоту footer; блок поля теперь учитывает эту высоту в scroll-margin-bottom, чтобы ошибка не уходила за увеличенную панель. |
+| CO1 | fixed | Общий semantic accent-color для native radio/checkbox/range; выбранные controls шага 1 зелёные в новых screenshots. Это не полный contrast pass. |
+| T2 | fixed | Label/choice text 14px/400, legend 600; четыре размера и два веса сохранены. |
+| S2 | fixed | Padding 12px заменён на интервалы шкалы 8/16px; listbox p-4, review list pl-4. Разрешённый radius 12px сохранён. Targets остаются ≥44px, primary ≥48px. |
+| C2 | fixed | PeopleStep и DraftReview используют общий presentation-словарь goalLabels: «Поддержание веса / Похудение / Набор массы»; persisted IDs прежние. |
+| C1 | partially fixed; interaction finding remains | Label возвращён к «Найти продукт». Выбор результата по-прежнему сразу добавляет product ID. Отдельная кнопка «Добавить продукт» не введена: это изменение interaction вне presentation fix. Контракт не переписан, waiver/принятие расхождения не заявлены. |
+
+### Verification evidence
+
+- RED до исправления: три browser tests 360px упали на фактических `block` вместо `flex`, 16px вместо 32px, CTA 144px вместо доступных 296px. После исправления эти три прошли; итоговый contract набор — 12 cases по четырём ширинам.
+- Chromium broad targeted run: 69 cases, **68 passed / 1 failed**. Единственный failure — длинная ошибка бюджета на 360px при CSS text 200%: низ 640.39px за верхом footer 620px. Добавлен scroll-margin блока поля на измеренную высоту footer +16px. После этого затронутый набор **23/23 passed** (31.1s); результат не выдаётся за полный повтор всех 69.
+- На окончательном коде WebKit 27.2: **47/47 passed** (1.6min): все presentation/accessibility, exact budget и overflow, критические wizard navigation/persistence cases. Chromium 156.0.8078.4. Полные три браузерных набора повторно не запускались; исходные проверки до remediation остаются отдельной историей.
+- На окончательном коде unit **134/134**, typecheck/lint/build **exit 0**; git diff --check passed. Новых зависимостей, endpoints, финансовых/пищевых правил нет.
+- Фактически открыты новые `.tmp/phase01-qa/chromium-{360-step2,390-step1,768-step4,1280-step2}.png` и PDF reference pages 1/6. Сумма стала визуальным акцентом, подписи идут рядом с controls, мобильные кнопки в отдельных полных строках. Системный шрифт, вертикальные списки и explanatory copy сохранены по scope. Pixel-perfect/визуальное одобрение человека не заявляются. PNG остаются gitignored, использованы только локальные тестовые данные.
+
+Для смещений прокрутки сверена документация [MDN scroll-padding-bottom](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scroll-padding-bottom); реализация использует уже измеренную высоту footer в scroll-margin блока, без новых API/состояния. Все прежние human_needed (реальные iOS keyboard/safe-area, исторический Safari15, native browser zoom, screen reader/полный contrast, визуальная приёмка, LCP и UX backstops) остаются открыты. Phase 1 не объявлена complete, Phase 2 не запускалась.

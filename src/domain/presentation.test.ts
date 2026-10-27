@@ -54,6 +54,7 @@ describe('canonical Russian plan presentation', () => {
     const shopping = presentation.selectPlanPresentation(value, { status: 'absent' });
     expect(menu).toEqual(shopping);
     expect(menu.costs).toEqual({ ingredient: '0,02 ₽', purchase: '0,02 ₽', covered: '0,00 ₽', remaining: '499,98 ₽', limit: '500,00 ₽' });
+    expect(menu.days[0].ingredientCost).toBe('0,02 ₽');
     expect(menu.itemCount).toBe('2 товара'); expect(menu.instanceCount).toBe('1 блюдо');
     expect(menu.purchases[0].sourceCount).toBe('1 блюдо');
     expect(menu.purchases[0].priceSource).toEqual({ sourceId: 'synthetic-price', recordId: 'synthetic-test', url: source.url, region: 'Синтетический регион', observedAt: '1 октября 2026 г.', estimate: true });

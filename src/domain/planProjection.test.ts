@@ -110,5 +110,7 @@ describe('whole-period exact projection', () => {
       expect(projection.projectPlan(data.inputs, { id: 'bad', instances: [instance] }).status).toBe('invalid');
     }
     expect(projection.projectPlan(data.inputs, { id: 'bad', instances: [first, first] }).status).toBe('invalid');
+    expect(projection.projectPlan(data.inputs, { id: 99, instances: [first] } as unknown as PlanVariant).status).toBe('invalid');
+    expect(projection.projectPlan(data.inputs, { id: 'bad', instances: [{ ...first, id: 99 }] } as unknown as PlanVariant).status).toBe('invalid');
   });
 });

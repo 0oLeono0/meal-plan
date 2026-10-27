@@ -23,6 +23,7 @@ export interface InstanceProjection {
 }
 export interface DayProjection {
   readonly date: string; readonly familyNutrition: Nutrition; readonly personNutrition: Nutrition; readonly ingredientCost: Rational;
+  readonly ingredientKopecks: bigint;
 }
 export interface BudgetCheck {
   readonly accepted: boolean; readonly exactWithinLimit: boolean; readonly displayedWithinLimit: boolean;
@@ -45,6 +46,7 @@ const zeroNutrition = (): Nutrition => ({ calories: zero(), protein: zero(), fat
 const plusNutrition = (left: Nutrition, right: Nutrition): Nutrition => ({ calories: add(left.calories, right.calories), protein: add(left.protein, right.protein), fat: add(left.fat, right.fat), carbohydrates: add(left.carbohydrates, right.carbohydrates) });
 const divideNutrition = (values: Nutrition, divisor: Rational): Nutrition => ({ calories: divide(values.calories, divisor), protein: divide(values.protein, divisor), fat: divide(values.fat, divisor), carbohydrates: divide(values.carbohydrates, divisor) });
 function fail(code: string): never { throw new RangeError(code); }
+const validId = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0 && value.length <= 256;
 export function checkPurchaseBudget(purchase: Rational, purchaseKopecks: bigint, limit: Rational): BudgetCheck {
   if (compare(purchase, zero()) < 0 || compare(limit, zero()) < 0 || purchaseKopecks < 0n) fail('INVALID_BUDGET');
   const exactWithinLimit = compare(purchase, limit) <= 0;
@@ -61,13 +63,13 @@ export function projectPlan(rawInputs: PlanInputs, variant: PlanVariant): Projec
     const validated = validatePlanInputs(rawInputs);
     if (validated.status === 'invalid') return validated;
     const inputs = validated.inputs;
-    if (!variant.id || !Array.isArray(variant.instances) || variant.instances.length > inputs.dates.length * mealSlots.length) fail('INVALID_VARIANT');
+    if (!validId(variant.id) || !Array.isArray(variant.instances) || variant.instances.length > inputs.dates.length * mealSlots.length) fail('INVALID_VARIANT');
     const ids = new Set<string>(), slots = new Set<string>();
     const aggregates = new Map<string, { food: FoodProfile; quantity: Quantity; sources: Contribution[] }>();
     const instanceRows: InstanceProjection[] = [];
     for (const instance of variant.instances) {
       const recipe = inputs.catalog.recipes.find(entry => entry.id === instance.recipeId);
-      if (!instance.id || ids.has(instance.id) || !inputs.dates.includes(instance.date) || !mealSlots.includes(instance.slot)
+      if (!validId(instance.id) || ids.has(instance.id) || !inputs.dates.includes(instance.date) || !mealSlots.includes(instance.slot)
         || slots.has(`${instance.date}/${instance.slot}`) || instance.catalogVersion !== inputs.catalogVersion
         || !recipe || !recipe.slots.includes(instance.slot) || !sameSnapshot(recipe, instance.recipeSnapshot)) fail('INVALID_RECIPE_REFERENCE');
       const servings = rational(instance.selectedServings.numerator, instance.selectedServings.denominator);
@@ -128,7 +130,13 @@ export function projectPlan(rawInputs: PlanInputs, variant: PlanVariant): Projec
     const days = inputs.dates.map(date => {
       const selected = instanceRows.filter(row => row.instance.date === date);
       const familyNutrition = selected.reduce((total, row) => plusNutrition(total, row.familyNutrition), zeroNutrition());
-      return { date, familyNutrition, personNutrition: divideNutrition(familyNutrition, decimal(String(inputs.appliedSettings.people))), ingredientCost: selected.reduce((total, row) => add(total, row.ingredientCost), zero()) };
+      // Canonical day display follows rounded product rows too. The period has its own
+      // product aggregation: never distribute purchase/rounding residuals arbitrarily among days.
+      const ingredientKopecks = rows.reduce((sum, row) => {
+        const dayAmount = row.sources.filter(source => source.date === date).reduce((amount, source) => add(amount, source.quantity.amount), zero());
+        return sum + roundHalfUp(multiply(row.costs.exact.ingredient, divide(dayAmount, row.required.amount)), 2);
+      }, 0n);
+      return { date, familyNutrition, personNutrition: divideNutrition(familyNutrition, decimal(String(inputs.appliedSettings.people))), ingredientCost: selected.reduce((total, row) => add(total, row.ingredientCost), zero()), ingredientKopecks };
     });
     const familyNutrition = instanceRows.reduce((total, row) => plusNutrition(total, row.familyNutrition), zeroNutrition());
     // Nutrients retain their exact source arithmetic; no stock/currency rounding can affect them.

@@ -77,7 +77,7 @@ export function selectPlanPresentation(value: PlanProjection, target: AppliedSet
     budgetCheck: value.budget.check, familyNutrition: formatNutrition(value.familyNutrition), averagePersonDayNutrition: formatNutrition(value.averagePersonDayNutrition),
     targetComparison: compareNutritionTarget(value.averagePersonDayNutrition, target),
     days: value.days.map(day => ({ date: formatDateOnly(day.date), dateOnly: day.date, personNutrition: formatNutrition(day.personNutrition), familyNutrition: formatNutrition(day.familyNutrition),
-      ingredientCost: formatCurrency(roundHalfUp(day.ingredientCost, 2)), costBasis: 'Полная стоимость ингредиентов семьи за день', targetComparison: compareNutritionTarget(day.personNutrition, target) })),
+      ingredientCost: formatCurrency(day.ingredientKopecks), costBasis: 'Полная стоимость ингредиентов семьи за день', targetComparison: compareNutritionTarget(day.personNutrition, target) })),
     purchases: value.purchases.map(presentRow), covered: value.covered.map(presentRow),
     categories: categories.map(category => ({ category, rows: value.purchases.filter(row => row.category === category).map(presentRow) })),
     pantryIssues: value.pantryIssues.map(issue => ({ ...issue, message: issue.code === 'UNKNOWN_PANTRY_QUANTITY' ? 'Количество дома неизвестно — запас не уменьшает покупки' : 'Единица запаса несовместима с потребностью — запас не уменьшает покупки' })),

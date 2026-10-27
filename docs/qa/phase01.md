@@ -64,6 +64,10 @@ Playwright MCP также реально использован на отдел�
 
 ## Остающиеся проверки
 
+### Дополнение оркестратора 2026-10-27: повтор Firefox после review fixes
+
+Исторический teardown error `Browser.removeBrowserContext / _maybeDontRestoreTabs` не скрыт. На неизменённых исходниках проблемный skip-link case затем прошёл 1/1 с одним worker и 3/3 с обычными двумя workers; полный затронутый Firefox-набор guest/storage/storage-retry/nutrition/accessibility прошёл **62/62**, exit 0, 64.172s. Логи/XML/JSON: `.tmp/phase01-qa/review-firefox-final.*`. Причинность настройки workers не установлена, код и browser preferences не менялись. Результаты всех затронутых областей теперь green по отдельным запускам Chromium/WebKit/Firefox, не один фиктивный full-suite. Прежние human/device gates остаются открытыми до независимой приёмки.
+
 Human/backstop: настоящий iOS с клавиатурой и safe-area, исторический Safari 15, screen reader/полный contrast review, browser zoom, визуальное одобрение всех экранов, двухвкладочный UX и методика LCP Q-17. Desktop emulation не заменяет эти проверки. Upstream react-router MODULE_LEVEL_DIRECTIVE остаётся открытым в WINDOWS.md. Проверка PDF здесь означает просмотр предоставленных макетов; экспорт списка покупок относится к Phase 7 и не заявляется.
 
 ## Release suite и исправления по фактическим сбоям
@@ -103,3 +107,26 @@ Browser versions: Chromium 156.0.8078.4, WebKit 27.2. Исходные 112-case 
 Фактически просмотрены обновлённые screenshots `.tmp/phase01-qa/chromium-360-step2.png`, `chromium-390-step1.png`, `chromium-768-step4.png`, `chromium-1280-step2.png`; сопоставлены PDF reference pages 1/6. Виден крупный бюджет/₽, выровненные подписи, зелёный выбор и полная мобильная ширина primary. Full-page положение sticky не используется как доказательство постоянного перекрытия; видимость поля/ошибки подтверждают geometry assertions. Артефакты локальны и gitignored, production data не использовались. Ни новые баллы UI-аудита, ни human acceptance не объявлялись.
 
 Открытые проверки real iOS/keyboard/safe-area, Safari15, native zoom, screen reader/полный contrast, визуальное одобрение, LCP и judgement backstops сохраняются. Phase 1 всё ещё awaiting verification/acceptance; Phase 2 не запускалась.
+
+## Code review remediation — 2026-10-27
+
+Ревью `01-REVIEW.md` на `c899a1c` выявило три прежде не покрытых сценария. Исходный отчёт сохранён. Исправления: `8811b0f` CR-01 — успешный read retry восстанавливает нетронутую память из снимка без записи defaults; edits до/во время await сохраняют приоритет. `a82e308` WR-01 — invalid field фокусируется после раскрытия nutrition, через существующий post-commit effect. `8cd5872` WR-02 — при удалённом reset-инициаторе диалог возвращает focus на heading; cancellation/failed reset сохраняют живой инициатор. Полные точные titles/изменённые файлы/коммиты — в `01-REVIEW-FIXES.md` и `01-REVIEW-DISPOSITION.md`.
+
+Новые `storage-retry` проверяют полный snapshot, ID/ограничения/quantity/unit/expiry/manual source и byte-for-byte неизменность реального localStorage при retry без редактирования; контролируемый Promise второго чтения проверяет latest memory edits во время await. Покрыты missing/corrupt/retry-write-failure. Nutrition-регрессии используют клавиатуру при 390px и 360px/200% CSS text с проверкой первого invalid focus и положения field/error выше footer. Reset-регрессии проверяют сохранность чужих ключей, возвращение heading на том же шаге 1, focus trap после неуспеха и возврат инициатору после отмены.
+
+| Команда / этап | Фактический результат |
+|---|---|
+| `npx playwright test e2e/storage-retry.spec.ts --project=chromium --project=webkit --grep 'without edits\|missing read'` до fix | **4 failed**, ожидаемый RED на стирании полного снимка / unsolicited default write |
+| `npx playwright test e2e/storage-retry.spec.ts --project=chromium --project=webkit` после fix | **12 passed**, 12.4s |
+| `npx playwright test e2e/nutrition.spec.ts --grep WR-01 --project=chromium --project=webkit --project=firefox` | **6 failed** до fix → **6 passed**, 12.0s после |
+| `npx playwright test e2e/storage.spec.ts --grep 'corrupt bytes' --project=chromium --project=webkit --project=firefox` до fix | **3 failed**, heading не фокусировался после reset |
+| `npx playwright test e2e/storage.spec.ts --grep 'corrupt bytes\|reset failure' --project=chromium --project=webkit --project=firefox` после fix | **6 passed**, 13.4s |
+| `npx playwright test e2e/storage-retry.spec.ts e2e/storage.spec.ts e2e/nutrition.spec.ts e2e/guest.spec.ts e2e/accessibility.spec.ts --project=chromium --project=webkit --project=firefox` на `8cd5872` | **185 passed / 1 error**, exit 1, 167.640s JUnit; Chromium 62 passed, WebKit 62 passed, Firefox 61 passed + context teardown error |
+| `npx playwright test e2e/accessibility.spec.ts --grep 'skip link visible focus target sizes' --project=firefox` | **1 error**, повтор той же ошибки закрытия контекста, 6.364s JUnit, exit 1 |
+| `npm run test:unit -- --run`, `npm run typecheck`, `npm run lint`, `npm run build` | **134 passed / 4 files**, остальные exit 0; build safari15 1.12s |
+
+Все три findings имеют успешные регрессии во всех трёх браузерах. Единственная ошибка связанного запуска — `accessibility skip link visible focus target sizes navigation current state and reduced motion`: `browserContext.close: Protocol error (Browser.removeBrowserContext): can't access property "_maybeDontRestoreTabs", this[#windows][aWindow.__SSi] is undefined`. Она возникает при teardown после проверок страницы и воспроизводится отдельно. Инфраструктурная причина ещё не установлена и не объявлена pre-existing; source/тест не изменялись ради обхода. Запуск **не считается 186 green**. Evidence: `.tmp/phase01-qa/review-related-186.xml`, `review-related-firefox-teardown.md/zip`, `review-firefox-teardown-rerun.xml`.
+
+Все gates выполнены в основном checkout `D:/Projects/meal-plan`, ветка `codex/phase01-execution`, без worktree согласно config. Исходники заморожены на время итогового browser run. Ранний storage trial содержал 34 passed/2 selector errors из-за двух status на восстановленном шаге 3; save-status уточнён по notice, затем 12 регрессий прошли. В reset trial устранено неверное предположение pointer-focus WebKit; containment и возврат живого инициатора сохранены. Чистый RED успешного reset отдельно подтверждён all 3. Это уточнения тестовых предположений, а не ослабление требований хранения/фокуса.
+
+Это **composite coverage** с прежними full runs выше: новый полный suite после этих трёх исправлений не запускался. Прежние budget/products/presentation не выдаются за повторно проверенные. Code review fixed не означает phase complete: независимая проверка логики CR-01, расследование Firefox teardown и прежние human/device/visual gates остаются; Phase 2 не начата.

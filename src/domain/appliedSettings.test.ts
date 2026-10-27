@@ -25,6 +25,12 @@ describe('applied settings gate', () => {
     const draft = createDraft(); draft.manualNutrition.calories = '2000';
     expect(buildAppliedSettings(draft)).toMatchObject({ status: 'invalid', step: 1, errors: { protein: expect.any(String) } });
   });
+  it('reports duplicate restrictions and home rows at their own first failing step', () => {
+    const draft = createDraft(); draft.restrictions = ['no-fish', 'no-fish'];
+    expect(buildAppliedSettings(draft)).toMatchObject({ status: 'invalid', step: 3 });
+    draft.restrictions = []; draft.home = [{ productId: 'rice', quantity: '', expiresSoon: false }, { productId: 'rice', quantity: '', expiresSoon: true }];
+    expect(buildAppliedSettings(draft)).toMatchObject({ status: 'invalid', step: 4 });
+  });
   it('preserves exact raw decimals, zero macros and target provenance', () => {
     const draft = createDraft();
     draft.manualNutrition = { calories: '2000,000000000000000001', protein: '0', fat: '0.1', carbohydrates: '250' };

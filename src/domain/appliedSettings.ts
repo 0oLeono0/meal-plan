@@ -61,13 +61,23 @@ export function sameSnapshot(left: unknown, right: unknown): boolean {
     && sameSnapshot((left as Record<string, unknown>)[key], (right as Record<string, unknown>)[key]));
 }
 const invalid = (step: Step, errors: StepErrors): AppliedSettingsResult => ({ status: 'invalid', step, errors });
+/** Preserve duplicate rows for step validation; the storage guard rejects duplicates too early. */
+function hasDraftShape(value: unknown): value is SettingsDraft {
+  if (isSettingsDraft(value)) return true;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const input = value as Record<string, unknown>;
+  const base = { ...input, restrictions: [], exclusionIds: [], home: [] };
+  return isSettingsDraft(base)
+    && [input.restrictions, input.exclusionIds].every(ids => Array.isArray(ids) && ids.every(id => typeof id === 'string' && id.trim().length > 0))
+    && Array.isArray(input.home) && input.home.every(row => isSettingsDraft({ ...base, home: [row] }));
+}
 
 /** The sole apply gate for wizard completion and quick start. Skip is navigation, never deletion. */
 export function buildAppliedSettings(input: unknown): AppliedSettingsResult {
   let raw: SettingsDraft;
   try {
     const detached = immutableSnapshot(input);
-    if (!isSettingsDraft(detached)) return invalid(1, { people: 'Сохранённые настройки повреждены. Проверьте мастер' });
+    if (!hasDraftShape(detached)) return invalid(1, { people: 'Сохранённые настройки повреждены. Проверьте мастер' });
     raw = detached;
   } catch { return invalid(1, { people: 'Сохранённые настройки повреждены. Проверьте мастер' }); }
   for (const step of [1, 2, 3, 4] as const) {

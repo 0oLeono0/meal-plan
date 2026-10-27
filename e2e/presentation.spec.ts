@@ -121,6 +121,6 @@ for (const width of widths) test(`presentation ${width}px truthful route states 
     await page.evaluate(() => document.documentElement.style.fontSize = '200%');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(title);
     await fits(page);
-    await page.screenshot({ path: `.tmp/phase01-qa/${info.project.name}-${width}-${path.replaceAll('/', '_')}-text200.png`, fullPage: true });
+    await page.screenshot({ path: `.tmp/phase01-qa/${info.project.name}-${width}-${path.replace(/\//g, '_')}-text200.png`, fullPage: true });
   }
 });

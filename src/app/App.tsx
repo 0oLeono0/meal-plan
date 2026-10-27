@@ -180,6 +180,7 @@ function AppLayout({ brand, loading, children }: { brand: string; loading: boole
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [profileTrigger, setProfileTrigger] = useState<HTMLElement | null>(null);
   const shell = useRef<HTMLDivElement>(null);
   const nav = useRef<HTMLElement>(null);
   const fullscreen = pathname === '/plan/new' || pathname === '/plan/generating';
@@ -202,11 +203,11 @@ function AppLayout({ brand, loading, children }: { brand: string; loading: boole
       <header className="app-header">{pathname !== '/' && <Link className="brand brand-link" to="/" translate="no">{brand}</Link>}<Link className="new-menu" to="/plan/new"><span aria-hidden="true">+ </span>Новое меню</Link></header>
       <nav className="app-nav" aria-label="Основные разделы" ref={nav}>
         {navItems.map(item => <NavLink key={item.to} to={item.to} end><NavIcon path={item.path} /><span>{item.label}</span></NavLink>)}
-        <button type="button" onClick={() => setProfileOpen(true)} aria-haspopup="dialog"><NavIcon path="M20 21v-2a7 7 0 0 0-14 0v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8" /><span>Профиль</span></button>
+        <button type="button" onClick={event => { setProfileTrigger(event.currentTarget); setProfileOpen(true); }} aria-haspopup="dialog"><NavIcon path="M20 21v-2a7 7 0 0 0-14 0v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8" /><span>Профиль</span></button>
       </nav>
     </>}
     <main id="main" tabIndex={-1}>{children}</main>
-    {profileOpen && <ConfirmDialog title="Гостевой профиль" description="Вы пользуетесь гостевым режимом. Профиль появится позже" cancelLabel="Закрыть пояснение" confirmLabel="Вернуться к меню" onCancel={() => setProfileOpen(false)} onConfirm={() => {
+    {profileOpen && <ConfirmDialog returnFocus={profileTrigger} title="Гостевой профиль" description="Вы пользуетесь гостевым режимом. Профиль появится позже" cancelLabel="Закрыть пояснение" confirmLabel="Вернуться к меню" onCancel={() => setProfileOpen(false)} onConfirm={() => {
       setProfileOpen(false);
       navigate('/menu');
       requestAnimationFrame(() => shell.current?.querySelector<HTMLElement>('h1')?.focus());

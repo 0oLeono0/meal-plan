@@ -11,6 +11,7 @@ export function Wizard({ draft, onChange, recovery = false, saved = false, onRes
   const [resetOpen, setResetOpen] = useState(false);
   const [resetPending, setResetPending] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
+  const [dialogTrigger, setDialogTrigger] = useState<HTMLElement | null>(null);
   const [errors, setErrors] = useState<StepErrors>({});
   const [reviewed, setReviewed] = useState(false);
   const pendingFocus = useRef<string | null>(null);
@@ -73,13 +74,13 @@ export function Wizard({ draft, onChange, recovery = false, saved = false, onRes
   }
   const titles = ['Для кого составляем меню', 'Бюджет и готовка', 'Предпочтения и ограничения', 'Продукты дома'];
   return <section className="wizard" aria-labelledby="wizard-title">
-    <Link className="back" to="/" onClick={event => { event.preventDefault(); exit(); }}>На главную</Link>
-    {recovery && <Button onClick={() => setResetOpen(true)} disabled={resetPending}>Сбросить черновик</Button>}
+    <Link className="back" to="/" onClick={event => { event.preventDefault(); setDialogTrigger(event.currentTarget); exit(); }}>На главную</Link>
+    {recovery && <Button onClick={event => { setDialogTrigger(event.currentTarget); setResetOpen(true); }} disabled={resetPending}>Сбросить черновик</Button>}
     <p className="eyebrow">Шаг {draft.step} из 4</p>
     <div className="steps" role="progressbar" aria-label="Настройка меню" aria-valuemin={0} aria-valuemax={4} aria-valuenow={draft.step}>
       {[1, 2, 3, 4].map(step => <span key={step} className={step <= draft.step ? 'filled' : ''} />)}
     </div>
-    {resetOpen && <ConfirmDialog title="Сбросить черновик?" description="Настройки мастера на этом устройстве будут удалены" cancelLabel="Оставить черновик" confirmLabel="Сбросить черновик" onCancel={() => { if (!resetPending) setResetOpen(false); }} onConfirm={() => {
+    {resetOpen && <ConfirmDialog returnFocus={dialogTrigger} title="Сбросить черновик?" description="Настройки мастера на этом устройстве будут удалены" cancelLabel="Оставить черновик" confirmLabel="Сбросить черновик" onCancel={() => { if (!resetPending) setResetOpen(false); }} onConfirm={() => {
       if (resetPending || !onReset) return;
       setResetPending(true);
       void onReset().then(success => { if (active.current) { setResetPending(false); if (success) { touched.current = false; setResetOpen(false); setErrors({}); } } });
@@ -93,10 +94,10 @@ export function Wizard({ draft, onChange, recovery = false, saved = false, onRes
       {reviewed && <DraftReview draft={draft} />}
     </div>
     <div ref={footer} className="sticky-actions grid grid-cols-2 gap-2">
-      <Button disabled={resetPending} onClick={() => { setErrors({}); if (draft.step === 1) setExitOpen(true); else change({ type: 'step', value: (draft.step - 1) as Step }); }}>Назад</Button>
+      <Button disabled={resetPending} onClick={event => { setErrors({}); if (draft.step === 1) { setDialogTrigger(event.currentTarget); setExitOpen(true); } else change({ type: 'step', value: (draft.step - 1) as Step }); }}>Назад</Button>
       {draft.step < 4 && <Button variant="primary" disabled={resetPending} onClick={next}>Далее</Button>}
       {draft.step === 4 && <Button variant="primary" disabled={resetPending} onClick={review}>Проверить настройки</Button>}
     </div>
-    {exitOpen && <ConfirmDialog title="Выйти из мастера?" description={saved ? 'Черновик останется на этом устройстве' : 'Изменения не сохранены на этом устройстве'} cancelLabel="Продолжить настройку" confirmLabel="Выйти из мастера" onCancel={() => setExitOpen(false)} onConfirm={() => navigate('/')} />}
+    {exitOpen && <ConfirmDialog returnFocus={dialogTrigger} title="Выйти из мастера?" description={saved ? 'Черновик останется на этом устройстве' : 'Изменения не сохранены на этом устройстве'} cancelLabel="Продолжить настройку" confirmLabel="Выйти из мастера" onCancel={() => setExitOpen(false)} onConfirm={() => navigate('/')} />}
   </section>;
 }

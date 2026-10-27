@@ -438,6 +438,16 @@ Category names beyond V2 сверить с ASVS 5.0 при security review; scop
 ### Secondary / Tertiary
 Поисковый сторонний price aggregator использован только для обнаружения official XLSX URL; его числа не рекомендованы к импорту. Training-data food numbers не использованы.
 
+## Supplemental price discovery — 2026-10-27
+
+Open Prices read API was actually available without a key over verified TLS. Stable `order_by=id` pagination captured 566 unique RUB records with RU locations. Evidence and 26 file hashes: `.tmp/phase2-price-discovery.json`; detailed audit: `.tmp/phase2-price-discovery.md`. Official API/data references: https://openfoodfacts.github.io/open-prices/guides/api/ and https://openfoodfacts.github.io/open-prices/guides/data/. This is a collection of observations, not representative Russian or user-region prices. [VERIFIED: independent source probe and saved capture audit]
+
+Photo review exposed material differences: egg API70 versus receipt69.99/10pcs; curd API95 versus receipt94.99 with200g only in product metadata; chicken API294 for a named818g pack versus receipt293.99 RUB/kg. Rice99.99/500g is visible on the proof photo; potato34 RUB/kg appears on an oats receipt rather than a separate price row. Do not auto-import the mistaken chicken denominator or silently overwrite raw records. Dates, cities, food identities and edible-mass mappings remain distinct. [VERIFIED: saved selectedApiRecords/photoReviews]
+
+Dataset ODbL and proof-photo CC-BY-SA4.0 were confirmed from official source/licence files; preserve attribution and appropriate notices, and do not ship receipt images by default. Source photographs may contain personal data. This is provenance evidence, not legal clearance for a combined redistributed database. [VERIFIED: licence source bytes/hashes in manifest]
+
+**API_AVAILABLE=true; PRODUCTION_CATALOG_READY=false.** Fresh tomato and complete matching/safety/50+recipe coverage are not established. Q-14/02-06 stays open. A further targeted official price-table search is permitted within existing D-07–D-10; no locked decision or source gate is relaxed. [VERIFIED: probe final INSUFFICIENT]
+
 ## Metadata
 
 **Confidence:** MEDIUM по seam websearch verified; concrete downloaded USDA observations проверены дополнительно, но policy confidence не повышался вручную.

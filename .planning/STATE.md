@@ -5,17 +5,17 @@ milestone_name: P0 MVP
 current_phase: 1
 current_phase_name: Гостевой старт и сохраняемые настройки
 current_plan: 8
-status: executing
-stopped_at: Completed 01-06-PLAN.md; next 01-08 final QA
-last_updated: "2026-10-26T17:35:14.142Z"
-last_activity: 2026-10-26
-last_activity_desc: 01-06 завершён, 2/2 задачи; products 13 и regressions 19 Chromium, unit 65, typecheck/lint/build passed; следующий 01-08
-state_head: eb65717bea96a1dbeba2a6665f181d28a86322a3
+status: ready_for_verification
+stopped_at: Completed 01-08-PLAN.md; 8/8 execution plans, Phase 1 awaiting code/security review and verification
+last_updated: "2026-10-27T08:21:41.560Z"
+last_activity: 2026-10-27
+last_activity_desc: 01-08 завершён; 8/8 планов, unit 134, final WebKit 112 и affected Chromium/Firefox 70 passed; awaiting phase verification
+state_head: 280ccd4f94807d69264fcdc97f2c3cc560c69f87
 progress:
   total_phases: 7
   completed_phases: 0
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Project State
@@ -25,34 +25,34 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-25)
 
 **Core value:** Допустимое меню с прозрачным бюджетом и согласованные покупки с количественным учётом домашних запасов.
-**Current focus:** Phase 1 — планы 01–07 завершены (7/8). Ограничения, продукты дома и честная проверка draft работают. C-04 scope-amendment исполнен; автокалькулятор NEXT-10 — P1, WIZ-09 manual P0 Pending до QA. Следующий и единственный незавершённый план 01-08.
+**Current focus:** Phase 1 — выполнены 8/8 планов; итоговая автоматизированная QA 01-08 завершена. WIZ-09 manual P0 принят по обновлённому контракту; NEXT-10 остаётся deferred P1. Фаза ожидает code/security review, goal verification и обязательных human gates; приложение и весь P0 не приняты.
 
 ## Current Position
 
 Phase: 1 (Гостевой старт и сохраняемые настройки)
-Current Plan: 8 (next incomplete plan; 01-06 and docs-only 01-07 complete)
+Current Plan: 8 (last execution plan complete)
 Total Plans in Phase: 8
-Status: Executing; 7/8 plans complete; final QA 01-08 pending
-Last activity: 2026-10-26 — 01-06: 2/2 tasks; 13 products + 19 regression Chromium cases and 65 unit tests passed; typecheck/lint/build passed
+Status: Ready for verification; 8/8 plans complete; Phase 1 awaiting acceptance
+Last activity: 2026-10-27 — 01-08: final WebKit 112, affected Chromium/Firefox 70, unit 134 passed; typecheck/lint/build passed. Original full Chromium/Firefox 112 each preceded the focus fix.
 
-Progress: [█████████░] 87.5% текущей фазы (7/8); будущие фазы ещё не имеют планов исполнения
+Progress: [██████████] 100% планов исполнения текущей фазы (8/8); приёмка Phase 1 pending, completed phases 0/7
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 10.9 min
-- Total execution time: 1.27 hours
+- Total plans completed: 8
+- Historical active durations for first 7 plans: 76 min (10.9 min/plan).
+- Plan 01-08 recorded wall window: 877 min, including overnight usage-limit interruption; exact active duration unknown and excluded from active-time averages.
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01 | 7 | 76 min | 10.9 min |
+| 01 | 8 | First 7: 76 min; 01-08: 877 min wall incl. pause | Active average for first 7: 10.9 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-03 (14 min), 01-04 (11 min), 01-05 (9 min), 01-07 (5 min, docs-only), 01-06 (12 min)
-- Trend: семь завершённых планов; итоговая QA 01-08 ожидает исполнения
+- Last plan: 01-08, 2/2 tasks; 877 min recorded wall window including interruption, active duration unknown.
+- Trend: восемь исполненных планов; отдельная верификация/приёмка фазы ожидается.
 
 **Per-Plan Metrics:**
 
@@ -65,6 +65,7 @@ Progress: [█████████░] 87.5% текущей фазы (7/8); 
 | Phase 01 P05 | 9 min | 2 tasks | 6 files |
 | Phase 01 P07 | 5min | 2 tasks | 18 files |
 | Phase 01 P06 | 12 min | 2 tasks | 8 files |
+| Phase 01 P08 | 877min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -84,14 +85,15 @@ Progress: [█████████░] 87.5% текущей фазы (7/8); 
 - [Phase 01]: 01-05 exact budget >=500 is canonical; slider projection and person-day hint are derived; time/variety use existing draft actions
 - [Phase 01]: 01-07 docs-only executed: human-confirmed C-04 keeps optional manual WIZ-09 P0/Pending until QA; automatic NEXT-10 and four calculator states deferred P1; Q-03 partially open.
 - [Phase 01]: 01-06: names-only product IDs and raw positive quantities; review validates draft only, without confirmed settings/pantry mutation or generation.
+- [Phase 01]: 01-08 accepts amended manual WIZ-09 only; automatic NEXT-10 remains deferred P1; other broad requirements await verifier and human acceptance.
 
 ### Pending Todos
 
-Продолжить 01-08: итоговая QA. 01-06 и docs-only 01-07 выполнены. WIZ-03/WIZ-04/WIZ-05/WIZ-06/WIZ-07 закрыты; общие APP-01/APP-02/APP-03/WIZ-01/WIZ-02/UX-01 и WIZ-09 manual остаются Pending до итоговой приёмки. Прежний calculator scope перенесён в NEXT-10 P1 и не выполнен. C-04 по приоритету подтверждён, Q-03 частично открыт.
+Следующий шаг: code/security review и goal verification Phase 1; обязательные human gates перечислены в docs/qa/phase01.md и WINDOWS.md. WIZ-03/WIZ-04/WIZ-05/WIZ-06/WIZ-07 и manual WIZ-09 закрыты; общие APP-01/APP-02/APP-03/WIZ-01/WIZ-02/UX-01 остаются Pending для итогового verifier и человеческой приёмки. NEXT-10 P1 не реализован. Phase 2 ещё не запускать.
 
 ### Blockers/Concerns
 
-- Phase 1: C-04 по приоритету решён человеком; scoped docs-only replan 01-07 проверен и исполнен; QA 01-08 ещё не выполнена. Формулы/средние нормы и роль nutrition targets в генерации Q-03 остаются открыты; это не разрешение калькулятора P0. Исторический запрет разработки снят запуском исполнения пользователем.
+- Phase 1: QA 01-08 выполнена; reduced-motion и WebKit focus regressions исправлены и перепроверены. Реальные iOS keyboard/safe-area, Safari15, screen reader/contrast, native zoom/visual approval, Q-17 LCP и two-tab/safety judgement backstops остаются unverified/human_needed. Это не завершённая фаза. C-04 подтверждён по приоритету, формулы/средние нормы и роль nutrition targets Q-03 открыты.
 - Build: upstream react-router MODULE_LEVEL_DIRECTIVE warning; сборка прошла, предупреждение зарегистрировано в WINDOWS.md.
 - Phase 2–4: базы бюджета/КБЖУ/порций, варианты/отказы, Q-14 о данных и Q-16 об округлении остаются воротами.
 - Phase 5–7: C-03 (pantry), Q-09/Q-12 (ручные покупки/категории), Q-13 (PDF), Q-17 (QA) не закрыты.
@@ -106,6 +108,6 @@ Progress: [█████████░] 87.5% текущей фазы (7/8); 
 
 ## Session Continuity
 
-Last session: 2026-10-26T17:35:14.094Z
-Stopped at: Completed 01-06-PLAN.md; next 01-08 final QA
+Last session: 2026-10-27T08:21:41.504Z
+Stopped at: Completed 01-08-PLAN.md; 8/8 execution plans, Phase 1 awaiting code/security review and verification
 Resume file: None

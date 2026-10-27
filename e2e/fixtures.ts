@@ -6,6 +6,7 @@ export interface AppFixtureOptions {
   draft?: Partial<SettingsDraft>;
   raw?: string;
   readDelay?: number;
+  holdRetryRead?: boolean;
   writeDelay?: number;
   failRead?: boolean;
   failWrite?: boolean;
@@ -51,8 +52,17 @@ export async function mountAppFixture(page: Page, options: AppFixtureOptions = {
       },
     }));
     const delay = (ms = 0) => new Promise(resolve => setTimeout(resolve, ms));
+    let reads = 0;
     const draftPort = {
-      async load() { await delay(options.readDelay); return adapter.load(); },
+      async load() {
+        await delay(options.readDelay);
+        const result = await adapter.load();
+        if (++reads > 1 && options.holdRetryRead) {
+          sessionStorage.setItem('retry-read-pending', 'yes');
+          await new Promise<void>(resolve => window.addEventListener('release-retry-read', () => resolve(), { once: true }));
+        }
+        return result;
+      },
       async save(draft: SettingsDraft) { await delay(options.writeDelay); return adapter.save(draft); },
       reset: () => adapter.reset(),
     };

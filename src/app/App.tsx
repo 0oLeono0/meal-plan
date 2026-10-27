@@ -44,6 +44,7 @@ type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand = appConfig.brand }: AppProps) {
   const [draft, setDraft] = useState(createDraft);
   const currentDraft = useRef(draft);
+  const memoryEdited = useRef(false);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [presence, setPresence] = useState<PlanPresence>({ status: 'pending' });
@@ -58,6 +59,7 @@ export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand =
     setLoadState('loading');
     setPresence({ status: 'pending' });
     setSaveState('idle');
+    memoryEdited.current = false;
     const readDraft = async () => {
       try {
         const result = await draftPort.load();
@@ -94,6 +96,7 @@ export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand =
   function change(action: DraftAction) {
     if (resetting.current || loadState === 'loading') return;
     const next = draftReducer(currentDraft.current, action);
+    memoryEdited.current = true;
     currentDraft.current = next;
     setDraft(next);
     if (loadState === 'ready') persist(next);
@@ -103,15 +106,23 @@ export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand =
     if (resetting.current) return;
     setSaveState('saving');
     if (loadState === 'error') {
+      const readRevision = revision.current;
       try {
         const result = await draftPort.load();
-        if (!mounted.current) return;
+        if (!mounted.current || resetting.current || revision.current !== readRevision) return;
         if (result.status === 'error' || result.status === 'corrupt') {
           setLoadState(result.status);
           setSaveState('error');
           return;
         }
         setLoadState('ready');
+        // Check after the await: edits made while reading also take precedence.
+        if (!memoryEdited.current) {
+          currentDraft.current = result.draft;
+          setDraft(result.draft);
+          setSaveState(result.status === 'loaded' ? 'saved' : 'idle');
+          return;
+        }
       } catch { if (mounted.current) setSaveState('error'); return; }
     }
     persist(currentDraft.current);
@@ -129,6 +140,7 @@ export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand =
       if (result.status !== 'saved') { setSaveState('error'); return false; }
       const next = createDraft();
       currentDraft.current = next;
+      memoryEdited.current = false;
       setDraft(next);
       setLoadState('ready');
       setSaveState('idle');

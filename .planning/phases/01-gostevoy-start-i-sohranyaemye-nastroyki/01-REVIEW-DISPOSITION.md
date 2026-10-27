@@ -22,10 +22,21 @@ total: 3
 
 | Finding / exact source title | Severity | Disposition | Commit / evidence |
 |---------|----------|-------------|--------|
-| CR-01: Повтор после ошибки чтения без редактирования стирает восстановленный черновик | critical | fixed; requires human verification of state logic | `8811b0f`; six `storage-retry.spec.ts` cases passed all 3 browsers, including full raw snapshot and edits during held read |
+| CR-01: Повтор после ошибки чтения без редактирования стирает восстановленный черновик | critical | fixed; independently reviewed | `8811b0f`; six `storage-retry.spec.ts` cases passed all 3 browsers; независимая проверка App/адаптера/полных assertions — addendum ниже |
 | WR-01: «Далее» не фокусирует ошибку внутри свёрнутой нормы КБЖУ | warning | fixed | `a82e308`; two collapsed-error keyboard cases passed all 3 browsers, 390px and 360px/200% text |
 | WR-02: После успешного сброса на первом шаге фокус теряется на body | warning | fixed | `8cd5872`; successful reset heading focus, cancellation and failed-reset trigger preservation passed all 3 browsers |
 
-Источник — неизменённый `01-REVIEW.md` на `c899a1c`; детали исправлений — `01-REVIEW-FIXES.md`. Все три замечания исправлены, waived нет. Итоговый связанный запуск: **185 passed / 1 Firefox context teardown error**, изолированный повтор этого error также не прошёл. Это не полный новый suite и не 186 green. Unit 134/typecheck/lint/build passed. Статус fixed относится к замечаниям, а не к завершению проверки фазы; инфраструктурная причина Firefox, независимая проверка логики и human acceptance остаются.
+Источник — неизменённый `01-REVIEW.md` на `c899a1c`; детали исправлений — `01-REVIEW-FIXES.md`. Все три замечания исправлены, waived нет. Итоговый связанный запуск: **185 passed / 1 Firefox context teardown error**, изолированный повтор этого error также не прошёл. Это не полный новый suite и не 186 green. Unit 134/typecheck/lint/build passed. Статус fixed относится к замечаниям, а не к завершению проверки фазы; причина Firefox не доказана, человеческая приёмка остаётся. Независимый review логики завершён в addendum ниже.
 
-Последующее evidence оркестратора: без изменений кода проблемный Firefox case прошёл 1/1 и затем 3/3; весь связанный Firefox-набор повторно **62/62 passed**, exit 0, 64.172s (`.tmp/phase01-qa/review-firefox-final.xml`). Исходный сбой остаётся историей нестабильности инфраструктуры, его корневая причина не доказана. Затронутые сценарии теперь проверены во всех трёх браузерах отдельными запусками. Независимая проверка логики и human acceptance не подменяются этим повтором.
+Последующее evidence оркестратора: без изменений кода проблемный Firefox case прошёл 1/1 и затем 3/3; весь связанный Firefox-набор повторно **62/62 passed**, exit 0, 64.172s (`.tmp/phase01-qa/review-firefox-final.xml`). Исходный сбой остаётся историей нестабильности инфраструктуры, его корневая причина не доказана. Затронутые сценарии теперь проверены во всех трёх браузерах отдельными запусками. Человеческая приёмка не подменяется этим повтором.
+
+## Independent verification — 2026-10-27
+
+gsd-verifier независимо перечитал `src/app/App.tsx` (`change`, `retry`, `persist`, `resetDraft`), `src/adapters/guestDraft.ts`, управляемый Promise в `e2e/fixtures.ts` и все шесть сценариев `e2e/storage-retry.spec.ts`. Вывод ограничен исправлением CR-01:
+
+- `memoryEdited` устанавливается синхронно вместе с `currentDraft`; проверка после `await draftPort.load()` учитывает ввод во время чтения. Эта ветвь передаёт в `persist` текущий ref, а не захваченный до чтения draft.
+- Без редактирования `loaded` восстанавливает `result.draft` и шаг без `save`; `missing` оставляет idle без unsolicited write. Исходные форматированные байты проверяются через `toBe(raw)`, а не через частичное совпадение полей.
+- Mounted/revision/resetting проверяются до применения результата; reset инвалидирует revision, дожидается очереди и удаляет только draft key. Гидратация и успешный reset очищают dirty ref. Corrupt/read/write ошибки не дают ложного успеха; тест failed-write сравнивает старый полный snapshot и затем полную последнюю memory-версию.
+- Сохранённые JUnit прочитаны независимо: исходный связанный запуск — 186 tests, 0 failures, 1 error; окончательный Firefox — 62 tests, 0 failures, 0 errors, 0 skipped. Это composite evidence, без заявления о новом полном прогоне.
+
+Дополнительный собственный spot-check: `node node_modules/vitest/vitest.mjs run src/adapters/guestDraft.test.ts -t 'retry saves the supplied newest raw value after a failed write'` — exit 0, 1 passed (10 невыбранных случаев). Полный suite не повторялся. Обязательные реальные устройства, screen reader/contrast, native zoom/визуальная приёмка, LCP, two-tab UX и safety judgement остаются в `01-VERIFICATION.md`; отдельная ручная проверка внутренней логики CR-01 больше не требуется.

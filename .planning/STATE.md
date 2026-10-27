@@ -5,11 +5,11 @@ milestone_name: P0 MVP
 current_phase: 1
 current_phase_name: Гостевой старт и сохраняемые настройки
 current_plan: 8
-status: ready_for_verification
-stopped_at: Completed 01-08-PLAN.md; 8/8 execution plans, Phase 1 awaiting code/security review and verification
-last_updated: "2026-10-27T08:21:41.560Z"
+status: human_needed
+stopped_at: Phase 1 verified human_needed; 8/8 plans executed, 9 UAT groups pending; no Phase 2 advancement
+last_updated: "2026-10-27T13:06:05.208900+00:00"
 last_activity: 2026-10-27
-last_activity_desc: 01-08 завершён; 8/8 планов, unit 134, final WebKit 112 и affected Chromium/Firefox 70 passed; awaiting phase verification
+last_activity_desc: Независимая проверка human_needed; review fixes подтверждены, UAT 9 pending, фаза не принята
 state_head: 280ccd4f94807d69264fcdc97f2c3cc560c69f87
 progress:
   total_phases: 7
@@ -25,14 +25,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-25)
 
 **Core value:** Допустимое меню с прозрачным бюджетом и согласованные покупки с количественным учётом домашних запасов.
-**Current focus:** Phase 1 — выполнены 8/8 планов; итоговая автоматизированная QA 01-08 завершена. WIZ-09 manual P0 принят по обновлённому контракту; NEXT-10 остаётся deferred P1. Фаза ожидает code/security review, goal verification и обязательных human gates; приложение и весь P0 не приняты.
+**Current focus:** Phase 1 — 8/8 планов исполнены; code/security/UI review и исправления завершены. Независимый VERIFICATION: human_needed, 120/128 must-haves verified; 9 групп ручной приёмки сохранены в 01-UAT.md. CR-01 независимо проверен; NEXT-10 — P1. Фаза 1 не принята, фаза 2 не начата.
 
 ## Current Position
 
 Phase: 1 (Гостевой старт и сохраняемые настройки)
 Current Plan: 8 (last execution plan complete)
 Total Plans in Phase: 8
-Status: Ready for verification; 8/8 plans complete; Phase 1 awaiting acceptance
+Status: Human verification required — 01-UAT.md: 9 pending; не phase complete
 Last activity: 2026-10-27 — 01-08: final WebKit 112, affected Chromium/Firefox 70, unit 134 passed; typecheck/lint/build passed. Original full Chromium/Firefox 112 each preceded the focus fix.
 
 Progress: [██████████] 100% планов исполнения текущей фазы (8/8); приёмка Phase 1 pending, completed phases 0/7
@@ -109,5 +109,5 @@ Progress: [██████████] 100% планов исполнени�
 ## Session Continuity
 
 Last session: 2026-10-27T08:21:41.504Z
-Stopped at: Completed 01-08-PLAN.md; 8/8 execution plans, Phase 1 awaiting code/security review and verification
-Resume file: None
+Stopped at: Phase 1 human_needed; run $gsd-verify-work 1; 9 UAT groups pending
+Resume file: .planning/phases/01-gostevoy-start-i-sohranyaemye-nastroyki/01-UAT.md

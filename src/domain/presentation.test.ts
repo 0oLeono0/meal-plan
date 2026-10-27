@@ -11,12 +11,12 @@ import * as presentation from './presentation';
 const nutrition = (calories: string, protein = '0', fat = '0', carbohydrates = '0'): Nutrition => ({ calories: decimal(calories), protein: decimal(protein), fat: decimal(fat), carbohydrates: decimal(carbohydrates) });
 const source = { sourceId: 'synthetic-price', recordId: 'synthetic-test', release: 'v1', license: 'CC0-1.0', url: 'https://example.org/synthetic' };
 // Synthetic 1g foods only verify arithmetic; these fixtures make no production/source-readiness claim.
-function projected(price = '0.005', budget = '500') {
+function projected(price = '0.005', budget = '500', secondPrice = price) {
   const draft = createDraft(); draft.days = '1'; draft.people = '1'; draft.budget = budget;
   const applied = buildAppliedSettings(draft); if (applied.status !== 'applied') throw new Error('Invalid fixture');
   const foods: FoodProfile[] = ['a', 'b'].map(id => ({ productId: id, profileId: id, name: id, identity: id, state: 'raw', category: 'Тестовая категория',
     nutrition: { status: 'known', reference: { amount: '1', unit: 'g', basis: 'edible' }, values: { calories: '5.5', protein: '0.05', fat: '0', carbohydrates: '0' }, source },
-    price: { status: 'known', amount: price, currency: 'RUB', reference: { amount: '1', unit: 'g', basis: 'edible' }, source, region: 'Синтетический регион', observedAt: '2026-10-01', estimate: true },
+    price: { status: 'known', amount: id === 'a' ? price : secondPrice, currency: 'RUB', reference: { amount: '1', unit: 'g', basis: 'edible' }, source, region: 'Синтетический регион', observedAt: '2026-10-01', estimate: true },
     safety: { status: 'unknown', reason: 'Test only' }, conversions: [] }));
   const recipe: Recipe = { id: 'test', name: 'test', baseServings: decimal('1'), ingredients: foods.map(food => ({ productId: food.productId, profileId: food.profileId, quantity: { amount: decimal('1'), unit: 'g' } })), slots: ['breakfast'], cookingMinutes: 1, steps: ['Test'], source };
   const inputs = createPlanInputs(applied.settings, { version: 'test', foods, recipes: [recipe] }, { seed: 'test', now: () => new Date(2026, 9, 27) });
@@ -65,9 +65,9 @@ describe('canonical Russian plan presentation', () => {
     expect(checkPurchaseBudget(decimal('500.0001'), 50000n, decimal('500'))).toMatchObject({ accepted: false, reason: 'exact-limit-exceeded' });
   });
   it('conservatively rejects rounded rows beyond displayed limit without minimum-budget claim', () => {
-    const value = projected('250.005', '500.01');
-    expect(value.costs.exact.purchase).toEqual(decimal('500.01'));
-    expect(value.costs.kopecks.purchase).toBe(50002n);
+    const value = projected('250.005', '500', '249.995');
+    expect(value.costs.exact.purchase).toEqual(decimal('500'));
+    expect(value.costs.kopecks.purchase).toBe(50001n);
     expect(value.budget.check).toEqual({ accepted: false, exactWithinLimit: true, displayedWithinLimit: false, reason: 'display-rounding-exceeded' });
   });
 });

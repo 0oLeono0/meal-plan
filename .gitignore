@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.tmp/
+.playwright-mcp/
+playwright-report/
+test-results/
+.planning/state.json

@@ -1,5 +1,7 @@
 # Phase 01: Гостевой старт и сохраняемые настройки — Pattern Map
 
+**Scope update 26.10.2026:** исходная карта ниже описывает первоначальную точку до реализации. По human-confirmed D-10/C-04 автоматический персональный калькулятор и empty/loading/error/partial перенесены в P1/NEXT-10; WIZ-09 — необязательная ручная цель P0, Pending до приёмки. Ссылка: docs/decisions/nutrition-calculator.json и nutrition-calculator-amendment.md. Старые упоминания блокирующего calculator gate ниже исторические; формула/средние нормы и жёсткость nutrition targets по Q-03 не утверждены. Новых source-pattern решений amendment не вводит.
+
 **Mapped:** 2026-10-26. **Analog coverage:** 0 / 14 proposed file groups.
 Greenfield: `rg --files` и `git ls-files` не обнаружили исходников приложения или package.json. Инструменты `.tmp` и материалы skills не являются аналогами приложения. Все пути и интерфейсы ниже — **FUTURE: предложения**, существующих символов и фрагментов для копирования нет.
 

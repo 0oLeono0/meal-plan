@@ -1,0 +1,29 @@
+{
+  "decision": "scope-amendment",
+  "status": "human-confirmed",
+  "humanConfirmedAt": "2026-10-26T17:05:06.225411+00:00",
+  "humanResponse": {
+    "text": "тогда выбираем второй",
+    "source": "Сообщение пользователя в текущем чате после рекомендации варианта 2: перенести автоматический калькулятор персональной нормы в P1; оставить ручную цель в P0."
+  },
+  "scopeReferences": [
+    "reference/PRD.md#5.2",
+    "reference/OPEN_QUESTIONS.md#C-04",
+    "reference/OPEN_QUESTIONS.md#Q-03",
+    ".planning/phases/01-gostevoy-start-i-sohranyaemye-nastroyki/01-07-PLAN.md"
+  ],
+  "amendmentReferences": [
+    "docs/decisions/nutrition-calculator-proposal.md",
+    ".planning/REQUIREMENTS.md",
+    ".planning/ROADMAP.md",
+    ".planning/phases/01-gostevoy-start-i-sohranyaemye-nastroyki/01-CONTEXT.md",
+    ".planning/phases/01-gostevoy-start-i-sohranyaemye-nastroyki/01-UI-SPEC.md",
+    ".planning/phases/01-gostevoy-start-i-sohranyaemye-nastroyki/01-VALIDATION.md"
+  ],
+  "scope": {
+    "deferredToP1": "Автоматический калькулятор персональной нормы по полу, возрасту, росту, весу и активности; автоматическая подстановка средних норм также не получает неподтверждённых значений в P0.",
+    "retainedInP0": "Необязательная ручная цель КБЖУ на человека в день. Обязательные детерминированные расчёты КБЖУ рецептов, меню, порций, бюджета и покупок сохраняются.",
+    "historicalRequirement": "Перенос не является выполнением прежней вычислительной части WIZ-09. Требуется scoped replan и последующая проверка обновлённых критериев."
+  },
+  "replanStatus": "executed"
+}

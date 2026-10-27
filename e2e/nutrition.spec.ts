@@ -1,6 +1,35 @@
 import { test, expect } from '@playwright/test';
 import { mountAppFixture } from './fixtures';
 
+for (const { width, textSize, raw, firstInvalid } of [
+  { width: 390, textSize: '100%', raw: '1,', firstInvalid: 'calories' },
+  { width: 360, textSize: '200%', raw: '2000', firstInvalid: 'protein' },
+]) test(`WR-01 collapsed partial nutrition reveals and focuses first error at ${width}px ${textSize} text`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 800 });
+  await page.goto('/plan/new');
+  await page.evaluate(textSize => document.documentElement.style.fontSize = textSize, textSize);
+  const disclosure = page.getByRole('button', { name: 'Норма КБЖУ', exact: true });
+  await disclosure.focus();
+  await page.keyboard.press('Enter');
+  await page.getByLabel('Калории, ккал', { exact: true }).fill(raw);
+  await disclosure.focus();
+  await page.keyboard.press('Enter');
+  await expect(disclosure).toHaveAttribute('aria-expanded', 'false');
+  await page.getByRole('button', { name: 'Далее', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  const invalid = page.locator(`#${firstInvalid}`);
+  await expect(disclosure).toHaveAttribute('aria-expanded', 'true');
+  await expect(invalid).toBeFocused();
+  await expect(invalid).toHaveAttribute('aria-invalid', 'true');
+  await expect(invalid).toHaveAttribute('aria-describedby', `${firstInvalid}-error`);
+  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '1');
+  const field = await invalid.locator('..').boundingBox();
+  const footer = await page.locator('.sticky-actions').boundingBox();
+  expect(field!.y).toBeGreaterThanOrEqual(0);
+  expect(field!.y + field!.height).toBeLessThanOrEqual(footer!.y);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
 test('manual-nutrition empty: keyboard disclosure, explicit basis and no guessed target', async ({ page }) => {
   await page.goto('/plan/new');
   const disclosure = page.getByRole('button', { name: 'Норма КБЖУ', exact: true });

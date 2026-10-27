@@ -62,13 +62,9 @@ export function Wizard({ draft, onChange, recovery = false, saved = false, onRes
     if (nextLock.current) { document.getElementById('wizard-title')?.focus(); return; }
     if (draft.step === 4) return;
     const found = validateStep(draft);
+    pendingFocus.current = Object.keys(found)[0] ?? null;
     setErrors(found);
-    if (Object.keys(found).length) {
-      const invalid = document.getElementById(Object.keys(found)[0]);
-      invalid?.focus();
-      (invalid?.closest('.field') ?? invalid)?.scrollIntoView({ block: 'center' });
-      return;
-    }
+    if (pendingFocus.current) return;
     nextLock.current = setTimeout(() => { nextLock.current = null; }, 250);
     change({ type: 'step', value: (draft.step + 1) as Step });
   }

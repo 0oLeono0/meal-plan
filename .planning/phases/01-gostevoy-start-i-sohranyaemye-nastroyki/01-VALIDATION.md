@@ -1,114 +1,113 @@
 ---
 phase: "01"
 slug: "gostevoy-start-i-sohranyaemye-nastroyki"
-status: draft
+status: validated
 nyquist_compliant: false
-wave_0_complete: false
+wave_0_complete: true
 created: "2026-10-26"
+validated: "2026-10-27"
 ---
 
-# Phase 01 — Validation Strategy
+# Phase 01 — Validation
 
-Это контракт проверки, а не отчёт о прошедших тестах. Историческая исходная точка была без приложения; планы 01–05 уже исполнены и их фактические результаты находятся в неизменённых SUMMARY. Разработка разрешена. Поправка человека C-04/D-10 от 26.10.2026: автоматический калькулятор NEXT-10 и его четыре состояния deferred P1; P0/WIZ-09 — необязательная ручная цель. Ни подготовка replan, ни строки таблицы ниже не доказывают приёмку 01-07/08.
+Фактический аудит покрытия после 8/8 исполненных планов. `validated` означает проверенную карту evidence, а не принятую фазу. Автоматизированные случаи имеют наблюдаемые assertions и выполненные прогоны; обязательные human/device проверки ниже остаются pending, поэтому `nyquist_compliant: false`. Реализация и тесты этим аудитом не изменялись; повторный полный прогон без изменений не запускался.
+
+Scope: APP-01/02/03, WIZ-01…07, amended WIZ-09 manual, UX-01 в границах гостевого старта. APP-04/WIZ-08, настоящая генерация, меню, склад и покупки относятся к следующим фазам. Их честные пустые маршруты не доказывают будущую функциональность. Подтверждённая поправка C-04/D-10 переносит автоматический калькулятор и empty/loading/error/partial/overflow/long-text в NEXT-10 P1. Он не реализован и не получает вычислительного кредита; оставшаяся Q-03 открыта. Ручной WIZ-09 принят по QA 01-08.
 
 ## Test Infrastructure
 
-| Property | Value |
+| Property | Actual value |
 |---|---|
-| Framework | Vitest (чистые функции), Playwright (DOM/браузер), TypeScript, ESLint |
-| Config file | FUTURE playwright.config.ts создаётся tracer01-01-02; vite.config.ts/Vitest, strict tsconfig и ESLint создаются01-02-02 |
-| Quick run command | `npm run test:unit -- --run` после substantive unit specs в01-03-01 |
-| Full suite command | `npm run typecheck`, затем `npm run lint`, `npm run test:unit -- --run`, `npm run build`, `npm run test:e2e` |
-| Estimated runtime | Не измерен: запусков приложения ещё не было |
+| Framework | Vitest 5.0.5, Playwright 1.64.1, strict TypeScript, ESLint |
+| Config | package.json, vite.config.ts, playwright.config.ts, tsconfig.json, eslint.config.js существуют |
+| Quick unit | `npm run test:unit -- --run` — 134 tests / 4 files, 1.17 s финальный журнал |
+| Quick browser | `npm run test:e2e -- e2e/accessibility.spec.ts --project=chromium --grep smoke` — 1 passed, 4.6 s в QA |
+| Release | `npm run typecheck`; `npm run lint`; `npm run test:unit -- --run`; `npm run build`; `npm run test:e2e -- --project=chromium` (и отдельно firefox/webkit) |
+| Browser limits | Chromium 156.0.8078.4, Firefox 157.0, WebKit 27.2: desktop projects, viewport emulation; не iOS/Safari 15 |
 
-Все команды — предлагаемый контракт scripts, который должен быть создан первым заданием и указан в его acceptance criteria. Нельзя утверждать, что эти команды уже существуют или успешно выполнялись.
+## Executed Evidence
 
-## Sampling Rate
+| Evidence | Actual outcome | Qualification |
+|---|---|---|
+| `.tmp/phase01-qa/unit-final.log` | 134 passed, 4 files | После исправления фокуса |
+| `release-chromium.log/xml` | 112 passed, exit 0; 93.141 s wall | Полный исходный прогон до узкого focus fix |
+| `release-firefox.log/xml` | 112 passed, exit 0; 124.531 s wall | Полный исходный прогон до узкого focus fix |
+| `release-webkit-final.log/xml` | 112 passed; 154.689 s JUnit | Финальный полный прогон после focus fix |
+| `focus-cross-browser-final.log/xml` | 70 passed, 35/browser; 74.461 s JUnit | После fix: все navigation/storage/accessibility Chromium + Firefox |
+| `focus-red.log/xml/json` → `focus-green.log/xml` | 2 failed → 2 passed, 6.3 s | Profile/exit return-focus; исходные assertions сохранены |
+| `reduced-motion-red.xml/json` | 10 passed / 1 failed → focused 11 passed | Ошибка specificity исправлена в 01-08; фактический RED сохранён |
+| `docs/qa/phase01.md`, 01-08-SUMMARY | typecheck/lint/build exit 0; final build 3.74 s, dist/index.html | Начальный TS2550 в release-typecheck.log исправлен; release-results.json содержит исторический неуспех и не является финальным агрегатом |
 
-- После каждого изменения бизнес-валидации/сохранения: релевантные unit и typecheck.
-- После UI/storage задания: релевантные e2e без watch, lint и build.
-- После волны и перед приёмкой: полный набор; отдельно реальные screenshots/visual checks.
-- Цель быстрого feedback — менее 60 секунд после установки; фактическое время сначала измерить, не представлять оценку как результат.
+Локальные `.tmp` журналы просмотрены при аудите; долговременный tracked отчёт — `docs/qa/phase01.md` и неизменённые SUMMARY. Ни 70 повторных кейсов, ни старый release-results.json не обозначают второй полный Chromium/Firefox прогон.
 
 ## Per-Task Verification Map
 
-| Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
-|---|---|---|---|---|---|---|---|---|---|
-|01-01-01|01-01|1|APP-01|T-01-SC|Human SUS/pins/peers before install|record gate|node -e install record check from PLAN|No, human record|gated|
-|01-01-02|01-01|1|APP-01,APP-03,WIZ-02,UX-01|T-01-01,T-01-02|Real save/reload, no false saved|e2e|npm run test:e2e -- e2e/guest.spec.ts --project=chromium|No, created here|pending|
-|01-02-01|01-02|2|APP-01,APP-02,APP-03,UX-01|T-01-03|Literal labels, safe routes/dialog/presence|e2e|npm run test:e2e -- e2e/navigation.spec.ts --project=chromium|No, created here|pending|
-|01-02-02|01-02|2|APP-01,APP-02,UX-01|T-01-03|Shared tokens, strict quality and Safari15 build target|e2e/build|navigation.spec; npm run typecheck; npm run lint; npm run build|No, config created here|pending|
-|01-03-01|01-03|3|WIZ-01,WIZ-02|T-01-11|Corrupt raw untouched;exact-key reset;throw/retry|unit/e2e|npm run test:unit -- --run src/domain/settings.test.ts src/adapters/guestDraft.test.ts; npm run test:e2e -- e2e/storage.spec.ts --project=chromium|No, created here|pending|
-|01-03-02|01-03|3|WIZ-01,WIZ-02|T-01-11|Exit/cancel/newest value;decision validator fail closed|unit/e2e|npm run test:e2e -- e2e/storage.spec.ts --project=chromium --grep exit; npm run test:unit -- --run src/adapters/guestDraft.test.ts|No, expanded here|pending|
-|01-04-01|01-04|4|WIZ-01,WIZ-02,WIZ-03|T-01-11|Full integer counts;no step skipping|unit/e2e|npm run test:unit -- --run src/domain/settings.test.ts; npm run test:e2e -- e2e/wizard.spec.ts --project=chromium|No, created/expanded here|pending|
-|01-04-02|01-04|4|WIZ-09 manual|T-01-05|Missing≠0;partial invalid;explicit manual origin|unit/e2e|npm run test:unit -- --run src/domain/nutritionTarget.test.ts; npm run test:e2e -- e2e/nutrition.spec.ts --project=chromium|No, created here|pending|
-|01-05-01|01-05|5|WIZ-04|T-01-04|Exact safe budget;truthful thumb aria|unit/e2e|npm run test:unit -- --run src/domain/budget.test.ts; npm run test:e2e -- e2e/budget.spec.ts --project=chromium|No, created here|pending|
-|01-05-02|01-05|5|WIZ-05|T-01-04|Latest time/variety preserves budget/raw|e2e|npm run test:e2e -- e2e/budget.spec.ts --project=chromium --grep time-variety|No, expanded here|pending|
-|01-06-01|01-06|6|WIZ-06|T-01-06,T-01-07,T-01-08|Literal labels/IDs/stale response|e2e|npm run test:e2e -- e2e/products.spec.ts --project=chromium --grep exclusions|No, created here|pending|
-|01-06-02|01-06|6|WIZ-01,WIZ-02,WIZ-07,UX-01|T-01-07,T-01-08|Unknown quantity≠0;global sentinel unchanged|unit/e2e|npm run test:unit -- --run src/domain/settings.test.ts; npm run test:e2e -- e2e/products.spec.ts --project=chromium --grep home-products|No, expanded here|pending|
-|01-07-01|01-07|5|WIZ-09 scope / NEXT-10 deferred|T-01-09|Exact human response/source/timestamp;validator exit 1 with REPLAN_REQUIRED retained|record/docs|01-07 task01 automated node assertion: human-confirmed scope-amendment plus expected fail-closed validator|Yes, record/archive verified; tracer recheck passed|passed docs-only 26.10.2026; no formula approval|
-|01-07-02|01-07|5|WIZ-09 manual / NEXT-10 deferred|T-01-09,T-01-10|Manual Pending;calculator and four states P1;no invented norms;Q-03 partial|docs|01-07 task02 automated node assertion plus git diff --check; amendment affected-path review|Yes, scope documents checked; no calculator source changed|passed docs-only 26.10.2026; WIZ-09 Pending QA|
-|01-08-01|01-08|7|APP-01,APP-02,APP-03,WIZ-01,WIZ-02,UX-01|T-01-12|Responsive real flow;honest evidence|smoke/e2e|npm run test:e2e -- e2e/presentation.spec.ts --project=chromium --grep smoke; then full focused spec|No, created here|gated|
-|01-08-02|01-08|7|WIZ-01,WIZ-02,WIZ-09,UX-01|T-01-12|Keyboard/aria/focus;no fabricated acceptance|smoke/e2e/release|npm run test:e2e -- e2e/accessibility.spec.ts --project=chromium --grep smoke; then full focused spec and release commands below|No, created here|gated|
+Все команды выполняются из корня проекта. `green` относится только к указанному автоматизированному поведению; file exists = yes у всех перечисленных specs. Неуспех, No tests found и ноль выполненных тестов не считаются успехом.
 
-Every runnable automated command has immediate fails_when in PLAN; nonzero/No tests found/zero tests fail. Commands run in repository root; package.json is a FUTURE artifact of01-01-02, not a manifest created during planning. No prefix/cd representation points the probe at an absent current manifest. Native tracer runs with Vite CLI before optional shared configuration is added in02; unit specs begin03. Missing/unconfirmed calculator decision is nonzero; scope amendment emits REPLAN_REQUIRED.
+| Task ID | Requirement | Type | Automated command / file | Observable test ID or behavior | Status |
+|---|---|---|---|---|---|
+| 01-01-01 | APP-01 install gate | record | node assertion из 01-01-PLAN; docs/qa/phase01-install-preflight.json | Human approval/pins/peers; исполнение записано в 01-01-SUMMARY | record verified; не runtime test |
+| 01-01-02 | APP-01, APP-03, WIZ-02, UX-01 | e2e | `npm run test:e2e -- e2e/guest.spec.ts --project=webkit` | guest people count survives a real reload; only validated plan presence redirects the root; late/error/invalid presence, literal brand, double CTA | green |
+| 01-02-01 | APP-01/02/03, UX-01 | e2e | `npm run test:e2e -- e2e/navigation.spec.ts --project=webkit` | deep routes and neighboring paths; exact 1199 to 1200 boundary; profile trap/Escape/resize; late presence | green; visual/device pending |
+| 01-02-02 | APP-01/02, UX-01 | e2e/build | `npm run typecheck`; `npm run lint`; `npm run build`; navigation.spec.ts | Shared type scale, targets, route states; safari15 build target | green; build target не доказательство Safari 15 |
+| 01-03-01 | WIZ-01/02 | unit/e2e | `npm run test:unit -- --run src/domain/settings.test.ts src/adapters/guestDraft.test.ts`; `npm run test:e2e -- e2e/storage.spec.ts --project=webkit` | corrupt bytes explicit safe reset; hydrate before edits; raw partial strings; read/write/remove throws; newest retry | green |
+| 01-03-02 | WIZ-01/02 | unit/e2e | `npm run test:e2e -- e2e/storage.spec.ts --project=webkit --grep exit`; guestDraft.test.ts unit command above | exit cancel retains raw and focus; pending/memory copy honest; late callbacks keep newest draft | green |
+| 01-04-01 | WIZ-01/02/03 | unit/e2e | `npm run test:unit -- --run src/domain/settings.test.ts`; `npm run test:e2e -- e2e/wizard.spec.ts --project=webkit` | WIZ-03 boundary people/days, 4+, goals; raw reload, first invalid focus; double Next cannot skip | green |
+| 01-04-02 | WIZ-09 manual | unit/e2e | `npm run test:unit -- --run src/domain/nutritionTarget.test.ts`; `npm run test:e2e -- e2e/nutrition.spec.ts --project=webkit` | absent whitespace, partial/clear, full finite values, zero kcal/negative/nonfinite errors, source/person-day and raw reload | green, amended manual only |
+| 01-05-01 | WIZ-04 | unit/e2e | `npm run test:unit -- --run src/domain/budget.test.ts`; `npm run test:e2e -- e2e/budget.spec.ts --project=webkit` | exact field and truthful range projection: 500/1000/1050/15000/20000; unsafe/partial input; people/days affect hint only | green |
+| 01-05-02 | WIZ-05 | e2e | `npm run test:e2e -- e2e/budget.spec.ts --project=webkit --grep time-variety` | defaults/order, keyboard/idempotency, latest choices/back/reload, invalid stored enums | green |
+| 01-06-01 | WIZ-06 | e2e | `npm run test:e2e -- e2e/products.spec.ts --project=webkit --grep exclusions` | five restrictions, resolved ID tags Enter/comma, duplicate/undo order/5 s expiry; latest request/loading/error/retry; hostile literal labels | green |
+| 01-06-02 | WIZ-01/02/07, UX-01 | unit/e2e | `npm run test:unit -- --run src/domain/settings.test.ts`; `npm run test:e2e -- e2e/products.spec.ts --project=webkit --grep home-products` | six popular IDs; unknown ≠ zero; positive quantity/compatible unit; expiry/duplicate focus/undo/raw reload; no confirmed/pantry mutation; provenance | green |
+| 01-07-01 | WIZ-09 scope / NEXT-10 | record | exact node assertion из 01-07-PLAN, 01-07-SUMMARY | human amendment/source/time/archive; validator expected exit 1 REPLAN_REQUIRED | docs verified; calculator locked |
+| 01-07-02 | WIZ-09 manual / NEXT-10 | docs | exact node assertion из 01-07-PLAN; git diff --check | manual P0 / calculator P1 mapping; no invented formula | docs verified; не calculator pass |
+| 01-08-01 | APP-01/02/03, WIZ-01/02/09, UX-01 | e2e | `npm run test:e2e -- e2e/presentation.spec.ts --project=webkit` | 15 cases: seven-width complete guest journey/raw IDs/manual origin; absence/partial correction; six truthful route states at 200% CSS text | green; visual/native zoom pending |
+| 01-08-02 | WIZ-01/02/09, UX-01 | e2e/release | `npm run test:e2e -- e2e/accessibility.spec.ts --project=webkit` | 11 cases: keyboard trap/cancel/restore/first error; skip link/current nav/targets/reduce; combobox; seven-width sticky errors; short viewport | green; human accessibility pending |
 
-## Predicate Allocation
+Named focused commands above select cases actually included in the full final WebKit run; they are repeatable commands, not a claim that every filtered command was separately rerun during this audit. Requirements APP-01/02/03, WIZ-01/02, UX-01 retain final-verifier/human acceptance status independently of automated green. WIZ-03…07 and amended manual WIZ-09 have recorded completion in current REQUIREMENTS.
 
-|Source|Plan/task owner|Test evidence|
+## Predicate Allocation and Remaining Gaps
+
+| Group | Coverage and limit | Resolution |
 |---|---|---|
-|4 welcome UI +4 APP-03 edges|01-01-02|guest.spec|
-|8 nav/routes UI +14 routes/nav/UX edges|01-02-01/02|navigation.spec|
-|6 recovery UI +6 wizard/storage edges|01-03-01/02|storage.spec,settings/guestDraft unit|
-|12 people/manual UI +4 count/norm edges|01-04-01/02|wizard/nutrition specs,settings/nutritionTarget unit|
-|6 budget UI +7 financial/options edges|01-05-01/02|budget.spec,budget unit|
-|16 products UI +10 exclusion/home edges|01-06-01/02|products.spec,settings unit|
-|Historical 2 calculator layout UI +4 calculator assumptions|NEXT-10 P1 by human-confirmed D-10|All six rows deferred; not implemented and excluded from P0 formula/UI tests|
-|Applicable P0 requirement/decision/UI/edge evidence|01-08-01/02|presentation/accessibility smoke,matrix,actual QA record; WIZ-09 manual only|
+| welcome/navigation/routes | guest/navigation: pending/error/empty/encoding/history/late response/1199–1200/current nav; presentation seven-width route reflow | FILLED automated |
+| raw draft/recovery/navigation | settings/guestDraft + storage/wizard: structural validity vs readiness, hydrate, latest retry, exact-key reset, safe exit, reload | FILLED automated |
+| people/budget/manual target | settings/budget/nutritionTarget + wizard/budget/nutrition/presentation; actual input and saved-state assertions | FILLED automated |
+| exclusions/home products | products: empty/loading/error/retry/stale/partial/populated/zero-one-many/long literal labels, IDs, unknown quantity, compatible units, undo | FILLED automated |
+| layout/keyboard | presentation/accessibility geometry, CSS text 200%, focus, targets and short viewport | WARNING: partial; human cases below pending |
+| two tabs | storage test `two-tab backstop observes independent memory and last successful local write without claiming sync` | WARNING: tested last-write behavior, user conflict judgement pending |
+| calculator | NEXT-10 P1, confirmed D-10 | explicit justified SKIP from P0; не implementation gap и не выполненное требование |
 
-Historical baseline before amendment: 45 edges=44 explicit +1 flat backstop(WIZ-02/concurrency two tabs). No new aggregate count is claimed without a fresh audit; applicable named P0 criteria retain coverage. Calculator empty/loading/error/partial and overflow/long-text explicitly deferred P1/NEXT-10 by D-10, not passed or implemented. Safety prohibitions04/06 remain flagged-unverified without fabricated check descriptors.
+Новых критических пропусков автоматизированного поведения в пределах проверенного гостевого среза не выявлено. Новые тесты не создавались: существующие проверки включены в реальные зелёные прогоны. Это не снимает следующие непроверенные обязательные случаи и не подтверждает все будущие P0 функции. Исторические 54/45 counts не используются как количество принятых predicates.
 
-## Release Verification
+## Manual-Only Verifications — pending / human_needed
 
-After each meaningful focused smoke/spec passes,01-08 runs all: npm run test:unit -- --run; npm run test:e2e -- --project=chromium; separately --project=firefox and --project=webkit; npm run typecheck; npm run lint; npm run build. Immediate fails_when statements remain in01-08 release block. Full suite is not presented as measured quick feedback; timings still unmeasured.
-
-## Required Cases
-
-- Гостевой deep link/reload всех P0-маршрутов; неизвестный рецепт; валидный plan-presence fixture для redirect, без фиктивной генерации.
-- 4 шага, назад/выход/отмена, первый error focus, восстановление шага 3 с тегами и сырыми невалидными строками.
-- Люди 1/10, чип 4+→4, дни 1/7; дефолты не перекрывают восстановленные значения.
-- Бюджет 500/1000/1050/15000/20000, дробный/пустой/unsafe integer; отдельное доступное значение ползунка и точного поля, изменение дней меняет подсказку, не сумму.
-- Read/write throws, повреждённый JSON, неизвестная версия, retry/reset только принадлежащего приложению ключа; режим памяти предупреждает о несохранении.
-- Ограничения и product-ID теги Enter/запятая/удаление; lookup loading/empty/error; popular-чипы и повторный productId.
-- Запасы без количества, известное положительное количество/единица, expiresSoon; черновик не расходует глобальный pantry.
-- Норма: пустой/частичный/полный набор, отрицательные/nonfinite; происхождение manual; отсутствие не трактуется нулём или примером ТЗ.
-- Размеры 360/390/430/768/1280, граница 1199/1200: overflow, фокус, touch targets, отсутствие перекрытий.
-
-## Infrastructure Allocation
-
-- [ ]01-01-01: human package legitimacy/pin/engine/peer approval before install; TypeScript peer conflict is not bypassed.
-- [ ]01-01-02:8-file real save/reload tracer with package/lock/index/App/domain/storage/Playwright config+guest browser spec; Vite CLI explicit Safari15 target.
-- [ ]01-02-02: inline Tailwind3.4/PostCSS in vite.config.ts, strict tsconfig and ESLint, shared tokens; no unlisted config files.
-- [ ]01-03: substantive unit/storage specs and isolated fixtures; strict calculator decision validator; no empty/fake-pass tests.
-- [ ]Each feature task creates focused specs RED before implementation; future scripts/files are never claimed present today.
-
-## Manual-Only Verifications
-
-| Behavior | Requirement | Why Manual | Test Instructions |
+| Gap | Requirement / owner | Why existing automation is insufficient | Required evidence |
 |---|---|---|---|
-| Визуальное соответствие PDF | UX-01, APP-02 | DOM assertions не доказывают визуальное качество | Посмотреть screenshots всех размеров, макет, ошибки и sticky footer |
-| Виртуальная клавиатура/safe area | APP-02, WIZ-01 | Desktop viewport не повторяет реальное устройство | Проверить реальный iOS при доступности; недоступность записать |
-| Именно Safari 15 | Совместимость PRD | Современный Playwright WebKit — другой браузер | Проверить историческую версию отдельно или указать непроведённую проверку |
-| C-04/Q-03 | WIZ-09 manual / NEXT-10 P1 | Приоритет подтверждён человеком; формулы/средние нормы и жёсткость nutrition targets не определены | 01-07 проверяет docs-only amendment; 01-08 принимает manual WIZ-09. Автокалькулятор/четыре состояния deferred P1; Q-03 остаётся частично открытым для будущего контракта и генерации |
+| M-01 iOS keyboard/safe area | APP-02, WIZ-01, UI D-16 | desktop 390×400 проверяет поток, не virtual keyboard/safe area | Реальное iOS: все поля/поиск/footer достижимы при клавиатуре, portrait/rotation и safe-area |
+| M-02 historical Safari 15 | PRD compatibility | WebKit 27.2 и safari15 build target не исполняют Safari 15 | Реальный Safari 15: guest/reload/dialogs/search/manual target либо явное согласованное изменение совместимости |
+| M-03 screen reader / full contrast | UX-01, UI accessibility | ARIA/focus/geometry не доказывают announcements и AA всех состояний | Screen reader walkthrough labels/status/errors/dialog/listbox; измерение контраста normal/hover/focus/error/disabled |
+| M-04 native zoom / final visuals | UX-01, APP-02, D-15/16 | font-size 200% не browser zoom; выборочный просмотр PNG не человеческое одобрение всех экранов | Native 200% zoom и оценка читаемости/перекрытий всех шагов/ошибок; сравнение с предоставленными PDF |
+| M-05 Q-17 LCP | quality/Q-17 | нет согласованной методики и фактического измерения | Согласованный device/network/cache метод и реальное измерение LCP |
+| M-06 concurrency / safety judgement | WIZ-02, WIZ-09, WIZ-06/07 | two-tab backstop не принимает UX конфликтов; flagged prohibitions 04/06 не получают общий pass | Оценка конфликтов двух вкладок и отсутствие ложных медицинских/пищевых деклараций; remaining Q-03 для будущей генерации отдельно |
 
-## Validation Sign-Off
+Все шесть — WARNING / unverified requirement, не green и не заполненные gaps. Они эскалированы итоговому verifier; недоступность среды не заменяет результат. Учёт ограничений: docs/qa/phase01.md и .planning/WINDOWS.md entries 4–9. Известный MODULE_LEVEL_DIRECTIVE остаётся в WINDOWS и не скрывается аудитом.
 
-- [ ] Все задачи имеют automated verify с fails_when либо явную Wave 0 dependency.
-- [ ] Нет трёх последовательных исполняемых задач без автоматической проверки.
-- [ ] Tracer создаёт scripts/Playwright;02 добавляет strict/shared configs,03 unit fixtures; последующие команды используют реально созданные ранее пути.
-- [ ] Нет watch-mode flags и проверок с нулём найденных тестов как успехом.
-- [ ] Применимые требования P0 подтверждены; WIZ-09 принят только по обновлённому manual-контракту. Прежнее вычисление отдельно NEXT-10 P1 и не выполнено.
-- [ ] Фактически выполненные проверки и ограничения записаны отдельно.
-- [ ] `nyquist_compliant: true` устанавливается только после проверки контрактов; execution readiness не заявляется при открытом decision checkpoint.
+## Sampling and Sign-Off
 
-**Approval:** pending. Фактические тесты/сборка планов 01–05 записаны в их исторических SUMMARY; docs-only 01-07 проверен и исполнен, приёмка 01-08 ещё не выполнена. C-04 закрыт по приоритету human-confirmed amendment, Q-03 в оставшемся объёме открыт. Документальное исполнение не означает принятую WIZ-09 или завершённую фазу.
+- [x] Nyquist включён в .planning/config.json; все 8 PLAN/SUMMARY учтены.
+- [x] Wave 0 инфраструктура, содержательные unit/e2e и реальные scripts существуют; команды не watch и не passWithNoTests.
+- [x] У каждой исполняемой задачи есть automated verify/fails_when либо проверенный human decision record; трёх задач без автоматической проверки нет.
+- [x] Actual evidence отделено от исторического RED и будущей функциональности; amendment не выдаётся за реализованный калькулятор.
+- [x] Достаточно unit/focused feedback; длительный release suite не обещается менее 60 секунд.
+- [ ] Все обязательные human/device/judgement cases подтверждены.
+- [ ] Phase 1 принята итоговым verifier и человеком; nyquist_compliant=true.
+
+**Approval:** pending human verification. Итог этого hook — PARTIAL: автоматизированное покрытие подтверждено существующими выполненными тестами, 6 групп обязательных проверок остаются human_needed. Приложение, весь P0 и Phase 1 этим документом не объявляются завершёнными. Следующий шаг — итоговый verifier с открытыми M-01…M-06; новые тесты/commits аудитом не создавались.
+
+## Validation Audit 2026-10-27
+
+| Metric | Count |
+|---|---|
+| Gaps found | 6 |
+| Resolved | 0 |
+| Escalated | 6 |

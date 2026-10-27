@@ -62,6 +62,15 @@ describe('dated reproducible plan boundary', () => {
       const expected = [String(date.getFullYear()).padStart(4, '0'), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
       expect(plan.createPlanInputs(settingsFixture(), catalogFixture(), { now: () => date, seed: 'seed' }).startDate).toBe(expected);
     }
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (zone === 'Europe/Moscow') expect(plan.localDateOnly(new Date('2026-10-26T21:05:00Z'))).toBe('2026-10-27');
+    if (zone === 'America/New_York') {
+      expect(plan.localDateOnly(new Date('2026-10-27T03:55:00Z'))).toBe('2026-10-26');
+      // This launch really crosses a 23-hour DST day in the TZ-isolated test run.
+      expect(new Date(2026, 2, 7, 12).getTimezoneOffset()).toBe(300);
+      expect(new Date(2026, 2, 8, 12).getTimezoneOffset()).toBe(240);
+      expect(inputsFixture('4', new Date(2026, 2, 7, 23, 55)).dates).toEqual(['2026-03-07', '2026-03-08', '2026-03-09', '2026-03-10']);
+    }
   });
   it('keeps repeated recipe IDs as independent source instances and scales servings only later', () => {
     const envelope = envelopeFixture(); const [breakfast, lunch] = envelope.variants[0].instances;

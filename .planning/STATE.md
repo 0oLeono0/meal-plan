@@ -4,19 +4,18 @@ milestone: v1.0
 milestone_name: P0 MVP
 current_phase: 2
 current_phase_name: Первый допустимый план и рассчитанные покупки
-current_plan: Not started
+current_plan: 2
 status: executing
-stopped_at: Phase 1 complete, ready to plan Phase 2
-last_updated: "2026-10-27T18:29:45.137Z"
+stopped_at: Completed 02-01-PLAN.md; ready for 02-02
+last_updated: "2026-10-27T18:40:05.384Z"
 last_activity: 2026-10-27
-last_activity_desc: Phase 1 complete, transitioned to Phase 2
-state_head: eae456088765cb085eee9409b254aa6de54e4465
+last_activity_desc: Completed 02-01; ready for 02-02
+state_head: 7ce2a7a2b6e234b5c6a2f854907c19cc7b3df8ad
 progress:
   total_phases: 7
   completed_phases: 1
-  total_plans: 8
-  completed_plans: 8
-  percent: 14
+  total_plans: 18
+  completed_plans: 9
 ---
 
 # Project State
@@ -26,17 +25,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-27)
 
 **Core value:** Допустимое меню с прозрачным бюджетом и согласованные покупки с количественным учётом домашних запасов.
-**Current focus:** Phase 2 — Первый допустимый план и рассчитанные покупки. Phase 1 завершена: 8/8 планов, VERIFICATION passed, пользовательская UAT 9/9. Следующий шаг — собрать контекст Phase 2; её код ещё не начат.
+**Current focus:** Phase 2 — Первый допустимый план и рассчитанные покупки. Завершён 02-01: точные количества и проверенный USDA ingredient tracer; следующий 02-02. Полный каталог и production generation ещё не готовы.
 
 ## Current Position
 
 Phase: 2 — Первый допустимый план и рассчитанные покупки
-Current Plan: Not started
-Total Plans in Phase: 0 (Phase 2 not planned)
-Status: executing
-Last activity: 2026-10-27 — Phase 1 complete, transitioned to Phase 2
+Current Plan: 2
+Total Plans in Phase: 10
+Status: Ready to execute
+Last activity: 2026-10-27 — Completed 02-01; ready for 02-02
 
-Progress: [█░░░░░░░░░] 1/7 фаз завершена ([█░░░░░░░░░] 14%); Phase 1: 8/8 планов, UAT 9/9; Phase 2 ещё не спланирована.
+Progress: Phase 1: 8/8 планов приняты; Phase 2: 1/10 завершён (02-01), следующий 02-02. Остальные фазы ещё не завершены.
 
 ## Performance Metrics
 
@@ -67,6 +66,7 @@ Progress: [█░░░░░░░░░] 1/7 фаз завершена ([█�
 | Phase 01 P07 | 5min | 2 tasks | 18 files |
 | Phase 01 P06 | 12 min | 2 tasks | 8 files |
 | Phase 01 P08 | 877min | 2 tasks | 8 files |
+| Phase 02 P01 | 6min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -79,6 +79,7 @@ Progress: [█░░░░░░░░░] 1/7 фаз завершена ([█�
 - Точный бюджет ≥500 — источник истины; slider — отдельная проекция, а не скрытое ограничение суммы.
 - Products — стабильные names-only IDs и raw количества; H9 принимает добавление выбором результата без отдельной кнопки.
 - Автоматизированные результаты и пользовательские pass H1–H9 записаны раздельно; весь P0 ещё не завершён.
+- [Phase 02]: Exact source decimals use normalized BigInt rationals and bounded string JSON codec; unknown price/safety remain explicit in the USDA tracer.
 
 ### Pending Todos
 
@@ -101,6 +102,6 @@ Progress: [█░░░░░░░░░] 1/7 фаз завершена ([█�
 
 ## Session Continuity
 
-Last session: 2026-10-27T14:09:25.881135+00:00
-Stopped at: Phase 1 complete, ready to plan Phase 2
+Last session: 2026-10-27T18:39:44.144Z
+Stopped at: Completed 02-01-PLAN.md; ready for 02-02
 Resume file: None

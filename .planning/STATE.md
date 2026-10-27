@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: P0 MVP
 current_phase: 2
 current_phase_name: Первый допустимый план и рассчитанные покупки
-current_plan: 3
+current_plan: 4
 status: executing
-stopped_at: Completed 02-02-PLAN.md; ready for 02-03
-last_updated: "2026-10-27T18:54:02.469Z"
+stopped_at: Completed 02-03-PLAN.md; ready for 02-04
+last_updated: "2026-10-27T19:04:19.237Z"
 last_activity: 2026-10-27
-last_activity_desc: Completed 02-02; ready for 02-03
-state_head: 9473f6ee0c5ef2f2e04791bd98e7d25df76a6010
+last_activity_desc: Completed 02-03; ready for 02-04
+state_head: 6d2868aaa298e6d72d7fd7429531fda394252d38
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 18
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
@@ -25,22 +25,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-27)
 
 **Core value:** Допустимое меню с прозрачным бюджетом и согласованные покупки с количественным учётом домашних запасов.
-**Current focus:** Phase 2 — завершены 02-01 и 02-02: точные immutable settings и dated plan contracts. Следующий 02-03: общая проекция КБЖУ, бюджета и покупок. Production generation и каталог ещё не готовы.
+**Current focus:** Phase 2 — завершены 02-01–02-03: точные immutable settings, dated plan contracts и общая проекция КБЖУ/бюджета/покупок. Следующий 02-04: детерминированный подбор с жёсткими ограничениями. Production generation и каталог ещё не готовы.
 
 ## Current Position
 
 Phase: 2 — Первый допустимый план и рассчитанные покупки
-Current Plan: 3
+Current Plan: 4
 Total Plans in Phase: 10
 Status: Ready to execute
-Last activity: 2026-10-27 — Completed 02-02; ready for 02-03
+Last activity: 2026-10-27 — Completed 02-03; ready for 02-04
 
-Progress: Phase 1: 8/8 планов приняты; Phase 2: 2/10 завершены (02-01, 02-02), следующий 02-03. Остальные фазы ещё не завершены.
+Progress: Phase 1: 8/8 планов приняты; Phase 2: 3/10 завершены (02-01–02-03), следующий 02-04. Остальные фазы ещё не завершены.
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
+- Total plans completed: 11
 - Historical active durations for first 7 plans: 76 min (10.9 min/plan).
 - Plan 01-08 recorded wall window: 877 min, including overnight usage-limit interruption; exact active duration unknown and excluded from active-time averages.
 
@@ -68,6 +68,7 @@ Progress: Phase 1: 8/8 планов приняты; Phase 2: 2/10 заверше
 | Phase 01 P08 | 877min | 2 tasks | 8 files |
 | Phase 02 P01 | 6min | 2 tasks | 6 files |
 | Phase 02 P02 | 8min | 2 tasks | 4 files |
+| Phase 02 P03 | 10min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -82,10 +83,11 @@ Progress: Phase 1: 8/8 планов приняты; Phase 2: 2/10 заверше
 - Автоматизированные результаты и пользовательские pass H1–H9 записаны раздельно; весь P0 ещё не завершён.
 - [Phase 02]: Exact source decimals use normalized BigInt rationals and bounded string JSON codec; unknown price/safety remain explicit in the USDA tracer.
 - [Phase 02]: Applied settings use exact raw strings and detached snapshots; local date-only plan instances and canonical generation contracts are validated independently of later price/safety projection.
+- [Phase 02]: Whole-period projection spends pantry once and preserves exact nutrients; canonical period/day product rows and exact/displayed budget checks serve shared presentation.
 
 ### Pending Todos
 
-Следующий шаг — `$gsd-discuss-phase 2`: источники каталога Q-14, база бюджета Q-04, роль nutrition targets Q-03 и округление Q-16 должны получить проверяемый контракт до генератора. Phase 1 закрыта, NEXT-10 остаётся P1.
+Следующий шаг — исполнение 02-04. Общая численная проекция проверена 26 целевыми тестами; полный unit suite — 228/228. Источники каталога DATA/Q-14 и интегрированная приёмка ещё открыты; синтетические численные fixtures не закрывают эти ворота. NEXT-10 остаётся P1.
 
 ### Blockers/Concerns
 
@@ -104,6 +106,6 @@ Progress: Phase 1: 8/8 планов приняты; Phase 2: 2/10 заверше
 
 ## Session Continuity
 
-Last session: 2026-10-27T18:53:53.891Z
-Stopped at: Completed 02-02-PLAN.md; ready for 02-03
+Last session: 2026-10-27T19:04:19.046Z
+Stopped at: Completed 02-03-PLAN.md; ready for 02-04
 Resume file: None

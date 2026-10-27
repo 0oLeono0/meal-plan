@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 import { draftKey } from './fixtures';
 
 const widths = [360, 390, 430, 768, 1199, 1200, 1280];
@@ -12,6 +12,84 @@ async function next(page: Page, step: number) {
   await page.waitForTimeout(260);
   await page.getByRole('button', { name: 'Далее', exact: true }).click();
   await expect(page.getByRole('progressbar', { name: 'Настройка меню' })).toHaveAttribute('aria-valuenow', String(step));
+}
+
+async function alignedChoices(page: Page) {
+  const choices = page.locator('label').filter({ has: page.locator('input[type="radio"], input[type="checkbox"]') });
+  expect(await choices.count()).toBeGreaterThan(0);
+  for (const choice of await choices.all()) {
+    await expect(choice).toHaveCSS('display', 'flex');
+    await expect(choice).toHaveCSS('align-items', 'center');
+    await expect(choice).toHaveCSS('column-gap', '8px');
+    await expect(choice).toHaveCSS('margin', '0px');
+    await expect(choice).toHaveCSS('font-weight', '400');
+    expect((await choice.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await expect(choice.locator('input')).toHaveCSS('accent-color', 'rgb(28, 124, 80)');
+  }
+}
+
+async function footerFits(page: Page, primary: Locator, mobile: boolean) {
+  const footer = page.locator('.sticky-actions');
+  const reserved = page.locator('.has-sticky-actions');
+  await expect.poll(async () => reserved.evaluate(element => parseFloat(getComputedStyle(element).getPropertyValue('--footer-height')))).toBeCloseTo((await footer.boundingBox())!.height, 0);
+  const bounds = await footer.boundingBox();
+  const button = await primary.boundingBox();
+  expect(button!.height).toBeGreaterThanOrEqual(48);
+  if (mobile) expect(button!.width).toBeCloseTo(bounds!.width - 32, 0);
+  const padding = await reserved.evaluate(element => parseFloat(getComputedStyle(element).paddingBottom));
+  expect(padding).toBeGreaterThanOrEqual(bounds!.height + 16);
+  await primary.focus();
+  const focused = await primary.boundingBox();
+  expect(focused!.y).toBeGreaterThanOrEqual(0);
+  expect(focused!.y + focused!.height).toBeLessThanOrEqual(800);
+  await fits(page);
+}
+
+for (const width of [360, 390, 768, 1280]) {
+  test(`presentation contract ${width}px choice captions align beside controls across all steps`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto('/plan/new');
+    await alignedChoices(page);
+    await next(page, 2);
+    await alignedChoices(page);
+    await next(page, 3);
+    await alignedChoices(page);
+    await next(page, 4);
+    await page.getByRole('group', { name: 'Популярные продукты' }).getByRole('button', { name: 'Рис', exact: true }).click();
+    await alignedChoices(page);
+  });
+
+  test(`presentation contract ${width}px budget is prominent with currency and retains exact raw amount`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto('/plan/new');
+    await next(page, 2);
+    const budget = page.getByLabel('Бюджет на неделю', { exact: true });
+    await budget.fill(' 1050 ');
+    await expect(budget).toHaveCSS('font-size', '32px');
+    await expect(budget).toHaveCSS('font-weight', '600');
+    await expect(budget).toHaveCSS('font-variant-numeric', 'tabular-nums');
+    await expect(page.locator('.budget-amount').getByText('₽', { exact: true })).toBeVisible();
+    await expect(budget).toHaveValue(' 1050 ');
+    await expect(page.getByRole('slider')).toHaveAttribute('aria-valuenow', '1100');
+    await expect(page.getByRole('slider')).toHaveAttribute('aria-valuetext', /Точная сумма в поле: 1\s050 рублей/);
+    await budget.fill('9007199254740991');
+    await fits(page);
+    await budget.fill('1,');
+    await expect(budget).toHaveValue('1,');
+    await expect(budget).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.getByRole('slider')).toHaveAttribute('aria-valuetext', /Отдельный выбор суммы/);
+  });
+
+  test(`presentation contract ${width}px primary fills mobile footer and reservation tracks enlarged final action`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto('/plan/new');
+    await footerFits(page, page.getByRole('button', { name: 'Далее', exact: true }), width < 768);
+    await next(page, 2);
+    await next(page, 3);
+    await next(page, 4);
+    await page.evaluate(() => document.documentElement.style.fontSize = '200%');
+    await footerFits(page, page.getByRole('button', { name: 'Проверить настройки' }), width < 768);
+  });
 }
 
 for (const width of widths) test(`presentation ${width === 360 ? 'smoke ' : ''}${width}px complete guest journey retains raw values IDs and manual origin`, async ({ page, browser }, info) => {
@@ -29,7 +107,7 @@ for (const width of widths) test(`presentation ${width === 360 ? 'smoke ' : ''}$
   await start.click();
   await page.getByLabel('Число людей', { exact: true }).fill('3');
   await page.getByLabel('Число дней', { exact: true }).fill('5');
-  await page.getByRole('radio', { name: 'Набрать вес' }).check();
+  await page.getByRole('radio', { name: 'Набор массы' }).check();
   await page.getByRole('button', { name: 'Норма КБЖУ', exact: true }).click();
   for (const [label, value] of [['Калории, ккал', ' 1800,5 '], ['Белки, г', '90'], ['Жиры, г', '0'], ['Углеводы, г', '240']]) {
     await page.getByLabel(label, { exact: true }).fill(value);

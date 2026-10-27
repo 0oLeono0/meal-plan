@@ -1,6 +1,7 @@
 import type { DraftAction, SettingsDraft, StepErrors } from '../../domain/settings';
 import { Button, Field } from '../../shared/ui';
 import { NutritionFields } from './NutritionFields';
+import { goalLabels } from './copy';
 
 export interface PeopleStepProps {
   draft: SettingsDraft;
@@ -39,10 +40,12 @@ export function PeopleStep({ draft, onChange, errors, disabled = false }: People
     </div>
     <fieldset id="goal" tabIndex={-1} className="card border-0 min-w-0" disabled={disabled} aria-describedby={errors.goal ? 'goal-error' : undefined}>
       <legend>Цель питания</legend>
-      {([{ value: 'maintain', label: 'Поддерживать вес' }, { value: 'lose', label: 'Снизить вес' }, { value: 'gain', label: 'Набрать вес' }] as const).map(goal => <label className="flex items-center gap-2 min-h-[44px]" key={goal.value}>
-        <input className="!w-6 shrink-0" type="radio" name="goal" checked={draft.goal === goal.value} onChange={() => onChange({ type: 'goal', value: goal.value })} />
-        <span>{goal.label}</span>
-      </label>)}
+      <div className="grid gap-2">
+        {(['maintain', 'lose', 'gain'] as const).map(value => <label className="flex items-center gap-2 min-h-[44px]" key={value}>
+          <input className="!w-6 shrink-0" type="radio" name="goal" checked={draft.goal === value} onChange={() => onChange({ type: 'goal', value })} />
+          <span>{goalLabels[value]}</span>
+        </label>)}
+      </div>
       {errors.goal && <p className="field-error" id="goal-error">{errors.goal}</p>}
     </fieldset>
     <div className="card">{counter('days', 'Число дней', 7)}</div>

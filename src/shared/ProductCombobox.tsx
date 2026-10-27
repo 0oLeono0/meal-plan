@@ -59,7 +59,7 @@ export function ProductCombobox({ label, onSelect, port = localProductCatalog, i
       }} />
     {expanded && <ul id={listId} role="listbox" aria-label={label} aria-busy={pending} className="max-h-[240px] overflow-y-auto list-none p-0 m-0 min-w-0 border border-[var(--color-border)] rounded-xl">
       {!pending && items.map((product, index) => <li key={product.id} id={`${listId}-option-${index}`} role="option" aria-selected={highlight === index}
-        className={`min-h-[44px] p-3 cursor-pointer [overflow-wrap:anywhere] ${highlight === index ? 'bg-[var(--color-selected)]' : 'bg-[var(--color-surface)]'}`}
+        className={`min-h-[44px] p-4 cursor-pointer [overflow-wrap:anywhere] ${highlight === index ? 'bg-[var(--color-selected)]' : 'bg-[var(--color-surface)]'}`}
         onMouseDown={event => event.preventDefault()} onMouseMove={() => setHighlight(index)} onClick={() => select(product)}>{product.name}</li>)}
     </ul>}
     <p id={`${inputId}-status`} role="status" className="hint">{!term ? 'Начните вводить название продукта' : pending ? 'Ищем продукты…' : !current?.error && !items.length ? 'Ничего не найдено. Попробуйте другое название' : ''}</p>

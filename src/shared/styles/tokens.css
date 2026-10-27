@@ -70,7 +70,7 @@ body { margin: 0; min-width: 0; }
   color: var(--color-text);
 }
 .app-shell button {
-  padding: 12px var(--space-md);
+  padding: var(--space-sm) var(--space-md);
   font-weight: 600;
   cursor: pointer;
   touch-action: manipulation;
@@ -99,8 +99,15 @@ body { margin: 0; min-width: 0; }
 .app-shell .hint { margin: var(--space-md) 0 0; }
 .app-shell .journey { margin: var(--space-xl) 0; }
 .app-shell .card { border-radius: var(--radius-card); background: var(--color-surface); padding: var(--space-md); margin: var(--space-lg) 0; }
-.app-shell label { display: block; margin-bottom: var(--space-md); font-size: var(--text-label); font-weight: 600; }
+.app-shell label { display: block; margin-bottom: var(--space-md); font-size: var(--text-label); font-weight: 400; }
+.app-shell label.flex { display: flex; align-items: center; gap: var(--space-sm); margin: 0; min-height: var(--target-size); }
+.app-shell fieldset { min-width: 0; }
+.app-shell legend { font-weight: 600; }
+.app-shell :is(input[type=radio], input[type=checkbox], input[type=range]) { accent-color: var(--color-accent); }
+.app-shell input[type=radio], .app-shell input[type=checkbox] { margin: 0; }
 .app-shell input { width: 100%; padding: var(--space-sm); text-align: center; font-variant-numeric: tabular-nums; }
+.app-shell .budget-amount { display: flex; align-items: center; gap: var(--space-sm); font-size: var(--text-display); font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.app-shell .budget-amount input { flex: 1; font-size: inherit; font-weight: inherit; line-height: inherit; }
 .app-shell .stepper { display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; gap: var(--space-sm); align-items: center; }
 .app-shell .stepper button { padding: var(--space-sm); font-size: var(--text-heading); }
 .app-shell .notice { border: 1px solid var(--color-border); border-radius: var(--radius-field); padding: var(--space-md); background: var(--color-surface); margin-bottom: var(--space-lg); overflow-wrap: anywhere; }
@@ -109,7 +116,7 @@ body { margin: 0; min-width: 0; }
 .app-shell .steps span { height: var(--space-xs); border-radius: var(--radius-pill); background: var(--color-disabled); }
 .app-shell .steps .filled { background: var(--color-accent); }
 .app-shell .back { display: inline-flex; min-height: var(--target-size); align-items: center; margin-bottom: var(--space-lg); }
-.app-shell .skip-link { position: absolute; top: -200px; left: var(--space-md); background: var(--color-surface); padding: 12px; z-index: 110; }
+.app-shell .skip-link { position: absolute; top: -200px; left: var(--space-md); background: var(--color-surface); padding: var(--space-md); z-index: 110; }
 .app-shell .skip-link:focus { top: var(--space-sm); }
 .app-header { max-width: 960px; margin: auto; padding: var(--space-md); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-md); }
 .app-shell .brand-link { min-width: 0; min-height: var(--target-size); display: flex; align-items: center; flex: 1 1 160px; text-decoration: none; margin: 0; }
@@ -119,12 +126,13 @@ body { margin: 0; min-width: 0; }
 .app-nav svg { flex-shrink: 0; }
 .app-shell .app-nav [aria-current=page] { background: var(--color-selected); color: var(--color-accent); font-weight: 600; }
 .app-shell .app-nav :is(a, button):hover { background: var(--color-selected); }
-.action-link { display: flex; align-items: center; justify-content: center; min-height: var(--primary-height); padding: 12px var(--space-md); border-radius: var(--radius-field); text-align: center; text-decoration: none; overflow-wrap: anywhere; font-weight: 600; }
+.action-link { display: flex; align-items: center; justify-content: center; min-height: var(--primary-height); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-field); text-align: center; text-decoration: none; overflow-wrap: anywhere; font-weight: 600; }
 .dialog-overlay { position: fixed; inset: 0; z-index: 100; background: var(--color-overlay); display: flex; align-items: center; justify-content: center; padding: var(--space-md); overflow-y: auto; }
 .confirm-dialog { background: var(--color-surface); border-radius: var(--radius-card); padding: var(--space-lg); max-width: 480px; width: 100%; max-height: calc(100vh - 32px); overflow-y: auto; overscroll-behavior: contain; box-shadow: var(--shadow-overlay); }
 .dialog-actions { display: flex; flex-direction: column; gap: var(--space-sm); }
 .sticky-actions { position: sticky; bottom: 0; padding: var(--space-md); padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom)); background: var(--color-surface); }
 .has-sticky-actions { padding-bottom: calc(var(--footer-height, 80px) + var(--space-md)); }
+.app-shell .has-sticky-actions .field { scroll-margin-bottom: calc(var(--footer-height, 80px) + var(--space-md)); }
 @media (max-height: 500px) { .sticky-actions { position: static; } }
 @media (min-width: 768px) {
   .app-shell main { padding-top: var(--space-2xl); padding-left: var(--space-lg); padding-right: var(--space-lg); }
@@ -134,7 +142,7 @@ body { margin: 0; min-width: 0; }
 @media (min-width: 1200px) {
   .app-shell:not(.fullscreen) { padding-left: var(--sidebar-width); }
   .app-nav { top: 0; right: auto; bottom: 0; width: var(--sidebar-width); grid-template-columns: minmax(0, 1fr); align-content: start; padding: var(--space-lg) var(--space-md); border-top: 0; border-right: 1px solid var(--color-border); overflow-y: auto; }
-  .app-shell .app-nav a, .app-shell .app-nav button { flex-direction: row; justify-content: flex-start; padding: 12px var(--space-md); font-size: var(--text-body); gap: var(--space-sm); }
+  .app-shell .app-nav a, .app-shell .app-nav button { flex-direction: row; justify-content: flex-start; padding: var(--space-sm) var(--space-md); font-size: var(--text-body); gap: var(--space-sm); }
   .app-shell:not(.fullscreen) main { max-width: 960px; padding: var(--space-xl); padding-bottom: var(--space-2xl); }
   .app-shell :is(a, button, input, select, textarea, h1) { scroll-margin-bottom: var(--space-md); }
 }

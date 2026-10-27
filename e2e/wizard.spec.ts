@@ -14,12 +14,12 @@ test('WIZ-03 boundary: people/days limits, 4+ and goals are saved without defaul
   await page.getByLabel('Число дней', { exact: true }).fill('1');
   await expect(page.getByRole('button', { name: 'Уменьшить число людей' })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Уменьшить число дней' })).toBeDisabled();
-  await page.getByRole('radio', { name: 'Набрать вес' }).check();
+  await page.getByRole('radio', { name: 'Набор массы' }).check();
   await expect(page.getByRole('status')).toHaveText('Сохранено на этом устройстве');
   await page.reload();
   await expect(page.getByLabel('Число людей', { exact: true })).toHaveValue('1');
   await expect(page.getByLabel('Число дней', { exact: true })).toHaveValue('1');
-  await expect(page.getByRole('radio', { name: 'Набрать вес' })).toBeChecked();
+  await expect(page.getByRole('radio', { name: 'Набор массы' })).toBeChecked();
 });
 
 test('D-08 partial/error: raw text reload, first invalid focus and no double-next skip', async ({ page }) => {
@@ -48,7 +48,7 @@ test('D-08 partial/error: raw text reload, first invalid focus and no double-nex
 
 test('D-04 navigation slots progress 1–4 preserve values and exit cancel/accept retains draft', async ({ page }) => {
   await page.goto('/plan/new');
-  await page.getByRole('radio', { name: 'Снизить вес' }).check();
+  await page.getByRole('radio', { name: 'Похудение' }).check();
   for (let step = 2; step <= 4; step++) {
     await page.getByRole('button', { name: 'Далее' }).click();
     await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', String(step));
@@ -57,14 +57,14 @@ test('D-04 navigation slots progress 1–4 preserve values and exit cancel/accep
   }
   await expect(page.getByRole('button', { name: /Создать|Генерировать/ })).toHaveCount(0);
   for (let step = 3; step >= 1; step--) await page.getByRole('button', { name: 'Назад', exact: true }).click();
-  await expect(page.getByRole('radio', { name: 'Снизить вес' })).toBeChecked();
+  await expect(page.getByRole('radio', { name: 'Похудение' })).toBeChecked();
   await page.getByRole('button', { name: 'Назад', exact: true }).click();
   await page.getByRole('button', { name: 'Продолжить настройку' }).click();
-  await expect(page.getByRole('radio', { name: 'Снизить вес' })).toBeChecked();
+  await expect(page.getByRole('radio', { name: 'Похудение' })).toBeChecked();
   await page.getByRole('link', { name: 'На главную' }).click();
   await page.getByRole('button', { name: 'Выйти из мастера', exact: true }).click();
   await page.getByRole('link', { name: 'Новое меню' }).click();
-  await expect(page.getByRole('radio', { name: 'Снизить вес' })).toBeChecked();
+  await expect(page.getByRole('radio', { name: 'Похудение' })).toBeChecked();
 });
 
 test('step1 loading/restored: hydration keeps edits unavailable and restored values win', async ({ page }) => {
@@ -73,7 +73,7 @@ test('step1 loading/restored: hydration keeps edits unavailable and restored val
   await expect(page.getByLabel('Число дней', { exact: true })).toHaveCount(0);
   await expect(page.getByLabel('Число людей', { exact: true })).toHaveValue('6');
   await expect(page.getByLabel('Число дней', { exact: true })).toHaveValue('2');
-  await expect(page.getByRole('radio', { name: 'Снизить вес' })).toBeChecked();
+  await expect(page.getByRole('radio', { name: 'Похудение' })).toBeChecked();
 });
 
 for (const width of [360, 768, 1280]) test(`step1 overflow/long-text: ${width}px doubled text and sticky actions`, async ({ page }) => {

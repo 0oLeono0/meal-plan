@@ -15,7 +15,10 @@ export function BudgetStep({ draft, onChange, errors, disabled = false }: { draf
     <p>Задайте бюджет на весь период. Время и разнообразие помогут подобрать подходящие блюда.</p>
     <div className="card min-w-0">
       <Field id="budget" label={budgetPeriodLabel(draft.days)} hint="В рублях. Целое число от 500; точную сумму можно ввести вручную." error={error}>
-        <input id="budget" name="budget" className="min-w-0 max-w-full" type="text" inputMode="numeric" autoComplete="off" value={draft.budget} disabled={disabled} onChange={event => onChange({ type: 'set', field: 'budget', value: event.target.value })} aria-invalid={!!error} aria-describedby={`budget-hint${error ? ' budget-error' : ''}`} />
+        <div className="budget-amount">
+          <input id="budget" name="budget" className="min-w-0 max-w-full" type="text" inputMode="numeric" autoComplete="off" value={draft.budget} disabled={disabled} onChange={event => onChange({ type: 'set', field: 'budget', value: event.target.value })} aria-invalid={!!error} aria-describedby={`budget-hint${error ? ' budget-error' : ''}`} />
+          <span aria-hidden="true">₽</span>
+        </div>
       </Field>
       <label htmlFor="budget-slider">Выбрать бюджет ползунком</label>
       <input id="budget-slider" className="min-h-[44px] accent-[var(--color-accent)]" type="range" min={1000} max={15000} step={100} value={thumb} disabled={disabled} aria-valuenow={thumb} aria-valuetext={rangeText} aria-describedby="budget-slider-hint" onChange={event => onChange({ type: 'set', field: 'budget', value: event.target.value })} />

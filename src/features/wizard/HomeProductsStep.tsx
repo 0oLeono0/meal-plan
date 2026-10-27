@@ -2,6 +2,7 @@ import { popularProductIds, productNames, type ProductCatalogPort } from '../../
 import { dietaryRestrictions, parseHomeQuantity, validateHomeRow, type DraftAction, type HomeDraftRow, type SettingsDraft, type StepErrors, type Unit } from '../../domain/settings';
 import { ProductCombobox, useRemovalUndo } from '../../shared/ProductCombobox';
 import { Button, Field } from '../../shared/ui';
+import { goalLabels } from './copy';
 
 const unitLabels: Record<Unit, string> = { g: 'г', kg: 'кг', ml: 'мл', l: 'л', pcs: 'шт' };
 const nameFor = (id: string) => productNames.find(product => product.id === id)?.name ?? `Продукт из сохранённого черновика (${id})`;
@@ -18,7 +19,7 @@ export function HomeProductsStep({ draft, onChange, errors, disabled = false, pr
   }
   return <>
     <p>Укажите, что есть дома. Количество можно оставить пустым; это не означает ноль.</p>
-    <div className="card min-w-0"><ProductCombobox id="home-search" label="Добавить домашний продукт" disabled={disabled} port={productPort} onSelect={product => add(product.id)} />
+    <div className="card min-w-0"><ProductCombobox id="home-search" label="Найти продукт" disabled={disabled} port={productPort} onSelect={product => add(product.id)} />
       <div role="group" aria-label="Популярные продукты" className="flex flex-wrap gap-2 mt-4">{popularProductIds.map(id => <Button disabled={disabled} key={id} onClick={() => add(id)}>{nameFor(id)}</Button>)}</div>
     </div>
     <div id="home" tabIndex={-1}>
@@ -71,12 +72,12 @@ export function DraftReview({ draft }: { draft: SettingsDraft }) {
     <dl className="grid gap-2 [overflow-wrap:anywhere]">
       <dt>Люди и период</dt><dd className="m-0">{draft.people} чел. · {draft.days} дн.</dd>
       <dt>Бюджет на весь период</dt><dd className="m-0">{draft.budget.trim()} ₽</dd>
-      <dt>Цель питания</dt><dd className="m-0">{{ maintain: 'Поддержание веса', lose: 'Похудение', gain: 'Набор массы' }[draft.goal]}</dd>
+      <dt>Цель питания</dt><dd className="m-0">{goalLabels[draft.goal]}</dd>
       <dt>Время и разнообразие</dt><dd className="m-0">{draft.cookingTime === 'any' ? 'Любое время' : `До ${draft.cookingTime} мин`} · {{ same: 'Одно и то же каждый день', medium: 'Среднее', max: 'Каждый день разное' }[draft.variety]}</dd>
       <dt>Цель КБЖУ на человека в день</dt><dd className="m-0">{draft.manualNutrition.calories.trim() ? `${draft.manualNutrition.calories} ккал; Б ${draft.manualNutrition.protein} г / Ж ${draft.manualNutrition.fat} г / У ${draft.manualNutrition.carbohydrates} г · ${draft.targetSource.kind === 'manual' ? 'Введено вручную' : 'Сохранённая норма из расчёта'}` : 'Цель КБЖУ не указана'}</dd>
       <dt>Ограничения</dt><dd className="m-0">{draft.restrictions.map(id => dietaryRestrictions.find(option => option.id === id)?.label).join(', ') || 'Не выбраны'}</dd>
       <dt>Не люблю</dt><dd className="m-0">{draft.exclusionIds.map(nameFor).join(', ') || 'Исключений нет'}</dd>
-      <dt>Продукты дома</dt><dd className="m-0">{!draft.home.length ? 'Не указаны' : <ul className="pl-5">{draft.home.map(row => <li key={row.productId}>{nameFor(row.productId)}: <span>{parseHomeQuantity(row.quantity).status === 'unknown' ? 'Количество не указано' : `${row.quantity} ${row.unit ? unitLabels[row.unit] : ''}`}</span>{row.expiresSoon && ' · Скоро испортится'}</li>)}</ul>}</dd>
+      <dt>Продукты дома</dt><dd className="m-0">{!draft.home.length ? 'Не указаны' : <ul className="pl-4">{draft.home.map(row => <li key={row.productId}>{nameFor(row.productId)}: <span>{parseHomeQuantity(row.quantity).status === 'unknown' ? 'Количество не указано' : `${row.quantity} ${row.unit ? unitLabels[row.unit] : ''}`}</span>{row.expiresSoon && ' · Скоро испортится'}</li>)}</ul>}</dd>
     </dl>
   </section>;
 }

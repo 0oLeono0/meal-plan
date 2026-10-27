@@ -93,7 +93,7 @@ export function Wizard({ draft, onChange, recovery = false, saved = false, onRes
       {draft.step === 4 && <HomeProductsStep draft={draft} onChange={change} errors={errors} disabled={resetPending} />}
       {reviewed && <DraftReview draft={draft} />}
     </div>
-    <div ref={footer} className="sticky-actions grid grid-cols-2 gap-2">
+    <div ref={footer} className="sticky-actions grid grid-cols-1 md:grid-cols-2 gap-2">
       <Button disabled={resetPending} onClick={event => { setErrors({}); if (draft.step === 1) { setDialogTrigger(event.currentTarget); setExitOpen(true); } else change({ type: 'step', value: (draft.step - 1) as Step }); }}>Назад</Button>
       {draft.step < 4 && <Button variant="primary" disabled={resetPending} onClick={next}>Далее</Button>}
       {draft.step === 4 && <Button variant="primary" disabled={resetPending} onClick={review}>Проверить настройки</Button>}

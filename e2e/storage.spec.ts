@@ -18,9 +18,11 @@ test('recovery partial/error: corrupt bytes require explicit safe reset and keep
   await expect(page.getByRole('button', { name: 'Оставить черновик', exact: true })).toBeFocused();
   await page.keyboard.press('Escape');
   expect(await page.evaluate(key => localStorage.getItem(key), key)).toBe('{broken');
+  await expect(page.getByRole('button', { name: 'Сбросить черновик', exact: true })).toBeFocused();
   await page.getByRole('button', { name: 'Сбросить черновик', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Сбросить черновик', exact: true }).click();
   await expect(page.getByLabel('Число людей', { exact: true })).toHaveValue('2');
+  await expect(page.locator('#wizard-title')).toBeFocused();
   expect(await page.evaluate(() => [localStorage.getItem('sentinel'), localStorage.getItem('mealplan:confirmed'), localStorage.getItem('mealplan:pantry')])).toEqual(['keep', 'confirmed', 'pantry']);
   await expect(page.getByText('Не удалось восстановить настройки. Сохранённые данные повреждены или имеют другую версию')).toHaveCount(0);
 });
@@ -80,12 +82,15 @@ test('recovery reset failure keeps raw and memory until explicit retry succeeds'
   await page.getByRole('dialog').getByRole('button', { name: 'Сбросить черновик', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Не удалось сохранить');
   expect(await page.evaluate(key => localStorage.getItem(key), key)).toBe('{broken');
+  expect(await page.getByRole('dialog').evaluate(dialog => dialog.contains(document.activeElement))).toBe(true);
   await page.getByRole('button', { name: 'Оставить черновик' }).click();
+  await expect(page.getByRole('button', { name: 'Сбросить черновик', exact: true })).toBeFocused();
   await expect(page.getByLabel('Число людей', { exact: true })).toHaveValue('4');
   await page.evaluate(() => sessionStorage.setItem('allow-reset', 'yes'));
   await page.getByRole('button', { name: 'Сбросить черновик', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Сбросить черновик', exact: true }).click();
   await expect(page.getByLabel('Число людей', { exact: true })).toHaveValue('2');
+  await expect(page.locator('#wizard-title')).toBeFocused();
 });
 
 test('recovery overflow/long-text: warning and reset remain in flow at 360px with doubled text', async ({ page }) => {

@@ -18,9 +18,10 @@ export function Status({ children }: { children: ReactNode }) {
 }
 
 // Custom modal avoids requiring dialog.showModal/inert, absent in Safari 15.0.
-export function ConfirmDialog({ title, description, cancelLabel = 'Отмена', confirmLabel, returnFocus, onCancel, onConfirm }: {
+export function ConfirmDialog({ title, description, cancelLabel = 'Отмена', confirmLabel, returnFocus, fallbackFocusId, onCancel, onConfirm }: {
   title: string; description: string; cancelLabel?: string; confirmLabel: string;
   returnFocus?: HTMLElement | null;
+  fallbackFocusId?: string;
   onCancel(): void; onConfirm(): void;
 }) {
   const id = useId();
@@ -28,6 +29,7 @@ export function ConfirmDialog({ title, description, cancelLabel = 'Отмена'
   const cancel = useRef<HTMLButtonElement>(null);
   // Pointer activation need not focus its trigger in WebKit.
   const trigger = useRef(returnFocus);
+  const fallback = useRef(fallbackFocusId);
   const handlers = useRef({ onCancel, onConfirm });
   useEffect(() => { handlers.current = { onCancel, onConfirm }; }, [onCancel, onConfirm]);
   useEffect(() => {
@@ -63,6 +65,7 @@ export function ConfirmDialog({ title, description, cancelLabel = 'Отмена'
       previous.forEach(([element, value]) => value === null ? element.removeAttribute('aria-hidden') : element.setAttribute('aria-hidden', value));
       document.body.style.overflow = overflow;
       if (initiator?.isConnected) initiator.focus();
+      else if (fallback.current) document.getElementById(fallback.current)?.focus();
     };
   }, []);
   return <div className="dialog-overlay" ref={overlay}>

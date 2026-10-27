@@ -76,7 +76,7 @@ export function Wizard({ draft, onChange, recovery = false, saved = false, onRes
     <div className="steps" role="progressbar" aria-label="Настройка меню" aria-valuemin={0} aria-valuemax={4} aria-valuenow={draft.step}>
       {[1, 2, 3, 4].map(step => <span key={step} className={step <= draft.step ? 'filled' : ''} />)}
     </div>
-    {resetOpen && <ConfirmDialog returnFocus={dialogTrigger} title="Сбросить черновик?" description="Настройки мастера на этом устройстве будут удалены" cancelLabel="Оставить черновик" confirmLabel="Сбросить черновик" onCancel={() => { if (!resetPending) setResetOpen(false); }} onConfirm={() => {
+    {resetOpen && <ConfirmDialog returnFocus={dialogTrigger} fallbackFocusId="wizard-title" title="Сбросить черновик?" description="Настройки мастера на этом устройстве будут удалены" cancelLabel="Оставить черновик" confirmLabel="Сбросить черновик" onCancel={() => { if (!resetPending) setResetOpen(false); }} onConfirm={() => {
       if (resetPending || !onReset) return;
       setResetPending(true);
       void onReset().then(success => { if (active.current) { setResetPending(false); if (success) { touched.current = false; setResetOpen(false); setErrors({}); } } });

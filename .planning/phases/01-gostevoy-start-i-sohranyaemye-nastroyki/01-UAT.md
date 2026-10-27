@@ -3,44 +3,54 @@ status: testing
 phase: 01-gostevoy-start-i-sohranyaemye-nastroyki
 source: [01-VERIFICATION.md]
 started: "2026-10-27T13:06:05.208900+00:00"
-updated: "2026-10-27T13:06:05.208900+00:00"
+updated: "2026-10-27T13:54:37.286257+00:00"
 ---
 
 # Phase 1 — ручная приёмка
 
 ## Current Test
 
-number: 1
-name: H1: Реальный iOS: клавиатура и safe area. На iPhone пройти четыре шага, открыть поиск и поля, повернуть экран с открытой клавиатурой.
+number: 6
+name: H6: Конфликт двух вкладок. Открыть мастер в двух вкладках, поочерёдно изменить ввод и перезагрузить одну; оценить понятность поведения.
 expected: |
-  Каждое поле, ошибка и закреплённое действие достижимы; клавиатура, вырез и нижний индикатор их не закрывают.
+  Пользователь понимает независимую память вкладок и последнюю успешную локальную запись; отсутствует обещание синхронизации.
 awaiting: user response
 
 ## Tests
 
 ### 1. H1: Реальный iOS: клавиатура и safe area. На iPhone пройти четыре шага, открыть поиск и поля, повернуть экран с открытой клавиатурой.
 expected: Каждое поле, ошибка и закреплённое действие достижимы; клавиатура, вырез и нижний индикатор их не закрывают.
-result: [pending]
+result: pass
+source: user
+reported: "pass"
 why_human: Desktop viewport/390×400 и WebKit 27.2 не воспроизводят реальные keyboard/safe area.
 
 ### 2. H2: Safari 15. В реальном Safari 15 пройти welcome → мастер → проверка настроек → reload; проверить диалоги и поиск.
 expected: Путь и восстановление работают без ошибок, доступны отмена/возврат/ручная цель.
-result: [pending]
+result: pass
+source: user
+reported: "pass"
 why_human: Build target safari15 и современный WebKit не являются выполнением Safari 15.
 
 ### 3. H3: Screen reader и полный контраст. Пройти поля, поиск/listbox, ошибки, recovery и диалоги со screen reader; измерить контраст normal/hover/focus/error/disabled.
 expected: Названия, состояния и ошибки объявляются понятно и однократно; текст/индикаторы удовлетворяют принятому AA-контракту.
-result: [pending]
+result: pass
+source: user
+reported: "pass"
 why_human: ARIA/focus/geometry assertions не проверяют реальные объявления и весь контраст.
 
 ### 4. H4: Native zoom и визуальная приёмка. Включить настоящий browser zoom 200%, пройти все шаги/ошибки/route states и сравнить с PDF-макетами.
 expected: Текст и действия целиком читаемы, поля/ошибки не перекрыты, общая композиция согласована.
-result: [pending]
+result: pass
+source: user
+reported: "pass"
 why_human: Тесты меняют CSS font-size; они не доказывают native zoom или человеческое принятие вида.
 
 ### 5. H5: Q-17: методика и LCP. Зафиксировать устройство, сеть и cold/warm cache для Q-17; измерить LCP по согласованной методике.
 expected: Есть воспроизводимый замер относительно согласованного критерия.
-result: [pending]
+result: pass
+source: user
+reported: "pass"
 why_human: Методика и фактический замер отсутствуют; скорость локального build не доказывает LCP.
 
 ### 6. H6: Конфликт двух вкладок. Открыть мастер в двух вкладках, поочерёдно изменить ввод и перезагрузить одну; оценить понятность поведения.
@@ -66,9 +76,9 @@ why_human: Кнопка из UI-SPEC отсутствует наблюдаемо
 ## Summary
 
 total: 9
-passed: 0
+passed: 5
 issues: 0
-pending: 9
+pending: 4
 skipped: 0
 blocked: 0
 

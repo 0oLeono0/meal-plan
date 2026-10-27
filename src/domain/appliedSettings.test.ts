@@ -5,6 +5,7 @@ import { buildAppliedSettings, selectQuickStartInput } from './appliedSettings';
 describe('applied settings gate', () => {
   it('applies a valid guest draft with absent target and family purchase budget', () => {
     const result = buildAppliedSettings(createDraft());
+    expect(result.status).toBe('applied');
     expect(result).toMatchObject({ status: 'applied', settings: {
       people: 2, days: 7, target: { status: 'absent' },
       budget: { limit: { numerator: 3000n, denominator: 1n }, basis: 'family-period-purchases', currency: 'RUB' },

@@ -40,3 +40,13 @@ gsd-verifier независимо перечитал `src/app/App.tsx` (`change`
 - Сохранённые JUnit прочитаны независимо: исходный связанный запуск — 186 tests, 0 failures, 1 error; окончательный Firefox — 62 tests, 0 failures, 0 errors, 0 skipped. Это composite evidence, без заявления о новом полном прогоне.
 
 Дополнительный собственный spot-check: `node node_modules/vitest/vitest.mjs run src/adapters/guestDraft.test.ts -t 'retry saves the supplied newest raw value after a failed write'` — exit 0, 1 passed (10 невыбранных случаев). Полный suite не повторялся. Обязательные реальные устройства, screen reader/contrast, native zoom/визуальная приёмка, LCP, two-tab UX и safety judgement остаются в `01-VERIFICATION.md`; отдельная ручная проверка внутренней логики CR-01 больше не требуется.
+
+## Acceptance delta review — 2026-10-27
+
+**Результат:** REVIEW DELTA OK; новых BLOCKER/WARNING в этой документальной дельте не выявлено. Это ограниченная проверка после UAT, а не повтор исходного ревью 38 файлов.
+
+Сверены `01-UAT.md` (H1–H9, 9/9, каждый `source: user`), текущая поправка шага 4 в `01-UI-SPEC.md`, `docs/decisions/home-product-addition.json`, дополнения QA/UI-REVIEW/VALIDATION и закрытие шести human-verify записей WINDOWS. H9 явно принимает существующее немедленное добавление при выборе результата и отменяет только требование отдельной кнопки. Это соответствует `HomeProductsStep.tsx:13-15,22-23` и `ProductCombobox.tsx:36-40,55-64`: выбранный ID передаётся в `add`, популярный продукт использует тот же путь, дубликат фокусирует существующую строку без перезаписи количества. Граница черновика, единицы, запасы и остальные бизнес-правила не расширены.
+
+`git log 8cd5872..HEAD -- src e2e scripts package.json playwright.config.ts vite.config.ts tsconfig.json eslint.config.js index.html` и diff тех же путей от `8cd5872` до рабочего состояния пусты. Новых изменений приложения, тестов или конфигурации после трёх исправлений нет; самостоятельная повторная проверка их реализации здесь не заявляется. Исходные findings и история исправлений выше сохранены.
+
+Принятие H1–H9 зафиксировано как пользовательские сообщения «pass». Агент не проводил дополнительные device/LCP/контраст/zoom проверки, не добавлял измерения, сведения об устройствах или новые результаты автоматизации; Q-17 детали воспроизводимости не выдумываются. Тесты в этом delta review не запускались. Итоговый verifier должен обновить покрытие по принятому UI-контракту и источнику human UAT; этот addendum сам по себе не объявляет фазу завершённой.

@@ -34,6 +34,27 @@ export function decimal(raw: string): Rational {
   const [whole, fraction = ''] = (negative ? raw.slice(1) : raw).split('.');
   return rational(BigInt(whole + fraction) * (negative ? -1n : 1n), 10n ** BigInt(fraction.length));
 }
+/** User-input normalization only; source imports must use the strict decimal parser. */
+export function parseDraftQuantity(raw: string): Rational {
+  if (typeof raw !== 'string' || raw.length > MAX_EXACT_DIGITS) throw new RangeError('INVALID_QUANTITY');
+  const value = decimal(raw.trim().replace(',', '.'));
+  if (value.numerator < 0n) throw new RangeError('NEGATIVE_QUANTITY');
+  return value;
+}
+export function add(left: Rational, right: Rational): Rational {
+  return rational(left.numerator * right.denominator + right.numerator * left.denominator, left.denominator * right.denominator);
+}
+export function subtract(left: Rational, right: Rational): Rational {
+  return rational(left.numerator * right.denominator - right.numerator * left.denominator, left.denominator * right.denominator);
+}
+export function compare(left: Rational, right: Rational): -1 | 0 | 1 {
+  const difference = left.numerator * right.denominator - right.numerator * left.denominator;
+  return difference < 0n ? -1 : difference > 0n ? 1 : 0;
+}
+export function clamp(value: Rational, minimum: Rational, maximum: Rational): Rational {
+  if (compare(minimum, maximum) > 0) throw new RangeError('INVALID_BOUNDS');
+  return compare(value, minimum) < 0 ? minimum : compare(value, maximum) > 0 ? maximum : value;
+}
 export function multiply(left: Rational, right: Rational): Rational {
   return rational(left.numerator * right.numerator, left.denominator * right.denominator);
 }
@@ -52,6 +73,11 @@ export function normalizeQuantity(quantity: Quantity): Quantity {
   const basis = dimension(quantity.unit);
   if (quantity.amount.numerator < 0n) throw new RangeError('NEGATIVE_QUANTITY');
   return { amount: multiply(quantity.amount, rational(multipliers[quantity.unit])), unit: basis === 'mass' ? 'g' : basis === 'volume' ? 'ml' : 'pcs' };
+}
+export function addQuantities(left: Quantity, right: Quantity): Quantity {
+  const normalizedLeft = normalizeQuantity(left), normalizedRight = normalizeQuantity(right);
+  if (normalizedLeft.unit !== normalizedRight.unit) throw new RangeError('INCOMPATIBLE_DIMENSION');
+  return { amount: add(normalizedLeft.amount, normalizedRight.amount), unit: normalizedLeft.unit };
 }
 export function convertQuantity(quantity: Quantity, unit: Unit, identity?: { productId: string; profileId: string }, conversions: readonly ProductConversion[] = []): Quantity {
   const input = normalizeQuantity(quantity);
@@ -83,4 +109,25 @@ export function formatExact(value: Rational): string {
     remainder %= normalized.denominator;
   }
   return `${sign}${numerator / normalized.denominator}${digits ? `.${digits}` : ''}`;
+}
+/** Returns integer minor units; ties round away from zero (half-up on magnitude). */
+export function roundHalfUp(value: Rational, places = 0): bigint {
+  if (!Number.isSafeInteger(places) || places < 0 || places > MAX_EXACT_DIGITS) throw new RangeError('INVALID_PRECISION');
+  const normalized = rational(value.numerator, value.denominator);
+  const scaled = abs(normalized.numerator) * 10n ** BigInt(places);
+  const rounded = scaled / normalized.denominator + (scaled % normalized.denominator * 2n >= normalized.denominator ? 1n : 0n);
+  return normalized.numerator < 0n ? -rounded : rounded;
+}
+export interface EncodedRational { readonly numerator: string; readonly denominator: string }
+export function encodeRational(value: Rational): EncodedRational {
+  const normalized = rational(value.numerator, value.denominator);
+  return { numerator: normalized.numerator.toString(), denominator: normalized.denominator.toString() };
+}
+export function decodeRational(value: unknown): Rational {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new RangeError('INVALID_ENCODING');
+  const encoded = value as Record<string, unknown>;
+  if (Object.keys(encoded).sort().join(',') !== 'denominator,numerator' || typeof encoded.numerator !== 'string' || typeof encoded.denominator !== 'string'
+    || encoded.numerator.length > MAX_EXACT_DIGITS + (encoded.numerator.startsWith('-') ? 1 : 0) || encoded.denominator.length > MAX_EXACT_DIGITS
+    || !/^-?(?:0|[1-9]\d*)$/.test(encoded.numerator) || !/^[1-9]\d*$/.test(encoded.denominator)) throw new RangeError('INVALID_ENCODING');
+  return rational(BigInt(encoded.numerator), BigInt(encoded.denominator));
 }

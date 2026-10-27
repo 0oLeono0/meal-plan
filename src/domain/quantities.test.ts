@@ -65,6 +65,14 @@ it('normalizes the codec and validates serialization before exposing raw BigInts
   expect(() => divide(decimal('1'), decimal('0'))).toThrow();
   expect(() => normalizeQuantity({ amount: decimal('-1'), unit: 'g' })).toThrow();
 });
+it('round-trips the largest permitted signed numerator and requires own codec fields', async () => {
+  const { encodeRational, decodeRational } = await arithmetic();
+  const negative = rational(-BigInt('9'.repeat(256)));
+  expect(decodeRational(encodeRational(negative))).toEqual(negative);
+  const inherited: unknown = Object.assign(Object.create({ numerator: '1', denominator: '2' }), { a: true, b: true });
+  expect(() => decodeRational(inherited)).toThrow();
+  expect(() => rational(BigInt('9'.repeat(513)))).toThrow('EXACT_SIZE_LIMIT');
+});
 it.each([['g', 'ml'], ['ml', 'pcs'], ['pcs', 'g']] as const)('never invents a %s to %s conversion', async (from, to) => {
   const { addQuantities } = await arithmetic();
   expect(() => convertQuantity({ amount: decimal('1'), unit: from }, to)).toThrow('INCOMPATIBLE_DIMENSION');

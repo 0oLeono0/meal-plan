@@ -1,4 +1,5 @@
 import type { Unit } from '../domain/settings';
+import foodSnapshot from '../../data/sources/food.snapshot.json';
 
 /** Names and supported input units only: no nutritional, price or allergy assertions. */
 export interface ProductName { id: string; name: string; synonyms: readonly string[]; allowedUnits: readonly Unit[] }
@@ -10,8 +11,11 @@ export const productNames: readonly ProductName[] = [
   { id: 'cottage-cheese', name: 'Творог', synonyms: [], allowedUnits: ['g', 'kg'] },
   { id: 'rice', name: 'Рис', synonyms: [], allowedUnits: ['g', 'kg'] },
   { id: 'potato', name: 'Картофель', synonyms: ['картошка'], allowedUnits: ['g', 'kg'] },
+  ...foodSnapshot.records.filter(food => !['egg', 'chicken', 'tomato', 'cottage-cheese', 'rice', 'potato'].includes(food.productId)).map(food => ({
+    id: food.productId, name: food.name, synonyms: [], allowedUnits: ['g', 'kg'] as const,
+  })),
 ];
-export const popularProductIds = productNames.map(product => product.id);
+export const popularProductIds = productNames.slice(0, 6).map(product => product.id);
 const normalize = (value: string) => value.trim().normalize('NFC').toLocaleLowerCase('ru');
 export function searchProducts(query: string): readonly ProductName[] {
   const term = normalize(query);

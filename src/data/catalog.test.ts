@@ -4,20 +4,25 @@ import { createDraft } from '../domain/settings';
 import { createPlanInputs } from '../domain/plan';
 import { createLocalGeneration } from '../adapters/generation';
 import { validateCatalog } from '../adapters/catalog';
-import { compare, decimal } from '../domain/quantities';
+import { compare, decimal, divide, formatExact } from '../domain/quantities';
 import { projectPlan } from '../domain/planProjection';
 import type { Catalog } from '../domain/catalog';
+import foodEvidence from '../../data/sources/food.snapshot.json';
+import priceEvidence from '../../data/sources/prices.snapshot.json';
+import safetyEvidence from '../../data/sources/safety.snapshot.json';
+
+const sourceEvidence = { food: foodEvidence, prices: priceEvidence, safety: safetyEvidence };
 
 const modules = import.meta.glob('./catalog.ts', { eager: true });
 // An absent production catalog is an assertion failure, never an import/discovery error.
-const production = () => modules['./catalog.ts'] as { bundledCatalog: Catalog; bundledCatalogPort: Parameters<typeof createLocalGeneration>[0]; validateBundledCatalog: (input: Catalog) => ReturnType<typeof validateCatalog> } | undefined;
+const production = () => modules['./catalog.ts'] as { bundledCatalog: Catalog; bundledCatalogPort: Parameters<typeof createLocalGeneration>[0]; validateBundledCatalog: (input: Catalog, sources?: typeof sourceEvidence) => Promise<ReturnType<typeof validateCatalog>> } | undefined;
 describe('source-backed production corpus', () => {
-  it('requires fifty complete genuinely distinct original recipes', () => {
+  it('requires fifty complete genuinely distinct original recipes', async () => {
     expect(production()?.bundledCatalog.recipes.length ?? 0).toBeGreaterThanOrEqual(50);
     const catalog = production()!.bundledCatalog;
     expect(validateCatalog(catalog).status).toBe('loaded');
-    expect(production()!.validateBundledCatalog(catalog).status).toBe('loaded');
-    const fingerprints = catalog.recipes.map(recipe => recipe.ingredients.map(ingredient => `${ingredient.profileId}:${ingredient.quantity.amount.numerator}/${ingredient.quantity.amount.denominator}/${recipe.baseServings.numerator}`).sort().join('|'));
+    expect((await production()!.validateBundledCatalog(catalog)).status).toBe('loaded');
+    const fingerprints = catalog.recipes.map(recipe => recipe.ingredients.map(ingredient => `${ingredient.profileId}:${formatExact(divide(ingredient.quantity.amount, recipe.baseServings))}`).sort().join('|'));
     expect(new Set(fingerprints).size).toBe(catalog.recipes.length);
     expect(new Set(catalog.recipes.map(recipe => recipe.steps.join(' '))).size).toBe(catalog.recipes.length);
     expect(new Set(catalog.recipes.map(recipe => recipe.name)).size).toBe(catalog.recipes.length);
@@ -40,10 +45,33 @@ describe('source-backed production corpus', () => {
   it('rejects an incomplete or tampered production catalog at its source gate', async () => {
     const module = production()!;
     const catalog = module.bundledCatalog;
-    expect(module.validateBundledCatalog({ ...catalog, recipes: catalog.recipes.slice(0, 49) }).status).toBe('invalid');
-    expect(module.validateBundledCatalog({ ...catalog, foods: catalog.foods.map((food, i) => i ? food : { ...food, price: { status: 'unknown', reason: 'missing observed value' } }) }).status).toBe('invalid');
-    expect(module.validateBundledCatalog({ ...catalog, foods: catalog.foods.map((food, i) => i || food.nutrition.status !== 'known' ? food : { ...food, nutrition: { ...food.nutrition, values: { ...food.nutrition.values, calories: '999' } } }) }).status).toBe('invalid');
+    expect((await module.validateBundledCatalog({ ...catalog, recipes: catalog.recipes.slice(0, 49) })).status).toBe('invalid');
+    expect((await module.validateBundledCatalog({ ...catalog, foods: catalog.foods.map((food, i) => i ? food : { ...food, price: { status: 'unknown', reason: 'missing observed value' } }) })).status).toBe('invalid');
+    expect((await module.validateBundledCatalog({ ...catalog, foods: catalog.foods.map((food, i) => i || food.nutrition.status !== 'known' ? food : { ...food, nutrition: { ...food.nutrition, values: { ...food.nutrition.values, calories: '999' } } }) })).status).toBe('invalid');
     expect((await module.bundledCatalogPort.load()).status).toBe('loaded');
+  });
+  it('rejects malformed original source bases rather than relabeling them as RUB and edible mass', async () => {
+    const sources = structuredClone(sourceEvidence);
+    sources.prices.records[0].reference.unit = 'pcs';
+    sources.prices.records[0].currency = 'USD';
+    sources.food.records[0].reference.amount = '1000';
+    sources.prices.records[0].evidenceSha256 = '0'.repeat(64);
+    expect((await production()!.validateBundledCatalog(production()!.bundledCatalog, sources)).status).toBe('invalid');
+  });
+  it.each<[string, (sources: typeof sourceEvidence) => void]>([
+    ['price currency', sources => { sources.prices.records[0].currency = 'USD'; }],
+    ['price reference', sources => { sources.prices.records[0].reference.unit = 'pcs'; }],
+    ['nutrition reference', sources => { sources.food.records[0].reference.amount = '1000'; }],
+    ['price evidence hash', sources => { sources.prices.records[0].evidenceSha256 = '0'.repeat(64); }],
+    ['food evidence hash', sources => { sources.food.records[0].sha256 = '0'.repeat(64); }],
+    ['safety product identity', sources => { sources.safety.records[0].productId = 'WRONG'; }],
+    ['safety evidence', sources => { sources.safety.records[0].originalEvidence += ' '; }],
+    ['nutrient value', sources => { sources.food.records[0].nutrients[0].amount = '999'; }],
+    ['price value', sources => { sources.prices.records[0].amount = '1'; }],
+  ])('rejects independently malformed %s', async (_, corrupt) => {
+    const sources = structuredClone(sourceEvidence);
+    corrupt(sources);
+    expect((await production()!.validateBundledCatalog(production()!.bundledCatalog, sources)).status).toBe('invalid');
   });
   it('generates all real default slots within the unchanged family budget offline', async () => {
     const module = production()!;
@@ -61,6 +89,15 @@ describe('source-backed production corpus', () => {
     if (projected.status !== 'projected') return;
     expect(compare(projected.projection.costs.exact.purchase, decimal('3000'))).toBeLessThanOrEqual(0);
     expect(compare(projected.projection.costs.exact.purchase, decimal('0'))).toBeGreaterThan(0);
+    // Independent calculation from literal acquired observations: this seeded plan
+    // uses 770g semolina, 238g sugar, 49g salt, 3600g cabbage, 1260g rice,
+    // 700g carrot, 1110g flour and 800g potato. Per-person-day divides by14.
+    expect(formatExact(projected.projection.costs.exact.purchase)).toBe('461.9293627901234552');
+    expect(projected.projection.costs.kopecks.purchase).toBe(46193n);
+    expect(formatExact(projected.projection.averagePersonDayNutrition.calories)).toBe('706773/700');
+    expect(formatExact(projected.projection.averagePersonDayNutrition.protein)).toBe('371127/14000');
+    expect(formatExact(projected.projection.averagePersonDayNutrition.fat)).toBe('33279/14000');
+    expect(formatExact(projected.projection.averagePersonDayNutrition.carbohydrates)).toBe('219.2096');
   }, 30000);
   it.each(['gluten-free', 'lactose-free', 'halal'])('never treats unknown %s evidence as safe', async restriction => {
     const module = production()!;

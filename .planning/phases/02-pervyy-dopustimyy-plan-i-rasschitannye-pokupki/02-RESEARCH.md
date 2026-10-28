@@ -448,6 +448,14 @@ Dataset ODbL and proof-photo CC-BY-SA4.0 were confirmed from official source/lic
 
 **API_AVAILABLE=true; PRODUCTION_CATALOG_READY=false.** Fresh tomato and complete matching/safety/50+recipe coverage are not established. Q-14/02-06 stays open. A further targeted official price-table search is permitted within existing D-07–D-10; no locked decision or source gate is relaxed. [VERIFIED: probe final INSUFFICIENT]
 
+### Official regional price tables — 2026-10-28
+
+An additional primary source was actually downloaded over verified TLS: https://monitorcen.admin-smolensk.ru/, linked by the official Smolensk administration. Six binary XLS workbooks were read with free xlrd2.0.2 installed only in `.tmp/document-tools`. All date/territory/price cells were inspected; ten raw hashes and twenty observations are recorded in `.tmp/phase2-official-price-table.json` and explained in `.tmp/phase2-official-price-table.md`. This resolves a source-access problem, not the complete catalog gate. [VERIFIED: source probe final AVAILABLE and hash assertions]
+
+Smolensk21.10.2026 observations include carrot51.7533333333333 RUB/kg, onion51.44 RUB/kg, salt25.8177777777778 RUB/kg, potato40.64 RUB/kg, polished rice69.7493827160494 RUB/kg, chicken carcasses269.138571428571 RUB/kg and category1 eggs114.319444444444 RUB/10pcs. Original source decimals and cell coordinates are retained in the manifest; no automatic nutrient-profile mapping is established. Carcasses are not boneless breast, and a dozen eggs supplies no edible mass conversion. All2367 nonempty cells across the six books were searched: fresh tomato is not present. [VERIFIED: cell dump and extraction assertions]
+
+An Irkutsk official XLSX was also downloaded/read: its current sheet is dated01.10.2026, while the first sheet is2023. It separates average minimum/maximum network/non-network observations and also lacks tomato. Do not silently choose the first sheet or mix these observations as one current national average. Explicit dataset redistribution licence was not established in this probe. **OFFICIAL_PRICE_SOURCE_AVAILABLE=true; COMPLETE_ALIGNED_CORE_BASKET=false; PRODUCTION_CATALOG_READY=false.** Q-14/02-06 remains open; future targeted tomato/food-basis work is still within the locked decisions. [VERIFIED: saved official-source manifest]
+
 ## Metadata
 
 **Confidence:** MEDIUM по seam websearch verified; concrete downloaded USDA observations проверены дополнительно, но policy confidence не повышался вручную.

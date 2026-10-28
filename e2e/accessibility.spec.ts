@@ -142,19 +142,21 @@ for (const width of [360, 390, 430, 768, 1199, 1200, 1280]) test(`accessibility 
   await page.getByRole('group', { name: 'Популярные продукты' }).getByRole('button', { name: 'Курица', exact: true }).click();
   const quantity = page.getByLabel('Количество Курица', { exact: true });
   await quantity.fill('1,');
-  await page.getByRole('button', { name: 'Проверить настройки' }).click();
+  await page.getByRole('button', { name: 'Составить меню' }).click();
   await unobscured(page, quantity);
   await quantity.fill('200');
   await page.getByLabel('Единица Курица', { exact: true }).selectOption('g');
-  await page.getByRole('button', { name: 'Проверить настройки' }).click();
-  await expect(page.getByRole('heading', { name: 'Настройки подготовлены' })).toBeFocused();
-  await page.screenshot({ path: `.tmp/phase01-qa/${info.project.name}-${width}-wizard-text200.png`, fullPage: true });
-  const last = page.getByRole('button', { name: 'Проверить настройки' });
+  const last = page.getByRole('button', { name: 'Составить меню' });
   await last.focus();
   const box = await last.boundingBox();
   expect(box!.height).toBeGreaterThanOrEqual(48);
   expect(box!.y + box!.height).toBeLessThanOrEqual(800);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: `.tmp/phase01-qa/${info.project.name}-${width}-wizard-text200.png`, fullPage: true });
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/\/(menu|plan\/generating)$/);
+  await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
+  await expect(page.getByRole('progressbar', { name: 'Настройка меню' })).toHaveCount(0);
 });
 
 test('accessibility short viewport moves action panel into flow without claiming real virtual keyboard', async ({ page }) => {

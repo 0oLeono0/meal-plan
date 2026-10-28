@@ -190,7 +190,7 @@ test('home-products boundary/precision/error: invalid raw persists, unit mandato
   await page.getByRole('button', { name: 'Рис', exact: true }).click();
   const amount = page.getByLabel('Количество Рис', { exact: true });
   await amount.fill('0');
-  await page.getByRole('button', { name: 'Проверить настройки' }).click();
+  await page.getByRole('button', { name: 'Составить меню' }).click();
   await expect(amount).toBeFocused();
   await expect(amount).toHaveAttribute('aria-invalid', 'true');
   await expect(page.getByText('Настройки подготовлены', { exact: true })).toHaveCount(0);
@@ -198,17 +198,21 @@ test('home-products boundary/precision/error: invalid raw persists, unit mandato
   await page.reload();
   await expect(amount).toHaveValue('0');
   await amount.fill('0.00000000000000000001');
-  await page.getByRole('button', { name: 'Проверить настройки' }).click();
+  await page.getByRole('button', { name: 'Составить меню' }).click();
   await expect(page.getByLabel('Единица Рис', { exact: true })).toBeFocused();
   await page.getByLabel('Единица Рис', { exact: true }).selectOption('g');
-  await page.getByRole('button', { name: 'Проверить настройки' }).click();
-  await expect(page.getByRole('heading', { name: 'Настройки подготовлены' })).toBeVisible();
-  await expect(page.getByText('0.00000000000000000001 г', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Составить меню' }).click();
+  await expect(page.getByRole('heading', { name: 'Недостаточно проверенных данных для расчёта меню' })).toBeFocused();
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).draft.home[0].quantity, draftKey)).toBe('0.00000000000000000001');
+  expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'))).toBeNull();
+  await page.getByRole('button', { name: 'Изменить настройки', exact: true }).click();
+  await expect(amount).toHaveValue('0.00000000000000000001');
+  await expect(page.getByLabel('Единица Рис', { exact: true })).toHaveValue('g');
 });
 
-test('home-products honest review: all four steps validated, no confirmed or pantry mutation', async ({ page }) => {
+test('home-products honest submit: all four steps validated, no confirmed or pantry mutation', async ({ page }) => {
   await mountAppFixture(page, { draft: { step: 4, people: '', budget: '0' } });
-  await page.getByRole('button', { name: 'Проверить настройки' }).click();
+  await page.getByRole('button', { name: 'Составить меню' }).click();
   await expect(page.getByLabel('Число людей', { exact: true })).toBeFocused();
   await page.getByLabel('Число людей', { exact: true }).fill('2');
   await page.getByRole('button', { name: 'Далее', exact: true }).click();
@@ -220,12 +224,12 @@ test('home-products honest review: all four steps validated, no confirmed or pan
   await expect(page.getByRole('heading', { name: 'Предпочтения и ограничения' })).toBeVisible();
   await page.waitForTimeout(260);
   await page.getByRole('button', { name: 'Далее', exact: true }).click();
-  await page.getByRole('button', { name: 'Проверить настройки' }).click();
-  await expect(page.getByRole('heading', { name: 'Настройки подготовлены' })).toBeFocused();
-  await expect(page.getByText('Запуск меню будет доступен на следующем этапе')).toBeVisible();
-  await expect(page.getByText('Цель КБЖУ не указана', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Составить меню', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Составить меню' }).click();
+  await expect(page.getByRole('heading', { name: 'Меню на неделю' })).toBeFocused();
+  await expect(page.getByText('Ручная цель КБЖУ не задана', { exact: true })).toBeVisible();
+  await expect(page.locator('[data-instance-id]')).toHaveCount(28);
   expect(await page.evaluate(() => [localStorage.getItem('mealplan:confirmed'), localStorage.getItem('mealplan:pantry')])).toEqual(['confirmed', 'pantry']);
+  await page.goto('/plan/new');
   await page.getByRole('button', { name: 'Назад', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Предпочтения и ограничения' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Настройки подготовлены' })).toHaveCount(0);
@@ -279,15 +283,15 @@ test('home-products long-text: unknown stored ID stays literal, wraps and cannot
   await expect(page.getByRole('button', { name: /^Удалить продукт/ })).toHaveCount(1);
   await expect(page.locator('img')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.getByRole('button', { name: 'Проверить настройки' }).click();
+  await page.getByRole('button', { name: 'Составить меню' }).click();
   await expect(page.getByText('Продукт отсутствует в справочнике. Удалите строку и выберите продукт заново')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Настройки подготовлены' })).toHaveCount(0);
 });
 
-test('home-products review preserves saved nutrition provenance', async ({ page }) => {
+test('home-products submit preserves saved nutrition provenance', async ({ page }) => {
   await mountAppFixture(page, { draft: { step: 4, targetSource: { kind: 'calculated', formulaVersion: 'existing-source', sourceRef: 'existing-ref' }, manualNutrition: { calories: '2000', protein: '90', fat: '70', carbohydrates: '240' } } });
-  await page.getByRole('button', { name: 'Проверить настройки' }).click();
-  await expect(page.getByRole('heading', { name: 'Настройки подготовлены' })).toBeVisible();
-  await expect(page.getByText(/Сохранённая норма из расчёта/)).toBeVisible();
+  await page.getByRole('button', { name: 'Составить меню' }).click();
+  await expect(page.getByRole('heading', { name: 'Меню на неделю' })).toBeVisible();
+  await expect(page.getByText('Цель из сохранённого расчёта · на человека в день', { exact: true })).toBeVisible();
   await expect(page.getByText(/Введено вручную/)).toHaveCount(0);
 });

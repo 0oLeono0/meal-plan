@@ -88,7 +88,7 @@ for (const width of [360, 390, 768, 1280]) {
     await next(page, 3);
     await next(page, 4);
     await page.evaluate(() => document.documentElement.style.fontSize = '200%');
-    await footerFits(page, page.getByRole('button', { name: 'Проверить настройки' }), width < 768);
+    await footerFits(page, page.getByRole('button', { name: 'Составить меню' }), width < 768);
   });
 }
 
@@ -139,26 +139,25 @@ for (const width of widths) test(`presentation ${width === 360 ? 'smoke ' : ''}$
   await popular.getByRole('button', { name: 'Яйца', exact: true }).click();
   await expect(page.getByText('Количество не указано', { exact: true })).toBeVisible();
   await capture('step4');
-  await page.getByRole('button', { name: 'Проверить настройки' }).click();
-  const review = page.getByRole('region', { name: 'Настройки подготовлены' });
-  await expect(review).toContainText('1050 ₽');
-  await expect(review).toContainText('На следующем этапе'.toLowerCase());
-  await expect(review).toContainText('Введено вручную');
-  await expect(review).toContainText('Количество не указано');
-  await expect(page.getByRole('button', { name: /Создать меню|Генерировать/ })).toHaveCount(0);
-  await capture('review');
   await expect(page.getByRole('status').filter({ hasText: 'Сохранено на этом устройстве' })).toBeVisible();
   const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).draft, draftKey);
   expect(saved).toMatchObject({ step: 4, people: '3', days: '5', budget: '1050', targetSource: { kind: 'manual' }, manualNutrition: { calories: ' 1800,5 ', protein: '90', fat: '0', carbohydrates: '240' }, exclusionIds: ['tomato'] });
   expect(saved.home).toEqual(expect.arrayContaining([expect.objectContaining({ productId: 'rice', quantity: ' 1,25 ', unit: 'kg', expiresSoon: true }), expect.objectContaining({ productId: 'egg', quantity: '' })]));
+  await page.getByRole('button', { name: 'Составить меню', exact: true }).click();
+  await expect(page).toHaveURL('/plan/generating');
+  // A restrictive high-variety request may be refused; constraints must stay intact.
+  await expect(page.getByRole('heading', { level: 1 })).not.toHaveText('Составляем меню');
+  await expect(page.getByRole('button', { name: 'Изменить настройки', exact: true })).toBeVisible();
+  await capture('operation');
+  await page.getByRole('button', { name: 'Изменить настройки', exact: true }).click();
   await page.reload();
   await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '4');
   await expect(page.getByLabel('Количество Рис', { exact: true })).toHaveValue(' 1,25 ');
   await expect(page.getByLabel('Единица Рис', { exact: true })).toHaveValue('kg');
-  await page.getByRole('button', { name: 'Проверить настройки' }).click();
-  await expect(review).toContainText('Без рыбы');
-  await expect(review).toContainText('Помидоры');
-  await expect(review).toContainText('Введено вручную');
+  await page.getByRole('button', { name: 'Назад', exact: true }).click();
+  await expect(page.getByRole('checkbox', { name: 'Без рыбы', exact: true })).toBeChecked();
+  await expect(page.getByRole('button', { name: 'Удалить исключение Помидоры' })).toBeVisible();
+  await next(page, 4);
   expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).draft, draftKey)).toEqual(saved);
   expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([draftKey]);
 });
@@ -182,19 +181,19 @@ test('presentation manual absence and partial correction preserve optional contr
   await next(page, 3);
   await page.getByRole('checkbox', { name: 'Халяль', exact: true }).check();
   await next(page, 4);
-  await page.getByRole('button', { name: 'Проверить настройки' }).click();
-  const review = page.getByRole('region', { name: 'Настройки подготовлены' });
-  await expect(review).toContainText('Цель КБЖУ не указана');
-  await expect(review).not.toContainText(/Введено вручную|2100|Рассчитано|средняя норма/i);
   await expect(page.getByRole('status').filter({ hasText: 'Сохранено на этом устройстве' })).toBeVisible();
   await page.reload();
-  await page.getByRole('button', { name: 'Проверить настройки' }).click();
-  await expect(review).toContainText('Цель КБЖУ не указана');
+  await page.getByRole('button', { name: 'Составить меню' }).click();
+  await expect(page.getByRole('heading', { name: 'Недостаточно проверенных данных для расчёта меню' })).toBeVisible();
+  await expect(page.getByRole('alert')).not.toContainText(/Введено вручную|2100|Рассчитано|средняя норма/i);
+  const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).draft, draftKey);
+  expect(saved.targetSource).toEqual({ kind: 'manual' });
+  expect(saved.manualNutrition).toEqual({ calories: '', protein: '', fat: '', carbohydrates: '' });
 });
 
 for (const width of widths) test(`presentation ${width}px truthful route states reflow under 200 percent text`, async ({ page }, info) => {
   await page.setViewportSize({ width, height: 800 });
-  for (const [path, title] of [['/menu', 'Меню пока нет'], ['/shopping', 'Сначала составьте меню'], ['/pantry', 'Добавьте, что есть дома, и мы не купим лишнего'], ['/recipe/missing', 'Такого рецепта нет'], ['/missing', 'Страница не найдена'], ['/plan/generating', 'Генерация не запущена']]) {
+  for (const [path, title] of [['/menu', 'Меню пока нет'], ['/shopping', 'Сначала составьте меню'], ['/pantry', 'Добавьте, что есть дома, и мы не купим лишнего'], ['/recipe/missing', 'Такого рецепта нет'], ['/missing', 'Страница не найдена'], ['/plan/generating', 'Генерация прервана или не запущена']]) {
     await page.goto(path);
     await page.evaluate(() => document.documentElement.style.fontSize = '200%');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(title);

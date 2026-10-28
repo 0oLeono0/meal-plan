@@ -1,0 +1,989 @@
+{
+  "version": "mealplan-source-2026-10-28-1",
+  "archiveUrl": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+  "archiveSha256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+  "accessedAt": "2026-10-28",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://fdc.nal.usda.gov/data-documentation.html",
+  "referenceEvidence": "SR Legacy documentation section 4.5: nutrients per 100 g edible portion",
+  "nutrientDefinitions": [
+    {
+      "id": "1003",
+      "name": "Protein",
+      "unit_name": "G",
+      "nutrient_nbr": "203",
+      "rank": "600.0"
+    },
+    {
+      "id": "1004",
+      "name": "Total lipid (fat)",
+      "unit_name": "G",
+      "nutrient_nbr": "204",
+      "rank": "800.0"
+    },
+    {
+      "id": "1005",
+      "name": "Carbohydrate, by difference",
+      "unit_name": "G",
+      "nutrient_nbr": "205",
+      "rank": "1110.0"
+    },
+    {
+      "id": "1008",
+      "name": "Energy",
+      "unit_name": "KCAL",
+      "nutrient_nbr": "208",
+      "rank": "300.0"
+    }
+  ],
+  "records": [
+    {
+      "productId": "potato",
+      "profileId": "usda-170026-raw",
+      "name": "Картофель с кожурой",
+      "food": {
+        "fdc_id": "170026",
+        "data_type": "sr_legacy_food",
+        "description": "Potatoes, flesh and skin, raw",
+        "food_category_id": "11",
+        "publication_date": "2019-04-01"
+      },
+      "nutrients": [
+        {
+          "id": "1488784",
+          "fdc_id": "170026",
+          "nutrient_id": "1004",
+          "amount": "0.09",
+          "data_points": "11",
+          "derivation_id": "1",
+          "min": "0.08",
+          "max": "0.2",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1488814",
+          "fdc_id": "170026",
+          "nutrient_id": "1008",
+          "amount": "77",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1488836",
+          "fdc_id": "170026",
+          "nutrient_id": "1003",
+          "amount": "2.05",
+          "data_points": "11",
+          "derivation_id": "1",
+          "min": "1.44",
+          "max": "2.22",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1488857",
+          "fdc_id": "170026",
+          "nutrient_id": "1005",
+          "amount": "17.49",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        }
+      ],
+      "category": {
+        "id": "11",
+        "code": "1100",
+        "description": "Vegetables and Vegetable Products"
+      },
+      "originalCsv": "\"fdc_id\",\"data_type\",\"description\",\"food_category_id\",\"publication_date\"\n\"170026\",\"sr_legacy_food\",\"Potatoes, flesh and skin, raw\",\"11\",\"2019-04-01\"\n\"id\",\"fdc_id\",\"nutrient_id\",\"amount\",\"data_points\",\"derivation_id\",\"min\",\"max\",\"median\",\"footnote\",\"min_year_acquired\"\n\"1488784\",\"170026\",\"1004\",\"0.09\",\"11\",\"1\",\"0.08\",\"0.2\",\"\",\"\",\"\"\n\"1488814\",\"170026\",\"1008\",\"77\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1488836\",\"170026\",\"1003\",\"2.05\",\"11\",\"1\",\"1.44\",\"2.22\",\"\",\"\",\"\"\n\"1488857\",\"170026\",\"1005\",\"17.49\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"",
+      "sha256": "4b73e1a8c8a77b750233bca4a6bf5b5493d85b92d4cbff75180d50ba4f383221",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Представительный USDA профиль обычного продукта, не анализ конкретной российской марки; сырое пищевое сырьё с явным названием и сухим/сырым состоянием. Никаких конверсий штук, плотности или выхода. В рецептах взвешивается съедобная часть: картофель/морковь/свёкла с кожурой, капуста без кочерыжки. Цена за кг служит оценкой стоимости этого количества, технологические отходы/упаковки не включены; это не закупочная спецификация целого кочана."
+    },
+    {
+      "productId": "tomato",
+      "profileId": "usda-170457-raw",
+      "name": "Помидоры красные",
+      "food": {
+        "fdc_id": "170457",
+        "data_type": "sr_legacy_food",
+        "description": "Tomatoes, red, ripe, raw, year round average",
+        "food_category_id": "11",
+        "publication_date": "2019-04-01"
+      },
+      "nutrients": [
+        {
+          "id": "1525333",
+          "fdc_id": "170457",
+          "nutrient_id": "1005",
+          "amount": "3.89",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1525334",
+          "fdc_id": "170457",
+          "nutrient_id": "1008",
+          "amount": "18",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1525365",
+          "fdc_id": "170457",
+          "nutrient_id": "1004",
+          "amount": "0.2",
+          "data_points": "26",
+          "derivation_id": "43",
+          "min": "0.07",
+          "max": "0.8",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1525376",
+          "fdc_id": "170457",
+          "nutrient_id": "1003",
+          "amount": "0.88",
+          "data_points": "19",
+          "derivation_id": "43",
+          "min": "0.59",
+          "max": "1.06",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        }
+      ],
+      "category": {
+        "id": "11",
+        "code": "1100",
+        "description": "Vegetables and Vegetable Products"
+      },
+      "originalCsv": "\"fdc_id\",\"data_type\",\"description\",\"food_category_id\",\"publication_date\"\n\"170457\",\"sr_legacy_food\",\"Tomatoes, red, ripe, raw, year round average\",\"11\",\"2019-04-01\"\n\"id\",\"fdc_id\",\"nutrient_id\",\"amount\",\"data_points\",\"derivation_id\",\"min\",\"max\",\"median\",\"footnote\",\"min_year_acquired\"\n\"1525333\",\"170457\",\"1005\",\"3.89\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1525334\",\"170457\",\"1008\",\"18\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1525365\",\"170457\",\"1004\",\"0.2\",\"26\",\"43\",\"0.07\",\"0.8\",\"\",\"\",\"\"\n\"1525376\",\"170457\",\"1003\",\"0.88\",\"19\",\"43\",\"0.59\",\"1.06\",\"\",\"\",\"\"",
+      "sha256": "aeaa3389907709779d3bd40fc226c12126bcfc758f260dd25c26a9e41632a466",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Представительный USDA профиль обычного продукта, не анализ конкретной российской марки; сырое пищевое сырьё с явным названием и сухим/сырым состоянием. Никаких конверсий штук, плотности или выхода. В рецептах взвешивается съедобная часть: картофель/морковь/свёкла с кожурой, капуста без кочерыжки. Цена за кг служит оценкой стоимости этого количества, технологические отходы/упаковки не включены; это не закупочная спецификация целого кочана."
+    },
+    {
+      "productId": "carrot",
+      "profileId": "usda-170393-raw",
+      "name": "Морковь",
+      "food": {
+        "fdc_id": "170393",
+        "data_type": "sr_legacy_food",
+        "description": "Carrots, raw",
+        "food_category_id": "11",
+        "publication_date": "2019-04-01"
+      },
+      "nutrients": [
+        {
+          "id": "1519940",
+          "fdc_id": "170393",
+          "nutrient_id": "1003",
+          "amount": "0.93",
+          "data_points": "19",
+          "derivation_id": "43",
+          "min": "0.68",
+          "max": "1.19",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1519947",
+          "fdc_id": "170393",
+          "nutrient_id": "1004",
+          "amount": "0.24",
+          "data_points": "26",
+          "derivation_id": "43",
+          "min": "0.1",
+          "max": "0.4",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1519995",
+          "fdc_id": "170393",
+          "nutrient_id": "1005",
+          "amount": "9.58",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1519996",
+          "fdc_id": "170393",
+          "nutrient_id": "1008",
+          "amount": "41",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        }
+      ],
+      "category": {
+        "id": "11",
+        "code": "1100",
+        "description": "Vegetables and Vegetable Products"
+      },
+      "originalCsv": "\"fdc_id\",\"data_type\",\"description\",\"food_category_id\",\"publication_date\"\n\"170393\",\"sr_legacy_food\",\"Carrots, raw\",\"11\",\"2019-04-01\"\n\"id\",\"fdc_id\",\"nutrient_id\",\"amount\",\"data_points\",\"derivation_id\",\"min\",\"max\",\"median\",\"footnote\",\"min_year_acquired\"\n\"1519940\",\"170393\",\"1003\",\"0.93\",\"19\",\"43\",\"0.68\",\"1.19\",\"\",\"\",\"\"\n\"1519947\",\"170393\",\"1004\",\"0.24\",\"26\",\"43\",\"0.1\",\"0.4\",\"\",\"\",\"\"\n\"1519995\",\"170393\",\"1005\",\"9.58\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1519996\",\"170393\",\"1008\",\"41\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"",
+      "sha256": "eea7db169b930577ff13c7595ad0dbe085f76726550d210075ad68465a6ac6e1",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Представительный USDA профиль обычного продукта, не анализ конкретной российской марки; сырое пищевое сырьё с явным названием и сухим/сырым состоянием. Никаких конверсий штук, плотности или выхода. В рецептах взвешивается съедобная часть: картофель/морковь/свёкла с кожурой, капуста без кочерыжки. Цена за кг служит оценкой стоимости этого количества, технологические отходы/упаковки не включены; это не закупочная спецификация целого кочана."
+    },
+    {
+      "productId": "cabbage",
+      "profileId": "usda-169975-raw",
+      "name": "Капуста белокочанная",
+      "food": {
+        "fdc_id": "169975",
+        "data_type": "sr_legacy_food",
+        "description": "Cabbage, raw",
+        "food_category_id": "11",
+        "publication_date": "2019-04-01"
+      },
+      "nutrients": [
+        {
+          "id": "1484444",
+          "fdc_id": "169975",
+          "nutrient_id": "1004",
+          "amount": "0.1",
+          "data_points": "13",
+          "derivation_id": "43",
+          "min": "0",
+          "max": "0.3",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1484445",
+          "fdc_id": "169975",
+          "nutrient_id": "1005",
+          "amount": "5.8",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1484446",
+          "fdc_id": "169975",
+          "nutrient_id": "1008",
+          "amount": "25",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1484505",
+          "fdc_id": "169975",
+          "nutrient_id": "1003",
+          "amount": "1.28",
+          "data_points": "4",
+          "derivation_id": "1",
+          "min": "1.1",
+          "max": "1.46",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        }
+      ],
+      "category": {
+        "id": "11",
+        "code": "1100",
+        "description": "Vegetables and Vegetable Products"
+      },
+      "originalCsv": "\"fdc_id\",\"data_type\",\"description\",\"food_category_id\",\"publication_date\"\n\"169975\",\"sr_legacy_food\",\"Cabbage, raw\",\"11\",\"2019-04-01\"\n\"id\",\"fdc_id\",\"nutrient_id\",\"amount\",\"data_points\",\"derivation_id\",\"min\",\"max\",\"median\",\"footnote\",\"min_year_acquired\"\n\"1484444\",\"169975\",\"1004\",\"0.1\",\"13\",\"43\",\"0\",\"0.3\",\"\",\"\",\"\"\n\"1484445\",\"169975\",\"1005\",\"5.8\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1484446\",\"169975\",\"1008\",\"25\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1484505\",\"169975\",\"1003\",\"1.28\",\"4\",\"1\",\"1.1\",\"1.46\",\"\",\"\",\"\"",
+      "sha256": "b15662f6d1b1a35179109b8986ea0731ee553563362de40a2e6cbab06d097262",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Представительный USDA профиль обычного продукта, не анализ конкретной российской марки; сырое пищевое сырьё с явным названием и сухим/сырым состоянием. Никаких конверсий штук, плотности или выхода. В рецептах взвешивается съедобная часть: картофель/морковь/свёкла с кожурой, капуста без кочерыжки. Цена за кг служит оценкой стоимости этого количества, технологические отходы/упаковки не включены; это не закупочная спецификация целого кочана."
+    },
+    {
+      "productId": "beet",
+      "profileId": "usda-169145-raw",
+      "name": "Свёкла",
+      "food": {
+        "fdc_id": "169145",
+        "data_type": "sr_legacy_food",
+        "description": "Beets, raw",
+        "food_category_id": "11",
+        "publication_date": "2019-04-01"
+      },
+      "nutrients": [
+        {
+          "id": "1416996",
+          "fdc_id": "169145",
+          "nutrient_id": "1005",
+          "amount": "9.56",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1416997",
+          "fdc_id": "169145",
+          "nutrient_id": "1008",
+          "amount": "43",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1417017",
+          "fdc_id": "169145",
+          "nutrient_id": "1004",
+          "amount": "0.17",
+          "data_points": "9",
+          "derivation_id": "",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1417022",
+          "fdc_id": "169145",
+          "nutrient_id": "1003",
+          "amount": "1.61",
+          "data_points": "9",
+          "derivation_id": "",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        }
+      ],
+      "category": {
+        "id": "11",
+        "code": "1100",
+        "description": "Vegetables and Vegetable Products"
+      },
+      "originalCsv": "\"fdc_id\",\"data_type\",\"description\",\"food_category_id\",\"publication_date\"\n\"169145\",\"sr_legacy_food\",\"Beets, raw\",\"11\",\"2019-04-01\"\n\"id\",\"fdc_id\",\"nutrient_id\",\"amount\",\"data_points\",\"derivation_id\",\"min\",\"max\",\"median\",\"footnote\",\"min_year_acquired\"\n\"1416996\",\"169145\",\"1005\",\"9.56\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1416997\",\"169145\",\"1008\",\"43\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1417017\",\"169145\",\"1004\",\"0.17\",\"9\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"1417022\",\"169145\",\"1003\",\"1.61\",\"9\",\"\",\"\",\"\",\"\",\"\",\"\"",
+      "sha256": "d6989f23db73ba6879edde9e6d0202460a3582e07495a01294c2997a59323b43",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Представительный USDA профиль обычного продукта, не анализ конкретной российской марки; сырое пищевое сырьё с явным названием и сухим/сырым состоянием. Никаких конверсий штук, плотности или выхода. В рецептах взвешивается съедобная часть: картофель/морковь/свёкла с кожурой, капуста без кочерыжки. Цена за кг служит оценкой стоимости этого количества, технологические отходы/упаковки не включены; это не закупочная спецификация целого кочана."
+    },
+    {
+      "productId": "rice",
+      "profileId": "usda-169756-raw",
+      "name": "Рис белый длиннозёрный, сухой",
+      "food": {
+        "fdc_id": "169756",
+        "data_type": "sr_legacy_food",
+        "description": "Rice, white, long-grain, regular, raw, unenriched",
+        "food_category_id": "20",
+        "publication_date": "2019-04-01"
+      },
+      "nutrients": [
+        {
+          "id": "1467237",
+          "fdc_id": "169756",
+          "nutrient_id": "1003",
+          "amount": "7.13",
+          "data_points": "70",
+          "derivation_id": "",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1467260",
+          "fdc_id": "169756",
+          "nutrient_id": "1004",
+          "amount": "0.66",
+          "data_points": "23",
+          "derivation_id": "",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1467261",
+          "fdc_id": "169756",
+          "nutrient_id": "1005",
+          "amount": "79.95",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1467262",
+          "fdc_id": "169756",
+          "nutrient_id": "1008",
+          "amount": "365",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        }
+      ],
+      "category": {
+        "id": "20",
+        "code": "2000",
+        "description": "Cereal Grains and Pasta"
+      },
+      "originalCsv": "\"fdc_id\",\"data_type\",\"description\",\"food_category_id\",\"publication_date\"\n\"169756\",\"sr_legacy_food\",\"Rice, white, long-grain, regular, raw, unenriched\",\"20\",\"2019-04-01\"\n\"id\",\"fdc_id\",\"nutrient_id\",\"amount\",\"data_points\",\"derivation_id\",\"min\",\"max\",\"median\",\"footnote\",\"min_year_acquired\"\n\"1467237\",\"169756\",\"1003\",\"7.13\",\"70\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"1467260\",\"169756\",\"1004\",\"0.66\",\"23\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"1467261\",\"169756\",\"1005\",\"79.95\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1467262\",\"169756\",\"1008\",\"365\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"",
+      "sha256": "cc8f4a0f11abe09900804a5ce9f2e81860ffa08f06359e93091ed7bc3c171a3c",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Представительный USDA профиль обычного продукта, не анализ конкретной российской марки; сырое пищевое сырьё с явным названием и сухим/сырым состоянием. Никаких конверсий штук, плотности или выхода."
+    },
+    {
+      "productId": "buckwheat",
+      "profileId": "usda-170685-raw",
+      "name": "Гречневая крупа обжаренная, сухая",
+      "food": {
+        "fdc_id": "170685",
+        "data_type": "sr_legacy_food",
+        "description": "Buckwheat groats, roasted, dry",
+        "food_category_id": "20",
+        "publication_date": "2019-04-01"
+      },
+      "nutrients": [
+        {
+          "id": "1543150",
+          "fdc_id": "170685",
+          "nutrient_id": "1003",
+          "amount": "11.73",
+          "data_points": "5",
+          "derivation_id": "",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1543164",
+          "fdc_id": "170685",
+          "nutrient_id": "1004",
+          "amount": "2.71",
+          "data_points": "5",
+          "derivation_id": "",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1543165",
+          "fdc_id": "170685",
+          "nutrient_id": "1005",
+          "amount": "74.95",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1543166",
+          "fdc_id": "170685",
+          "nutrient_id": "1008",
+          "amount": "346",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        }
+      ],
+      "category": {
+        "id": "20",
+        "code": "2000",
+        "description": "Cereal Grains and Pasta"
+      },
+      "originalCsv": "\"fdc_id\",\"data_type\",\"description\",\"food_category_id\",\"publication_date\"\n\"170685\",\"sr_legacy_food\",\"Buckwheat groats, roasted, dry\",\"20\",\"2019-04-01\"\n\"id\",\"fdc_id\",\"nutrient_id\",\"amount\",\"data_points\",\"derivation_id\",\"min\",\"max\",\"median\",\"footnote\",\"min_year_acquired\"\n\"1543150\",\"170685\",\"1003\",\"11.73\",\"5\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"1543164\",\"170685\",\"1004\",\"2.71\",\"5\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"1543165\",\"170685\",\"1005\",\"74.95\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1543166\",\"170685\",\"1008\",\"346\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"",
+      "sha256": "30487914ee52d7eefa9cc58d333f3217710905d252ed47ab68d28182bad0c5ce",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Представительный USDA профиль обычного продукта, не анализ конкретной российской марки; сырое пищевое сырьё с явным названием и сухим/сырым состоянием. Никаких конверсий штук, плотности или выхода."
+    },
+    {
+      "productId": "millet",
+      "profileId": "usda-169702-raw",
+      "name": "Пшено, сухое",
+      "food": {
+        "fdc_id": "169702",
+        "data_type": "sr_legacy_food",
+        "description": "Millet, raw",
+        "food_category_id": "20",
+        "publication_date": "2019-04-01"
+      },
+      "nutrients": [
+        {
+          "id": "1462641",
+          "fdc_id": "169702",
+          "nutrient_id": "1004",
+          "amount": "4.22",
+          "data_points": "9",
+          "derivation_id": "",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1462642",
+          "fdc_id": "169702",
+          "nutrient_id": "1005",
+          "amount": "72.85",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1462643",
+          "fdc_id": "169702",
+          "nutrient_id": "1008",
+          "amount": "378",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1462671",
+          "fdc_id": "169702",
+          "nutrient_id": "1003",
+          "amount": "11.02",
+          "data_points": "9",
+          "derivation_id": "",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        }
+      ],
+      "category": {
+        "id": "20",
+        "code": "2000",
+        "description": "Cereal Grains and Pasta"
+      },
+      "originalCsv": "\"fdc_id\",\"data_type\",\"description\",\"food_category_id\",\"publication_date\"\n\"169702\",\"sr_legacy_food\",\"Millet, raw\",\"20\",\"2019-04-01\"\n\"id\",\"fdc_id\",\"nutrient_id\",\"amount\",\"data_points\",\"derivation_id\",\"min\",\"max\",\"median\",\"footnote\",\"min_year_acquired\"\n\"1462641\",\"169702\",\"1004\",\"4.22\",\"9\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"1462642\",\"169702\",\"1005\",\"72.85\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1462643\",\"169702\",\"1008\",\"378\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1462671\",\"169702\",\"1003\",\"11.02\",\"9\",\"\",\"\",\"\",\"\",\"\",\"\"",
+      "sha256": "b0f249d03e4458b907d95f2e5740d6b13bbc3d1c3506a4096133b8cb864a7610",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Представительный USDA профиль обычного продукта, не анализ конкретной российской марки; сырое пищевое сырьё с явным названием и сухим/сырым состоянием. Никаких конверсий штук, плотности или выхода."
+    },
+    {
+      "productId": "semolina",
+      "profileId": "usda-168933-raw",
+      "name": "Манная крупа, сухая",
+      "food": {
+        "fdc_id": "168933",
+        "data_type": "sr_legacy_food",
+        "description": "Semolina, unenriched",
+        "food_category_id": "20",
+        "publication_date": "2019-04-01"
+      },
+      "nutrients": [
+        {
+          "id": "1400165",
+          "fdc_id": "168933",
+          "nutrient_id": "1003",
+          "amount": "12.68",
+          "data_points": "16",
+          "derivation_id": "",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1400192",
+          "fdc_id": "168933",
+          "nutrient_id": "1004",
+          "amount": "1.05",
+          "data_points": "2",
+          "derivation_id": "",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1400193",
+          "fdc_id": "168933",
+          "nutrient_id": "1005",
+          "amount": "72.83",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1400194",
+          "fdc_id": "168933",
+          "nutrient_id": "1008",
+          "amount": "360",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        }
+      ],
+      "category": {
+        "id": "20",
+        "code": "2000",
+        "description": "Cereal Grains and Pasta"
+      },
+      "originalCsv": "\"fdc_id\",\"data_type\",\"description\",\"food_category_id\",\"publication_date\"\n\"168933\",\"sr_legacy_food\",\"Semolina, unenriched\",\"20\",\"2019-04-01\"\n\"id\",\"fdc_id\",\"nutrient_id\",\"amount\",\"data_points\",\"derivation_id\",\"min\",\"max\",\"median\",\"footnote\",\"min_year_acquired\"\n\"1400165\",\"168933\",\"1003\",\"12.68\",\"16\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"1400192\",\"168933\",\"1004\",\"1.05\",\"2\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"1400193\",\"168933\",\"1005\",\"72.83\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1400194\",\"168933\",\"1008\",\"360\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"",
+      "sha256": "69f98e4fd5209447c3861e13747b925414e98df296c103fbc3cedf95effcd29f",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Представительный USDA профиль обычного продукта, не анализ конкретной российской марки; сырое пищевое сырьё с явным названием и сухим/сырым состоянием. Никаких конверсий штук, плотности или выхода."
+    },
+    {
+      "productId": "flour",
+      "profileId": "usda-169761-raw",
+      "name": "Мука пшеничная белая",
+      "food": {
+        "fdc_id": "169761",
+        "data_type": "sr_legacy_food",
+        "description": "Wheat flour, white, all-purpose, unenriched",
+        "food_category_id": "20",
+        "publication_date": "2019-04-01"
+      },
+      "nutrients": [
+        {
+          "id": "1467650",
+          "fdc_id": "169761",
+          "nutrient_id": "1004",
+          "amount": "0.98",
+          "data_points": "29",
+          "derivation_id": "",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1467651",
+          "fdc_id": "169761",
+          "nutrient_id": "1005",
+          "amount": "76.31",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1467652",
+          "fdc_id": "169761",
+          "nutrient_id": "1008",
+          "amount": "364",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1467697",
+          "fdc_id": "169761",
+          "nutrient_id": "1003",
+          "amount": "10.33",
+          "data_points": "61",
+          "derivation_id": "",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        }
+      ],
+      "category": {
+        "id": "20",
+        "code": "2000",
+        "description": "Cereal Grains and Pasta"
+      },
+      "originalCsv": "\"fdc_id\",\"data_type\",\"description\",\"food_category_id\",\"publication_date\"\n\"169761\",\"sr_legacy_food\",\"Wheat flour, white, all-purpose, unenriched\",\"20\",\"2019-04-01\"\n\"id\",\"fdc_id\",\"nutrient_id\",\"amount\",\"data_points\",\"derivation_id\",\"min\",\"max\",\"median\",\"footnote\",\"min_year_acquired\"\n\"1467650\",\"169761\",\"1004\",\"0.98\",\"29\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"1467651\",\"169761\",\"1005\",\"76.31\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1467652\",\"169761\",\"1008\",\"364\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1467697\",\"169761\",\"1003\",\"10.33\",\"61\",\"\",\"\",\"\",\"\",\"\",\"\"",
+      "sha256": "5a0da7bc24c348078152ee90de379427cddce07e806131b8fa514489ba035abb",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Представительный USDA профиль обычного продукта, не анализ конкретной российской марки; сырое пищевое сырьё с явным названием и сухим/сырым состоянием. Никаких конверсий штук, плотности или выхода."
+    },
+    {
+      "productId": "sugar",
+      "profileId": "usda-169655-raw",
+      "name": "Сахар",
+      "food": {
+        "fdc_id": "169655",
+        "data_type": "sr_legacy_food",
+        "description": "Sugars, granulated",
+        "food_category_id": "19",
+        "publication_date": "2019-04-01"
+      },
+      "nutrients": [
+        {
+          "id": "1459258",
+          "fdc_id": "169655",
+          "nutrient_id": "1003",
+          "amount": "0",
+          "data_points": "8",
+          "derivation_id": "1",
+          "min": "0",
+          "max": "0",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1459267",
+          "fdc_id": "169655",
+          "nutrient_id": "1004",
+          "amount": "0",
+          "data_points": "1",
+          "derivation_id": "1",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1459268",
+          "fdc_id": "169655",
+          "nutrient_id": "1008",
+          "amount": "387",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1459283",
+          "fdc_id": "169655",
+          "nutrient_id": "1005",
+          "amount": "99.98",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        }
+      ],
+      "category": {
+        "id": "19",
+        "code": "1900",
+        "description": "Sweets"
+      },
+      "originalCsv": "\"fdc_id\",\"data_type\",\"description\",\"food_category_id\",\"publication_date\"\n\"169655\",\"sr_legacy_food\",\"Sugars, granulated\",\"19\",\"2019-04-01\"\n\"id\",\"fdc_id\",\"nutrient_id\",\"amount\",\"data_points\",\"derivation_id\",\"min\",\"max\",\"median\",\"footnote\",\"min_year_acquired\"\n\"1459258\",\"169655\",\"1003\",\"0\",\"8\",\"1\",\"0\",\"0\",\"\",\"\",\"\"\n\"1459267\",\"169655\",\"1004\",\"0\",\"1\",\"1\",\"\",\"\",\"\",\"\",\"\"\n\"1459268\",\"169655\",\"1008\",\"387\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1459283\",\"169655\",\"1005\",\"99.98\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"",
+      "sha256": "bb01d9122f134b36678c28175003e311c190c2da56c461e581759b4f8ae6685b",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Представительный USDA профиль обычного продукта, не анализ конкретной российской марки; сырое пищевое сырьё с явным названием и сухим/сырым состоянием. Никаких конверсий штук, плотности или выхода."
+    },
+    {
+      "productId": "salt",
+      "profileId": "usda-173468-raw",
+      "name": "Соль поваренная",
+      "food": {
+        "fdc_id": "173468",
+        "data_type": "sr_legacy_food",
+        "description": "Salt, table",
+        "food_category_id": "2",
+        "publication_date": "2019-04-01"
+      },
+      "nutrients": [
+        {
+          "id": "1781407",
+          "fdc_id": "173468",
+          "nutrient_id": "1003",
+          "amount": "0",
+          "data_points": "1",
+          "derivation_id": "",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1781410",
+          "fdc_id": "173468",
+          "nutrient_id": "1004",
+          "amount": "0",
+          "data_points": "1",
+          "derivation_id": "",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1781411",
+          "fdc_id": "173468",
+          "nutrient_id": "1005",
+          "amount": "0",
+          "data_points": "0",
+          "derivation_id": "",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        },
+        {
+          "id": "1781412",
+          "fdc_id": "173468",
+          "nutrient_id": "1008",
+          "amount": "0",
+          "data_points": "0",
+          "derivation_id": "49",
+          "min": "",
+          "max": "",
+          "median": "",
+          "footnote": "",
+          "min_year_acquired": ""
+        }
+      ],
+      "category": {
+        "id": "2",
+        "code": "0200",
+        "description": "Spices and Herbs"
+      },
+      "originalCsv": "\"fdc_id\",\"data_type\",\"description\",\"food_category_id\",\"publication_date\"\n\"173468\",\"sr_legacy_food\",\"Salt, table\",\"2\",\"2019-04-01\"\n\"id\",\"fdc_id\",\"nutrient_id\",\"amount\",\"data_points\",\"derivation_id\",\"min\",\"max\",\"median\",\"footnote\",\"min_year_acquired\"\n\"1781407\",\"173468\",\"1003\",\"0\",\"1\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"1781410\",\"173468\",\"1004\",\"0\",\"1\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"1781411\",\"173468\",\"1005\",\"0\",\"0\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"1781412\",\"173468\",\"1008\",\"0\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"",
+      "sha256": "019ab04769845ec433d3158631d678066a326cda943c6c60c85d9539a55a8fa2",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Представительный USDA профиль обычного продукта, не анализ конкретной российской марки; сырое пищевое сырьё с явным названием и сухим/сырым состоянием. Никаких конверсий штук, плотности или выхода."
+    }
+  ]
+}

@@ -1,16 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync, existsSync } from 'node:fs';
-import { createHash } from 'node:crypto';
-
-const read = (name: string) => JSON.parse(readFileSync(`data/sources/${name}.snapshot.json`, 'utf8'));
-const hash = (value: string) => createHash('sha256').update(value).digest('hex');
+const originals = import.meta.glob('../../data/sources/*.snapshot.json', { query: '?raw', import: 'default', eager: true });
+const read = (name: string) => JSON.parse(String(originals[`../../data/sources/${name}.snapshot.json`]));
+const hash = async (value: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))), byte => byte.toString(16).padStart(2, '0')).join('');
 describe('archived primary sources', () => {
   it('archives actual primary observations before catalog acceptance', () => {
-    expect(existsSync('data/sources/prices.snapshot.json')).toBe(true);
-    expect(existsSync('data/sources/food.snapshot.json')).toBe(true);
-    expect(existsSync('data/sources/safety.snapshot.json')).toBe(true);
+    expect(typeof originals['../../data/sources/prices.snapshot.json']).toBe('string');
+    expect(typeof originals['../../data/sources/food.snapshot.json']).toBe('string');
+    expect(typeof originals['../../data/sources/safety.snapshot.json']).toBe('string');
   });
-  it('retains independent literal USDA values and original CSV evidence', () => {
+  it('retains independent literal USDA values and original CSV evidence', async () => {
     const food = read('food');
     expect(food.archiveSha256).toBe('b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0');
     for (const [id, expected] of [
@@ -22,7 +20,7 @@ describe('archived primary sources', () => {
       expect(['1008', '1003', '1004', '1005'].map(key => row.nutrients.find((n: { nutrient_id: string }) => n.nutrient_id === key).amount)).toEqual(expected);
     }
     for (const row of food.records) {
-      expect(hash(row.originalCsv)).toBe(row.sha256);
+      expect(await hash(row.originalCsv)).toBe(row.sha256);
       expect(row.originalCsv).toContain(row.food.description);
       expect(row.nutrients).toHaveLength(4);
       for (const n of row.nutrients) expect(row.originalCsv).toContain(`"${n.id}","${n.foodId ?? n.fdc_id}","${n.nutrient_id}","${n.amount}"`);
@@ -30,13 +28,13 @@ describe('archived primary sources', () => {
       expect(row.mapping.length).toBeGreaterThan(40);
     }
   });
-  it('retains literal RUB observations, exact original bases and separate scopes', () => {
+  it('retains literal RUB observations, exact original bases and separate scopes', async () => {
     const prices = read('prices');
     for (const [id, amount] of [['potato', '40.64'], ['rice', '69.7493827160494'], ['carrot', '51.7533333333333'], ['tomato', '270']]) {
       expect(prices.records.find((r: { productId: string }) => r.productId === id).amount).toBe(amount);
     }
     for (const row of prices.records) {
-      expect(hash(row.originalEvidence)).toBe(row.evidenceSha256);
+      expect(await hash(row.originalEvidence)).toBe(row.evidenceSha256);
       expect(row.originalEvidence).toContain(row.amount);
       expect(row.currency).toBe('RUB');
       expect(row.reference).toEqual({ amount: '1', unit: 'kg', basis: 'edible' });
@@ -49,13 +47,13 @@ describe('archived primary sources', () => {
     expect(prices.records.find((r: { productId: string }) => r.productId === 'tomato').scope).toContain('адрес/регион не выбран');
     expect(prices.records.find((r: { productId: string }) => r.productId === 'rice').observedAt).toBe('2026-10-21');
   });
-  it('makes safety claims evidence-specific and preserves certification uncertainty', () => {
+  it('makes safety claims evidence-specific and preserves certification uncertainty', async () => {
     const safety = read('safety');
     for (const row of safety.records) {
       expect(row.unknown).toEqual(expect.arrayContaining(['halal', 'gluten-free', 'lactose-free']));
       expect(row.facts.map((f: { key: string }) => f.key)).toEqual(['no-fish', 'vegetarian']);
       expect(row.facts.every((f: { suitable: boolean }) => f.suitable)).toBe(true);
-      expect(hash(row.originalEvidence)).toBe(row.evidenceSha256);
+      expect(await hash(row.originalEvidence)).toBe(row.evidenceSha256);
       expect(row.originalEvidence).toContain(row.fdcId);
       expect(row.rationale.length).toBeGreaterThan(50);
     }

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createActivePlanAdapter, ACTIVE_PLAN_KEY } from '../../adapters/activePlan';
-import type { ActivePlanLoadResult, ActivePlanPort, ActivePlanSaveResult } from '../../adapters/activePlan';
+import type { ActivePlanLoadResult, ActivePlanPort } from '../../adapters/activePlan';
 import { buildAppliedSettings } from '../../domain/appliedSettings';
 import type { Catalog } from '../../domain/catalog';
 import { buildActivePlanEnvelope, createPlanInputs, createRecipeInstances, mealSlots } from '../../domain/plan';
@@ -113,5 +113,47 @@ describe('generation lifecycle', () => {
     const { controller: c } = setup(); const listener = vi.fn(); const off = c.subscribe(listener); const snapshot = c.getSnapshot();
     expect(c.getSnapshot()).toBe(snapshot); await c.load(); expect(listener).toHaveBeenCalled(); expect(Object.isFrozen(c.getSnapshot())).toBe(true);
     off(); const count = listener.mock.calls.length; await c.start(fixture().inputs, origin); expect(listener).toHaveBeenCalledTimes(count); c.dispose();
+  });
+  it('a timeout during a delayed save preserves the old durable and active plan', async () => {
+    const real = setup(); await real.port.load(); await real.port.save(fixture().plan, { isCurrent: () => true });
+    const bytes = real.map.get(ACTIVE_PLAN_KEY), gate = deferred<void>();
+    const c = createGenerationController({ generation: { generate: async () => ({ status: 'success', plan: fixture('two').plan }) },
+      activePlan: { load: () => real.port.load(), async save(plan, guard) { await gate.promise; return real.port.save(plan, guard); } } });
+    await c.load(); const running = c.start(fixture('two').inputs, origin); await vi.advanceTimersByTimeAsync(0);
+    expect(c.getSnapshot().status).toBe('saving'); expect(c.getSnapshot().active?.plan.activeVariantId).toBe('one');
+    await vi.advanceTimersByTimeAsync(30_000); await running; gate.resolve(); await vi.advanceTimersByTimeAsync(0);
+    expect(c.getSnapshot().error?.code).toBe('TIMEOUT'); expect(c.getSnapshot().active?.plan.activeVariantId).toBe('one');
+    expect(real.map.get(ACTIVE_PLAN_KEY)).toBe(bytes); expect(vi.getTimerCount()).toBe(0);
+  });
+  it('a current request waits for an obsolete save and then alone commits', async () => {
+    const real = setup(), gate = deferred<void>(); let count = 0;
+    const c = createGenerationController({ generation: { generate: async request => ({ status: 'success', plan: fixture(request.inputs.seed).plan }) },
+      activePlan: { load: () => real.port.load(), async save(plan, guard) { if (++count === 1) await gate.promise; return real.port.save(plan, guard); } } });
+    await c.load(); const first = c.start(fixture().inputs, origin); await vi.advanceTimersByTimeAsync(0);
+    const second = c.start(fixture('two').inputs, origin); await vi.advanceTimersByTimeAsync(0);
+    expect(count).toBe(1); gate.resolve(); await Promise.all([first, second]);
+    expect(c.getSnapshot().status).toBe('succeeded'); expect(c.getSnapshot().active?.plan.activeVariantId).toBe('two');
+    const reloaded = await real.port.load(); expect(reloaded.status).toBe('loaded');
+    if (reloaded.status === 'loaded') expect(reloaded.bundle.plan.activeVariantId).toBe('two');
+  });
+  it('disposal invalidates a pending load and all later commands', async () => {
+    const read = deferred<ActivePlanLoadResult>(), save = vi.fn<ActivePlanPort['save']>();
+    const c = createGenerationController({ generation: { generate: vi.fn() }, activePlan: { load: () => read.promise, save } });
+    const loading = c.load(); c.dispose(); const snapshot = c.getSnapshot(); read.resolve({ status: 'missing' }); await loading;
+    await c.start(fixture().inputs, origin); await c.retrySave(); await c.load();
+    expect(c.getSnapshot()).toBe(snapshot); expect(save).not.toHaveBeenCalled(); expect(vi.getTimerCount()).toBe(0);
+  });
+  it('treats rejected search and save promises as explicit recoverable failures', async () => {
+    const real = setup(); const generation = { generate: vi.fn<GenerationPort['generate']>().mockRejectedValueOnce(new Error('search')).mockImplementation(async () => ({ status: 'success', plan: fixture().plan })) };
+    const save = vi.fn<ActivePlanPort['save']>().mockRejectedValueOnce(new Error('storage')).mockImplementation((...args) => real.port.save(...args));
+    const c = createGenerationController({ generation, activePlan: { load: () => real.port.load(), save } });
+    await c.load(); await c.start(fixture().inputs, origin); expect(c.getSnapshot().error?.code).toBe('FAILED');
+    await c.retryGeneration(); expect(c.getSnapshot().status).toBe('memory-only'); await c.retrySave();
+    expect(c.getSnapshot().status).toBe('succeeded'); expect(generation.generate).toHaveBeenCalledTimes(2); expect(vi.getTimerCount()).toBe(0);
+  });
+  it('rejects a valid result for the wrong immutable request instead of saving it', async () => {
+    const { controller: c, map } = setup({ generate: async () => ({ status: 'success', plan: fixture('other').plan }) });
+    await c.load(); await c.start(fixture().inputs, origin);
+    expect(c.getSnapshot().error?.code).toBe('GENERATION_DATA_INCOMPLETE'); expect(map.size).toBe(0); expect(vi.getTimerCount()).toBe(0);
   });
 });

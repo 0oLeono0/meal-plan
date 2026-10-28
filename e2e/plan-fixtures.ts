@@ -48,8 +48,9 @@ export async function openSyntheticPlan(page: Page, options: PlanFixtureOptions 
   await page.evaluate(plan => {
     localStorage.setItem('mealplan:guest:active-plan:v1', JSON.stringify({ schemaVersion: 1, plan }));
   }, plan);
-  await page.goto(route);
+  await page.goto('/menu');
   await expect(page.locator('[data-plan-id]')).toHaveAttribute('data-plan-id', 'synthetic-active');
+  if (route !== '/menu') await page.goto(route);
 }
 
 export async function generateRealPlan(page: Page) {

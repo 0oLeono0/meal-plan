@@ -12,7 +12,13 @@ test('real saved catalog menu has dated ordered slots and truthful provenance', 
   await expect(summary.getByText(/Использовано бюджета: \d+%/)).toBeVisible();
   await page.getByText('Источники расчёта', { exact: true }).click();
   await expect(page.getByText(/usda-fdc-sr-legacy/).first()).toBeVisible();
-  await expect(page.getByText(/Веб-витрина не подтверждает наличие цены в вашем регионе/)).toBeVisible();
+  const usesWebPrices = await page.evaluate(() => {
+    const envelope = JSON.parse(localStorage.getItem('mealplan:guest:active-plan:v1')!).plan;
+    const variant = envelope.variants.find((item: { id: string }) => item.id === envelope.activeVariantId);
+    const usedProfiles = new Set(variant.instances.flatMap((item: { recipeSnapshot: { ingredients: { profileId: string }[] } }) => item.recipeSnapshot.ingredients.map(row => row.profileId)));
+    return envelope.inputs.catalog.foods.some((food: { profileId: string; price: { region: string } }) => usedProfiles.has(food.profileId) && /web|веб/i.test(food.price.region));
+  });
+  await expect(page.getByText('Веб-витрина не подтверждает наличие цены в вашем регионе', { exact: true })).toHaveCount(usesWebPrices ? 1 : 0);
   const id = await page.locator('[data-plan-id]').getAttribute('data-plan-id');
   await page.reload();
   await expect(page.locator('[data-plan-id]')).toHaveAttribute('data-plan-id', id!);
@@ -26,6 +32,7 @@ test('synthetic independent nutrition costs and family basis stay distinct witho
   await expect(summary.locator('dd')).toHaveText(['50,00 ₽', '20,00 ₽', '30,00 ₽']);
   await expect(summary).toContainText('Осталось 2 970,00 ₽');
   await expect(summary).toContainText('Использовано бюджета: 1%');
+  await expect(summary).toContainText('Веб-витрина не подтверждает наличие цены в вашем регионе');
   const average = page.getByRole('heading', { name: 'Среднее на человека в день' }).locator('..');
   await expect(average.locator('dd')).toHaveText(['1 000 ккал', '50,0 г', '0,0 г', '150,0 г']);
   await expect(average).not.toContainText(/из \d|Отклонение|выше ручной/);

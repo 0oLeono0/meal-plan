@@ -1,11 +1,12 @@
 import { Link } from 'react-router';
 import type { GenerationSnapshot } from '../generation/controller';
 import { Button, Status } from '../../shared/ui';
-import { compareNutritionTarget, formatCount, formatCurrency, formatDateOnly, formatNutrition, formatQuantity, selectPlanPresentation } from '../../domain/presentation';
+import { formatCurrency, formatDateOnly, formatNutrition, selectPlanPresentation } from '../../domain/presentation';
 import type { TargetComparison } from '../../domain/presentation';
-import { decimal, divide, formatExact, roundHalfUp } from '../../domain/quantities';
+import { divide, formatExact, roundHalfUp } from '../../domain/quantities';
 import { localDateOnly } from '../../domain/plan';
 import type { Nutrition } from '../../domain/catalog';
+import { PlanSummary } from '../plan/PlanSummary';
 
 const labels = { calories: 'Калории', protein: 'Белки', fat: 'Жиры', carbohydrates: 'Углеводы' } as const;
 const slots = { breakfast: 'Завтрак', lunch: 'Обед', dinner: 'Ужин', snack: 'Перекус' } as const;
@@ -31,8 +32,6 @@ export function MenuPage({ snapshot, onRetryLoad }: { snapshot: GenerationSnapsh
   const settings = plan.inputs.appliedSettings;
   const view = selectPlanPresentation(projection, settings.target);
   const today = localDateOnly(new Date());
-  const budgetPercent = Number(projection.costs.exact.purchase.numerator * projection.budget.limit.denominator * 100n / (projection.costs.exact.purchase.denominator * projection.budget.limit.numerator));
-  const priceScopes = [...new Set(projection.rows.map(row => `${row.price.region} · ${formatDateOnly(row.price.observedAt)}`))];
   const instances = projection.instances.map(row => ({ id: row.instance.id, date: row.instance.date, slot: slots[row.instance.slot], name: row.instance.recipeSnapshot.name,
     minutes: row.instance.recipeSnapshot.cookingMinutes, servings: formatExact(row.instance.selectedServings), nutrition: formatNutrition(row.perPortionNutrition),
     cost: formatCurrency(roundHalfUp(divide(row.ingredientCost, row.instance.selectedServings), 2)) }));
@@ -40,13 +39,7 @@ export function MenuPage({ snapshot, onRetryLoad }: { snapshot: GenerationSnapsh
     <h1 tabIndex={-1}>{view.days.length === 7 ? 'Меню на неделю' : `Меню на ${view.period}`}</h1>
     <p>{formatDateOnly(plan.inputs.dates[0])} — {formatDateOnly(plan.inputs.dates[plan.inputs.dates.length - 1])} · На {view.people}</p>
     <p className="hint">Меню сохранено на этом устройстве</p>
-    <section className="card" aria-label="Бюджет меню">
-      <h2>Покупки: ≈ {view.costs.purchase} / {view.costs.limit}</h2>
-      <p>Лимит дополнительных покупок для всей семьи на {view.period}</p><p>Осталось {view.costs.remaining}</p>
-      <progress className="w-full accent-[var(--color-accent)]" aria-label="Использовано бюджета" max={100} value={budgetPercent} />
-      <dl className="tabular-nums"><dt>Все ингредиенты</dt><dd>{view.costs.ingredient}</dd><dt>Покрыто запасами</dt><dd>{view.costs.covered}</dd><dt>Нужно купить</dt><dd>{view.costs.purchase}</dd></dl>
-      <p>Цены ориентировочные, проверяйте в магазине</p><p className="hint">Оценка цен: {priceScopes.join('; ')}</p>
-    </section>
+    <PlanSummary bundle={bundle} projection={projection} />
     <section className="card"><h2>Среднее на человека в день</h2><NutritionSummary values={view.averagePersonDayNutrition} target={view.targetComparison} />
       <p>{settings.target.status === 'absent' ? 'Ручная цель КБЖУ не задана' : settings.target.source.kind === 'manual' ? 'Цель введена вручную · на человека в день' : 'Цель из сохранённого расчёта · на человека в день'}</p>
       <p className="hint">КБЖУ рассчитаны по составу продуктов и не являются медицинской рекомендацией</p>
@@ -59,15 +52,8 @@ export function MenuPage({ snapshot, onRetryLoad }: { snapshot: GenerationSnapsh
         <h3 className="font-semibold">{instance.slot}</h3><p>{instance.name}</p><p className="hint">{instance.minutes} мин · Порций для семьи: {instance.servings}</p>
         <p className="tabular-nums">На порцию: {instance.nutrition.calories} ккал · Б {instance.nutrition.protein} г · Ж {instance.nutrition.fat} г · У {instance.nutrition.carbohydrates} г · ≈ {instance.cost}</p>
       </article>)}
-      <h3 className="font-semibold mt-4">На человека за день</h3><NutritionSummary values={day.personNutrition} target={compareNutritionTarget(projection.days.find(item => item.date === day.dateOnly)!.personNutrition, settings.target)} />
+      <h3 className="font-semibold mt-4">На человека за день</h3><NutritionSummary values={day.personNutrition} target={day.targetComparison} />
       <p>{day.costBasis}: {day.ingredientCost}</p><details><summary className="min-h-[44px] py-2">КБЖУ семьи за день</summary><NutritionSummary values={day.familyNutrition} /></details>
     </section>)}
-    <details className="card"><summary className="min-h-[44px] py-2">Источники расчёта</summary><p>Версия каталога: {plan.inputs.catalogVersion}</p>
-      {projection.rows.map(row => <div key={row.profileId} className="my-4"><p>{row.name} · {row.productId} · {row.profileId}</p>
-        <p>Цена: {row.price.source.sourceId} / {row.price.source.recordId} · {formatQuantity({ amount: decimal(row.price.reference.amount), unit: row.price.reference.unit })} · {row.price.region} · {row.price.observedAt}</p>
-        {plan.inputs.catalog.foods.filter(food => food.profileId === row.profileId).map(food => food.nutrition.status === 'known' && <p key={food.profileId}>КБЖУ: {food.nutrition.source.sourceId} / {food.nutrition.source.recordId} · {formatQuantity({ amount: decimal(food.nutrition.reference.amount), unit: food.nutrition.reference.unit })}</p>)}
-      </div>)}
-      <p>Всего: {formatCount(plan.inputs.sourceSnapshots.length, 'item')}</p>
-    </details>
   </section>;
 }

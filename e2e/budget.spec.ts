@@ -1,6 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mountAppFixture } from './fixtures';
-import { createDraft } from '../src/domain/settings';
 
 async function openBudget(page: Page) {
   await page.goto('/plan/new');
@@ -137,7 +136,12 @@ test('time-variety concurrency: latest rapid choices survive back and reload', a
 });
 
 for (const field of ['cookingTime', 'variety'] as const) test(`time-variety empty/recovery: unknown restored ${field} never silently defaults`, async ({ page }) => {
-  const raw = JSON.stringify({ schemaVersion: 1, draft: { ...createDraft(), step: 2, [field]: 'unknown' } });
+  await page.goto('/plan/new');
+  const raw = await page.evaluate(async field => {
+    const path = '/src/domain/settings.ts';
+    const { createDraft } = await import(path);
+    return JSON.stringify({ schemaVersion: 1, draft: { ...createDraft(), step: 2, [field]: 'unknown' } });
+  }, field);
   await mountAppFixture(page, { raw });
   await expect(page.getByText('Не удалось восстановить настройки. Сохранённые данные повреждены или имеют другую версию')).toBeVisible();
   await expect(page.getByText('Можно продолжить в памяти. Исходная запись останется без изменений.')).toBeVisible();

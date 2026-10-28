@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 1
+open_count: 2
 waived_count: 0
 fixed_count: 9
-total_count: 10
-last_updated: 2026-10-28T08:38:21.271Z
+total_count: 11
+last_updated: 2026-10-28T08:53:08.359Z
 ---
 
 # Broken Windows Ledger
@@ -25,6 +25,7 @@ last_updated: 2026-10-28T08:38:21.271Z
 | 8 | 01 | unrun-verify | docs/qa/phase01.md |  | Phase 1: Q-17 LCP methodology and measurement remain pending | fixed |  | 2026-10-27T08:19:01.309Z | 2026-10-27T14:01:36.868Z |
 | 9 | 01 | unrun-verify | docs/qa/phase01.md |  | Phase 1: two-tab UX and flagged safety judgment backstops remain human_needed | fixed |  | 2026-10-27T08:19:02.252Z | 2026-10-27T14:01:37.462Z |
 | 10 | 02 | deviation | src/domain/generatePlan.ts |  | Closed during 02-04: pantry budget bound now follows nutrition basis; regression and independent re-review passed. | fixed |  | 2026-10-28T08:37:26.371Z | 2026-10-28T08:38:21.271Z |
+| 11 | 02 | deviation | src/features/generation/controller.ts |  | Resolved in7461e7d: overlapping generation start abandoned load bookkeeping; revision now advances only on active installation. | open |  | 2026-10-28T08:53:08.359Z |  |
 
 ````json
 [
@@ -156,6 +157,19 @@ last_updated: 2026-10-28T08:38:21.271Z
     "reason": "",
     "recorded_at": "2026-10-28T08:37:26.371Z",
     "resolved_at": "2026-10-28T08:38:21.271Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 11,
+    "kind": "deviation",
+    "phase": "02",
+    "file": "src/features/generation/controller.ts",
+    "line": null,
+    "description": "Resolved in7461e7d: overlapping generation start abandoned load bookkeeping; revision now advances only on active installation.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-28T08:53:08.359Z",
+    "resolved_at": null,
     "milestone": "v1.0"
   }
 ]

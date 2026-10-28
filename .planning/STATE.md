@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: P0 MVP
 current_phase: 2
 current_phase_name: Первый допустимый план и рассчитанные покупки
-current_plan: 5
+current_plan: 6
 status: executing
-stopped_at: Completed 02-04-PLAN.md; ready for 02-05
-last_updated: "2026-10-28T08:38:21.805Z"
+stopped_at: Completed 02-05-PLAN.md; ready for 02-06
+last_updated: "2026-10-28T08:53:07.694Z"
 last_activity: 2026-10-28
-last_activity_desc: Completed 02-04; ready for 02-05
-state_head: a4adced4e5de2e4fbba61879787a0011da3cebb1
+last_activity_desc: Completed 02-05; ready for 02-06
+state_head: 7461e7d7d9f563003eb4de532abbd3a625b32c93
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 18
-  completed_plans: 12
+  completed_plans: 13
 ---
 
 # Project State
@@ -25,17 +25,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-27)
 
 **Core value:** Допустимое меню с прозрачным бюджетом и согласованные покупки с количественным учётом домашних запасов.
-**Current focus:** Phase 2 — завершены 02-01–02-04: точные settings/plan contracts, общая проекция и детерминированный bounded solver с реальной отменой. Следующий 02-05: lifecycle и сохранение. Production generation UI и каталог 02-06 ещё не готовы.
+**Current focus:** Phase 2 — 02-01–02-05 complete: validated active persistence and race-safe lifecycle. Next 02-06 catalog/source acceptance; integrated production UI remains open.
 
 ## Current Position
 
 Phase: 2 — Первый допустимый план и рассчитанные покупки
-Current Plan: 5
+Current Plan: 6
 Total Plans in Phase: 10
 Status: Ready to execute
-Last activity: 2026-10-28 — Completed 02-04; ready for 02-05
+Last activity: 2026-10-28 — Completed 02-05; ready for 02-06
 
-Progress: Phase 1: 8/8 планов приняты; Phase 2: 4/10 завершены (02-01–02-04), следующий 02-05. Остальные фазы ещё не завершены.
+Progress: Phase 1: 8/8 plans accepted; Phase 2: 5/10 complete (02-01-02-05), next 02-06. Other phases remain incomplete.
 
 ## Performance Metrics
 
@@ -70,6 +70,7 @@ Progress: Phase 1: 8/8 планов приняты; Phase 2: 4/10 заверше
 | Phase 02 P02 | 8min | 2 tasks | 4 files |
 | Phase 02 P03 | 10min | 2 tasks | 4 files |
 | Phase 02 P04 | 12min | 2 tasks | 4 files |
+| Phase 02 P05 | 10min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,7 @@ Progress: Phase 1: 8/8 планов приняты; Phase 2: 4/10 заверше
 - [Phase 02]: Applied settings use exact raw strings and detached snapshots; local date-only plan instances and canonical generation contracts are validated independently of later price/safety projection.
 - [Phase 02]: Whole-period projection spends pantry once and preserves exact nutrients; canonical period/day product rows and exact/displayed budget checks serve shared presentation.
 - [Phase 02]: Bounded deterministic search uses explicit safety evidence and shared pantry-budget projection; incomplete search never proves impossibility. Local generation yields macrotasks and enforces cancellation/30s timeout.
+- [Phase 02]: Validated active snapshots use recomputed projections and final guarded serialized writes; memory-only retry never repeats search; active revision advances only upon installation.
 
 ### Pending Todos
 
@@ -108,6 +110,6 @@ Progress: Phase 1: 8/8 планов приняты; Phase 2: 4/10 заверше
 
 ## Session Continuity
 
-Last session: 2026-10-28T08:38:06.790Z
-Stopped at: Completed 02-04-PLAN.md; ready for 02-05
+Last session: 2026-10-28T08:53:06.507Z
+Stopped at: Completed 02-05-PLAN.md; ready for 02-06
 Resume file: None

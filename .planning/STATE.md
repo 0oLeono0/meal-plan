@@ -40,7 +40,7 @@ Progress: Phase 1: 8/8 plans accepted; Phase 2: 5/10 complete (02-01-02-05), nex
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
+- Total plans completed: 13
 - Historical active durations for first 7 plans: 76 min (10.9 min/plan).
 - Plan 01-08 recorded wall window: 877 min, including overnight usage-limit interruption; exact active duration unknown and excluded from active-time averages.
 
@@ -91,7 +91,7 @@ Progress: Phase 1: 8/8 plans accepted; Phase 2: 5/10 complete (02-01-02-05), nex
 
 ### Pending Todos
 
-Следующий шаг — исполнение 02-05: lifecycle генерации и сохранение активного меню. Solver и асинхронный адаптер проверены 41 целевым тестом; полный unit suite — 269/269, typecheck/lint/build прошли. Независимое ревью и регрессия закрыли ошибку оценки запаса через совместимую nutrition basis. Источники каталога 02-06/DATA/Q-14 и интегрированная приёмка ещё открыты; синтетические fixtures не закрывают эти ворота. NEXT-10 остаётся P1.
+Следующий шаг — 02-06: проверка источников каталога. 02-05 завершён: валидируемое сохранение активного плана и lifecycle с отменой, таймаутом и повтором сохранения. Целевые тесты 36/36, полный unit suite 305/305; typecheck/lint/build прошли. Найденная независимым ревью гонка загрузки исправлена и повторно проверена. DATA/Q-14 и интегрированная приёмка ещё открыты; синтетические fixtures не закрывают эти ворота. NEXT-10 остаётся P1.
 
 ### Blockers/Concerns
 

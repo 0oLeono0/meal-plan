@@ -8,6 +8,7 @@ export interface PlanFixtureOptions {
   long?: boolean;
   split?: 'one' | 'two';
   category?: string;
+  days?: number;
 }
 // Test-only synthetic inputs. Literal expectations in specs are independent of selectors.
 // Four 125g family meals = 500g need; 200g stock => 300g purchase.
@@ -18,29 +19,30 @@ export async function syntheticEnvelope(options: PlanFixtureOptions = {}) {
   const { buildAppliedSettings } = await import(appliedPath);
   const { buildActivePlanEnvelope, createPlanInputs, createRecipeInstances, encodePlanEnvelope } = await import(planPath);
   const { decimal } = await import(quantitiesPath);
-  const source = { sourceId: 'synthetic-browser-only', recordId: 'literal-oracle', release: 'test-v1', license: 'Synthetic test data', url: 'https://example.org/synthetic' };
+  const source = { sourceId: 'synthetic-browser-only', recordId: 'literal-oracle', release: 'test-v1', license: 'Synthetic test data', url: `https://example.org/synthetic${options.long ? `?record=${'ДлинныйИсточник'.repeat(24)}` : ''}` };
   const categories = ['Овощи и фрукты', 'Мясо и рыба', 'Молочное', 'Бакалея', 'Хлеб', 'Прочее'];
   const foods: FoodProfile[] = Array.from({ length: options.many ? 6 : options.split ? 2 : 1 }, (_, index) => ({
     productId: `synthetic-${index}`, profileId: `synthetic-profile-${index}`,
     name: options.long ? `СинтетическийПродукт${'ОченьДлинноеНазвание'.repeat(8)}${index}` : 'Синтетический продукт', identity: `synthetic food ${index}`, state: 'raw', category: options.category ?? categories[index],
     nutrition: { status: 'known', reference: { amount: '100', unit: 'g', basis: 'edible' }, values: { calories: options.target === 'exact-ten' ? '440' : options.target === 'above-ten' ? '440.004' : '400', protein: '20', fat: '0', carbohydrates: '60' }, source },
-    price: { status: 'known', amount: '100', currency: 'RUB', reference: { amount: '1', unit: 'kg', basis: 'edible' }, source: { ...source, recordId: `price-${index}` }, region: index % 2 ? 'Синтетический второй регион' : 'Синтетическая веб-витрина, регион не указан', observedAt: index % 2 ? '2026-10-02' : '2026-10-01', estimate: true },
+    price: { status: 'known', amount: options.long ? '1000000000000.99' : '100', currency: 'RUB', reference: { amount: '1', unit: 'kg', basis: 'edible' }, source: { ...source, recordId: `price-${index}` }, region: index % 2 ? 'Синтетический второй регион' : 'Синтетическая веб-витрина, регион не указан', observedAt: index % 2 ? '2026-10-02' : '2026-10-01', estimate: true },
     safety: { status: 'known', facts: [{ kind: 'restriction', key: 'vegetarian', suitable: true, evidence: [source] }] }, conversions: [],
   }));
-  const draft = createDraft(); draft.days = '1'; draft.people = '2';
+  const draft = createDraft(); draft.days = String(options.days ?? 1); draft.people = '2';
+  if (options.long) draft.budget = '9007199254740991';
   if (options.target && options.target !== 'absent') {
     draft.targetSource = { kind: 'manual' };
     draft.manualNutrition = { calories: '1000', protein: options.target === 'zero-positive' ? '0' : '50', fat: '0', carbohydrates: '150' };
   }
   const applied = buildAppliedSettings(draft);
   if (applied.status !== 'applied') throw new Error('Invalid synthetic settings');
-  const recipes: Catalog['recipes'] = (options.split ? [foods.slice(0, 1), foods.slice(1)] : [foods]).map((selected, index) => ({ id: index ? 'synthetic-other' : 'synthetic-repeated', name: index ? 'Синтетическое второе блюдо' : 'Синтетическое повторяющееся блюдо', baseServings: decimal('2'), slots: ['breakfast', 'lunch', 'dinner', 'snack'], cookingMinutes: 10,
+  const recipes: Catalog['recipes'] = (options.split ? [foods.slice(0, 1), foods.slice(1)] : [foods]).map((selected, index) => ({ id: index ? 'synthetic-other' : 'synthetic-repeated', name: options.long ? `${'<img src=x onerror=alert(1)>ОченьДлинноеБлюдо'.repeat(8)}${index}` : index ? 'Синтетическое второе блюдо' : 'Синтетическое повторяющееся блюдо', baseServings: decimal('2'), slots: ['breakfast', 'lunch', 'dinner', 'snack'], cookingMinutes: 10,
     ingredients: selected.map(food => ({ productId: food.productId, profileId: food.profileId, quantity: { amount: decimal('125'), unit: 'g' } })), steps: ['Синтетический тест'], source }));
   const catalog: Catalog = { version: 'synthetic-browser-v1', foods, recipes };
   const stock = options.stock ?? 'partial';
   const pantrySnapshot = stock === 'none' ? [] : foods.map(food => ({ productId: food.productId, expiresSoon: false, quantity: stock === 'unknown' ? { status: 'unknown' as const } : { status: 'known' as const, value: { amount: decimal(stock === 'all' ? '500' : stock === 'over' ? '900' : '200'), unit: stock === 'incompatible' ? 'ml' as const : 'g' as const } } }));
   const inputs = createPlanInputs(applied.settings, catalog, { seed: 'synthetic', now: () => new Date(2026, 9, 1), pantrySnapshot });
-  const recipeIds = options.split === 'one' ? ['synthetic-repeated', 'synthetic-other', 'synthetic-other', 'synthetic-other'] : options.split === 'two' ? ['synthetic-repeated', 'synthetic-repeated', 'synthetic-other', 'synthetic-other'] : Array(4).fill('synthetic-repeated');
+  const recipeIds = options.split === 'one' ? ['synthetic-repeated', 'synthetic-other', 'synthetic-other', 'synthetic-other'] : options.split === 'two' ? ['synthetic-repeated', 'synthetic-repeated', 'synthetic-other', 'synthetic-other'] : Array(4 * (options.days ?? 1)).fill('synthetic-repeated');
   const instances = createRecipeInstances(inputs, recipeIds, (date: string, slot: string) => `synthetic-${date}-${slot}`);
   return encodePlanEnvelope(buildActivePlanEnvelope(inputs, [{ id: 'synthetic-active', instances }], 'synthetic-active'));
 }

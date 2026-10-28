@@ -100,6 +100,13 @@ test('synthetic long product text fits mobile with all source and coverage rows 
   await expect(page.getByRole('link', { name: 'К меню', exact: true })).toBeFocused();
 });
 
+for (const category of ['constructor', 'toString', '__proto__']) test(`synthetic inherited category ${category} remains visible as other`, async ({ page }) => {
+  await openSyntheticPlan(page, { category }, '/shopping');
+  await expect(page.locator('[data-category] h2')).toHaveText(['Прочее']);
+  await expect(page.locator('[data-product-id]')).toHaveCount(1);
+  await expect(page.locator('[data-product-id]')).toContainText('Купить 300 г · ≈ 30,00 ₽');
+});
+
 test('shopping absent corrupt and retry states remain truthful', async ({ page }) => {
   await page.goto('/shopping');
   await expect(page.getByRole('heading', { name: 'Сначала составьте меню' })).toBeVisible();

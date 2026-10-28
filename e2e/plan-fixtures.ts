@@ -7,6 +7,7 @@ export interface PlanFixtureOptions {
   many?: boolean;
   long?: boolean;
   split?: 'one' | 'two';
+  category?: string;
 }
 // Test-only synthetic inputs. Literal expectations in specs are independent of selectors.
 // Four 125g family meals = 500g need; 200g stock => 300g purchase.
@@ -21,7 +22,7 @@ export async function syntheticEnvelope(options: PlanFixtureOptions = {}) {
   const categories = ['Овощи и фрукты', 'Мясо и рыба', 'Молочное', 'Бакалея', 'Хлеб', 'Прочее'];
   const foods: FoodProfile[] = Array.from({ length: options.many ? 6 : options.split ? 2 : 1 }, (_, index) => ({
     productId: `synthetic-${index}`, profileId: `synthetic-profile-${index}`,
-    name: options.long ? `СинтетическийПродукт${'ОченьДлинноеНазвание'.repeat(8)}${index}` : 'Синтетический продукт', identity: `synthetic food ${index}`, state: 'raw', category: categories[index],
+    name: options.long ? `СинтетическийПродукт${'ОченьДлинноеНазвание'.repeat(8)}${index}` : 'Синтетический продукт', identity: `synthetic food ${index}`, state: 'raw', category: options.category ?? categories[index],
     nutrition: { status: 'known', reference: { amount: '100', unit: 'g', basis: 'edible' }, values: { calories: options.target === 'exact-ten' ? '440' : options.target === 'above-ten' ? '440.004' : '400', protein: '20', fat: '0', carbohydrates: '60' }, source },
     price: { status: 'known', amount: '100', currency: 'RUB', reference: { amount: '1', unit: 'kg', basis: 'edible' }, source: { ...source, recordId: `price-${index}` }, region: index % 2 ? 'Синтетический второй регион' : 'Синтетическая веб-витрина, регион не указан', observedAt: index % 2 ? '2026-10-02' : '2026-10-01', estimate: true },
     safety: { status: 'known', facts: [{ kind: 'restriction', key: 'vegetarian', suitable: true, evidence: [source] }] }, conversions: [],

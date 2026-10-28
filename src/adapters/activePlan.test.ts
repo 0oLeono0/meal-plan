@@ -5,7 +5,7 @@ import type { Catalog } from '../domain/catalog';
 import type { ActivePlanEnvelope } from '../domain/plan';
 import { decimal } from '../domain/quantities';
 import { createDraft } from '../domain/settings';
-import { ACTIVE_PLAN_KEY, ACTIVE_PLAN_MAX_BYTES, createActivePlanAdapter } from './activePlan';
+import { ACTIVE_PLAN_KEY, ACTIVE_PLAN_MAX_BYTES, createActivePlanAdapter, createActivePlanPresencePort } from './activePlan';
 
 // Synthetic test data, never a production catalog or factual food claim.
 function fixture(change = {}): ActivePlanEnvelope {
@@ -72,5 +72,29 @@ describe('validated active persistence', () => {
     await port.load(); owned = true;
     expect((await port.save(fixture(), { isCurrent: () => owned })).status).toBe('cancelled');
     expect(store.map.has(ACTIVE_PLAN_KEY)).toBe(false);
+  });
+  it('produces presence only after full validation, not from a truthy object', async () => {
+    const store = storage(); const port = createActivePlanAdapter(() => store), presence = createActivePlanPresencePort(port);
+    expect(await presence.load()).toEqual({ status: 'absent' });
+    store.map.set(ACTIVE_PLAN_KEY, '{}'); expect(await presence.load()).toEqual({ status: 'error' });
+    store.map.set(ACTIVE_PLAN_KEY, rawPlan()); expect(await presence.load()).toEqual({ status: 'valid', planId: 'v' });
+  });
+  it('does not overwrite concurrent changed bytes and needs a successful inspection to recover', async () => {
+    const store = storage(), port = createActivePlanAdapter(() => store); await port.load();
+    store.map.set(ACTIVE_PLAN_KEY, 'foreign');
+    expect((await port.save(fixture(), current)).status).toBe('blocked');
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe('foreign');
+    store.map.set(ACTIVE_PLAN_KEY, rawPlan());
+    expect((await port.save(fixture(), current)).status).toBe('blocked');
+    expect((await port.load()).status).toBe('loaded');
+    expect((await port.save(fixture(), current)).status).toBe('saved');
+  });
+  it('rejects unsafe and overbudget candidates before any write, preserving the loaded plan', async () => {
+    const store = storage(); store.map.set(ACTIVE_PLAN_KEY, rawPlan()); const port = createActivePlanAdapter(() => store); await port.load();
+    const old = store.map.get(ACTIVE_PLAN_KEY), plan = fixture();
+    const over = buildActivePlanEnvelope(plan.inputs, [{ id: 'over', instances: plan.variants[0].instances.map(item => ({ ...item, selectedServings: decimal('10') })) }], 'over');
+    expect((await port.save(over, current)).status).toBe('error');
+    expect((await port.save(fixture({ restrictions: ['no-fish'] }), current)).status).toBe('error');
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(old);
   });
 });

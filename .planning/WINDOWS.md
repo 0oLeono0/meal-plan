@@ -2,9 +2,9 @@
 schema_version: 1
 open_count: 1
 waived_count: 0
-fixed_count: 8
-total_count: 9
-last_updated: 2026-10-27T14:01:37.462Z
+fixed_count: 9
+total_count: 10
+last_updated: 2026-10-28T08:38:21.271Z
 ---
 
 # Broken Windows Ledger
@@ -24,6 +24,7 @@ last_updated: 2026-10-27T14:01:37.462Z
 | 7 | 01 | unrun-verify | docs/qa/phase01.md |  | Phase 1: native browser zoom and final visual approval remain unverified | fixed |  | 2026-10-27T08:19:00.379Z | 2026-10-27T14:01:36.288Z |
 | 8 | 01 | unrun-verify | docs/qa/phase01.md |  | Phase 1: Q-17 LCP methodology and measurement remain pending | fixed |  | 2026-10-27T08:19:01.309Z | 2026-10-27T14:01:36.868Z |
 | 9 | 01 | unrun-verify | docs/qa/phase01.md |  | Phase 1: two-tab UX and flagged safety judgment backstops remain human_needed | fixed |  | 2026-10-27T08:19:02.252Z | 2026-10-27T14:01:37.462Z |
+| 10 | 02 | deviation | src/domain/generatePlan.ts |  | Closed during 02-04: pantry budget bound now follows nutrition basis; regression and independent re-review passed. | fixed |  | 2026-10-28T08:37:26.371Z | 2026-10-28T08:38:21.271Z |
 
 ````json
 [
@@ -142,6 +143,19 @@ last_updated: 2026-10-27T14:01:37.462Z
     "reason": "",
     "recorded_at": "2026-10-27T08:19:02.252Z",
     "resolved_at": "2026-10-27T14:01:37.462Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 10,
+    "kind": "deviation",
+    "phase": "02",
+    "file": "src/domain/generatePlan.ts",
+    "line": null,
+    "description": "Closed during 02-04: pantry budget bound now follows nutrition basis; regression and independent re-review passed.",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-10-28T08:37:26.371Z",
+    "resolved_at": "2026-10-28T08:38:21.271Z",
     "milestone": "v1.0"
   }
 ]

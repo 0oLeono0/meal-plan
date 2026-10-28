@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: P0 MVP
 current_phase: 2
 current_phase_name: Первый допустимый план и рассчитанные покупки
-current_plan: 4
+current_plan: 5
 status: executing
-stopped_at: Completed 02-03-PLAN.md; ready for 02-04
-last_updated: "2026-10-27T19:04:19.237Z"
-last_activity: 2026-10-27
-last_activity_desc: Completed 02-03; ready for 02-04
-state_head: 6d2868aaa298e6d72d7fd7429531fda394252d38
+stopped_at: Completed 02-04-PLAN.md; ready for 02-05
+last_updated: "2026-10-28T08:38:21.805Z"
+last_activity: 2026-10-28
+last_activity_desc: Completed 02-04; ready for 02-05
+state_head: a4adced4e5de2e4fbba61879787a0011da3cebb1
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 18
-  completed_plans: 11
+  completed_plans: 12
 ---
 
 # Project State
@@ -25,22 +25,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-27)
 
 **Core value:** Допустимое меню с прозрачным бюджетом и согласованные покупки с количественным учётом домашних запасов.
-**Current focus:** Phase 2 — завершены 02-01–02-03: точные immutable settings, dated plan contracts и общая проекция КБЖУ/бюджета/покупок. Следующий 02-04: детерминированный подбор с жёсткими ограничениями. Production generation и каталог ещё не готовы.
+**Current focus:** Phase 2 — завершены 02-01–02-04: точные settings/plan contracts, общая проекция и детерминированный bounded solver с реальной отменой. Следующий 02-05: lifecycle и сохранение. Production generation UI и каталог 02-06 ещё не готовы.
 
 ## Current Position
 
 Phase: 2 — Первый допустимый план и рассчитанные покупки
-Current Plan: 4
+Current Plan: 5
 Total Plans in Phase: 10
 Status: Ready to execute
-Last activity: 2026-10-27 — Completed 02-03; ready for 02-04
+Last activity: 2026-10-28 — Completed 02-04; ready for 02-05
 
-Progress: Phase 1: 8/8 планов приняты; Phase 2: 3/10 завершены (02-01–02-03), следующий 02-04. Остальные фазы ещё не завершены.
+Progress: Phase 1: 8/8 планов приняты; Phase 2: 4/10 завершены (02-01–02-04), следующий 02-05. Остальные фазы ещё не завершены.
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
+- Total plans completed: 12
 - Historical active durations for first 7 plans: 76 min (10.9 min/plan).
 - Plan 01-08 recorded wall window: 877 min, including overnight usage-limit interruption; exact active duration unknown and excluded from active-time averages.
 
@@ -69,6 +69,7 @@ Progress: Phase 1: 8/8 планов приняты; Phase 2: 3/10 заверше
 | Phase 02 P01 | 6min | 2 tasks | 6 files |
 | Phase 02 P02 | 8min | 2 tasks | 4 files |
 | Phase 02 P03 | 10min | 2 tasks | 4 files |
+| Phase 02 P04 | 12min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -84,10 +85,11 @@ Progress: Phase 1: 8/8 планов приняты; Phase 2: 3/10 заверше
 - [Phase 02]: Exact source decimals use normalized BigInt rationals and bounded string JSON codec; unknown price/safety remain explicit in the USDA tracer.
 - [Phase 02]: Applied settings use exact raw strings and detached snapshots; local date-only plan instances and canonical generation contracts are validated independently of later price/safety projection.
 - [Phase 02]: Whole-period projection spends pantry once and preserves exact nutrients; canonical period/day product rows and exact/displayed budget checks serve shared presentation.
+- [Phase 02]: Bounded deterministic search uses explicit safety evidence and shared pantry-budget projection; incomplete search never proves impossibility. Local generation yields macrotasks and enforces cancellation/30s timeout.
 
 ### Pending Todos
 
-Следующий шаг — исполнение 02-04. Общая численная проекция проверена 26 целевыми тестами; полный unit suite — 228/228. Источники каталога DATA/Q-14 и интегрированная приёмка ещё открыты; синтетические численные fixtures не закрывают эти ворота. NEXT-10 остаётся P1.
+Следующий шаг — исполнение 02-05: lifecycle генерации и сохранение активного меню. Solver и асинхронный адаптер проверены 41 целевым тестом; полный unit suite — 269/269, typecheck/lint/build прошли. Независимое ревью и регрессия закрыли ошибку оценки запаса через совместимую nutrition basis. Источники каталога 02-06/DATA/Q-14 и интегрированная приёмка ещё открыты; синтетические fixtures не закрывают эти ворота. NEXT-10 остаётся P1.
 
 ### Blockers/Concerns
 
@@ -106,6 +108,6 @@ Progress: Phase 1: 8/8 планов приняты; Phase 2: 3/10 заверше
 
 ## Session Continuity
 
-Last session: 2026-10-27T19:04:19.046Z
-Stopped at: Completed 02-03-PLAN.md; ready for 02-04
+Last session: 2026-10-28T08:38:06.790Z
+Stopped at: Completed 02-04-PLAN.md; ready for 02-05
 Resume file: None

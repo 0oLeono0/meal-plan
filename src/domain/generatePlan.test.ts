@@ -167,6 +167,19 @@ describe('bounded deterministic generation', () => {
     const catalog = { version: 'rounding', foods: [food('rice', '1.250025')], recipes: [recipe('r')] };
     expect(error(run(fixture({ budget: '500' }, catalog)).result).code).toBe('BUDGET_TOO_LOW');
   });
+  it('values stock through the canonical nutrition basis when two separate conversions are evidenced', () => {
+    const base = food('rice');
+    const converted = { ...base, price: { ...base.price, status: 'known' as const, amount: '1000', currency: 'RUB' as const,
+      reference: { amount: '1', unit: 'pcs' as const, basis: 'edible' as const }, source, region: 'Test', observedAt: '2026-10-28', estimate: true as const },
+      conversions: [
+        { productId: 'rice', profileId: 'rice-raw', from: { amount: decimal('100'), unit: 'ml' as const }, to: { amount: decimal('100'), unit: 'g' as const }, evidence: source },
+        { productId: 'rice', profileId: 'rice-raw', from: { amount: decimal('100'), unit: 'g' as const }, to: { amount: decimal('1'), unit: 'pcs' as const }, evidence: source },
+      ] };
+    const inputs = fixture({ budget: '500' }, { version: 'cross-basis', foods: [converted], recipes: [recipe('r')] }, stock('400', 'ml'));
+    const result = success(run(inputs).result);
+    expect(result.projection.costs.exact.purchase).toEqual(decimal('0'));
+    expect(result.projection.costs.exact.covered).toEqual(decimal('4000'));
+  });
   it('is independent of catalog array ordering for instances and projected amounts', () => {
     const catalog = { version: 'ordering', foods: [food('rice'), food('apple')], recipes: [recipe('a'), recipe('b', 'apple')] };
     const a = success(run(fixture({}, catalog)).result), b = success(run(fixture({}, { ...catalog, recipes: [...catalog.recipes].reverse(), foods: [...catalog.foods].reverse() })).result);

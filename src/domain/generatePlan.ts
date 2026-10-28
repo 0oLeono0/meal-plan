@@ -137,9 +137,12 @@ export function* createPlanSearch(rawInputs: PlanInputs, options: SearchOptions 
     for (const stock of inputs.pantrySnapshot) if (stock.quantity.status === 'known') {
       let maximum = zero();
       for (const food of inputs.catalog.foods.filter(food => food.productId === stock.productId && eligibleProfiles.has(food.profileId))) {
-        if (food.price.status !== 'known') continue;
+        if (food.price.status !== 'known' || food.nutrition.status !== 'known') continue;
         try {
-          const price = multiply(decimal(food.price.amount), divide(convertQuantity(stock.quantity.value, food.price.reference.unit, food, food.conversions).amount, decimal(food.price.reference.amount)));
+          // Projection covers stock in the nutrition row's compatible basis, then prices
+          // that row. Do not require an additional direct stock-to-price conversion.
+          const basis = convertQuantity(stock.quantity.value, food.nutrition.reference.unit, food, food.conversions);
+          const price = multiply(decimal(food.price.amount), divide(convertQuantity(basis, food.price.reference.unit, food, food.conversions).amount, decimal(food.price.reference.amount)));
           if (compare(price, maximum) > 0) maximum = price;
         } catch { /* Only compatible, evidenced stock has any discount value. */ }
       }

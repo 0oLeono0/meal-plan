@@ -1,9 +1,9 @@
 import { Link } from 'react-router';
 import type { GenerationSnapshot } from '../generation/controller';
 import { Button, Status } from '../../shared/ui';
-import { compareNutritionTarget, formatCount, formatCurrency, formatDateOnly, formatNutrition, selectPlanPresentation } from '../../domain/presentation';
+import { compareNutritionTarget, formatCount, formatCurrency, formatDateOnly, formatNutrition, formatQuantity, selectPlanPresentation } from '../../domain/presentation';
 import type { TargetComparison } from '../../domain/presentation';
-import { divide, formatExact, roundHalfUp } from '../../domain/quantities';
+import { decimal, divide, formatExact, roundHalfUp } from '../../domain/quantities';
 import { localDateOnly } from '../../domain/plan';
 import type { Nutrition } from '../../domain/catalog';
 
@@ -48,7 +48,7 @@ export function MenuPage({ snapshot, onRetryLoad }: { snapshot: GenerationSnapsh
       <p>Цены ориентировочные, проверяйте в магазине</p><p className="hint">Оценка цен: {priceScopes.join('; ')}</p>
     </section>
     <section className="card"><h2>Среднее на человека в день</h2><NutritionSummary values={view.averagePersonDayNutrition} target={view.targetComparison} />
-      <p>{settings.target.status === 'absent' ? 'Ручная цель КБЖУ не задана' : 'Цель введена вручную · на человека в день'}</p>
+      <p>{settings.target.status === 'absent' ? 'Ручная цель КБЖУ не задана' : settings.target.source.kind === 'manual' ? 'Цель введена вручную · на человека в день' : 'Цель из сохранённого расчёта · на человека в день'}</p>
       <p className="hint">КБЖУ рассчитаны по составу продуктов и не являются медицинской рекомендацией</p>
       <p className="hint">Текущий каталог ограничен растительными рецептами. Расчёт не подтверждает полноценность рациона.</p>
     </section>
@@ -64,8 +64,8 @@ export function MenuPage({ snapshot, onRetryLoad }: { snapshot: GenerationSnapsh
     </section>)}
     <details className="card"><summary className="min-h-[44px] py-2">Источники расчёта</summary><p>Версия каталога: {plan.inputs.catalogVersion}</p>
       {projection.rows.map(row => <div key={row.profileId} className="my-4"><p>{row.name} · {row.productId} · {row.profileId}</p>
-        <p>Цена: {row.price.source.sourceId} / {row.price.source.recordId} · {row.price.reference.amount} {row.price.reference.unit} · {row.price.region} · {row.price.observedAt}</p>
-        {plan.inputs.catalog.foods.filter(food => food.profileId === row.profileId).map(food => food.nutrition.status === 'known' && <p key={food.profileId}>КБЖУ: {food.nutrition.source.sourceId} / {food.nutrition.source.recordId} · {food.nutrition.reference.amount} {food.nutrition.reference.unit}</p>)}
+        <p>Цена: {row.price.source.sourceId} / {row.price.source.recordId} · {formatQuantity({ amount: decimal(row.price.reference.amount), unit: row.price.reference.unit })} · {row.price.region} · {row.price.observedAt}</p>
+        {plan.inputs.catalog.foods.filter(food => food.profileId === row.profileId).map(food => food.nutrition.status === 'known' && <p key={food.profileId}>КБЖУ: {food.nutrition.source.sourceId} / {food.nutrition.source.recordId} · {formatQuantity({ amount: decimal(food.nutrition.reference.amount), unit: food.nutrition.reference.unit })}</p>)}
       </div>)}
       <p>Всего: {formatCount(plan.inputs.sourceSnapshots.length, 'item')}</p>
     </details>

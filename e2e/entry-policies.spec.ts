@@ -24,7 +24,7 @@ async function appliedRaw(page: Page): Promise<SettingsDraft> {
 }
 
 test('skip retains restrictions exclusions home quantities and global pantry', async ({ page }) => {
-  const restrictions = ['vegetarian'], exclusionIds = ['milk'];
+  const restrictions = ['vegetarian'], exclusionIds = ['egg'];
   const home = [{ productId: 'rice', quantity: '100', unit: 'g' as const, expiresSoon: true }];
   await seedDraft(page, { step: 3, restrictions, exclusionIds, home });
   await expect(page.getByText('Пропуск сохранит выбранные ограничения и исключения', { exact: true })).toBeVisible();
@@ -46,6 +46,14 @@ test('skip cannot bypass partial home quantity and focuses the field', async ({ 
   await page.getByRole('button', { name: 'Пропустить', exact: true }).click();
   await expect(page.locator('#quantity-rice')).toBeFocused();
   await expect(page).toHaveURL(/\/plan\/new$/);
+  expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'))).toBeNull();
+});
+
+test('skip checks a partial manual target across all four steps', async ({ page }) => {
+  await seedDraft(page, { step: 4, manualNutrition: { calories: '1800', protein: '', fat: '', carbohydrates: '' } });
+  await page.getByRole('button', { name: 'Пропустить', exact: true }).click();
+  await expect(page.getByText('Шаг 1 из 4')).toBeVisible();
+  await expect(page.locator('[aria-invalid="true"]').first()).toBeFocused();
   expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'))).toBeNull();
 });
 

@@ -215,13 +215,13 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
   useEffect(() => {
     if (operation.status === 'succeeded' && pathname === '/plan/generating') navigate('/menu', { replace: true });
   }, [operation.status, pathname, navigate]);
-  function start(quick = false) {
+  function start(quick = false, focusAnchor = 'generate-menu') {
     if (operation.status === 'pending' || operation.status === 'saving') return;
     const applied = quick ? selectQuickStartInput(draft, operation.lastApplied) : buildAppliedSettings(draft);
     setLaunchErrors(applied);
     if (applied.status === 'invalid') { change({ type: 'step', value: applied.step }); navigate('/plan/new'); return; }
     setCatalogError(catalog.status !== 'loaded');
-    const origin = { returnRoute: pathname, focusAnchor: quick ? 'quick-start' : 'generate-menu' };
+    const origin = { returnRoute: pathname, focusAnchor: quick ? 'quick-start' : focusAnchor };
     launch.current = { settings: applied.settings, origin };
     navigate('/plan/generating');
     if (catalog.status === 'loaded') void controller.start(createPlanInputs(applied.settings, catalog.catalog, { seed: crypto.randomUUID() }), origin);
@@ -250,7 +250,7 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
     ? '2 человека · 7 дней · 3 000 ₽ · до 30 минут · среднее разнообразие · без ограничений' : 'Используем настройки из черновика';
   return <Routes>
     <Route path="/" element={presence.status === 'valid' ? <Navigate replace to="/menu" /> : <WelcomePage brand={brand} onStart={() => navigate('/plan/new')} onQuickStart={() => start(true)} quickStartBasis={basis} />} />
-    <Route path="/plan/new" element={<Wizard draft={draft} onChange={change} recovery={recovery} saved={saved} onReset={resetDraft} onStart={() => start()} launchErrors={launchErrors?.status === 'invalid' ? launchErrors.errors : undefined} editingNext={!!operation.lastApplied && !sameSnapshot(draft, operation.lastApplied.raw)} />} />
+    <Route path="/plan/new" element={<Wizard draft={draft} onChange={change} recovery={recovery} saved={saved} onReset={resetDraft} onStart={anchor => start(false, anchor)} launchErrors={launchErrors?.status === 'invalid' ? launchErrors.errors : undefined} editingNext={!!operation.lastApplied && !sameSnapshot(draft, operation.lastApplied.raw)} />} />
     <Route path="/plan/generating" element={<GenerationPage snapshot={operation} requestedSettings={launch.current?.settings} catalog={catalog} catalogError={catalogError} draftSaved={saved} onCancel={cancel} onRetry={() => void retryGeneration()} onSettings={settings} onRetrySave={() => void controller.retrySave()} onRetryLoad={() => void controller.retryLoad()} />} />
     <Route path="/menu" element={<MenuPage snapshot={operation} onRetryLoad={() => void controller.retryLoad()} />} />
     <Route path="/shopping" element={<GuestSectionPage section="shopping" />} />

@@ -61,14 +61,14 @@ export function HomeProductsStep({ draft, onChange, errors, disabled = false, pr
       }
       focusRow(removed.value.productId); setRemoved(null);
     }}>Отменить</button></div>}
-    <p className="hint">Это черновик. Глобальные запасы не изменяются; покупки пока не рассчитываются.</p>
+    <p className="hint">Это черновик следующего меню. При запуске используем снимок указанных количеств для расчёта покупок. Глобальные запасы не изменяются и не списываются.</p>
   </>;
 }
 
 export function DraftReview({ draft }: { draft: SettingsDraft }) {
   return <section className="notice" aria-labelledby="review-title">
     <h2 id="review-title" tabIndex={-1}>Настройки подготовлены</h2>
-    <p>Запуск меню будет доступен на следующем этапе</p>
+    <p>При запуске эти настройки станут снимком нового меню. До успешного сохранения текущее меню не изменится.</p>
     <dl className="grid gap-2 [overflow-wrap:anywhere]">
       <dt>Люди и период</dt><dd className="m-0">{draft.people} чел. · {draft.days} дн.</dd>
       <dt>Бюджет на весь период</dt><dd className="m-0">{draft.budget.trim()} ₽</dd>

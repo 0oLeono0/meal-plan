@@ -16,6 +16,22 @@ test('real catalog wizard saves every dated slot and reloads the same active men
   for (const slot of ['Завтрак', 'Обед', 'Ужин', 'Перекус']) await expect(page.getByRole('heading', { name: slot, exact: true })).toHaveCount(7);
   await expect(page.getByText('Ручная цель КБЖУ не задана', { exact: true })).toBeVisible();
   await expect(page.getByText('Меню сохранено на этом устройстве', { exact: true })).toBeVisible();
+  const calculated = await page.evaluate(async () => {
+    const activePath = '/src/adapters/activePlan.ts', presentationPath = '/src/domain/presentation.ts';
+    const { createActivePlanAdapter } = await import(activePath);
+    const { selectPlanPresentation } = await import(presentationPath);
+    const result = await createActivePlanAdapter().load();
+    if (result.status !== 'loaded') throw new Error('Expected a validated whole active bundle');
+    const projection = result.bundle.projections.find((item: { variantId: string }) => item.variantId === result.bundle.plan.activeVariantId);
+    const view = selectPlanPresentation(projection, result.bundle.plan.inputs.appliedSettings.target);
+    return { costs: view.costs, nutrition: view.averagePersonDayNutrition, dates: result.bundle.plan.inputs.dates };
+  });
+  await expect(page.getByRole('region', { name: 'Бюджет меню' }).getByRole('heading')).toHaveText(`Покупки: ≈ ${calculated.costs.purchase} / ${calculated.costs.limit}`);
+  expect(await page.locator('[data-date]').evaluateAll(rows => rows.map(row => row.getAttribute('data-date')))).toEqual(calculated.dates);
+  await expect(page.getByRole('region', { name: 'Бюджет меню' }).locator('dd')).toHaveText([calculated.costs.ingredient, calculated.costs.covered, calculated.costs.purchase]);
+  const average = page.getByRole('heading', { name: 'Среднее на человека в день', exact: true }).locator('..');
+  await expect(average).toContainText(`${calculated.nutrition.calories} ккал`);
+  for (const value of [calculated.nutrition.protein, calculated.nutrition.fat, calculated.nutrition.carbohydrates]) await expect(average).toContainText(`${value} г`);
   const values = await page.locator('[data-plan-id]').innerText();
   const id = await page.locator('[data-plan-id]').getAttribute('data-plan-id');
   const storage = await page.evaluate(() => ({ ...localStorage }));
@@ -82,6 +98,10 @@ test('pending rotates honestly, cancellation restores origin and ignores late re
   await page.getByRole('button', { name: 'Отмена', exact: true }).click();
   await expect(page).toHaveURL(/\/plan\/new$/);
   await expect(page.getByRole('button', { name: 'Составить меню', exact: true })).toBeFocused();
+  await page.getByRole('button', { name: 'Пропустить', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Составляем меню', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Отмена', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Пропустить', exact: true })).toBeFocused();
   await page.evaluate(() => window.dispatchEvent(new Event('release-generation')));
   await expect(page.getByText('Шаг 4 из 4')).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'))).toBeNull();

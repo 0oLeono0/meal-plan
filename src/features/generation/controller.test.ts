@@ -156,4 +156,21 @@ describe('generation lifecycle', () => {
     await c.load(); await c.start(fixture().inputs, origin);
     expect(c.getSnapshot().error?.code).toBe('GENERATION_DATA_INCOMPLETE'); expect(map.size).toBe(0); expect(vi.getTimerCount()).toBe(0);
   });
+  it('finishes an overlapping initial read and unlocks save retry without repeating search', async () => {
+    const real = setup(), read = deferred<ActivePlanLoadResult>();
+    const inspected = await real.port.load();
+    const generate = vi.fn<GenerationPort['generate']>(async () => ({ status: 'success', plan: fixture().plan }));
+    const c = createGenerationController({ generation: { generate }, activePlan: { load: () => read.promise, save: (...args) => real.port.save(...args) } });
+    const loading = c.load(); await c.start(fixture().inputs, origin);
+    expect(c.getSnapshot().status).toBe('memory-only'); read.resolve(inspected); await loading;
+    expect(c.getSnapshot().loadStatus).toBe('missing'); expect(c.getSnapshot().presence.status).toBe('absent');
+    await c.retrySave(); expect(c.getSnapshot().status).toBe('succeeded'); expect(generate).toHaveBeenCalledTimes(1);
+  });
+  it('finishes a read after an invalid start without falsely leaving pending presence', async () => {
+    const read = deferred<ActivePlanLoadResult>(), real = setup();
+    const c = createGenerationController({ generation: { generate: vi.fn() }, activePlan: { load: () => read.promise, save: (...args) => real.port.save(...args) } });
+    const loading = c.load(); await c.start({ ...fixture().inputs, seed: '' }, origin);
+    read.resolve({ status: 'missing' }); await loading;
+    expect(c.getSnapshot().status).toBe('error'); expect(c.getSnapshot().loadStatus).toBe('missing'); expect(c.getSnapshot().presence.status).toBe('absent');
+  });
 });

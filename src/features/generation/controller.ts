@@ -125,7 +125,9 @@ export function createGenerationController({ generation, activePlan, clock = { n
   }
   async function start(rawInputs: PlanInputs, origin: GenerationOrigin) {
     if (disposed) return;
-    invalidate(); revision++;
+    // Only installation of active memory advances revision. Starting a request must
+    // not abandon an outstanding read's status and write-permission bookkeeping.
+    invalidate();
     const checked = validatePlanInputs(rawInputs);
     if (checked.status !== 'valid') {
       publish({ status: 'error', candidate: null, origin, error: { code: 'GENERATION_DATA_INCOMPLETE', message: 'Проверьте настройки и исходные данные', diagnostics: checked.diagnostics } }); return;

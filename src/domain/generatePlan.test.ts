@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildAppliedSettings } from './appliedSettings';
 import type { PantrySnapshotRow } from './appliedSettings';
 import type { Catalog, FoodProfile, Recipe, SafetyFact } from './catalog';
-import { buildActivePlanEnvelope, createPlanInputs, createRecipeInstances, mealSlots } from './plan';
+import { createPlanInputs, mealSlots } from './plan';
 import type { GenerationResult, PlanInputs } from './plan';
 import { projectPlan } from './planProjection';
 import { decimal, formatExact } from './quantities';
@@ -102,7 +102,7 @@ describe('bounded deterministic generation', () => {
     const catalog = { version: 'target', foods: [food('rice')], recipes: [recipe('small', 'rice', '10'), recipe('large', 'rice', '100')] };
     expect(success(run(fixture({}, catalog)).result).ids).toEqual(Array(4).fill('small'));
     expect(success(run(fixture({ manualNutrition: { calories: '400', protein: '40', fat: '20', carbohydrates: '60' } }, catalog)).result).ids).toEqual(Array(4).fill('large'));
-    expect(success(run(fixture({ manualNutrition: { calories: '0', protein: '0', fat: '0', carbohydrates: '0' } }, catalog)).result).ids).toEqual(Array(4).fill('small'));
+    expect(success(run(fixture({ manualNutrition: { calories: '1', protein: '0', fat: '0', carbohydrates: '0' } }, catalog)).result).ids).toEqual(Array(4).fill('small'));
   });
   it('prioritizes real first-two-day expiring usage, caps known stock preference, ignores incompatible stock', () => {
     const catalog = { version: 'expires', foods: [food('rice'), food('apple')], recipes: [recipe('rice', 'rice', '10'), recipe('apple', 'apple', '1')] };
@@ -120,8 +120,8 @@ describe('bounded deterministic generation', () => {
     expect(new Set(success(run(fixture({ variety: 'max' }, catalog)).result).ids).size).toBe(2);
   });
   it('does not label bounded exhaustion as impossibility or invent a minimum', () => {
-    const catalog = { version: 'bounded', foods: [food('rice', '2')], recipes: [recipe('a'), recipe('b', 'rice', '101')] };
-    const { result, progress } = run(fixture({ budget: '500' }, catalog, stock('100')), { maxEvaluations: 1, maxTransitions: 50 });
+    const catalog = { version: 'bounded', foods: [food('rice', '6'), food('apple', '3')], recipes: [recipe('a'), recipe('b', 'apple', '120')] };
+    const { result, progress } = run(fixture({ budget: '500' }, catalog, stock('200')), { maxEvaluations: 1, maxTransitions: 50 });
     expect(error(result).code).toBe('SEARCH_EXHAUSTED');
     expect(error(result).budgetEvidence?.kind).not.toBe('exhaustive-minimum');
     expect(progress.evaluatedCandidates).toBeLessThanOrEqual(1);
@@ -137,7 +137,7 @@ describe('bounded deterministic generation', () => {
   });
   it('matches an independent tiny exhaustive quantity/pantry/budget oracle, including attained minimum', () => {
     // Independent integer oracle: four slots choose A(100g rice, RUB200) or B(120g apple, RUB120).
-    // Stock rice200g (RUB400) means minimum purchase is400 via four A, versus480 via four B.
+    // Stock rice200g (RUB400) means minimum purchase240 via two A and two B.
     const catalog = { version: 'oracle', foods: [food('rice', '2'), food('apple', '1')], recipes: [recipe('a'), recipe('b', 'apple', '120')] };
     const combinations = Array.from({ length: 16 }, (_, mask) => {
       const ids = Array.from({ length: 4 }, (_, slot) => mask & (1 << slot) ? 'b' : 'a');

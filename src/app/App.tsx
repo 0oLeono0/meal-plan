@@ -14,6 +14,7 @@ import { buildAppliedSettings, sameSnapshot, selectQuickStartInput, type Applied
 import { createPlanInputs, type GenerationPort } from '../domain/plan';
 import { GenerationPage } from '../features/generation/GenerationPage';
 import { MenuPage } from '../features/menu/MenuPage';
+import { ShoppingPage } from '../features/shopping/ShoppingPage';
 import '../shared/styles/tokens.css';
 
 export const appConfig = { brand: 'MealPlan' };
@@ -178,7 +179,7 @@ export function App({ draftPort = guestDraft, planPresencePort, brand = appConfi
   const loading = loadState === 'loading' || actualPresence.status === 'pending' || catalog === null;
   return <BrowserRouter>
     <AppLayout brand={brand} loading={loading}>
-      {loading ? <Status>Восстанавливаем настройки…</Status> : <>
+      {loading ? <InitialLoadStatus /> : <>
         {loadState === 'corrupt' && <div className="notice"><p>Не удалось восстановить настройки. Сохранённые данные повреждены или имеют другую версию</p><p>Можно продолжить в памяти. Исходная запись останется без изменений.</p><Link to="/">На главную</Link></div>}
         {(loadState === 'error' || saveState !== 'idle') && <div className="notice">
           <p role="status">{saveState === 'saving' ? 'Сохраняем настройки…' : loadState === 'error' ? 'Не удалось прочитать настройки. Изменения доступны до закрытия страницы' : saveState === 'saved' ? 'Сохранено на этом устройстве' : 'Не удалось сохранить на этом устройстве. Изменения доступны до закрытия страницы'}</p>
@@ -189,6 +190,11 @@ export function App({ draftPort = guestDraft, planPresencePort, brand = appConfi
       </>}
     </AppLayout>
   </BrowserRouter>;
+}
+
+function InitialLoadStatus() {
+  const { pathname } = useLocation();
+  return <Status>{pathname === '/shopping' ? 'Загружаем покупки…' : pathname === '/menu' ? 'Загружаем меню…' : 'Восстанавливаем настройки…'}</Status>;
 }
 
 function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCatalog, presence, recovery, saved, resetDraft }: {
@@ -253,7 +259,7 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
     <Route path="/plan/new" element={<Wizard draft={draft} onChange={change} recovery={recovery} saved={saved} onReset={resetDraft} onStart={anchor => start(false, anchor)} launchErrors={launchErrors?.status === 'invalid' ? launchErrors.errors : undefined} editingNext={!!operation.lastApplied && !sameSnapshot(draft, operation.lastApplied.raw)} />} />
     <Route path="/plan/generating" element={<GenerationPage snapshot={operation} requestedSettings={launch.current?.settings} catalog={catalog} catalogError={catalogError} draftSaved={saved} onCancel={cancel} onRetry={() => void retryGeneration()} onSettings={settings} onRetrySave={() => void controller.retrySave()} onRetryLoad={() => void controller.retryLoad()} />} />
     <Route path="/menu" element={<MenuPage snapshot={operation} onRetryLoad={() => void controller.retryLoad()} />} />
-    <Route path="/shopping" element={<GuestSectionPage section="shopping" />} />
+    <Route path="/shopping" element={<ShoppingPage snapshot={operation} onRetryLoad={() => void controller.retryLoad()} />} />
     <Route path="/pantry" element={<GuestSectionPage section="pantry" />} />
     <Route path="/recipe/:id" element={<RouteStatePage title="Такого рецепта нет" description="Рецепт не найден. Вы можете вернуться к своему меню." to="/menu" action="Вернуться к меню" />} />
     <Route path="*" element={<RouteStatePage title="Страница не найдена" description="Проверьте адрес или начните с главной страницы." to="/" action="На главную" />} />

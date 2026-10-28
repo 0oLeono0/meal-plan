@@ -81,6 +81,14 @@ test('synthetic many rows keep duplicate names by ID and categories in approved 
   await expect(page.getByText(/Цена: synthetic-browser-only \/ price-1/)).toContainText('2 октября 2026 г.');
 });
 
+for (const split of ['one', 'two'] as const) test(`synthetic ${split} instance sources have grammatical counts and literal contributions`, async ({ page }) => {
+  await openSyntheticPlan(page, { split, stock: 'none' }, '/shopping');
+  const row = page.locator('[data-product-id="synthetic-0"]');
+  await row.getByText(split === 'one' ? 'Из 1 блюда' : 'Из 2 блюд', { exact: true }).click();
+  await expect(row.locator('li')).toHaveCount(split === 'one' ? 1 : 2);
+  await expect(row).toContainText(split === 'one' ? 'Купить 125 г · ≈ 12,50 ₽' : 'Купить 250 г · ≈ 25,00 ₽');
+});
+
 test('synthetic long product text fits mobile with all source and coverage rows accessible', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   await openSyntheticPlan(page, { many: true, long: true }, '/shopping');

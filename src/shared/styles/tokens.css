@@ -58,7 +58,7 @@ body { margin: 0; min-width: 0; }
 .app-shell h2 { font-size: var(--text-heading); margin: 0 0 var(--space-md); }
 .app-shell p { margin: 0 0 var(--space-md); overflow-wrap: anywhere; }
 .app-shell a { color: inherit; text-underline-offset: var(--space-xs); touch-action: manipulation; }
-.app-shell :is(a, button, input, select, textarea, h1) { scroll-margin: var(--space-md) 0 calc(var(--nav-height) + var(--space-md)); }
+.app-shell :is(a, button, input, select, textarea, summary, h1) { scroll-margin: var(--space-md) 0 calc(var(--nav-height) + var(--space-md)); }
 .app-shell :is(button, input, select, textarea) {
   font: inherit;
   font-size: var(--text-body);
@@ -144,6 +144,6 @@ body { margin: 0; min-width: 0; }
   .app-nav { top: 0; right: auto; bottom: 0; width: var(--sidebar-width); grid-template-columns: minmax(0, 1fr); align-content: start; padding: var(--space-lg) var(--space-md); border-top: 0; border-right: 1px solid var(--color-border); overflow-y: auto; }
   .app-shell .app-nav a, .app-shell .app-nav button { flex-direction: row; justify-content: flex-start; padding: var(--space-sm) var(--space-md); font-size: var(--text-body); gap: var(--space-sm); }
   .app-shell:not(.fullscreen) main { max-width: 960px; padding: var(--space-xl); padding-bottom: var(--space-2xl); }
-  .app-shell :is(a, button, input, select, textarea, h1) { scroll-margin-bottom: var(--space-md); }
+  .app-shell :is(a, button, input, select, textarea, summary, h1) { scroll-margin-bottom: var(--space-md); }
 }
 @media (prefers-reduced-motion: reduce) { .app-shell :is(*, button), .app-shell *::before, .app-shell *::after { transition: none; animation: none; scroll-behavior: auto; } }

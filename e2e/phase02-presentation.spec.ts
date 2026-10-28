@@ -24,7 +24,7 @@ async function focusedVisible(page: Page, control: Locator) {
   expect(bounds.x + bounds.width).toBeLessThanOrEqual(await page.evaluate(() => innerWidth) + 1);
   expect(bounds.y).toBeGreaterThanOrEqual(0);
   const nav = page.getByRole('navigation');
-  const bottom = await nav.count() && await page.evaluate(() => innerWidth < 1200)
+  const bottom = await nav.count() && !await control.evaluate(element => Boolean(element.closest('nav'))) && await page.evaluate(() => innerWidth < 1200)
     ? (await nav.boundingBox())!.y : await page.evaluate(() => innerHeight);
   expect(bounds.y + bounds.height).toBeLessThanOrEqual(bottom + 1);
 }
@@ -40,11 +40,15 @@ async function disclosure(page: Page, summary: Locator) {
 
 async function lastContentClear(page: Page, content: Locator) {
   await page.keyboard.press('Control+End');
-  const box = (await content.boundingBox())!;
   const nav = page.getByRole('navigation');
-  const bottom = await page.evaluate(() => innerWidth < 1200) ? (await nav.boundingBox())!.y : await page.evaluate(() => innerHeight);
-  expect(box.y + box.height).toBeLessThanOrEqual(bottom + 1);
-  expect(box.y + box.height).toBeGreaterThan(0);
+  // Native keyboard scrolling can settle after the key event has returned.
+  await expect.poll(async () => {
+    const box = (await content.boundingBox())!;
+    const bottom = await page.evaluate(() => innerWidth < 1200) ? (await nav.boundingBox())!.y : await page.evaluate(() => innerHeight);
+    return box.y + box.height - bottom;
+  }).toBeLessThanOrEqual(1);
+  const last = (await content.boundingBox())!;
+  expect(last.y + last.height).toBeGreaterThan(0);
 }
 
 for (const width of widths) {
@@ -196,7 +200,7 @@ test('phase02 active pending and load error retry use honest recoverable screens
   await fits(page);
 });
 
-test('phase02 sequential Tab ShiftTab Space and Enter traverse saved screens and generation recovery', async ({ page }) => {
+test('phase02 sequential Tab ShiftTab Space and Enter traverse saved screens and navigation', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   const tab = async (control: Locator, backwards = false) => {
     await page.keyboard.press(backwards ? 'Shift+Tab' : 'Tab');
@@ -204,6 +208,16 @@ test('phase02 sequential Tab ShiftTab Space and Enter traverse saved screens and
     expect(await control.evaluate(element => getComputedStyle(element).outlineStyle)).not.toBe('none');
   };
   await generateRealPlan(page);
+  const nav = page.getByRole('navigation');
+  await tab(nav.getByRole('button', { name: 'Профиль', exact: true }), true);
+  for (const label of ['Дома', 'Покупки', 'Меню']) await tab(nav.getByRole('link', { name: label, exact: true }), true);
+  await tab(page.getByRole('link', { name: 'Новое меню', exact: true }), true);
+  await tab(page.getByRole('link', { name: 'MealPlan', exact: true }), true);
+  await tab(page.getByRole('link', { name: 'К содержимому', exact: true }), true);
+  await tab(page.getByRole('link', { name: 'MealPlan', exact: true }));
+  await tab(page.getByRole('link', { name: 'Новое меню', exact: true }));
+  for (const label of ['Меню', 'Покупки', 'Дома']) await tab(nav.getByRole('link', { name: label, exact: true }));
+  await tab(nav.getByRole('button', { name: 'Профиль', exact: true }));
   const sources = page.getByText('Источники расчёта', { exact: true });
   await tab(sources);
   await page.keyboard.press('Space');
@@ -225,11 +239,15 @@ test('phase02 sequential Tab ShiftTab Space and Enter traverse saved screens and
   await page.keyboard.press('Space');
   await expect(covered.locator('..')).not.toHaveAttribute('open');
   await tab(rows[rows.length - 1], true); await tab(covered);
-  const nav = page.getByRole('navigation');
-  for (const label of ['Меню', 'Покупки', 'Дома']) await tab(nav.getByRole('link', { name: label, exact: true }));
-  await tab(nav.getByRole('button', { name: 'Профиль', exact: true }));
-  await tab(nav.getByRole('link', { name: 'Дома', exact: true }), true);
+});
 
+test('phase02 sequential Tab ShiftTab and Enter traverse generation recovery', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  const tab = async (control: Locator, backwards = false) => {
+    await page.keyboard.press(backwards ? 'Shift+Tab' : 'Tab');
+    await focusedVisible(page, control);
+    expect(await control.evaluate(element => getComputedStyle(element).outlineStyle)).not.toBe('none');
+  };
   const submitByTab = async (mode: 'pending' | 'failure' | 'save-failure') => {
     await mountAppFixture(page, { draft: { step: 4 }, operation: mode });
     await expect(page.getByRole('heading', { name: 'Продукты дома', exact: true })).toBeFocused();

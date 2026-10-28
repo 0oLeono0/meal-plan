@@ -456,6 +456,12 @@ Smolensk21.10.2026 observations include carrot51.7533333333333 RUB/kg, onion51.4
 
 An Irkutsk official XLSX was also downloaded/read: its current sheet is dated01.10.2026, while the first sheet is2023. It separates average minimum/maximum network/non-network observations and also lacks tomato. Do not silently choose the first sheet or mix these observations as one current national average. Explicit dataset redistribution licence was not established in this probe. **OFFICIAL_PRICE_SOURCE_AVAILABLE=true; COMPLETE_ALIGNED_CORE_BASKET=false; PRODUCTION_CATALOG_READY=false.** Q-14/02-06 remains open; future targeted tomato/food-basis work is still within the locked decisions. [VERIFIED: saved official-source manifest]
 
+### Fresh tomato price observation — 2026-10-28
+
+Targeted primary-source GET https://vkusvill.ru/goods/tomaty-krasnye-15456/ returned HTTP200 over verified TLS: SKU15456, fresh red tomatoes,270 RUB/kg, public anonymous web scope with no selected address/store. HTTPDate2026-10-28T08:40:17Z; HTML675709bytes/SHA256d95e3f45069a91682bbcc87491b71a624ae4893c3afe375337ad6dce4b7ecf82. Actual page/JSON-LD/main product unit agree; a stale230 search snippet was rejected. Evidence and four verified raw hashes: `.tmp/phase2-tomato-price.json`, details `.tmp/phase2-tomato-price.md`. Photo was inspected as fresh whole/cut tomatoes, retained only locally as evidence. No redistribution permission for photos/database was established; public price observation and attribution/reuse disposition must be reviewed separately. [VERIFIED: independent targeted source probe]
+
+**FRESH_TOMATO_PRICE_AVAILABLE=true; EXACT_LOCAL_PRICE_CONFIRMED=false; PRODUCTION_CATALOG_READY=false.** This supplies the missing observed price, not a Smolensk/user-region quote or nutrient/safety mapping. Different explicit source scopes may not be presented as a single local basket. Source facts still require curated compatible profiles and the complete recipe gate. [VERIFIED: actual scope and probe limitations]
+
 ## Metadata
 
 **Confidence:** MEDIUM по seam websearch verified; concrete downloaded USDA observations проверены дополнительно, но policy confidence не повышался вручную.

@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: P0 MVP
 current_phase: 2
 current_phase_name: Первый допустимый план и рассчитанные покупки
-current_plan: 8
+current_plan: 9
 status: executing
-stopped_at: Completed 02-07-PLAN.md; ready for 02-08
-last_updated: "2026-10-28T16:59:23.797Z"
+stopped_at: Completed 02-08-PLAN.md; ready for 02-09
+last_updated: "2026-10-28T17:14:54.245Z"
 last_activity: 2026-10-28
-last_activity_desc: Completed 02-07; ready for 02-08
-state_head: db36776038a2a9e4966e9a631999a158afa7243e
+last_activity_desc: Completed 02-08; ready for 02-09
+state_head: 8897c4038e5db4be9a12bd80dd69b43701807b09
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 18
-  completed_plans: 15
+  completed_plans: 16
 ---
 
 # Project State
@@ -25,22 +25,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-27)
 
 **Core value:** Допустимое меню с прозрачным бюджетом и согласованные покупки с количественным учётом домашних запасов.
-**Current focus:** Phase 2 — 02-01–02-07 complete: real wizard/quick-start → guarded saved dated menu. Next02-08 calculated shopping UI.
+**Current focus:** Phase 2 —02-01–02-08 complete: saved menu and calculated shopping share canonical costs, source instances and stock coverage. Next02-09 regression/accessibility.
 
 ## Current Position
 
 Phase: 2 — Первый допустимый план и рассчитанные покупки
-Current Plan: 8
+Current Plan: 9
 Total Plans in Phase: 10
 Status: Ready to execute
-Last activity: 2026-10-28 — Completed 02-07; ready for 02-08
+Last activity: 2026-10-28 — Completed 02-08; ready for 02-09
 
-Progress: Phase 1: 8/8 plans accepted; Phase 2: 7/10 complete (02-01–02-07), next 02-08. Other phases remain incomplete.
+Progress: Phase 1:8/8 plans accepted; Phase 2:8/10 complete (02-01–02-08), next02-09. Other phases remain incomplete.
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15
+- Total plans completed: 16
 - Historical active durations for first 7 plans: 76 min (10.9 min/plan).
 - Plan 01-08 recorded wall window: 877 min, including overnight usage-limit interruption; exact active duration unknown and excluded from active-time averages.
 
@@ -51,8 +51,8 @@ Progress: Phase 1: 8/8 plans accepted; Phase 2: 7/10 complete (02-01–02-07), n
 | 1 | 8 | - | - |
 
 **Recent Trend:**
-- Last plan: 02-07, 2/2 tasks;13min observed from first RED commit; initial reads not separately timed.
-- Trend: Phase1 принята; Phase2:7/10 планов выполнены, далее рассчитанные покупки.
+- Last plan: 02-08, 2/2 tasks;10min observed from first RED commit; initial reads not separately timed.
+- Trend: Phase1 принята; Phase2:8/10 планов выполнены, далее регрессии и доступность новых экранов.
 
 **Per-Plan Metrics:**
 
@@ -73,6 +73,7 @@ Progress: Phase 1: 8/8 plans accepted; Phase 2: 7/10 complete (02-01–02-07), n
 | Phase 02 P05 | 10min | 2 tasks | 4 files |
 | Phase 02 P06 | 463min wall; active unknown | 2 tasks | 9 files |
 | Phase 02 P07 | 13min observed; initial reads not timed | 2 tasks | 8 files |
+| Phase 02 P08 | 10min observed; initial reads not timed | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -92,10 +93,11 @@ Progress: Phase 1: 8/8 plans accepted; Phase 2: 7/10 complete (02-01–02-07), n
 - [Phase 02]: Validated active snapshots use recomputed projections and final guarded serialized writes; memory-only retry never repeats search; active revision advances only upon installation.
 - [Phase 02]: Source-gated twelve-profile plant-based corpus has52 original recipes and real28-slot default proof; nutrition adequacy is not claimed. Source scopes and unknown safety remain explicit.
 - [Phase 02]: Real source-gated wizard and quick start promote only a whole guarded saved active plan; editable draft stays independent, skip retains constraints and stock.
+- [Phase 02]: Menu and shopping share one saved projection and PlanSummary; missing rows retain dated instance sources, pantry coverage is whole-period once, unknown categories use Map fallback.
 
 ### Pending Todos
 
-Следующий шаг —02-08: список рассчитанных покупок из того же active snapshot.02-07 завершён: wizard/quick-start→реальный каталог→guarded save→меню/reload, отмена/30s/retry/save-failure, сохранение ограничений/запасов при пропуске. Chromium generation9/9 и entry6/6, unit325/325, typecheck/lint/build прошли; независимое review без блокеров,360px visual sanity пройден. Набор12профилей/52рецептов растительный и ограниченный; полноценность рациона не заявляется. Shared requirements,02-09 regression и02-10 release matrix ещё открыты; NEXT-10 остаётсяP1.
+Следующий шаг —02-09: сохранить регрессии Phase1 и проверить доступность/адаптивность новых экранов.02-08 завершён: menu→shopping→menu и reload используют один active snapshot, три стоимости, dated instance sources и однократное покрытие запасами. Chromium menu5/5+shopping16/16; unit325/325 отдельно (первый конкурентный запуск дал timeout существующего benchmark); typecheck/lint/build прошли. Независимое review без блокеров; риск наследуемых category keys воспроизведён и исправлен через Map.360px visual sanity выполнен собственным Playwright context: scrollWidth360; MCP был занят. Shared requirements и полная02-10 release matrix ещё открыты. Каталог12профилей/52растительных рецептов ограничен, полноценность рациона не заявляется; NEXT-10 остаётсяP1.
 
 ### Blockers/Concerns
 
@@ -115,6 +117,6 @@ Progress: Phase 1: 8/8 plans accepted; Phase 2: 7/10 complete (02-01–02-07), n
 
 ## Session Continuity
 
-Last session: 2026-10-28T16:59:23.321Z
-Stopped at: Completed 02-07-PLAN.md; ready for 02-08
+Last session: 2026-10-28T17:14:25.765Z
+Stopped at: Completed 02-08-PLAN.md; ready for 02-09
 Resume file: None

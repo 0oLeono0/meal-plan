@@ -1,18 +1,28 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router';
 import { createDraft, draftReducer, type DraftAction, type SettingsDraft } from '../domain/settings';
 import { createGuestDraftAdapter, type GuestDraftPort } from '../adapters/guestDraft';
 import { Wizard } from '../features/wizard/Wizard';
 import { Button, ConfirmDialog, Status } from '../shared/ui';
+import { createGenerationController } from '../features/generation/controller';
+import { createActivePlanAdapter, type ActivePlanPort } from '../adapters/activePlan';
+import { createLocalGeneration } from '../adapters/generation';
+import { bundledCatalogPort } from '../data/catalog';
+import type { CatalogLoadResult, CatalogPort } from '../domain/catalog';
+import { buildAppliedSettings, sameSnapshot, selectQuickStartInput, type AppliedSettings } from '../domain/appliedSettings';
+import { createPlanInputs, type GenerationPort } from '../domain/plan';
+import { GenerationPage } from '../features/generation/GenerationPage';
+import { MenuPage } from '../features/menu/MenuPage';
 import '../shared/styles/tokens.css';
 
 export const appConfig = { brand: 'MealPlan' };
 
 export type PlanPresence = { status: 'absent' } | { status: 'valid'; planId: string } | { status: 'pending' } | { status: 'error' };
 export interface PlanPresencePort { load(): Promise<unknown> }
-const noPlan: PlanPresencePort = { async load() { return { status: 'absent' }; } };
 const guestDraft = createGuestDraftAdapter();
+const activePlan = createActivePlanAdapter();
+const localGeneration = createLocalGeneration(bundledCatalogPort);
 
 function parsePresence(value: unknown): PlanPresence {
   if (typeof value !== 'object' || value === null || !('status' in value)) return { status: 'absent' };
@@ -21,7 +31,7 @@ function parsePresence(value: unknown): PlanPresence {
   return { status: 'absent' };
 }
 
-export function WelcomePage({ brand = appConfig.brand, onStart }: { brand?: string; onStart(): void }) {
+export function WelcomePage({ brand = appConfig.brand, onStart, onQuickStart, quickStartBasis }: { brand?: string; onStart(): void; onQuickStart?(): void; quickStartBasis?: string }) {
   return <section className="welcome" aria-labelledby="welcome-title">
     <p className="brand" translate="no">{brand}</p>
     <p className="eyebrow">Питание в вашем ритме</p>
@@ -29,6 +39,7 @@ export function WelcomePage({ brand = appConfig.brand, onStart }: { brand?: stri
     <p>Выберите бюджет, ограничения и продукты дома</p>
     <p className="journey">Настройки → Меню → Покупки</p>
     <Button variant="primary" onClick={onStart}>Составить меню</Button>
+    {onQuickStart && <><Button id="quick-start" onClick={onQuickStart}>Меню за 1 клик</Button><p className="hint">{quickStartBasis}</p></>}
     <p className="hint">Без регистрации. Черновик хранится на этом устройстве.</p>
   </section>;
 }
@@ -37,11 +48,17 @@ interface AppProps {
   draftPort?: GuestDraftPort;
   planPresencePort?: PlanPresencePort;
   brand?: string;
+  generationPort?: GenerationPort;
+  activePlanPort?: ActivePlanPort;
+  catalogPort?: CatalogPort;
 }
 type LoadState = 'loading' | 'ready' | 'corrupt' | 'error';
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
-export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand = appConfig.brand }: AppProps) {
+export function App({ draftPort = guestDraft, planPresencePort, brand = appConfig.brand, generationPort = localGeneration, activePlanPort = activePlan, catalogPort = bundledCatalogPort }: AppProps) {
+  const controller = useMemo(() => createGenerationController({ generation: generationPort, activePlan: activePlanPort }), [generationPort, activePlanPort]);
+  const operation = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
+  const [catalog, setCatalog] = useState<CatalogLoadResult | null>(null);
   const [draft, setDraft] = useState(createDraft);
   const currentDraft = useRef(draft);
   const memoryEdited = useRef(false);
@@ -52,6 +69,13 @@ export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand =
   const saveQueue = useRef<Promise<void>>(Promise.resolve());
   const mounted = useRef(false);
   const resetting = useRef(false);
+
+  useEffect(() => { void controller.load(); return () => controller.dispose(); }, [controller]);
+  useEffect(() => {
+    let current = true;
+    void catalogPort.load().then(value => { if (current) setCatalog(value); }, () => { if (current) setCatalog({ status: 'invalid', diagnostics: [] }); });
+    return () => { current = false; };
+  }, [catalogPort]);
 
   useEffect(() => {
     let active = true;
@@ -73,6 +97,7 @@ export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand =
       } catch { if (active) setLoadState('error'); }
     };
     const readPresence = async () => {
+      if (!planPresencePort) return;
       try { const result = parsePresence(await planPresencePort.load()); if (active) setPresence(result); }
       catch { if (active) setPresence({ status: 'error' }); }
     };
@@ -149,7 +174,8 @@ export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand =
     finally { resetting.current = false; }
   }
 
-  const loading = loadState === 'loading' || presence.status === 'pending';
+  const actualPresence = planPresencePort ? presence : operation.presence;
+  const loading = loadState === 'loading' || actualPresence.status === 'pending' || catalog === null;
   return <BrowserRouter>
     <AppLayout brand={brand} loading={loading}>
       {loading ? <Status>Восстанавливаем настройки…</Status> : <>
@@ -158,20 +184,80 @@ export function App({ draftPort = guestDraft, planPresencePort = noPlan, brand =
           <p role="status">{saveState === 'saving' ? 'Сохраняем настройки…' : loadState === 'error' ? 'Не удалось прочитать настройки. Изменения доступны до закрытия страницы' : saveState === 'saved' ? 'Сохранено на этом устройстве' : 'Не удалось сохранить на этом устройстве. Изменения доступны до закрытия страницы'}</p>
           {(loadState === 'error' || saveState === 'error') && <button type="button" disabled={saveState === 'saving'} onClick={() => void retry()}>Повторить сохранение</button>}
         </div>}
-        {presence.status === 'error' && <p className="notice">Не удалось проверить наличие меню. Настройки доступны.</p>}
-        <Routes>
-          <Route path="/" element={presence.status === 'valid' ? <Navigate replace to="/menu" /> : <StartPage brand={brand} />} />
-          <Route path="/plan/new" element={<Wizard draft={draft} onChange={change} recovery={loadState === 'corrupt' || loadState === 'error'} saved={loadState === 'ready' && saveState === 'saved'} onReset={resetDraft} />} />
-          <Route path="/plan/generating" element={<RouteStatePage title="Генерация не запущена" description="Откройте настройки питания, чтобы подготовить меню." to="/plan/new" action="К настройкам" />} />
-          <Route path="/menu" element={<GuestSectionPage section="menu" />} />
-          <Route path="/shopping" element={<GuestSectionPage section="shopping" />} />
-          <Route path="/pantry" element={<GuestSectionPage section="pantry" />} />
-          <Route path="/recipe/:id" element={<RouteStatePage title="Такого рецепта нет" description="Рецепт не найден. Вы можете вернуться к своему меню." to="/menu" action="Вернуться к меню" />} />
-          <Route path="*" element={<RouteStatePage title="Страница не найдена" description="Проверьте адрес или начните с главной страницы." to="/" action="На главную" />} />
-        </Routes>
+        {actualPresence.status === 'error' && <p className="notice">Не удалось проверить наличие меню. Настройки доступны.</p>}
+        <ApplicationRoutes brand={brand} draft={draft} change={change} controller={controller} catalog={catalog!} reloadCatalog={async () => { try { const value = await catalogPort.load(); setCatalog(value); return value; } catch { return { status: 'invalid', diagnostics: [] }; } }} presence={actualPresence} recovery={loadState === 'corrupt' || loadState === 'error'} saved={loadState === 'ready' && saveState === 'saved'} resetDraft={resetDraft} />
       </>}
     </AppLayout>
   </BrowserRouter>;
+}
+
+function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCatalog, presence, recovery, saved, resetDraft }: {
+  brand: string; draft: SettingsDraft; change(action: DraftAction): void; controller: ReturnType<typeof createGenerationController>;
+  catalog: CatalogLoadResult; reloadCatalog(): Promise<CatalogLoadResult>; presence: PlanPresence; recovery: boolean; saved: boolean; resetDraft(): Promise<boolean>;
+}) {
+  const operation = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const [launchErrors, setLaunchErrors] = useState<ReturnType<typeof buildAppliedSettings> | null>(null);
+  const [catalogError, setCatalogError] = useState(false);
+  const returningFocus = useRef<string | null>(null);
+  const previousRoute = useRef(pathname);
+  const launch = useRef<{ settings: AppliedSettings; origin: { returnRoute: string; focusAnchor: string } } | null>(null);
+  const catalogAttempt = useRef(0);
+  useEffect(() => {
+    if (previousRoute.current === '/plan/generating' && pathname !== '/plan/generating') { catalogAttempt.current++; controller.cancel(); }
+    previousRoute.current = pathname;
+    if (returningFocus.current) {
+      const anchor = returningFocus.current; returningFocus.current = null;
+      requestAnimationFrame(() => (document.getElementById(anchor) ?? document.querySelector<HTMLElement>('h1'))?.focus());
+    }
+  }, [pathname, controller]);
+  useEffect(() => {
+    if (operation.status === 'succeeded' && pathname === '/plan/generating') navigate('/menu', { replace: true });
+  }, [operation.status, pathname, navigate]);
+  function start(quick = false) {
+    if (operation.status === 'pending' || operation.status === 'saving') return;
+    const applied = quick ? selectQuickStartInput(draft, operation.lastApplied) : buildAppliedSettings(draft);
+    setLaunchErrors(applied);
+    if (applied.status === 'invalid') { change({ type: 'step', value: applied.step }); navigate('/plan/new'); return; }
+    setCatalogError(catalog.status !== 'loaded');
+    const origin = { returnRoute: pathname, focusAnchor: quick ? 'quick-start' : 'generate-menu' };
+    launch.current = { settings: applied.settings, origin };
+    navigate('/plan/generating');
+    if (catalog.status === 'loaded') void controller.start(createPlanInputs(applied.settings, catalog.catalog, { seed: crypto.randomUUID() }), origin);
+  }
+  function settings(budget = false) {
+    catalogAttempt.current++; controller.cancel(); setCatalogError(false);
+    if (budget) change({ type: 'step', value: 2 });
+    navigate('/plan/new');
+  }
+  function cancel() {
+    const origin = operation.origin;
+    controller.cancel(); returningFocus.current = origin?.focusAnchor ?? 'wizard-title';
+    navigate(origin?.returnRoute ?? '/plan/new');
+  }
+  async function retryGeneration() {
+    if (!catalogError) { await controller.retryGeneration(); return; }
+    const atAttempt = ++catalogAttempt.current;
+    const loaded = await reloadCatalog();
+    if (atAttempt !== catalogAttempt.current || previousRoute.current !== '/plan/generating' || !launch.current) return;
+    if (loaded.status === 'loaded') {
+      setCatalogError(false);
+      await controller.start(createPlanInputs(launch.current.settings, loaded.catalog, { seed: crypto.randomUUID() }), launch.current.origin);
+    }
+  }
+  const basis = operation.lastApplied ? 'Используем последние применённые настройки' : sameSnapshot(draft, createDraft())
+    ? '2 человека · 7 дней · 3 000 ₽ · до 30 минут · среднее разнообразие · без ограничений' : 'Используем настройки из черновика';
+  return <Routes>
+    <Route path="/" element={presence.status === 'valid' ? <Navigate replace to="/menu" /> : <WelcomePage brand={brand} onStart={() => navigate('/plan/new')} onQuickStart={() => start(true)} quickStartBasis={basis} />} />
+    <Route path="/plan/new" element={<Wizard draft={draft} onChange={change} recovery={recovery} saved={saved} onReset={resetDraft} onStart={() => start()} launchErrors={launchErrors?.status === 'invalid' ? launchErrors.errors : undefined} editingNext={!!operation.lastApplied && !sameSnapshot(draft, operation.lastApplied.raw)} />} />
+    <Route path="/plan/generating" element={<GenerationPage snapshot={operation} requestedSettings={launch.current?.settings} catalog={catalog} catalogError={catalogError} draftSaved={saved} onCancel={cancel} onRetry={() => void retryGeneration()} onSettings={settings} onRetrySave={() => void controller.retrySave()} onRetryLoad={() => void controller.retryLoad()} />} />
+    <Route path="/menu" element={<MenuPage snapshot={operation} onRetryLoad={() => void controller.retryLoad()} />} />
+    <Route path="/shopping" element={<GuestSectionPage section="shopping" />} />
+    <Route path="/pantry" element={<GuestSectionPage section="pantry" />} />
+    <Route path="/recipe/:id" element={<RouteStatePage title="Такого рецепта нет" description="Рецепт не найден. Вы можете вернуться к своему меню." to="/menu" action="Вернуться к меню" />} />
+    <Route path="*" element={<RouteStatePage title="Страница не найдена" description="Проверьте адрес или начните с главной страницы." to="/" action="На главную" />} />
+  </Routes>;
 }
 
 export function RouteStatePage({ title, description, to, action }: { title: string; description: string; to: string; action: string }) {
@@ -225,12 +311,6 @@ function AppLayout({ brand, loading, children }: { brand: string; loading: boole
       requestAnimationFrame(() => shell.current?.querySelector<HTMLElement>('h1')?.focus());
     }} />}
   </div>;
-}
-
-function StartPage({ brand }: { brand: string }) {
-  // A single route instance owns the draft; repeat activation never creates a second wizard.
-  const [started, setStarted] = useState(false);
-  return started ? <Navigate to="/plan/new" /> : <WelcomePage brand={brand} onStart={() => setStarted(true)} />;
 }
 
 const rootElement = document.getElementById('root');

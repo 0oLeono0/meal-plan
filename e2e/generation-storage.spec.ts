@@ -134,7 +134,7 @@ test('timeout also invalidates a deferred save before its final write', async ({
   expect(await count(page, 'final-writes')).toBe(0);
 });
 
-test('draft load retry preserves edits made while its read is pending (WR-01/WR-02 boundary)', async ({ page }) => {
+test('draft load retry preserves edits made while its read is pending (CR-01 boundary)', async ({ page }) => {
   await mountAppFixture(page, { draft: { people: '8' }, failRead: true, holdRetryRead: true });
   await expect(page.getByRole('status')).toContainText('Не удалось прочитать настройки');
   await page.evaluate(() => sessionStorage.setItem('allow-read', 'yes'));

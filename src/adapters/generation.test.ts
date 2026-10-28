@@ -112,16 +112,20 @@ describe('local cooperative generation', () => {
     expectError(await createLocalGeneration(createLocalCatalog(expensive)).generate(request(expensive), new AbortController().signal), 'BUDGET_TOO_LOW');
     expectError(await createLocalGeneration(createLocalCatalog(data), { search: { maxTransitions: 1 } }).generate(req, new AbortController().signal), 'SEARCH_EXHAUSTED');
   });
-  it('measures one 60-recipe seven-day synthetic benchmark with bounded work', async () => {
+  it('measures the 60-recipe seven-day synthetic domain search with bounded work', () => {
     const data = catalog(60), req = request(data, '7');
     const search = createPlanSearch(req.inputs); let next = search.next(); let work = { transitions: 0, evaluatedCandidates: 0 };
     const start = performance.now();
     while (!next.done) { work = next.value; next = search.next(); }
     const domainMs = performance.now() - start;
     expect(next.value.status).toBe('success'); expect(work.evaluatedCandidates).toBeLessThanOrEqual(20000); expect(work.transitions).toBeLessThanOrEqual(200000);
+    console.info('SYNTHETIC_DOMAIN_BENCHMARK', JSON.stringify({ recipes: 60, days: 7, ...work, domainMs }));
+  });
+  it('measures the 60-recipe seven-day synthetic cooperative adapter with real yields', async () => {
+    const data = catalog(60), req = request(data, '7');
     let yields = 0; const adapterStart = performance.now();
     const result = await createLocalGeneration(createLocalCatalog(data), { yieldTask: async () => { yields++; await tick(); } }).generate(req, new AbortController().signal);
     expect(result.status).toBe('success'); expect(yields).toBeGreaterThan(0);
-    console.info('SYNTHETIC_BENCHMARK', JSON.stringify({ recipes: 60, days: 7, ...work, domainMs, adapterMs: performance.now() - adapterStart, yields }));
+    console.info('SYNTHETIC_ADAPTER_BENCHMARK', JSON.stringify({ recipes: 60, days: 7, adapterMs: performance.now() - adapterStart, yields }));
   });
 });

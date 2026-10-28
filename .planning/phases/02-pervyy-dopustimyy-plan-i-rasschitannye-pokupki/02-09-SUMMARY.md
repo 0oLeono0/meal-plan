@@ -29,7 +29,7 @@ actuals:
   tokens: 12377
   tasks: 3
   commits: 4
-plan_head_before: 7238061a14b2c2834b7880728a27f0668c03db86
+plan_head_before: 723806136299e1697ec3bb8aaa399ee9937872ce
 plan_head_after: 4260172f1a37e5789e120fd50c1479f53702dc40
 coverage:
   - id: D1
@@ -49,7 +49,7 @@ coverage:
         ref: "Independent read-only review: Tab coverage finding resolved and re-reviewed; no blockers"
         status: pass
     human_judgment: false
-duration: "17min observed from first baseline run; initial reads not separately timed"
+duration: "18min observed from first baseline run through documentation; initial reads not separately timed"
 completed: 2026-10-28
 ---
 

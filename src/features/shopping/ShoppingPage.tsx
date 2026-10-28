@@ -6,12 +6,12 @@ import { PlanSummary } from '../plan/PlanSummary';
 
 const categoryOrder = ['Овощи и фрукты', 'Мясо и рыба', 'Молочное', 'Бакалея', 'Хлеб', 'Прочее'] as const;
 type Category = typeof categoryOrder[number];
-const categoryAliases: Readonly<Record<string, Category>> = {
-  'Овощи': 'Овощи и фрукты', 'Фрукты': 'Овощи и фрукты', 'Овощи и фрукты': 'Овощи и фрукты',
-  'Мясо': 'Мясо и рыба', 'Рыба': 'Мясо и рыба', 'Мясо и рыба': 'Мясо и рыба',
-  'Молочное': 'Молочное', 'Молочные продукты': 'Молочное',
-  'Крупы': 'Бакалея', 'Крупы и мука': 'Бакалея', 'Бакалея': 'Бакалея', 'Хлеб': 'Хлеб',
-};
+const categoryAliases = new Map<string, Category>([
+  ['Овощи', 'Овощи и фрукты'], ['Фрукты', 'Овощи и фрукты'], ['Овощи и фрукты', 'Овощи и фрукты'],
+  ['Мясо', 'Мясо и рыба'], ['Рыба', 'Мясо и рыба'], ['Мясо и рыба', 'Мясо и рыба'],
+  ['Молочное', 'Молочное'], ['Молочные продукты', 'Молочное'],
+  ['Крупы', 'Бакалея'], ['Крупы и мука', 'Бакалея'], ['Бакалея', 'Бакалея'], ['Хлеб', 'Хлеб'],
+]);
 const sourceLabel = (count: string) => `Из ${count.replace(/блюдо$|блюда$/, ending => ending === 'блюдо' ? 'блюда' : 'блюд')}`;
 export function ShoppingPage({ snapshot, onRetryLoad }: { snapshot: GenerationSnapshot; onRetryLoad(): void }) {
   const bundle = snapshot.active;
@@ -23,7 +23,7 @@ export function ShoppingPage({ snapshot, onRetryLoad }: { snapshot: GenerationSn
   const { plan } = bundle;
   const projection = bundle.projections.find(item => item.variantId === plan.activeVariantId)!;
   const view = selectPlanPresentation(projection, plan.inputs.appliedSettings.target);
-  const groups = categoryOrder.map(category => ({ category, rows: view.purchases.filter(row => (categoryAliases[row.category] ?? 'Прочее') === category) })).filter(group => group.rows.length > 0);
+  const groups = categoryOrder.map(category => ({ category, rows: view.purchases.filter(row => (categoryAliases.get(row.category) ?? 'Прочее') === category) })).filter(group => group.rows.length > 0);
   const namesByInstance = new Map(projection.instances.map(row => [row.instance.id, row.instance.recipeSnapshot.name]));
   const issues = view.pantryIssues.map(issue => ({
     key: JSON.stringify([issue.productId, issue.profileId, issue.code]),

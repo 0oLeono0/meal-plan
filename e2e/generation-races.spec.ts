@@ -27,6 +27,7 @@ test('navigate away invalidates request and a newer real success survives an old
   await generateRealPlan(page);
   const old = await page.evaluate(key => localStorage.getItem(key), activeKey);
   await mountGeneration(page, { deferGeneration: true });
+  await page.getByLabel('Число дней', { exact: true }).fill('1');
   await finishWizard(page);
   await page.goBack();
   await expect(page).toHaveURL(/\/plan\/new$/);
@@ -73,7 +74,7 @@ for (const kind of ['lower-bound', 'exhaustive-minimum'] as const) for (const co
     await expect(page.getByText('Шаг 2 из 4')).toBeVisible();
   });
 
-test('30s timeout is precise, distinct from search, ignores late result and retry preserves settings', async ({ page }) => {
+test('30s timeout stays pending at 29s, differs from search and permits real retry with preserved settings', async ({ page }) => {
   await mountGeneration(page, { deferGeneration: true });
   await page.clock.install();
   await page.getByLabel('Число дней', { exact: true }).fill('2');
@@ -138,4 +139,22 @@ test('deep generation reload cannot resurrect a pending request or mutate the ol
   await preserved(page, old);
   await page.getByRole('link', { name: 'К текущему меню', exact: true }).click();
   await expect(page.locator('[data-plan-id]')).toBeVisible();
+});
+
+test('real source-backed menu and shopping run with every external runtime provider blocked', async ({ page }) => {
+  const external: string[] = [];
+  await page.route('**/*', async route => {
+    const url = new URL(route.request().url());
+    if (url.origin === 'http://127.0.0.1:4173') await route.continue();
+    else { external.push(url.origin); await route.abort('blockedbyclient'); }
+  });
+  await generateRealPlan(page);
+  const raw = await page.evaluate(key => localStorage.getItem(key), activeKey);
+  const id = await page.locator('[data-plan-id]').getAttribute('data-plan-id');
+  await page.getByRole('link', { name: 'Покупки', exact: true }).first().click();
+  await expect(page.getByRole('heading', { name: /Список покупок/ }).first()).toBeVisible();
+  await page.reload();
+  await expect(page.locator('[data-plan-id]')).toHaveAttribute('data-plan-id', id!);
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(raw);
+  expect(external).toEqual([]);
 });

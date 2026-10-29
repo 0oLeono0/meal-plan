@@ -1,7 +1,7 @@
 ---
 phase: "02"
 slug: "pervyy-dopustimyy-plan-i-rasschitannye-pokupki"
-status: awaiting-independent-verification
+status: validated
 nyquist_compliant: false
 wave_0_complete: true
 created: "2026-10-27"
@@ -58,7 +58,58 @@ created: "2026-10-27"
 |02-10-02|DATA-02,GEN-03/04,MENU-01|`npm run test:e2e -- e2e/generation-storage.spec.ts --project=chromium` — old bytes/active/memory-only/retry-save/corrupt/dirty retry|T-02-23|passed|
 |02-10-03|all20 phase IDs|`npm run test:unit -- --run`; `npm run typecheck`; `npm run lint`; `npm run build`; `npm run test:e2e -- --project=chromium`; then firefox/webkit separately|T-02-24; all mitigations|executed; 2 native WebKit cases retained failed/manual-unverified for independent phase verification|
 
-The last row denotes separate invocations, each with its own fails_when in02-10. Quick checks target under60s, not measured. Partition broad regression scenarios if actual measured duration exceeds the target; never omit coverage. The full release matrix runs once after implementation/fixes. All source/corpus gates must pass before a success claim.
+The last row denotes separate invocations, each with its own fails_when in02-10. Фактический быстрый feedback: unit326 —8.56s, races14 —49.87s, storage8 —46.3s. Широкие02-09 группы71/44 заняли119.726890/117.946298s и не удовлетворили цели60s; полные release suites также дольше60s. Это не основание пропускать случаи или объявлять всю матрицу быстрой. Полная матрица повторно в этом документальном аудите не запускалась.
+
+## Executed Requirement Coverage — Nyquist Audit 2026-10-29
+
+Проверен активный `verify:post` hook `validate-phase`, state A; configured agent skills пусты. Карта ниже заменяет прежнюю плановую трактовку COVERED для двадцати phase REQ. **COVERED** означает существующий поведенческий assertion и фактически зелёный отчёт, **PARTIAL** — неполный/неуспешный тест нужного поведения, **MISSING** — тест не найден. Это покрытие назначенного фазе поведения, а не самостоятельное закрытие shared REQ во всём P0. Например, экспорт CALC-07 относится к будущей фазе. Ручные crosscutting критерии перечислены отдельно; их отсутствие не превращает проверенную арифметику MENU-04 в PARTIAL.
+
+Корневые команды: `npm run test:unit -- --run <file>` для unit/integration файлов и `npm run test:e2e -- <file> --project=<chromium|firefox|webkit> --workers=1` для browser. Все перечисленные unit-файлы входят в фактический326/326 release; все browser-файлы — в case-identity coverage240. В остальных колонках указаны реальные имена тестов или их уникальные начала и проверяемый результат; наличие файла само по себе не считается evidence.
+
+| Requirement | Task IDs | Test file / behavioral assertion | Status |
+|---|---|---|---|
+| APP-04 |02-02-01,02-07-02|`src/domain/appliedSettings.test.ts` — `quick start prioritizes only valid last applied settings...`; `e2e/entry-policies.spec.ts` — `quick start prefers last applied settings while preserving the changed draft`, `quick start opens the first invalid step...`: saved applied raw unchanged, draft bytes retained, invalid field focused|COVERED|
+| WIZ-08 |02-02-01,02-07-02|`src/domain/appliedSettings.test.ts` — `skip keeps restrictions and unknown home quantity...`; `e2e/entry-policies.spec.ts` — `skip retains restrictions exclusions home quantities and global pantry`, partial home/manual cases: stored restrictions/home exact, sentinel preserved, invalid input blocks start|COVERED|
+| DATA-01 |02-01-01,02-02-02,02-06-01/02|`src/adapters/catalog.test.ts` — `calculates independently asserted USDA 171287 values...` (150g→214.5/18.84/14.265/1.08); `src/data/sources.test.ts` — literal USDA/price rows; `src/data/catalog.test.ts` — fifty complete distinct recipes, references and source bases; `src/domain/plan.test.ts` — separate repeated instances|COVERED|
+| DATA-02 |02-01-01,02-04-01,02-05-01,02-06|`src/domain/planProjection.test.ts` — `reports missing price and nutrient facts instead of inventing zero`; `src/data/catalog.test.ts` — nine independent source corruptions and unknown restriction failures; `src/adapters/activePlan.test.ts` — unsafe/overbudget/corrupt rejection before write|COVERED|
+| DATA-03 |02-01,02-04-02,02-07,02-10-01|`src/adapters/generation.test.ts` — actual local search/macrotask abort; `e2e/generation-races.spec.ts` — `real source-backed menu and shopping run with every external runtime provider blocked`: external requests=[], same saved bytes/ID after reload|COVERED|
+| CALC-01 |02-01-02,02-03-01|`src/domain/quantities.test.ts` — exact thirds/JSON, compatible normalization, explicit large-egg conversion only; `src/adapters/catalog.test.ts` — unsupported g/ml/pieces diagnosed; `src/domain/planProjection.test.ts` — kg stock and evidenced conversion|COVERED|
+| CALC-03 |02-03-01,02-08-01|`src/domain/planProjection.test.ts` — `scales base2 to selected3 once...`:300g,360/30/12/33 family,120/10/4/11 portion,90kcal average over actual two-day period; `e2e/menu.spec.ts` — `synthetic independent nutrition costs and family basis...`:1000person-day/2000family literals|COVERED|
+| CALC-04 |02-03-01,02-08|`src/domain/planProjection.test.ts` — aggregate500/cover200/purchase300g→100/40/60RUB; `e2e/menu.spec.ts`, `e2e/shopping.spec.ts` — independent50/20/30RUB visible and equal through real route navigation|COVERED|
+| CALC-05 |02-03-02,02-04-01,02-08-01|`src/domain/presentation.test.ts` — exact500 accepted/500.0001 rejected despite equal display; raw500/canonical500.01 rejected; `src/domain/generatePlan.test.ts` — shared ledger budget gate; `e2e/menu.spec.ts` — remaining2970RUB/progress1% literals|COVERED|
+| CALC-06 |02-03-01,02-08-02|`src/domain/planProjection.test.ts` — `aggregates 200+300g before spending pantry 200g once...`, cross-profile stock once; `e2e/shopping.spec.ts` — `synthetic partial stock...`, all/over/unknown/incompatible/none: capped500g coverage or full500g purchase|COVERED|
+| CALC-07 |02-01-02,02-03-02,02-08|`src/domain/quantities.test.ts` — half-up cases; `src/domain/presentation.test.ts` — two0.005 rows→0.02RUB and daily canonical amount; `e2e/shopping.spec.ts` — real menu→shopping→menu→reload retains identical three totals. Export is outside this phase|COVERED|
+| GEN-01 |02-02-02,02-04-01,02-06-02,02-07|`src/domain/generatePlan.test.ts` — reproducibility/catalog-order independence, target/variety/expiring-stock preferences; `src/data/catalog.test.ts` — `generates all real default slots...`:28slots,2people,exact461.9293627901234552RUB, explicit nutrient oracle; real wizard browser path saves/reloads|COVERED|
+| GEN-02 |02-04-01,02-06|`src/domain/generatePlan.test.ts` — restriction/allergen/time table cases, no-fish requires seafood evidence, product exclusion before metadata; `src/data/catalog.test.ts` — unknown gluten/lactose/halal→GENERATION_DATA_INCOMPLETE, never safe|COVERED|
+| GEN-03 |02-04-02,02-05-02,02-07-01,02-10-01|`src/adapters/generation.test.ts` — real macrotask abort stops transitions; `src/features/generation/controller.test.ts` —2000ms, supersession/deferred saves; `e2e/generation-races.spec.ts` — actual pending text/cancel/navigation/late result/newer success: old route/bytes/active preserved|COVERED|
+| GEN-04 |02-05-02,02-07-01,02-10|`src/features/generation/controller.test.ts` — timeout exactly30000ms even ignoring abort; `e2e/generation-races.spec.ts` — `30s timeout stays pending at 29s...`, typed error/retry scenarios: actual actions, focus/settings and subsequent real save|COVERED|
+| GEN-05 |02-04-01,02-07-01,02-10-01|`src/domain/generatePlan.test.ts` — independent tiny exhaustive oracle/attained minimum, lower-bound proof, exhaustion distinct; `e2e/generation-races.spec.ts` — complete/incomplete proof labels and unproved refusal opens budget step without minimum claim|COVERED|
+| MENU-01 |02-02-02,02-03-02,02-08-01|`src/domain/plan.test.ts` — local midnight/DST/calendar/unique slots; `e2e/menu.spec.ts` — `real saved catalog menu has dated ordered slots and truthful provenance`:7dates/28slots and saved ID; independent synthetic date/person/budget/absent norm/source basis assertions|COVERED|
+| MENU-04 |02-03-02,02-08-01|`src/domain/presentation.test.ts` — all four metrics exact110% no warning,110%+epsilon warning, absent/zero safe; `e2e/menu.spec.ts` — `synthetic target exact-ten/above-ten/zero-positive...`, visible textual warning count and family day nutrition/cost literals|COVERED|
+| SHOP-01 |02-03-01,02-08-02|`src/domain/planProjection.test.ts` — compatible aggregation and separate date/slot instance contributions; `e2e/shopping.spec.ts` —500−200=300g, four dated125g sources,1/2/4source grammar, duplicate names preserved by ID, six categories|COVERED|
+| SHOP-04 |02-03-01,02-08-02|`e2e/shopping.spec.ts` — `synthetic partial stock...`: initially collapsed native details then200g/20RUB; all/over cover capped500g/50RUB; unknown/incompatible reasons without invented coverage; `src/domain/planProjection.test.ts` asserts same capped exact costs|COVERED|
+
+Итог по назначенным phase REQ:20 COVERED,0 PARTIAL,0 MISSING. Новых отсутствующих автоматических тестов аудит не выявил, новые tests/fixtures не создавались. Обязательные crosscutting keyboard predicates ниже остаются PARTIAL/manual-unverified; поэтому `nyquist_compliant:false` сохраняется. Ни один REQ checkbox в REQUIREMENTS этим аудитом не изменён.
+
+### Evidence Integrity and Run Boundaries
+
+Аудитор повторно прочитал raw JUnit и сверил SHA256 всех8 файлов из `.tmp/02-10-release-evidence.json`:8/8 совпали. Это документальный recheck существующих выполненных команд, не новый запуск suites. Исходный unit log подтверждает326passed/16files/8.56s. Case overlays сверены с именами текущих тестов; не складываются как новые уникальные случаи.
+
+| Report | Actual observed result | Seconds |
+|---|---|---|
+| `.tmp/02-10-release-chromium-final.xml` |225passed,0failed,0skipped; исходная коллекция|395.760903|
+| `.tmp/02-10-chromium-affected-final.xml` |132passed; вместе с108unchanged покрывает текущие240,missing0/unexpected0|247.765827|
+| `.tmp/02-10-release-firefox-final.xml` |240passed,0failed,0skipped; full,1worker|986.799644|
+| `.tmp/02-10-release-webkit-final.xml` |226passed/14failed,0skipped; исходный full240|1081.932577|
+| `.tmp/02-10-webkit-presentation-final.xml` |38passed/2failed,0skipped; owning40; overlay200+40=238passed/2failed|292.281763|
+
+Предыдущий Firefox225case run198passed/27failed также сохранён и hash-verified, не назван успешным. Final End smoke Chromium2/2 —18.858061s, Firefox2/2 —27.674407s. Утверждения о full240 Chromium single run или WebKit240/240 pass отсутствуют.
+
+### Source Assertions versus Synthetic Oracles
+
+Source evidence: `src/data/sources.test.ts` независимо задаёт48 nutrient values и12 фактических RUB observations, проверяет захваченные excerpts/hashes/reference/scope; `src/data/catalog.test.ts` проверяет девять раздельных corruptions,50+ полный corpus и настоящий adapter generation. Приведённые tests не доказывают online актуальность цены, открытую лицензию price database или кухонную пригодность; original acquisition/review и ограничения зафиксированы в02-06-SUMMARY и `docs/data/phase02-sources.md`. Archived excerpt hash не является проверкой наличия полного ZIP/XLS в runtime.
+
+Synthetic evidence: `planProjection.test.ts`, `presentation.test.ts` и `e2e/plan-fixtures.ts` задают независимые численные крайние случаи; они доказывают алгоритм и отображение, не происхождение production facts. Настоящие browser generation/reload/external-provider-block paths перечислены отдельно. Ни числовой fixture, ни structurally distinct recipe fingerprint не заменяет исходный52/52 content review. Ограниченный12-profile plant corpus и низкая энергия/жиры не объявляются полноценным рационом.
 
 ## Data and Numerical Oracles
 
@@ -78,9 +129,13 @@ The last row denotes separate invocations, each with its own fails_when in02-10.
 
 | Behavior | Requirement | Why separate | Instructions |
 |---|---|---|---|
-| Provenance/meaning of curated food/price/safety records | DATA-01/02 | Успешный synthetic spec не подтверждает реальный источник | Проверяемые первичные источники и сопоставление, честный data gate |
+| Provenance/meaning of curated food/price/safety records | DATA-01/02 | Source acquisition/content review выполнены отдельно02-06, а не synthetic spec | Evidence закрыто в ограниченном scope12profiles/52recipes; медицинская/кухонная оценка не заявляется |
 | New menu/shopping usability and real-device presentation | MENU-01/04, SHOP-01/04 | Phase 1 user UAT не является будущей Phase 2 приёмкой | Проверять новые экраны после реализации; не переписывать прежние результаты |
 | LCP / historical Safari / screen-reader limits | Applicable UI criteria | Фактическая среда/методика должны быть названы | Не выдавать emulation/build target за реальное устройство/браузер; численные результаты не выдумывать |
+| Native sequential Tab/ShiftTab through saved screen navigation |02-09-03 /02-10-03; crosscutting keyboard predicate, WINDOWS15 | **PARTIAL / ESCALATED environmental gate:** `phase02 sequential Tab ShiftTab Space and Enter traverse saved screens and navigation` failed at nav anchor «Дома» | Запустить этот неизменённый тест/реальную последовательность на подходящем WebKit/Safari c полным обходом ссылок; подтвердить Tab/ShiftTab/Space/Enter, видимый фокус и отсутствие перекрытий |
+| Native sequential Tab/ShiftTab through generation recovery |02-09-03 /02-10-03; crosscutting keyboard predicate, WINDOWS16 | **PARTIAL / ESCALATED environmental gate:** `phase02 sequential Tab ShiftTab and Enter traverse generation recovery` failed reaching «К текущему меню» | Подтвердить настоящий клавиатурный обход error/recovery ссылок в подходящей среде; `.focus()` не заменяет Tab |
+
+Два failed теста не SKIP и не FILLED. BLOCKER для автоматического sign-off полной матрицы; дефект приложения не установлен: отдельный plain HTML воспроизводит пропуск anchors без MealPlan (assessment и raw JSON). Chromium/Firefox фактический обход пройден. Новых debug iterations в этом документальном аудите0; повторять уже диагностированное ограничение среды три раза не даёт нового evidence. Требуются подходящая среда/наблюдение, без изменений реализации или ослабления assertions. WINDOWS14 (новая UAT/устройства/Safari15/screen-reader/native zoom/LCP) также остаётся открытым; generic human checks не используются для искусственного PARTIAL арифметических REQ.
 
 ## Validation Sign-Off
 
@@ -116,7 +171,7 @@ Only wave4 is parallel;04 modifies generatePlan/generation files and05 modifies 
 
 ## Multi-Source Coverage Audit
 
-COVERED means an executable plan allocation exists, not that implementation or data evidence passed. No deferred idea is promoted. Data-source items are planned with a real fail-closed acquisition gate, not silently treated as resolved.
+Ниже сохранена историческая multi-source allocation карта PLAN/CONTEXT/RESEARCH: её COVERED означает назначение задачи, а не самостоятельное выполненное доказательство. Авторитетная текущая карта20 REQ с фактическими assertions находится в `Executed Requirement Coverage` выше. Для дополнительных context/research строк эта таблица не утверждает новый test pass. No deferred idea is promoted.
 
 |SOURCE|ID|Feature / constraint|Plan / task|Status|
 |---|---|---|---|---|
@@ -197,3 +252,11 @@ COVERED means an executable plan allocation exists, not that implementation or d
 ## Data Gate Semantics
 
 02-01 is a production-quality ingredient calculation through actual USDA evidence, without claiming price/safety/catalog readiness.02-02…05 are useful independently testable domain/adapter capabilities.02-06 acquisition and50+corpus are substantive mandatory tasks. If lawful free source-ready data cannot be obtained, record precise material/attempted alternatives and stop dependent production acceptance; do not mark the task complete, lower the corpus target, bypass TLS/403, replace facts with fixtures or treat a blocked result as success.02-07 depends on02-06 explicitly. This planned gate is not hypothetical human approval and is not an automatic source certification.
+
+## Validation Audit 2026-10-29
+
+| Metric | Count |
+|---|---|
+| Gaps found | 2 |
+| Resolved | 0 |
+| Escalated | 2 |

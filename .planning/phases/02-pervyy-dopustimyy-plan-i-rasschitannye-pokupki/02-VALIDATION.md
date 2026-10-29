@@ -9,7 +9,7 @@ created: "2026-10-27"
 
 # Phase 2 — Validation Strategy
 
-Карта22 задач в10 планах/9волнах сохранена. Выполнение02-01–09 подтверждено их SUMMARY и общей unit-проверкой326/326; source/corpus gate02-06 имеет самостоятельное первичное evidence.02-10 задачи1–2 пройдены. Release gate задачи3 открыта: Firefox full240/240 и Chromium240-case coverage подтверждены; WebKit full240 дал226passed/14failed, owning40 после native End —38passed/2failed. Identity overlay даёт WebKit238passed/2failed из240,0skipped;12 scroll failures закрыты. Две native linkTab последовательности Windows WebKit остаются failed/unverified (WINDOWS15/16). Phase2 и02-10 не приняты. Итоговые команды, ошибки и ограничения — `docs/qa/phase02.md`; независимая приёмка остаётся отдельным этапом.
+Карта22 задач в10 планах/9волнах сохранена. Все10 планов исполнены; независимая приёмка ожидается.02-10: Firefox full240/240, Chromium240-case coverage; WebKit full226passed/14failed и owning38passed/2failed дают238passed/2failed из240. Две linkTab последовательности остаются failed/manual-unverified (WINDOWS15/16). Независимый plain-HTML эксперимент45777d6 воспроизвёл ограничение без приложения; orchestrator auto-mode разрешил только продолжение независимых проверок, не пользовательский pass. История halt сохранена вSUMMARY. Nyquist остаётсяfalse: два ручных подтверждения отсутствуют. Phase2 не завершена; требования открыты до независимого verifier.
 
 ## Test Infrastructure
 
@@ -56,7 +56,7 @@ created: "2026-10-27"
 |02-09-03|GEN-03/04,MENU-01/04,SHOP-01/04|`npm run test:e2e -- e2e/phase02-presentation.spec.ts --project=chromium` —360/390/430/768/1199/1200/1280,keyboard,200%,long text|T-02-22|passed|
 |02-10-01|APP-04,WIZ-08,GEN-03/04/05|`npm run test:e2e -- e2e/generation-races.spec.ts --project=chromium` — actual pending/cancel/late/error/30s/retry browser interactions|T-02-23|passed|
 |02-10-02|DATA-02,GEN-03/04,MENU-01|`npm run test:e2e -- e2e/generation-storage.spec.ts --project=chromium` — old bytes/active/memory-only/retry-save/corrupt/dirty retry|T-02-23|passed|
-|02-10-03|all20 phase IDs|`npm run test:unit -- --run`; `npm run typecheck`; `npm run lint`; `npm run build`; `npm run test:e2e -- --project=chromium`; then firefox/webkit separately|T-02-24; all mitigations|blocked: 2 native WebKit linkTab checks; human/environment gate|
+|02-10-03|all20 phase IDs|`npm run test:unit -- --run`; `npm run typecheck`; `npm run lint`; `npm run build`; `npm run test:e2e -- --project=chromium`; then firefox/webkit separately|T-02-24; all mitigations|executed; 2 native WebKit cases retained failed/manual-unverified for independent phase verification|
 
 The last row denotes separate invocations, each with its own fails_when in02-10. Quick checks target under60s, not measured. Partition broad regression scenarios if actual measured duration exceeds the target; never omit coverage. The full release matrix runs once after implementation/fixes. All source/corpus gates must pass before a success claim.
 

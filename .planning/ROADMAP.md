@@ -81,7 +81,7 @@
 4. Пользователь видит даты, средние ккал относительно нормы, дневные Ккал/Б/Ж/У, текстовое предупреждение свыше нормы на 10%, лимит/остаток и три отдельные стоимости: ингредиенты, покрытие запасами, закупка. Масштаб человека/семьи, период лимита и округление явны и согласованы; цены обозначены как оценки.
 5. Пользователь открывает базовые покупки с источниками блюд и блоком «Уже есть дома»: совместимые количества агрегированы по ID, запас вычтен один раз для всего плана, например 500 г − 200 г = 300 г; несовместимые единицы не смешаны, отрицательных покупок нет.
 
-**Plans:** 9/10 plans complete;02-10 executed to a blocked release gate (2/3 tasks)
+**Plans:** 10/10 execution plans complete; awaiting independent phase verification
 - [x] 02-01-PLAN.md
 - [x] 02-02-PLAN.md
 - [x] 02-03-PLAN.md
@@ -91,7 +91,7 @@
 - [x] 02-07-PLAN.md
 - [x] 02-08-PLAN.md
 - [x] 02-09-PLAN.md
-- [ ] 02-10-PLAN.md — release evidence recorded;2 native Windows WebKit linkTab checks failed/unverified, awaiting independent gate decision
+- [x] 02-10-PLAN.md — execution complete;2 native WebKit cases retained failed/manual-unverified under independent verification (assessment45777d6)
 
 **UI hint:** yes
 
@@ -263,12 +263,12 @@
 
 ## Progress
 
-**Execution Order:** 1 → 2 → 3 → 4 → 5 → 6 → 7. Все фазы относятся к v1.0. Phase1 принята:8/8 планов и пользовательская UAT9/9. WIZ-09 принят только как optional manual P0; NEXT-10 calculator deferred P1. Phase2:9/10 планов завершены, далее02-10 — общая приёмка и полная браузерная матрица; shared requirements до неё открыты. C-04 по приоритету подтверждён, Q-03 в оставшемся объёме не закрыт. Весь P0 ещё не принят.
+**Execution Order:** 1 → 2 → 3 → 4 → 5 → 6 → 7. Phase1 принята8/8. Phase2:10/10 планов исполнены; независимая приёмка и human-check остаются открытыми, WebKit238passed/2failed не заменён успешным fullpass. WIZ-09 — optional manual P0; NEXT-10 — P1. C-04 подтверждён; Q-03 в оставшемся объёме открыт. Весь P0 ещё не принят.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Гостевой старт и сохраняемые настройки | 8/8 | Complete    | 2026-10-27 |
-| 2. Первый допустимый план и рассчитанные покупки | 9/10 | Blocked at 02-10-03; verification pending | - |
+| 2. Первый допустимый план и рассчитанные покупки | 10/10 | Awaiting independent verification | - |
 | 3. Сравнение вариантов и просмотр рецептов | 0/TBD | Not started | - |
 | 4. Изменение блюд и порций | 0/TBD | Not started | - |
 | 5. Домашние запасы и меню из остатков | 0/TBD | Not started | - |

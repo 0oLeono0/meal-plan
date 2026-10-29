@@ -44,7 +44,10 @@ async function disclosure(page: Page, summary: Locator) {
 }
 
 async function lastContentClear(page: Page, content: Locator) {
-  await page.keyboard.press('Control+End');
+  // Playwright WebKit uses the native mac command for End even on Windows.
+  // The installed port ignores Control+End; actual scroll metrics prove End.
+  const endKey = page.context().browser()!.browserType().name() === 'webkit' ? 'End' : 'Control+End';
+  await page.keyboard.press(endKey);
   const nav = page.getByRole('navigation');
   // Native keyboard scrolling can settle after the key event has returned.
   await expect.poll(async () => {

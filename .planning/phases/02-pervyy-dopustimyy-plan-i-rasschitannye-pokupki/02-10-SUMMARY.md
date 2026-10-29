@@ -3,7 +3,15 @@ phase: 02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki
 plan: "10"
 subsystem: testing
 tags: [playwright, vitest, storage, races, source-evidence, accessibility]
-status: halted
+status: complete
+execution_status: awaiting-independent-verification
+checkpoint_resolution:
+  actor: orchestrator-auto-mode
+  assessment: docs/qa/phase02-webkit-assessment.md
+  assessment_commit: 45777d652e554254b923ef6b68cd66f681fc840c
+  user_manual_pass: false
+  authorizes: independent-phase-checks-only
+halt_snapshot_actuals: {tokens: 19680, tasks: 2, commits: 8, plan_head_after: 7de703a46b7825d28c032b149e2ba7fb5ba0ac25}
 requires:
   - phase: 02-09
     provides: Source-backed saved screens and preserved responsive/storage regressions
@@ -22,15 +30,15 @@ key-decisions:
   - "Keep actual source/corpus evidence separate from numerical fixtures; limited plant-based recipes do not establish nutritional adequacy."
   - "Preserve all assertions and deadlines; use real Tab modality and controlled port completion instead of fake UI success."
   - "Use the verified native End command in WebKit. Do not apply the unconfirmed Alt-Tab workaround, CSS/tabindex changes or system preferences."
-  - "Two required Windows WebKit linkTab cases remain failed/unverified; 02-10 and Phase2 are not complete."
+  - "Two Windows WebKit cases remain failed/manual-unverified. Independent plain-HTML evidence moves ownership from the execution halt to phase verification; no user pass or phase completion is claimed."
 requirements-completed: []
 requirements-contributed: [APP-04, WIZ-08, DATA-01, DATA-02, DATA-03, CALC-01, CALC-03, CALC-04, CALC-05, CALC-06, CALC-07, GEN-01, GEN-02, GEN-03, GEN-04, GEN-05, MENU-01, MENU-04, SHOP-01, SHOP-04]
 actuals:
-  tokens: 19680
-  tasks: 2
-  commits: 8
+  tokens: 24214
+  tasks: 3
+  commits: 11
 plan_head_before: ba6497f5e3d1298ae1acebf42901f29534713448
-plan_head_after: 7de703a46b7825d28c032b149e2ba7fb5ba0ac25
+plan_head_after: 45777d652e554254b923ef6b68cd66f681fc840c
 coverage:
   - id: D1
     description: Controlled pending/cancel/timeout/late/error operations preserve route and storage ownership
@@ -54,13 +62,13 @@ coverage:
         status: fail
     human_judgment: true
     rationale: "Windows WebKit Tab and Alt-Tab omit anchors; independent verifier must assess the environment/manual gate."
-duration: "1373min observed wall since first recorded trial; overnight/resumption gaps included; active time unknown"
+duration: "1379min observed wall through independent assessment; overnight/resumption gaps included; active time unknown"
 completed: 2026-10-29
 ---
 
-# Phase 2 Plan 10: Controlled browser faults and blocked release gate Summary
+# Phase 2 Plan 10: Controlled browser faults and release evidence Summary
 
-**Настоящие отмена, таймаут, поздние ответы и ошибки хранения проверены; приёмка остановлена на двух последовательностях Tab по ссылкам Windows WebKit.**
+**Все команды исполнения выполнены; две неуспешные последовательности Windows WebKit переданы независимой приёмке после воспроизведения на простой HTML-странице без приложения.**
 
 ## Task Commits
 
@@ -68,7 +76,7 @@ completed: 2026-10-29
 |---|---|---|
 | 02-10-01 | `16ace70`, `7511560`, `7f31ff0` | Complete: реальные операции, offline-provider block и защита от старого ответа |
 | 02-10-02 | `7da6901`, `7f31ff0` | Complete: bytes/active/pantry, corrupt/read/write, retry-save и dirty draft |
-| 02-10-03 | `614e4b6`, `92d85b0`, `7f31ff0`, `2a8d74a`, `7de703a` | Executed but blocked: два обязательных native linkTab cases не подтверждены |
+| 02-10-03 | `614e4b6`, `92d85b0`, `7f31ff0`, `2a8d74a`, `7de703a`; assessment `45777d6` | Execution complete; native linkTab evidence remains failed/manual-unverified under phase verification |
 
 ## Verification
 
@@ -99,9 +107,11 @@ TDD_MODE=false; tasks1–2 add coverage for existing07/08 behavior. Initial9case
 
 ## Remaining Gate
 
-**Task3 remains incomplete.** `phase02 sequential Tab ShiftTab Space and Enter traverse saved screens and navigation` and `phase02 sequential Tab ShiftTab and Enter traverse generation recovery` fail to reach semantic anchors in this Win32 WebKit port. Both plain and Alt traversal log H1→Profile→BODY/document.hasFocus=false and skip anchors over36 real key events. Alt-Tab is not applied as a fix; no supported public browser/context preference was located. CSS, tabindex and system settings are untouched; tests are neither skipped nor weakened.
+**Historical halt:** task3 originally remained incomplete at this gate (`1a70011`, `f8a0ebf`). `phase02 sequential Tab ShiftTab Space and Enter traverse saved screens and navigation` and `phase02 sequential Tab ShiftTab and Enter traverse generation recovery` still fail to reach semantic anchors in this Win32 WebKit port. Both plain and Alt traversal log H1→Profile→BODY/document.hasFocus=false and skip anchors over36 real key events. Alt-Tab is not applied as a fix; no supported public browser/context preference was located. CSS, tabindex and system settings are untouched; tests are neither skipped nor weakened.
 
 Chromium/Firefox actual sequential navigation passes. Root independent verification must decide the appropriate environment/manual evidence; no human answer is fabricated. WINDOWS15/16 remain open for the two cases, WINDOWS14 for new human/device observations. Requirements stay open and Phase2 is not complete.
+
+**Registered continuation:** the orchestrator independently reproduced skipped anchors on plain HTML with two links/two buttons, without MealPlan/React/CSS. Chromium/Firefox reach both links; Windows WebKit Tab/AltTab skip both. See `docs/qa/phase02-webkit-assessment.md` and its raw JSON. Under the existing auto-mode, checkpoint Gate:blocking (not blocking-human) was technically approved solely to continue independent phase checks. This is not a user response, manual pass, Safari exemption or successful WebKit240/240 claim. Execution halt is lifted; coverageD3 remains fail + human_judgment:true, and phase verification/UAT own the outstanding requirement.
 
 ## Source and Scope Limits
 
@@ -111,9 +121,9 @@ No new production stubs, dependencies, endpoints, auth or schema trust boundarie
 
 ## Actuals and Continuation
 
-Measured realized diff before this metadata:78719characters/4→19680tokens,11files,8commits from the persisted ledger. Two tasks complete; release task blocked. Observed window starts at the first recorded trial2026-10-28T17:37:48.944Z; active time and paused gaps were not separately measured.
+Initial halt measurement:78719characters/4→19680tokens,11files,8commits. Continuation measurement through45777d6:96854characters/4→24214tokens,15files,11commits from the same persisted ledger, including prior metadata and independent assessment. Three execution tasks are complete with the manual/environment observation explicitly outstanding. Observed window starts2026-10-28T17:37:48.944Z; active time and paused gaps were not separately measured.
 
-Resume at02-10-03 with the above evidence and independent verifier decision. Do not rerun unchanged green suites or claim a successful full WebKit matrix.
+Next: independent security/UI/Nyquist/code review/verifier gates and retained human checks. Do not rerun unchanged green suites or claim a successful full WebKit matrix or completed Phase2.
 
 ## Self-Check: PASSED
 

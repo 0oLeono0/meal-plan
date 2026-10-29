@@ -1,7 +1,7 @@
 ---
 phase: "02"
 slug: "pervyy-dopustimyy-plan-i-rasschitannye-pokupki"
-status: blocked-native-webkit-keyboard
+status: awaiting-independent-verification
 nyquist_compliant: false
 wave_0_complete: true
 created: "2026-10-27"

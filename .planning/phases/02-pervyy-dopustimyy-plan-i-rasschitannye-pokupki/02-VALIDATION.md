@@ -1,15 +1,15 @@
 ---
 phase: "02"
 slug: "pervyy-dopustimyy-plan-i-rasschitannye-pokupki"
-status: planned
+status: blocked-native-webkit-keyboard
 nyquist_compliant: false
-wave_0_complete: false
+wave_0_complete: true
 created: "2026-10-27"
 ---
 
 # Phase 2 — Validation Strategy
 
-Это требования к будущей проверке, не отчёт о выполненных тестах. Исходные 134 unit и браузерные проверки Phase 1 не доказывают генератор Phase 2. Планировщик назначил22 задачи в10 планах/9волнах; actual RED/GREEN, source readiness и browser outcomes ещё не получены. nyquist_compliant и wave_0_complete остаются false до исполнения.
+Карта22 задач в10 планах/9волнах сохранена. Выполнение02-01–09 подтверждено их SUMMARY и общей unit-проверкой326/326; source/corpus gate02-06 имеет самостоятельное первичное evidence.02-10 задачи1–2 пройдены. Release gate задачи3 открыта: Firefox full240/240 и Chromium240-case coverage подтверждены; WebKit full240 дал226passed/14failed, owning40 после native End —38passed/2failed. Identity overlay даёт WebKit238passed/2failed из240,0skipped;12 scroll failures закрыты. Две native linkTab последовательности Windows WebKit остаются failed/unverified (WINDOWS15/16). Phase2 и02-10 не приняты. Итоговые команды, ошибки и ограничения — `docs/qa/phase02.md`; независимая приёмка остаётся отдельным этапом.
 
 ## Test Infrastructure
 
@@ -21,7 +21,7 @@ created: "2026-10-27"
 | Unit release | `npm run test:unit -- --run` |
 | Browser release | `npm run test:e2e -- --project=chromium`, отдельно firefox/webkit |
 | Quality | `npm run typecheck`, `npm run lint`, `npm run build` |
-| Runtime | Будущие тесты ещё не измерены; целевой быстрый feedback <60s, измерить первый запуск и дробить по реальным сценариям |
+| Runtime | Unit326/326:8.56s; races14:49.87s; storage8:46.3s. Полная matrix регистрируется отдельно в QA |
 
 ## Sampling Rate
 
@@ -31,32 +31,32 @@ created: "2026-10-27"
 
 ## Per-Task Verification Map
 
-Каждый spec создаётся substantive owning задачей до первого запуска. Все команды выполняются из корня с существующим package.json; ни один тест ещё не выполнен. Nonzero exit,0 collected tests, skip обязательного сценария или отсутствие ожидаемых поведенческих assertions означает failure. Каждый automated в PLAN имеет соседний fails_when.
+Каждый spec создан substantive owning задачей. Команды выполняются из корня с существующим package.json; фактические targeted результаты находятся в SUMMARY01–10 и QA. Nonzero exit,0 collected tests, skip обязательного сценария или отсутствие ожидаемых поведенческих assertions означает failure. Каждый automated в PLAN имеет соседний fails_when; промежуточные failures сохранены и не объявляются GREEN.
 
 | Task | Req IDs | Exact test file / root command | Threat Ref | Status |
 |---|---|---|---|---|
-|02-01-01|DATA-01/02/03|`npm run test:unit -- --run src/adapters/catalog.test.ts` — real USDA port/evaluator and unknown facts|T-02-01,T-02-02|pending|
-|02-01-02|CALC-01/07|`npm run test:unit -- --run src/domain/quantities.test.ts src/adapters/catalog.test.ts` — exact fractions/units/codec/half-up|T-02-02|pending|
-|02-02-01|APP-04,WIZ-08,DATA-03|`npm run test:unit -- --run src/domain/appliedSettings.test.ts` — precedence, first error, skip, immutable copies|T-02-03|pending|
-|02-02-02|DATA-01/02,GEN-01,MENU-01|`npm run test:unit -- --run src/domain/plan.test.ts src/domain/appliedSettings.test.ts` — local dates/DST,4/28slots, unique instances|T-02-04|pending|
-|02-03-01|CALC-01/03/04/05/06,SHOP-01/04|`npm run test:unit -- --run src/domain/planProjection.test.ts` — independent scale/nutrition/whole-period stock/three costs|T-02-05|pending|
-|02-03-02|CALC-05/07,MENU-01/04|`npm run test:unit -- --run src/domain/presentation.test.ts src/domain/planProjection.test.ts` — raw budget bound,canonical sums,target absent/zero/>10%|T-02-06|pending|
-|02-04-01|GEN-01/02/05,DATA-02|`npm run test:unit -- --run src/domain/generatePlan.test.ts` — seeded hard filters,soft preferences,independent tiny exhaustive oracle|T-02-07,T-02-09|pending|
-|02-04-02|DATA-03,GEN-03/04|`npm run test:unit -- --run src/adapters/generation.test.ts src/domain/generatePlan.test.ts` — real work/event-loop yield/cancel|T-02-08|pending|
-|02-05-01|DATA-02/03,MENU-01|`npm run test:unit -- --run src/adapters/activePlan.test.ts` — version/source/projected integrity,roundtrip,corrupt/write guards|T-02-10,T-02-12|pending|
-|02-05-02|APP-04,GEN-03/04/05|`npm run test:unit -- --run src/features/generation/controller.test.ts src/adapters/activePlan.test.ts` — 30s,2s,races,save-before-promotion,retry-save|T-02-11|pending|
-|02-06-01|DATA-01/02|`npm run test:unit -- --run src/data/sources.test.ts` — actual captured original evidence,hash,bases,scope,rights|T-02-13,T-02-14,T-02-15|pending; material acquisition gate|
-|02-06-02|DATA-01/02/03,GEN-01/02|`npm run test:unit -- --run src/data/catalog.test.ts src/data/sources.test.ts` —50+ distinct full recipes,source matching,real default feasibility|T-02-13,T-02-14|pending; source/corpus gate|
-|02-07-01|WIZ-08,DATA-03,GEN-01/03/04/05,MENU-01|`npm run test:e2e -- e2e/generation.spec.ts --project=chromium` — real sourced submit→save→dated menu→reload|T-02-16,T-02-17,T-02-18|pending|
-|02-07-02|APP-04,WIZ-08|`npm run test:e2e -- e2e/entry-policies.spec.ts --project=chromium` — last-applied/default/invalid draft,skip preservation|T-02-16|pending|
-|02-08-01|CALC-03/04/05/07,MENU-01/04|`npm run test:e2e -- e2e/menu.spec.ts --project=chromium` — dates/basis/manual bounds/provenance|T-02-19,T-02-20|pending|
-|02-08-02|CALC-04/06/07,SHOP-01/04|`npm run test:e2e -- e2e/shopping.spec.ts --project=chromium` — shared totals,0/1/many,source instances,covered/partial/unknown|T-02-19,T-02-20|pending|
-|02-09-01|WIZ-08,GEN-03,MENU-01|`npm run test:e2e -- e2e/products.spec.ts e2e/accessibility.spec.ts e2e/presentation.spec.ts --project=chromium` — retain Phase1 input/focus/geometry guarantees|T-02-21|pending|
-|02-09-02|APP-04,GEN-04,MENU-01,SHOP-01|`npm run test:e2e -- e2e/navigation.spec.ts --project=chromium` — no-plan/presence/navigation/focus and compatible test ports|T-02-21|pending|
-|02-09-03|GEN-03/04,MENU-01/04,SHOP-01/04|`npm run test:e2e -- e2e/phase02-presentation.spec.ts --project=chromium` —360/390/430/768/1199/1200/1280,keyboard,200%,long text|T-02-22|pending|
-|02-10-01|APP-04,WIZ-08,GEN-03/04/05|`npm run test:e2e -- e2e/generation-races.spec.ts --project=chromium` — actual pending/cancel/late/error/30s/retry browser interactions|T-02-23|pending|
-|02-10-02|DATA-02,GEN-03/04,MENU-01|`npm run test:e2e -- e2e/generation-storage.spec.ts --project=chromium` — old bytes/active/memory-only/retry-save/corrupt/dirty retry|T-02-23|pending|
-|02-10-03|all20 phase IDs|`npm run test:unit -- --run`; `npm run typecheck`; `npm run lint`; `npm run build`; `npm run test:e2e -- --project=chromium`; then firefox/webkit separately|T-02-24; all mitigations|pending|
+|02-01-01|DATA-01/02/03|`npm run test:unit -- --run src/adapters/catalog.test.ts` — real USDA port/evaluator and unknown facts|T-02-01,T-02-02|passed|
+|02-01-02|CALC-01/07|`npm run test:unit -- --run src/domain/quantities.test.ts src/adapters/catalog.test.ts` — exact fractions/units/codec/half-up|T-02-02|passed|
+|02-02-01|APP-04,WIZ-08,DATA-03|`npm run test:unit -- --run src/domain/appliedSettings.test.ts` — precedence, first error, skip, immutable copies|T-02-03|passed|
+|02-02-02|DATA-01/02,GEN-01,MENU-01|`npm run test:unit -- --run src/domain/plan.test.ts src/domain/appliedSettings.test.ts` — local dates/DST,4/28slots, unique instances|T-02-04|passed|
+|02-03-01|CALC-01/03/04/05/06,SHOP-01/04|`npm run test:unit -- --run src/domain/planProjection.test.ts` — independent scale/nutrition/whole-period stock/three costs|T-02-05|passed|
+|02-03-02|CALC-05/07,MENU-01/04|`npm run test:unit -- --run src/domain/presentation.test.ts src/domain/planProjection.test.ts` — raw budget bound,canonical sums,target absent/zero/>10%|T-02-06|passed|
+|02-04-01|GEN-01/02/05,DATA-02|`npm run test:unit -- --run src/domain/generatePlan.test.ts` — seeded hard filters,soft preferences,independent tiny exhaustive oracle|T-02-07,T-02-09|passed|
+|02-04-02|DATA-03,GEN-03/04|`npm run test:unit -- --run src/adapters/generation.test.ts src/domain/generatePlan.test.ts` — real work/event-loop yield/cancel|T-02-08|passed|
+|02-05-01|DATA-02/03,MENU-01|`npm run test:unit -- --run src/adapters/activePlan.test.ts` — version/source/projected integrity,roundtrip,corrupt/write guards|T-02-10,T-02-12|passed|
+|02-05-02|APP-04,GEN-03/04/05|`npm run test:unit -- --run src/features/generation/controller.test.ts src/adapters/activePlan.test.ts` — 30s,2s,races,save-before-promotion,retry-save|T-02-11|passed|
+|02-06-01|DATA-01/02|`npm run test:unit -- --run src/data/sources.test.ts` — actual captured original evidence,hash,bases,scope,rights|T-02-13,T-02-14,T-02-15|passed|
+|02-06-02|DATA-01/02/03,GEN-01/02|`npm run test:unit -- --run src/data/catalog.test.ts src/data/sources.test.ts` —50+ distinct full recipes,source matching,real default feasibility|T-02-13,T-02-14|passed|
+|02-07-01|WIZ-08,DATA-03,GEN-01/03/04/05,MENU-01|`npm run test:e2e -- e2e/generation.spec.ts --project=chromium` — real sourced submit→save→dated menu→reload|T-02-16,T-02-17,T-02-18|passed|
+|02-07-02|APP-04,WIZ-08|`npm run test:e2e -- e2e/entry-policies.spec.ts --project=chromium` — last-applied/default/invalid draft,skip preservation|T-02-16|passed|
+|02-08-01|CALC-03/04/05/07,MENU-01/04|`npm run test:e2e -- e2e/menu.spec.ts --project=chromium` — dates/basis/manual bounds/provenance|T-02-19,T-02-20|passed|
+|02-08-02|CALC-04/06/07,SHOP-01/04|`npm run test:e2e -- e2e/shopping.spec.ts --project=chromium` — shared totals,0/1/many,source instances,covered/partial/unknown|T-02-19,T-02-20|passed|
+|02-09-01|WIZ-08,GEN-03,MENU-01|`npm run test:e2e -- e2e/products.spec.ts e2e/accessibility.spec.ts e2e/presentation.spec.ts --project=chromium` — retain Phase1 input/focus/geometry guarantees|T-02-21|passed|
+|02-09-02|APP-04,GEN-04,MENU-01,SHOP-01|`npm run test:e2e -- e2e/navigation.spec.ts --project=chromium` — no-plan/presence/navigation/focus and compatible test ports|T-02-21|passed|
+|02-09-03|GEN-03/04,MENU-01/04,SHOP-01/04|`npm run test:e2e -- e2e/phase02-presentation.spec.ts --project=chromium` —360/390/430/768/1199/1200/1280,keyboard,200%,long text|T-02-22|passed|
+|02-10-01|APP-04,WIZ-08,GEN-03/04/05|`npm run test:e2e -- e2e/generation-races.spec.ts --project=chromium` — actual pending/cancel/late/error/30s/retry browser interactions|T-02-23|passed|
+|02-10-02|DATA-02,GEN-03/04,MENU-01|`npm run test:e2e -- e2e/generation-storage.spec.ts --project=chromium` — old bytes/active/memory-only/retry-save/corrupt/dirty retry|T-02-23|passed|
+|02-10-03|all20 phase IDs|`npm run test:unit -- --run`; `npm run typecheck`; `npm run lint`; `npm run build`; `npm run test:e2e -- --project=chromium`; then firefox/webkit separately|T-02-24; all mitigations|blocked: 2 native WebKit linkTab checks; human/environment gate|
 
 The last row denotes separate invocations, each with its own fails_when in02-10. Quick checks target under60s, not measured. Partition broad regression scenarios if actual measured duration exceeds the target; never omit coverage. The full release matrix runs once after implementation/fixes. All source/corpus gates must pass before a success claim.
 
@@ -84,11 +84,12 @@ The last row denotes separate invocations, each with its own fails_when in02-10.
 
 ## Validation Sign-Off
 
-- [x] Точная карта22 задач/20 REQ и secure behaviors заполнена планировщиком; выполнение ещё не подтверждено.
-- [ ] Реальные RED/GREEN/проверки и source evidence выполнены исполнителем.
-- [ ] Production catalog проверен, unknown не подменён фактами.
-- [ ] Браузеры/type/lint/build выполнены, существенные ограничения названы.
-- [ ] Независимая приёмка ещё не выполнена.
+- [x] Точная карта22 задач/20 REQ и secure behaviors заполнена, первые21 owning проверки подтверждены.
+- [x] Реальные проверки и source evidence выполнены; coverage-only tests не объявляются продуктовым RED.
+- [x] Production catalog12profiles/52recipes проверен в указанном ограниченном scope; unknown не подменён фактами.
+- [x] Браузеры/type/lint/build фактически запускались; failures и ограничения названы.
+- [ ] Две обязательные native linkTab последовательности подтверждены в подходящей WebKit/Safari среде.
+- [ ] Независимая приёмка фазы выполнена.
 
 ## Dependency / Ownership Allocation
 

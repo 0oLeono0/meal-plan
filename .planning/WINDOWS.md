@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 1
+open_count: 4
 waived_count: 0
-fixed_count: 10
-total_count: 11
-last_updated: 2026-10-28T08:53:53.182Z
+fixed_count: 13
+total_count: 17
+last_updated: 2026-10-29T16:30:14.130Z
 ---
 
 # Broken Windows Ledger
@@ -26,6 +26,12 @@ last_updated: 2026-10-28T08:53:53.182Z
 | 9 | 01 | unrun-verify | docs/qa/phase01.md |  | Phase 1: two-tab UX and flagged safety judgment backstops remain human_needed | fixed |  | 2026-10-27T08:19:02.252Z | 2026-10-27T14:01:37.462Z |
 | 10 | 02 | deviation | src/domain/generatePlan.ts |  | Closed during 02-04: pantry budget bound now follows nutrition basis; regression and independent re-review passed. | fixed |  | 2026-10-28T08:37:26.371Z | 2026-10-28T08:38:21.271Z |
 | 11 | 02 | deviation | src/features/generation/controller.ts |  | Resolved in7461e7d: overlapping generation start abandoned load bookkeeping; revision now advances only on active installation. | fixed |  | 2026-10-28T08:53:08.359Z | 2026-10-28T08:53:53.182Z |
+| 12 | 02 | deviation | src/adapters/generation.test.ts |  | Resolved in614e4b6: combined sequential benchmark exceeded default5s; separate bounded domain and yielding adapter measurements preserve all assertions and product30s deadline. | fixed |  | 2026-10-28T17:47:09.921Z | 2026-10-28T17:48:14.030Z |
+| 13 | 02 | deviation | e2e/budget.spec.ts |  | Resolved: legacy static createDraft import loaded source JSON through Node ESM during browser collection; browser dynamic import preserves exact unknown-field recovery assertions. | fixed |  | 2026-10-28T17:47:10.714Z | 2026-10-28T17:48:14.927Z |
+| 14 | 02 | unrun-verify | docs/qa/phase02.md |  | Phase2 end-of-phase human observations for new menu/shopping/recovery and physical-device/Safari15/screen-reader/native-zoom/LCP evidence remain pending; Phase1 UAT does not certify new screens. | open |  | 2026-10-28T17:49:05.698Z |  |
+| 15 | 02 | unmet-truth | e2e/phase02-presentation.spec.ts | 222 | Windows WebKit native Tab and Alt+Tab omit semantic navigation links; saved-screen sequential keyboard case remains failed/unverified. Actual Chromium and Firefox sequence passes; supported native Safari/environment verification is pending. | open |  | 2026-10-29T16:28:42.422Z |  |
+| 16 | 02 | unmet-truth | e2e/phase02-presentation.spec.ts | 263 | Windows WebKit native Tab and Alt+Tab omit the current-menu anchor during generation recovery; required sequential keyboard case remains failed/unverified. No fake focus, skipped test or system preference workaround is applied. | open |  | 2026-10-29T16:28:43.085Z |  |
+| 17 | 02 | deviation | e2e/phase02-presentation.spec.ts |  | Resolved test-only Firefox focus/subpixel/DOM/async harness mismatches and native WebKit End geometry without CSS, timeout, dependency or production changes; the two native WebKit linkTab gates remain separate open entries15/16. | fixed |  | 2026-10-29T16:29:51.775Z | 2026-10-29T16:30:14.130Z |
 
 ````json
 [
@@ -170,6 +176,84 @@ last_updated: 2026-10-28T08:53:53.182Z
     "reason": "",
     "recorded_at": "2026-10-28T08:53:08.359Z",
     "resolved_at": "2026-10-28T08:53:53.182Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 12,
+    "kind": "deviation",
+    "phase": "02",
+    "file": "src/adapters/generation.test.ts",
+    "line": null,
+    "description": "Resolved in614e4b6: combined sequential benchmark exceeded default5s; separate bounded domain and yielding adapter measurements preserve all assertions and product30s deadline.",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-10-28T17:47:09.921Z",
+    "resolved_at": "2026-10-28T17:48:14.030Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 13,
+    "kind": "deviation",
+    "phase": "02",
+    "file": "e2e/budget.spec.ts",
+    "line": null,
+    "description": "Resolved: legacy static createDraft import loaded source JSON through Node ESM during browser collection; browser dynamic import preserves exact unknown-field recovery assertions.",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-10-28T17:47:10.714Z",
+    "resolved_at": "2026-10-28T17:48:14.927Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 14,
+    "kind": "unrun-verify",
+    "phase": "02",
+    "file": "docs/qa/phase02.md",
+    "line": null,
+    "description": "Phase2 end-of-phase human observations for new menu/shopping/recovery and physical-device/Safari15/screen-reader/native-zoom/LCP evidence remain pending; Phase1 UAT does not certify new screens.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-28T17:49:05.698Z",
+    "resolved_at": null,
+    "milestone": "v1.0"
+  },
+  {
+    "id": 15,
+    "kind": "unmet-truth",
+    "phase": "02",
+    "file": "e2e/phase02-presentation.spec.ts",
+    "line": 222,
+    "description": "Windows WebKit native Tab and Alt+Tab omit semantic navigation links; saved-screen sequential keyboard case remains failed/unverified. Actual Chromium and Firefox sequence passes; supported native Safari/environment verification is pending.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-29T16:28:42.422Z",
+    "resolved_at": null,
+    "milestone": "v1.0"
+  },
+  {
+    "id": 16,
+    "kind": "unmet-truth",
+    "phase": "02",
+    "file": "e2e/phase02-presentation.spec.ts",
+    "line": 263,
+    "description": "Windows WebKit native Tab and Alt+Tab omit the current-menu anchor during generation recovery; required sequential keyboard case remains failed/unverified. No fake focus, skipped test or system preference workaround is applied.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-10-29T16:28:43.085Z",
+    "resolved_at": null,
+    "milestone": "v1.0"
+  },
+  {
+    "id": 17,
+    "kind": "deviation",
+    "phase": "02",
+    "file": "e2e/phase02-presentation.spec.ts",
+    "line": null,
+    "description": "Resolved test-only Firefox focus/subpixel/DOM/async harness mismatches and native WebKit End geometry without CSS, timeout, dependency or production changes; the two native WebKit linkTab gates remain separate open entries15/16.",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-10-29T16:29:51.775Z",
+    "resolved_at": "2026-10-29T16:30:14.130Z",
     "milestone": "v1.0"
   }
 ]

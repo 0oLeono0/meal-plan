@@ -7,7 +7,9 @@ import { buildActivePlanEnvelope, createPlanInputs, createRecipeInstances, mealS
 import type { GenerationPort, GenerationResult } from '../../domain/plan';
 import { createDraft } from '../../domain/settings';
 import { decimal } from '../../domain/quantities';
-import { createGenerationController } from './controller';
+import { createGenerationController as productionController } from './controller';
+import type { GenerationControllerOptions } from './controller';
+import { createTrustedCatalogRegistry } from '../../adapters/trustedCatalogs';
 
 const origin = { returnRoute: '/plan/new', focusAnchor: 'generate' };
 // Synthetic test catalog only. No production data or adapter depends on these values.
@@ -24,15 +26,49 @@ function fixture(seed = 'one') {
   return { inputs, plan };
 }
 function deferred<T>() { let resolve!: (value: T) => void; let reject!: (reason: unknown) => void; const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; }
+const trustedCatalogs = createTrustedCatalogRegistry([fixture().inputs.catalog]);
+const createGenerationController = (options: GenerationControllerOptions) => productionController({ trustedCatalogs, ...options });
 function setup(generation?: GenerationPort) {
   const map = new Map<string, string>(); let failWrite = false;
-  const port = createActivePlanAdapter(() => ({ getItem: key => map.get(key) ?? null, setItem(key, value) { if (failWrite) throw new Error('quota'); map.set(key, value); } }));
+  const port = createActivePlanAdapter(() => ({ getItem: key => map.get(key) ?? null, setItem(key, value) { if (failWrite) throw new Error('quota'); map.set(key, value); } }), trustedCatalogs);
   const generate = vi.fn<GenerationPort['generate']>(generation?.generate ?? (async request => ({ status: 'success', plan: fixture(request.inputs.seed).plan })));
   const controller = createGenerationController({ generation: { generate }, activePlan: port, clock: { now: () => Date.now() } });
   return { controller, map, port, generate, failWrite: (value: boolean) => { failWrite = value; } };
 }
 describe('generation lifecycle', () => {
   beforeEach(() => vi.useFakeTimers()); afterEach(() => vi.useRealTimers());
+  it.each(['unknown-version', 'altered-facts'] as const)('does not promote a custom port loaded %s plan or permit writes', async kind => {
+    const original = fixture().inputs.catalog, food = original.foods[0];
+    if (food.price.status !== 'known') throw new Error('fixture');
+    const catalog = kind === 'unknown-version' ? { ...original, version: 'unregistered' }
+      : { ...original, foods: [{ ...food, price: { ...food.price, amount: '0.0000001' } }] };
+    const inputs = createPlanInputs(fixture().inputs.appliedSettings, catalog, { seed: 'forged', now: () => new Date(2026, 9, 28) });
+    const plan = buildActivePlanEnvelope(inputs, [{ id: 'forged', instances: createRecipeInstances(inputs, ['r', 'r', 'r', 'r'], (date, slot) => `${date}-${slot}`) }], 'forged');
+    const save = vi.fn<ActivePlanPort['save']>();
+    const c = createGenerationController({ generation: { generate: async () => ({ status: 'success', plan: fixture().plan }) },
+      activePlan: { load: async () => ({ status: 'loaded', bundle: { plan, projections: [] } }), save } });
+    await c.load();
+    expect(c.getSnapshot().loadStatus).toBe('corrupt'); expect(c.getSnapshot().presence.status).toBe('error');
+    expect(c.getSnapshot().active).toBeNull();
+    await c.start(fixture().inputs, origin); await c.retrySave();
+    expect(c.getSnapshot().saveError).toBe('blocked'); expect(save).not.toHaveBeenCalled(); c.dispose();
+  });
+  it('rejects untrusted generated facts before save even with an internally matching request', async () => {
+    const original = fixture().inputs.catalog, food = original.foods[0];
+    if (food.nutrition.status !== 'known') throw new Error('fixture');
+    const catalog = { ...original, foods: [{ ...food, nutrition: { ...food.nutrition, values: { ...food.nutrition.values, calories: '0' } } }] };
+    const inputs = createPlanInputs(fixture().inputs.appliedSettings, catalog, { seed: 'forged', now: () => new Date(2026, 9, 28) });
+    const plan = buildActivePlanEnvelope(inputs, [{ id: 'forged', instances: createRecipeInstances(inputs, ['r', 'r', 'r', 'r'], (date, slot) => `${date}-${slot}`) }], 'forged');
+    const save = vi.fn<ActivePlanPort['save']>();
+    const c = createGenerationController({ generation: { generate: async () => ({ status: 'success', plan }) }, activePlan: { load: async () => ({ status: 'missing' }), save } });
+    await c.load(); await c.start(inputs, origin);
+    expect(c.getSnapshot().error?.code).toBe('GENERATION_DATA_INCOMPLETE');
+    expect(c.getSnapshot().active).toBeNull(); expect(c.getSnapshot().candidate).toBeNull(); expect(save).not.toHaveBeenCalled(); c.dispose();
+  });
+  it('uses compiled catalog trust by default even when a custom port claims a synthetic plan loaded', async () => {
+    const c = productionController({ generation: { generate: vi.fn() }, activePlan: { load: async () => ({ status: 'loaded', bundle: { plan: fixture().plan, projections: [] } }), save: vi.fn() } });
+    await c.load(); expect(c.getSnapshot().loadStatus).toBe('corrupt'); expect(c.getSnapshot().presence.status).toBe('error'); c.dispose();
+  });
   it('saves before promotion and reloads the exact active plan', async () => {
     const { controller: c, map, port } = setup(); await c.load();
     await c.start(fixture().inputs, origin);

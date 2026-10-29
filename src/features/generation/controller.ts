@@ -3,6 +3,8 @@ import type { ActiveBundle, ActivePlanPort, ActivePlanSaveResult } from '../../a
 import type { GenerationError, GenerationPort, PlanInputs } from '../../domain/plan';
 import { validatePlanInputs } from '../../domain/plan';
 import { immutableSnapshot, sameSnapshot } from '../../domain/appliedSettings';
+import { trustedCatalogs as defaultTrustedCatalogs } from '../../adapters/trustedCatalogs';
+import type { TrustedCatalogRegistry } from '../../adapters/trustedCatalogs';
 
 export interface GenerationOrigin { readonly returnRoute: string; readonly focusAnchor: string; readonly firstErroneousStep?: number }
 export interface GenerationSnapshot {
@@ -22,9 +24,10 @@ export interface GenerationSnapshot {
 export interface GenerationScheduler { setTimeout(callback: () => void, milliseconds: number): unknown; clearTimeout(handle: unknown): void }
 export interface GenerationControllerOptions {
   readonly generation: GenerationPort; readonly activePlan: ActivePlanPort;
+  readonly trustedCatalogs?: TrustedCatalogRegistry;
   readonly clock?: { now(): number }; readonly scheduler?: GenerationScheduler;
 }
-export function createGenerationController({ generation, activePlan, clock = { now: () => Date.now() }, scheduler = {
+export function createGenerationController({ generation, activePlan, trustedCatalogs = defaultTrustedCatalogs, clock = { now: () => Date.now() }, scheduler = {
   setTimeout: (callback, milliseconds) => globalThis.setTimeout(callback, milliseconds),
   clearTimeout: handle => globalThis.clearTimeout(handle as ReturnType<typeof setTimeout>),
 } }: GenerationControllerOptions) {
@@ -82,7 +85,7 @@ export function createGenerationController({ generation, activePlan, clock = { n
       const result = await activePlan.load();
       if (disposed || token !== loadSequence || atRevision !== revision) return;
       if (result.status === 'loaded') {
-        const checked = validateActiveBundle(result.bundle.plan);
+        const checked = validateActiveBundle(result.bundle.plan, trustedCatalogs);
         if (checked.status !== 'valid') { writeAllowed = false; publish({ loadStatus: 'corrupt', presence: snapshot.active ? snapshot.presence : { status: 'error' } }); return; }
         writeAllowed = true; revision++;
         publish({ loadStatus: 'loaded', active: checked.bundle, lastApplied: checked.bundle.plan.inputs.appliedSettings,
@@ -142,7 +145,7 @@ export function createGenerationController({ generation, activePlan, clock = { n
       if (!owned(op) || result === cancelled) return;
       if (result.status === 'cancelled') { cancel(); return; }
       if (result.status === 'error') { stopTimers(op); publish({ status: 'error', error: result.error }); return; }
-      const candidate = validateActiveBundle(result.plan);
+      const candidate = validateActiveBundle(result.plan, trustedCatalogs);
       if (candidate.status !== 'valid' || !sameSnapshot(result.plan.inputs, op.inputs)) {
         stopTimers(op); publish({ status: 'error', error: { code: 'GENERATION_DATA_INCOMPLETE', message: 'Получено несогласованное меню', diagnostics: candidate.status === 'invalid' ? candidate.diagnostics : [] } }); return;
       }

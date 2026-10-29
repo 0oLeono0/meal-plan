@@ -51,12 +51,32 @@ export async function openSyntheticPlan(page: Page, options: PlanFixtureOptions 
   await page.goto('/plan/new');
   await expect(page.getByLabel('Число людей', { exact: true })).toBeVisible();
   const plan = await page.evaluate(syntheticEnvelope, options);
-  await page.evaluate(plan => {
+  await page.evaluate(async ({ plan, route }) => {
+    // Explicit test-owned trust is injected into a separate App instance.
+    // Production boot never registers catalogs found in browser storage.
+    const urls = performance.getEntriesByType('resource').map(row => row.name);
+    const reactUrl = urls.find(url => /\/react\.js\?/.test(url));
+    const rootUrl = urls.find(url => /\/react-dom_client\.js\?/.test(url));
+    if (!reactUrl || !rootUrl) throw new Error('Actual React modules not observed');
+    const { default: { createElement } } = await import(reactUrl);
+    const { default: { createRoot } } = await import(rootUrl);
+    const appPath = '/src/app/App.tsx', planPath = '/src/domain/plan.ts';
+    const registryPath = '/src/adapters/trustedCatalogs.ts', activePath = '/src/adapters/activePlan.ts';
+    const { App } = await import(appPath);
+    const { validateActivePlanEnvelope } = await import(planPath);
+    const { createTrustedCatalogRegistry } = await import(registryPath);
+    const { createActivePlanAdapter } = await import(activePath);
+    const validated = validateActivePlanEnvelope(plan);
+    if (validated.status !== 'valid') throw new Error('Invalid test-owned synthetic plan');
+    const trustedCatalogs = createTrustedCatalogRegistry([validated.plan.inputs.catalog]);
     localStorage.setItem('mealplan:guest:active-plan:v1', JSON.stringify({ schemaVersion: 1, plan }));
-  }, plan);
-  await page.goto('/menu');
+    document.getElementById('root')?.remove();
+    const container = document.createElement('div'); container.id = 'root'; document.body.append(container);
+    history.replaceState({}, '', route);
+    createRoot(container).render(createElement(App, { trustedCatalogs,
+      activePlanPort: createActivePlanAdapter(() => localStorage, trustedCatalogs) }));
+  }, { plan, route });
   await expect(page.locator('[data-plan-id]')).toHaveAttribute('data-plan-id', 'synthetic-active');
-  if (route !== '/menu') await page.goto(route);
 }
 
 export async function generateRealPlan(page: Page, days?: number) {

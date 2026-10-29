@@ -4,6 +4,8 @@ import { projectPlan } from '../domain/planProjection';
 import { immutableSnapshot } from '../domain/appliedSettings';
 import type { PlanProjection } from '../domain/planProjection';
 import type { CatalogDiagnostic } from '../domain/catalog';
+import { trustedCatalogs } from './trustedCatalogs';
+import type { TrustedCatalogRegistry } from './trustedCatalogs';
 
 export const ACTIVE_PLAN_KEY = 'mealplan:guest:active-plan:v1';
 export const ACTIVE_PLAN_MAX_BYTES = 4_000_000;
@@ -19,11 +21,13 @@ export interface ActivePlanPort {
 }
 type PlanStorage = Pick<Storage, 'getItem' | 'setItem'>;
 /** Shared load/save trust boundary. Derived totals are always recomputed, never trusted JSON. */
-export function validateActiveBundle(input: unknown): { readonly status: 'valid'; readonly bundle: ActiveBundle }
+export function validateActiveBundle(input: unknown, registry: TrustedCatalogRegistry = trustedCatalogs): { readonly status: 'valid'; readonly bundle: ActiveBundle }
   | { readonly status: 'invalid'; readonly diagnostics: readonly CatalogDiagnostic[] } {
   const validated = validateActivePlanEnvelope(input);
   if (validated.status === 'invalid') return validated;
   const plan = validated.plan, projections: PlanProjection[] = [];
+  const trust = registry.validate(plan.inputs.catalog);
+  if (trust.status === 'invalid') return trust;
   const settings = plan.inputs.appliedSettings;
   const requirements = [...settings.restrictions.map(key => ({ kind: 'restriction', key })),
     ...(settings.restrictions.includes('no-fish') ? [{ kind: 'allergen', key: 'seafood' }] : [])];
@@ -47,7 +51,7 @@ export function validateActiveBundle(input: unknown): { readonly status: 'valid'
   }
   return { status: 'valid', bundle: immutableSnapshot({ plan, projections }) };
 }
-export function createActivePlanAdapter(getStorage: () => PlanStorage = () => window.localStorage): ActivePlanPort {
+export function createActivePlanAdapter(getStorage: () => PlanStorage = () => window.localStorage, registry: TrustedCatalogRegistry = trustedCatalogs): ActivePlanPort {
   let writable = false, inspectedRaw: string | null = null;
   return {
     async load() {
@@ -62,7 +66,7 @@ export function createActivePlanAdapter(getStorage: () => PlanStorage = () => wi
         if (typeof value !== 'object' || value === null || Array.isArray(value)
           || Object.keys(value).sort().join(',') !== 'plan,schemaVersion'
           || !('schemaVersion' in value) || value.schemaVersion !== 1 || !('plan' in value)) return { status: 'corrupt' };
-        const checked = validateActiveBundle(value.plan);
+        const checked = validateActiveBundle(value.plan, registry);
         if (checked.status === 'invalid') return { status: 'corrupt', diagnostics: checked.diagnostics };
         writable = true;
         return { status: 'loaded', bundle: checked.bundle };
@@ -71,7 +75,7 @@ export function createActivePlanAdapter(getStorage: () => PlanStorage = () => wi
     async save(plan, { isCurrent }) {
       if (!isCurrent()) return { status: 'cancelled' };
       if (!writable) return { status: 'blocked' };
-      const checked = validateActiveBundle(plan);
+      const checked = validateActiveBundle(plan, registry);
       if (checked.status === 'invalid') return { status: 'error', diagnostics: checked.diagnostics };
       try {
         const raw = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(checked.bundle.plan) });

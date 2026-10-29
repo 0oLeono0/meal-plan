@@ -3,6 +3,36 @@ import { activeKey, count, finishWizard, mountGeneration, preserved, release } f
 import { generateRealPlan } from './plan-fixtures';
 import { mountAppFixture } from './fixtures';
 
+for (const kind of ['nutrition', 'price', 'unknown-version'] as const) test(`source trust rejects altered ${kind} after genuine reload and blocks replacement writes`, async ({ page }) => {
+  await generateRealPlan(page, 1);
+  const raw = await page.evaluate(({ activeKey, kind }) => {
+    const stored = JSON.parse(localStorage.getItem(activeKey)!);
+    if (kind === 'unknown-version') {
+      stored.plan.inputs.catalog.version = 'unregistered-browser-version';
+      stored.plan.inputs.catalogVersion = 'unregistered-browser-version';
+      for (const variant of stored.plan.variants) for (const instance of variant.instances) instance.catalogVersion = 'unregistered-browser-version';
+    } else {
+      const profileId = stored.plan.variants[0].instances[0].recipeSnapshot.ingredients[0].profileId;
+      const food = stored.plan.inputs.catalog.foods.find((food: { profileId: string }) => food.profileId === profileId);
+      if (kind === 'nutrition') food.nutrition.values.calories = '0';
+      else food.price.amount = '0.0000001';
+    }
+    const raw = JSON.stringify(stored); localStorage.setItem(activeKey, raw); return raw;
+  }, { activeKey, kind });
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Сохранённое меню повреждено или несовместимо с текущей версией' })).toBeVisible();
+  await expect(page.locator('[data-plan-id]')).toHaveCount(0);
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(raw);
+  await mountGeneration(page, { route: '/menu' });
+  await page.getByRole('link', { name: 'К настройкам', exact: true }).click();
+  await finishWizard(page);
+  await expect(page.getByRole('heading', { name: 'Меню рассчитано, но не сохранено' })).toBeVisible();
+  await page.getByRole('button', { name: 'Повторить сохранение', exact: true }).click();
+  expect(await count(page, 'save-calls')).toBe(0);
+  expect(await count(page, 'final-writes')).toBe(0);
+  await preserved(page, raw);
+});
+
 test('failed save exposes a separate candidate, preserves exact old active and retries only the write', async ({ page }) => {
   await generateRealPlan(page);
   const old = await page.evaluate(key => localStorage.getItem(key), activeKey);

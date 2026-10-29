@@ -9,6 +9,7 @@ import { createGenerationController } from '../features/generation/controller';
 import { createActivePlanAdapter, type ActivePlanPort } from '../adapters/activePlan';
 import { createLocalGeneration } from '../adapters/generation';
 import { bundledCatalogPort } from '../data/catalog';
+import { trustedCatalogs as defaultTrustedCatalogs, type TrustedCatalogRegistry } from '../adapters/trustedCatalogs';
 import type { CatalogLoadResult, CatalogPort } from '../domain/catalog';
 import { buildAppliedSettings, sameSnapshot, selectQuickStartInput, type AppliedSettings } from '../domain/appliedSettings';
 import { createPlanInputs, type GenerationPort } from '../domain/plan';
@@ -52,12 +53,13 @@ interface AppProps {
   generationPort?: GenerationPort;
   activePlanPort?: ActivePlanPort;
   catalogPort?: CatalogPort;
+  trustedCatalogs?: TrustedCatalogRegistry;
 }
 type LoadState = 'loading' | 'ready' | 'corrupt' | 'error';
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
-export function App({ draftPort = guestDraft, planPresencePort, brand = appConfig.brand, generationPort = localGeneration, activePlanPort = activePlan, catalogPort = bundledCatalogPort }: AppProps) {
-  const controller = useMemo(() => createGenerationController({ generation: generationPort, activePlan: activePlanPort }), [generationPort, activePlanPort]);
+export function App({ draftPort = guestDraft, planPresencePort, brand = appConfig.brand, generationPort = localGeneration, activePlanPort = activePlan, catalogPort = bundledCatalogPort, trustedCatalogs = defaultTrustedCatalogs }: AppProps) {
+  const controller = useMemo(() => createGenerationController({ generation: generationPort, activePlan: activePlanPort, trustedCatalogs }), [generationPort, activePlanPort, trustedCatalogs]);
   const operation = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const [catalog, setCatalog] = useState<CatalogLoadResult | null>(null);
   const [draft, setDraft] = useState(createDraft);

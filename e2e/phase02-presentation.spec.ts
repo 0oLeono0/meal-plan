@@ -31,10 +31,15 @@ async function focusedVisible(page: Page, control: Locator) {
 
 async function disclosure(page: Page, summary: Locator) {
   await keyboardVisible(page, summary);
+  // Firefox preserves pointer modality after focus(). Enter alone does not
+  // imply :focus-visible; reach the disclosure with a real Tab before checking.
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Tab');
+  await focusedVisible(page, summary);
   expect((await summary.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await page.keyboard.press('Enter');
   await expect(summary.locator('..')).toHaveAttribute('open', '');
-  expect(await summary.evaluate(element => getComputedStyle(element).outlineStyle)).not.toBe('none');
+  await expect(summary).toHaveCSS('outline-style', 'solid');
   await fits(page);
 }
 
@@ -124,10 +129,10 @@ for (const width of widths) {
     await fits(page);
   });
 
-  test(`phase02 ${width}px pending cancel error retry and save failure preserve keyboard recovery`, async ({ page }) => {
+  test(`phase02 ${width}px pending cancellation preserves keyboard recovery`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await mountAppFixture(page, { draft: { step: 4 }, operation: 'pending' });
+    await mountAppFixture(page, { draft: { step: 4, days: '1' }, operation: 'pending' });
     const submit = page.getByRole('button', { name: 'Составить меню', exact: true });
     await submit.focus(); await page.keyboard.press('Enter');
     await expect(page.getByRole('heading', { name: 'Составляем меню' })).toBeFocused();
@@ -142,7 +147,12 @@ for (const width of widths) {
     await page.evaluate(() => window.dispatchEvent(new Event('release-generation')));
     await expect(page.getByText('Шаг 4 из 4')).toBeVisible();
     expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'))).toBeNull();
-    await mountAppFixture(page, { draft: { step: 4 }, operation: 'failure' });
+  });
+
+  test(`phase02 ${width}px generation error and retry preserve keyboard recovery`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await mountAppFixture(page, { draft: { step: 4, days: '1' }, operation: 'failure' });
     await page.getByRole('button', { name: 'Составить меню', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Не получилось составить меню' })).toBeFocused();
     await expect(page.getByRole('alert')).toHaveCount(1);
@@ -152,8 +162,14 @@ for (const width of widths) {
     await page.evaluate(() => sessionStorage.setItem('allow-generation', 'yes'));
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL('/menu');
+  });
+
+  test(`phase02 ${width}px save failure and retry preserve old active and keyboard recovery`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await generateRealPlan(page, 1);
     const previous = await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'));
-    await mountAppFixture(page, { draft: { step: 4 }, operation: 'save-failure' });
+    await mountAppFixture(page, { draft: { step: 4, days: '2' }, operation: 'save-failure' });
     await page.getByRole('button', { name: 'Составить меню', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Меню рассчитано, но не сохранено' })).toBeFocused();
     expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'))).toBe(previous);
@@ -249,7 +265,7 @@ test('phase02 sequential Tab ShiftTab and Enter traverse generation recovery', a
     expect(await control.evaluate(element => getComputedStyle(element).outlineStyle)).not.toBe('none');
   };
   const submitByTab = async (mode: 'pending' | 'failure' | 'save-failure') => {
-    await mountAppFixture(page, { draft: { step: 4 }, operation: mode });
+    await mountAppFixture(page, { draft: { step: 4, days: '1' }, operation: mode });
     await expect(page.getByRole('heading', { name: 'Продукты дома', exact: true })).toBeFocused();
     await tab(page.getByRole('combobox', { name: 'Найти продукт' }));
     for (const popular of await page.getByRole('group', { name: 'Популярные продукты' }).getByRole('button').all()) await tab(popular);
@@ -280,6 +296,6 @@ test('phase02 sequential Tab ShiftTab and Enter traverse generation recovery', a
   await tab(retrySave, true);
   await page.evaluate(() => sessionStorage.setItem('allow-plan-write', 'yes'));
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('heading', { name: 'Меню на неделю' })).toBeFocused();
+  await expect(page.getByRole('heading', { name: 'Меню на 1 день', exact: true })).toBeFocused();
   await fits(page);
 });

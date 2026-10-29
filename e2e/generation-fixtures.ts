@@ -1,9 +1,11 @@
 import { expect, type Page } from '@playwright/test';
 import type { GenerationError, GenerationPort } from '../src/domain/plan';
 import type { ActivePlanPort } from '../src/adapters/activePlan';
+import type { SettingsDraft } from '../src/domain/settings';
 
 export const activeKey = 'mealplan:guest:active-plan:v1';
 interface Options {
+  draft?: Partial<SettingsDraft>;
   route?: string;
   activeRaw?: string;
   deferGeneration?: boolean;
@@ -34,6 +36,11 @@ export async function mountGeneration(page: Page, options: Options = {}) {
     const { createActivePlanAdapter } = await import(activePath);
     const { createLocalGeneration } = await import(generationPath);
     const { bundledCatalogPort } = await import(catalogPath);
+    if (options.draft) {
+      const settingsPath = '/src/domain/settings.ts';
+      const { createDraft } = await import(settingsPath);
+      localStorage.setItem('mealplan:guest:draft:v1', JSON.stringify({ schemaVersion: 1, draft: { ...createDraft(), ...options.draft } }));
+    }
     if (options.activeRaw !== undefined) localStorage.setItem('mealplan:guest:active-plan:v1', options.activeRaw);
     localStorage.setItem('sentinel', 'keep'); localStorage.setItem('mealplan:pantry', 'pantry-sentinel');
     const count = (key: string) => {
@@ -73,6 +80,7 @@ export async function mountGeneration(page: Page, options: Options = {}) {
         ? { status: 'error' as const, error: options.error }
         : await actual.generate(request, new AbortController().signal);
       sessionStorage.setItem(`generation-result-${n}`, result.status);
+      window.dispatchEvent(new Event(`fixture-complete-generation-${n}`));
       return result;
     } };
     document.getElementById('root')?.remove();
@@ -85,7 +93,14 @@ export async function mountGeneration(page: Page, options: Options = {}) {
 }
 
 export async function release(page: Page, name: string) {
-  await page.evaluate(name => window.dispatchEvent(new Event(`release-${name}`)), name);
+  if (name.startsWith('generation-')) {
+    // Release the controlled response and await its real port completion under
+    // the existing test deadline. The subsequent assertions retain their 5s.
+    await page.evaluate(name => new Promise<void>(resolve => {
+      window.addEventListener(`fixture-complete-${name}`, () => resolve(), { once: true });
+      window.dispatchEvent(new Event(`release-${name}`));
+    }), name);
+  } else await page.evaluate(name => window.dispatchEvent(new Event(`release-${name}`)), name);
 }
 export async function count(page: Page, key: string) { return page.evaluate(key => Number(sessionStorage.getItem(key) ?? 0), key); }
 export async function finishWizard(page: Page) {

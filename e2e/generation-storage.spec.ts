@@ -94,9 +94,10 @@ test('read denial blocks writes until actual reload retry recovers the old activ
 });
 
 test('cancelled deferred final save is guarded and cannot replace old active even after a newer request', async ({ page }) => {
-  await generateRealPlan(page);
+  await generateRealPlan(page, 1);
   const old = await page.evaluate(key => localStorage.getItem(key), activeKey);
   await mountGeneration(page, { deferSave: true });
+  await page.getByLabel('Число дней', { exact: true }).fill('2');
   await finishWizard(page);
   await expect(page.getByText('Сохраняем меню…', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Отмена', exact: true }).click();

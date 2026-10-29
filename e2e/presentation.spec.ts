@@ -16,6 +16,7 @@ async function next(page: Page, step: number) {
 
 async function alignedChoices(page: Page) {
   const choices = page.locator('label').filter({ has: page.locator('input[type="radio"], input[type="checkbox"]') });
+  await expect(choices.first()).toBeVisible();
   expect(await choices.count()).toBeGreaterThan(0);
   for (const choice of await choices.all()) {
     await expect(choice).toHaveCSS('display', 'flex');
@@ -23,7 +24,9 @@ async function alignedChoices(page: Page) {
     await expect(choice).toHaveCSS('column-gap', '8px');
     await expect(choice).toHaveCSS('margin', '0px');
     await expect(choice).toHaveCSS('font-weight', '400');
-    expect((await choice.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await expect(choice).toHaveCSS('min-height', '44px');
+    // Firefox can report 43.99993896484375 for an exact 44 CSS-pixel target.
+    expect((await choice.boundingBox())!.height + 0.01).toBeGreaterThanOrEqual(44);
     await expect(choice.locator('input')).toHaveCSS('accent-color', 'rgb(28, 124, 80)');
   }
 }

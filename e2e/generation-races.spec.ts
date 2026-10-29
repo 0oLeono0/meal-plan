@@ -23,22 +23,35 @@ test('pending rotates every 2s, rejects repeat submit and cancel restores initia
   expect(await count(page, 'save-calls')).toBe(0);
 });
 
-test('navigate away invalidates request and a newer real success survives an older late response', async ({ page }) => {
-  await generateRealPlan(page);
+test('navigate away invalidates a request and its late success preserves the old active plan', async ({ page }) => {
+  await generateRealPlan(page, 1);
   const old = await page.evaluate(key => localStorage.getItem(key), activeKey);
   await mountGeneration(page, { deferGeneration: true });
-  await page.getByLabel('Число дней', { exact: true }).fill('1');
+  await page.getByLabel('Число дней', { exact: true }).fill('2');
   await finishWizard(page);
   await page.goBack();
   await expect(page).toHaveURL(/\/plan\/new$/);
   await preserved(page, old);
+  await release(page, 'generation-1');
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem('generation-result-1'))).toBe('success');
+  await expect(page).toHaveURL(/\/plan\/new$/);
+  await preserved(page, old);
+  expect(await count(page, 'save-calls')).toBe(0);
+});
+
+test('a newer real success survives an older late response through shopping and reload', async ({ page }) => {
+  await mountGeneration(page, { deferGeneration: true, draft: { days: '1' } });
+  await finishWizard(page);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/plan\/new$/);
+  await preserved(page, null);
   await page.getByRole('button', { name: 'Составить меню', exact: true }).click();
   await expect.poll(() => count(page, 'generation-calls')).toBe(2);
   await release(page, 'generation-2');
   await expect(page).toHaveURL(/\/menu$/);
   const newer = await page.evaluate(key => localStorage.getItem(key), activeKey);
   const id = await page.locator('[data-plan-id]').getAttribute('data-plan-id');
-  expect(newer).not.toBe(old);
+  expect(newer).not.toBeNull();
   await release(page, 'generation-1');
   await expect.poll(() => page.evaluate(() => sessionStorage.getItem('generation-result-1'))).toBe('success');
   await preserved(page, newer);
@@ -49,7 +62,7 @@ test('navigate away invalidates request and a newer real success survives an old
 });
 
 test('quick-start pending rejects a double click and cancellation restores quick-start focus', async ({ page }) => {
-  await mountGeneration(page, { deferGeneration: true, route: '/' });
+  await mountGeneration(page, { deferGeneration: true, route: '/', draft: { days: '1' } });
   await page.getByRole('button', { name: 'Меню за 1 клик', exact: true }).dblclick();
   await expect(page.getByRole('heading', { name: 'Составляем меню', exact: true })).toBeVisible();
   expect(await count(page, 'generation-calls')).toBe(1);

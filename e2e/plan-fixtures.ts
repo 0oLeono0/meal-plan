@@ -59,8 +59,19 @@ export async function openSyntheticPlan(page: Page, options: PlanFixtureOptions 
   if (route !== '/menu') await page.goto(route);
 }
 
-export async function generateRealPlan(page: Page) {
+export async function generateRealPlan(page: Page, days?: number) {
+  if (days !== undefined) {
+    await page.goto('/plan/new');
+    await page.getByLabel('Число дней', { exact: true }).fill(String(days));
+    await expect(page.getByRole('status')).toHaveText('Сохранено на этом устройстве');
+  }
   await page.goto('/');
   await page.getByRole('button', { name: 'Меню за 1 клик', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Меню на неделю', exact: true })).toBeVisible();
+  // Real generation is a navigation-producing operation, not a 5s DOM update.
+  // The existing 20s overall test deadline still bounds the entire journey.
+  await page.waitForURL('**/menu');
+  const title = days === undefined || days === 7 ? 'Меню на неделю'
+    : `Меню на ${days} ${days === 1 ? 'день' : days < 5 ? 'дня' : 'дней'}`;
+  await expect(page.getByRole('heading', { level: 1, name: title, exact: true })).toBeVisible();
+  await expect(page.locator('[data-instance-id]')).toHaveCount(4 * (days ?? 7));
 }

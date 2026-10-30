@@ -28,8 +28,8 @@ function storage() {
 const current = { isCurrent: () => true };
 const rawPlan = (plan = fixture()) => JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
 
-function sourcePlan(catalog: Catalog = bundledCatalog) {
-  const applied = buildAppliedSettings({ ...createDraft(), days: '1', people: '1', budget: '1000' });
+function sourcePlan(catalog: Catalog = bundledCatalog, restrictions: string[] = []) {
+  const applied = buildAppliedSettings({ ...createDraft(), days: '1', people: '1', budget: '1000', restrictions });
   if (applied.status !== 'applied') throw new Error('settings');
   const inputs = createPlanInputs(applied.settings, catalog, { seed: 'source-trust', now: () => new Date(2026, 9, 28) });
   const ids = mealSlots.map(slot => catalog.recipes.find(recipe => recipe.slots.includes(slot))!.id);
@@ -37,6 +37,19 @@ function sourcePlan(catalog: Catalog = bundledCatalog) {
 }
 
 describe('source-backed persistence trust', () => {
+  it('accepts the reviewed fish-and-seafood ingredient restriction without requiring allergen certification', () => {
+    expect(validateActiveBundle(sourcePlan(bundledCatalog, ['no-fish'])).status).toBe('valid');
+  });
+  it.each([false, undefined])('rejects trusted no-fish suitability %s instead of assuming ingredient safety', suitable => {
+    const original = fixture().inputs.catalog, food = original.foods[0];
+    const catalog: Catalog = { ...original, foods: [{ ...food, safety: { status: 'known', facts: suitable === undefined ? [{
+      kind: 'restriction', key: 'vegetarian', suitable: true, evidence: [original.recipes[0].source],
+    }] : [{
+      kind: 'restriction', key: 'no-fish', suitable, evidence: [original.recipes[0].source],
+    }] } }] };
+    const registry = createTrustedCatalogRegistry([catalog]);
+    expect(validateActiveBundle(sourcePlan(catalog, ['no-fish']), registry).status).toBe('invalid');
+  });
   it('rejects an unregistered synthetic version by default', () => {
     expect(validateActiveBundle(fixture()).status).toBe('invalid');
   });

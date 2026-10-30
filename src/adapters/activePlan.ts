@@ -29,8 +29,8 @@ export function validateActiveBundle(input: unknown, registry: TrustedCatalogReg
   const trust = registry.validate(plan.inputs.catalog);
   if (trust.status === 'invalid') return trust;
   const settings = plan.inputs.appliedSettings;
-  const requirements = [...settings.restrictions.map(key => ({ kind: 'restriction', key })),
-    ...(settings.restrictions.includes('no-fish') ? [{ kind: 'allergen', key: 'seafood' }] : [])];
+  // Match generation: no-fish covers fish/seafood ingredients, not allergen traces.
+  const requirements = settings.restrictions.map(key => ({ kind: 'restriction', key }));
   const invalid = (code: string, path: string) => ({ status: 'invalid' as const, diagnostics: [{ code, path, message: code }] });
   for (const variant of plan.variants) {
     for (const instance of variant.instances) {

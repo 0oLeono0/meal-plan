@@ -3,6 +3,8 @@ import { buildAppliedSettings } from '../domain/appliedSettings';
 import { createDraft } from '../domain/settings';
 import { createPlanInputs } from '../domain/plan';
 import { createLocalGeneration } from '../adapters/generation';
+import { createActivePlanAdapter, validateActiveBundle } from '../adapters/activePlan';
+import { createPlanSearch } from '../domain/generatePlan';
 import { validateCatalog } from '../adapters/catalog';
 import { compare, decimal, divide, formatExact } from '../domain/quantities';
 import { projectPlan } from '../domain/planProjection';
@@ -17,6 +19,38 @@ const modules = import.meta.glob('./catalog.ts', { eager: true });
 // An absent production catalog is an assertion failure, never an import/discovery error.
 const production = () => modules['./catalog.ts'] as { bundledCatalog: Catalog; bundledCatalogPort: Parameters<typeof createLocalGeneration>[0]; validateBundledCatalog: (input: Catalog, sources?: typeof sourceEvidence) => Promise<ReturnType<typeof validateCatalog>> } | undefined;
 describe('source-backed production corpus', () => {
+  it('generates, validates, saves and reloads reviewed no-fish facts without inventing allergen guarantees', async () => {
+    const module = production()!;
+    const applied = buildAppliedSettings({ ...createDraft(), days: '1', restrictions: ['no-fish'] });
+    if (applied.status !== 'applied') throw new Error('Invalid real draft');
+    const inputs = createPlanInputs(applied.settings, module.bundledCatalog, { seed: 'real-no-fish-proof' });
+    const result = await createLocalGeneration(module.bundledCatalogPort).generate({ requestId: 'no-fish', inputs }, new AbortController().signal);
+    expect(result.status).toBe('success');
+    if (result.status !== 'success') throw new Error('Expected reviewed no-fish corpus to generate');
+    expect(result.plan.variants[0].instances).toHaveLength(4);
+    expect(validateActiveBundle(result.plan).status).toBe('valid');
+    const values = new Map<string, string>();
+    const store = { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); } };
+    const port = createActivePlanAdapter(() => store);
+    expect((await port.load()).status).toBe('missing');
+    const saved = await port.save(result.plan, { isCurrent: () => true });
+    expect(saved.status).toBe('saved');
+    const loaded = await createActivePlanAdapter(() => store).load();
+    expect(loaded.status).toBe('loaded');
+    if (saved.status !== 'saved' || loaded.status !== 'loaded') throw new Error('Expected round-trip');
+    expect(loaded.bundle).toEqual(saved.bundle);
+    expect(loaded.bundle.plan.inputs.appliedSettings.restrictions).toEqual(['no-fish']);
+    expect(loaded.bundle.projections[0].budget.check.accepted).toBe(true);
+    expect(module.bundledCatalog.foods.every(food => food.safety.status === 'known' && food.safety.facts.every(fact => fact.kind === 'restriction'))).toBe(true);
+    // The same real corpus cannot certify package-level seafood allergen safety.
+    const search = createPlanSearch(inputs, { allergenKeys: ['seafood'] });
+    let next = search.next();
+    while (!next.done) next = search.next();
+    expect(next.value.status).toBe('error');
+    if (next.value.status !== 'error') throw new Error('Expected unknown allergy refusal');
+    expect(next.value.error.code).toBe('GENERATION_DATA_INCOMPLETE');
+    expect(next.value.error.diagnostics.some(row => row.message === 'allergen:seafood')).toBe(true);
+  }, 30000);
   it('requires fifty complete genuinely distinct original recipes', async () => {
     expect(production()?.bundledCatalog.recipes.length ?? 0).toBeGreaterThanOrEqual(50);
     const catalog = production()!.bundledCatalog;

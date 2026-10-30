@@ -202,10 +202,10 @@ test('home-products boundary/precision/error: invalid raw persists, unit mandato
   await expect(page.getByLabel('Единица Рис', { exact: true })).toBeFocused();
   await page.getByLabel('Единица Рис', { exact: true }).selectOption('g');
   await page.getByRole('button', { name: 'Составить меню' }).click();
-  await expect(page.getByRole('heading', { name: 'Недостаточно проверенных данных для расчёта меню' })).toBeFocused();
+  await expect(page.getByRole('heading', { name: 'Меню на неделю', exact: true })).toBeVisible();
   expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).draft.home[0].quantity, draftKey)).toBe('0.00000000000000000001');
-  expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'))).toBeNull();
-  await page.getByRole('button', { name: 'Изменить настройки', exact: true }).click();
+  expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'))).not.toBeNull();
+  await page.goto('/plan/new');
   await expect(amount).toHaveValue('0.00000000000000000001');
   await expect(page.getByLabel('Единица Рис', { exact: true })).toHaveValue('g');
 });

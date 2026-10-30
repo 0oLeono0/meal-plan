@@ -94,9 +94,10 @@ export function* createPlanSearch(rawInputs: PlanInputs, options: SearchOptions 
       || allergens.some(key => typeof key !== 'string' || !key.trim() || key.length > 256)) {
       diagnostics.push(diagnostic('INVALID_SEARCH_OPTIONS', 'search')); return refuse('GENERATION_DATA_INCOMPLETE');
     }
-    // A no-fish assertion alone does not establish seafood suitability.
+    // Reviewed no-fish restriction facts cover fish and seafood ingredients.
+    // Package-level allergen guarantees are a separate, explicitly requested policy.
     const requirements = [...inputs.appliedSettings.restrictions.map(key => ({ kind: 'restriction', key })),
-      ...[...new Set([...allergens, ...(inputs.appliedSettings.restrictions.includes('no-fish') ? ['seafood'] : [])])].map(key => ({ kind: 'allergen', key }))];
+      ...allergens.map(key => ({ kind: 'allergen', key }))];
     const admitted: Candidate[] = [], incomplete: Recipe[] = [], rejected: Recipe[] = [];
     const foods = new Map(inputs.catalog.foods.map(food => [food.profileId, food]));
     for (const recipe of [...inputs.catalog.recipes].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)) {

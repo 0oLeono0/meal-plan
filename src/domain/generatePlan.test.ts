@@ -74,9 +74,20 @@ describe('bounded deterministic generation', () => {
       expect(refusal.diagnostics.some(row => row.code === 'SLOT_CANDIDATES')).toBe(true);
     }
   });
-  it('no-fish also requires explicit seafood safety, never a generic food name', () => {
-    const shrimp = { ...food('shrimp'), name: 'Без рыбы', safety: { status: 'known' as const, facts: [fact('no-fish'), fact('seafood', false, 'allergen')] } };
-    expect(error(run(fixture({ restrictions: ['no-fish'] }, { version: 'shrimp', foods: [shrimp], recipes: [recipe('shrimp', 'shrimp')] })).result).code).toBe('NO_RECIPES');
+  it.each(['fish', 'shrimp', 'squid', 'mussels'])('no-fish rejects evidenced %s ingredients regardless of a misleading name', productId => {
+    // This reviewed restriction covers fish and all seafood, separately from allergies.
+    const unsafe = { ...food(productId), name: 'Без рыбы', safety: { status: 'known' as const, facts: [fact('no-fish', false)] } };
+    expect(error(run(fixture({ restrictions: ['no-fish'] }, { version: productId, foods: [unsafe], recipes: [recipe(productId, productId)] })).result).code).toBe('NO_RECIPES');
+  });
+  it.each([false, undefined])('keeps explicit seafood allergy hard when suitability is %s', suitable => {
+    const facts = [fact('no-fish'), ...(suitable === undefined ? [] : [fact('seafood', suitable, 'allergen')])];
+    const rice = { ...food('rice'), safety: { status: 'known' as const, facts } };
+    const inputs = fixture({ restrictions: ['no-fish'] }, { version: 'explicit-allergy', foods: [rice], recipes: [recipe('r')] });
+    expect(success(run(inputs).result).ids).toEqual(Array(4).fill('r'));
+    expect(error(run(inputs, { allergenKeys: ['seafood'] }).result).code).toBe(suitable === false ? 'NO_RECIPES' : 'GENERATION_DATA_INCOMPLETE');
+  });
+  it('accepts an explicitly evidenced seafood allergy when requested', () => {
+    expect(success(run(fixture({ restrictions: ['no-fish'] }), { allergenKeys: ['seafood'] }).result).ids).toEqual(Array(4).fill('r'));
   });
   it('enforces explicit product exclusions before unknown metadata and allergens', () => {
     expect(error(run(fixture({ exclusionIds: ['rice'] })).result).code).toBe('NO_RECIPES');

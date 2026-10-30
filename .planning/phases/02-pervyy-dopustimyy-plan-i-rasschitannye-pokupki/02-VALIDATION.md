@@ -9,6 +9,12 @@ created: "2026-10-27"
 
 # Phase 2 — Validation Strategy
 
+## Последующие исправления и проверка — 30.10.2026
+
+После исторической release-матрицы исправлены source-trustT-02-10(e3f65a3),7UIwarnings(9834678/8605fe7),CR-01no-fish(5160dee) иCR-02optionalunit(50c1295). Независимый security recheck:25/25CLOSED; UI re-reviewPASS; code re-review0Critical/0Warning/0Info.
+
+Текущий совместный `npm run test:unit -- --run`:359/359,16files,15.26s,exit0; текущие typecheck/lint/build также exit0 (138modules). Результаты `.tmp/phase02-final-*.log`. Targetedbrowserproof новых исправлений — отчёты docs/qa/phase02-persistence-trust-fix.md,phase02-ui-fixes.md,phase02-cr01-fix.md,phase02-cr02-fix.md. Эти targeted результаты не подменяются прежними full-browser результатами другогоHEAD. Две nativeWebKitmanual gaps остаются, nyquist_compliantfalse; независимый verifier ещё не выдал вердикт.
+
 Карта22 задач в10 планах/9волнах сохранена. Все10 планов исполнены; независимая приёмка ожидается.02-10: Firefox full240/240, Chromium240-case coverage; WebKit full226passed/14failed и owning38passed/2failed дают238passed/2failed из240. Две linkTab последовательности остаются failed/manual-unverified (WINDOWS15/16). Независимый plain-HTML эксперимент45777d6 воспроизвёл ограничение без приложения; orchestrator auto-mode разрешил только продолжение независимых проверок, не пользовательский pass. История halt сохранена вSUMMARY. Nyquist остаётсяfalse: два ручных подтверждения отсутствуют. Phase2 не завершена; требования открыты до независимого verifier.
 
 ## Test Infrastructure

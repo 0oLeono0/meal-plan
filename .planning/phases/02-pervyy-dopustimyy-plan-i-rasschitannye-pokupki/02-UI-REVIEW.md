@@ -1,5 +1,7 @@
 # Phase 2 — UI Review
 
+> Follow-up30.10.2026: все7предупреждений исправлены9834678/8605fe7 и независимо перепроверены (PASS). Chromium20/20, typecheck/lint/build exit0; снимки360/768/1280 просмотрены. Отчёт: `docs/qa/phase02-ui-fixes.md`. Историческая оценка19/24 и findings сохранены; новая численная оценка не выдумывается. Ручные/Safari-наблюдения остаются открытыми.
+
 **Audited:** 2026-10-29
 **Baseline:** approved `02-UI-SPEC.md`, `02-CONTEXT.md`; границы следующих фаз сохранены.
 **Screenshots:** captured ранее в `.tmp/phase02-qa/`; повторно просмотрены Firefox 360 menu, 768 shopping, 1280 menu. Новый CLI-снимок изолированного pending-компонента: `.planning/ui-reviews/02-pending-component.png`.

@@ -68,6 +68,14 @@ completed: 2026-10-29
 
 # Phase 2 Plan 10: Controlled browser faults and release evidence Summary
 
+## Post-audit fixes — 30.10.2026
+
+Независимый аудит выявилT-02-10: сохранённый каталог сравнивался только с самим собой. Исправлениеe3f65a3 создало `src/adapters/trustedCatalogs.ts` и обновило activePlan/controller/App и unit/browser fixtures. Trusted-version comparison предшествует projection/presence/promotion/save. Независимый recheck52/52 и исходный tamper probe подтвердили CLOSED;25/25threats закрыты. Доказательства: `docs/qa/phase02-persistence-trust-fix.md`, `02-SECURITY.md`.
+
+Исполнитель проверил342/342unit, typecheck/lint/build и11storage+6synthetic-consumer Chromium cases. UI7warnings исправлены9834678/8605fe7, создан `src/features/plan/PlanLoading.tsx`, обновлены GenerationPage/MenuPage/ShoppingPage/PlanSummary/tokensCSS/App presentation и e2e/generation.spec.ts. Независимый UI re-review PASS, latestChromium20/20/typecheck/lint/build. Отчёт: `docs/qa/phase02-ui-fixes.md`.
+
+Эти targeted результаты относятся к последним изменениям; прежняя матрица не выдаётся за повторный полный прогон новогоHEAD. Два WebKit failed остаются manual/unverified. Приёмка фазы и пользовательский pass не заявлены.
+
 **Все команды исполнения выполнены; две неуспешные последовательности Windows WebKit переданы независимой приёмке после воспроизведения на простой HTML-странице без приложения.**
 
 ## Task Commits

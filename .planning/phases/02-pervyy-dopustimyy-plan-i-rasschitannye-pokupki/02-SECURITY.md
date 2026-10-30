@@ -1,8 +1,8 @@
 ---
 phase: "02"
 slug: pervyy-dopustimyy-plan-i-rasschitannye-pokupki
-status: draft
-threats_open: 1
+status: verified
+threats_open: 0
 asvs_level: 1
 block_on: high
 register_authored_at_plan_time: true
@@ -25,7 +25,7 @@ audited_head: b73ea09657413497b55a70b7100c092d144c9edc
 | T-02-07 | Tampering | high | CLOSED | generatePlan.ts:98,104,110,123,165: hard filters до admission/ranking, final shared budget |
 | T-02-08 | Denial of service | high | CLOSED | generatePlan.ts:16,92,103; generation.ts:15,37,57,64: bounded work/macrotasks/abort/deadline |
 | T-02-09 | Repudiation | medium | CLOSED | generatePlan.ts:84,134,152,208: seed/version/work; lower-bound/exhaustive/exhaustion различаются |
-| T-02-10 | Tampering | high | OPEN | activePlan.ts:22,65,74 доверяет source facts из того же untrusted catalog; воспроизведение ниже |
+| T-02-10 | Tampering | high | CLOSED | Первоначальная подмена воспроизведена ниже; исправление e3f65a3 независимо перепроверено, delta ниже |
 | T-02-11 | Tampering | high | CLOSED | controller.ts:44,106,114,118; activePlan.ts:81,83: serialization/ownership beforewrite/savebeforepromotion |
 | T-02-12 | Information disclosure | medium | CLOSED | activePlan.ts:8,56,84; guestDraft.ts:36,42: отдельные local keys, sentinel test:29, dietary transport не обнаружен |
 | T-02-13 | Tampering | high | CLOSED | acquisition/production gate data/catalog.ts:53,68,75,83,87,93: source identity/bases/values/computed excerpt hashes. Restoration bypass выделен в T-02-10 |
@@ -56,4 +56,16 @@ audited_head: b73ea09657413497b55a70b7100c092d144c9edc
 
 Повторно выполнена группа activePlan/catalog/sources/controller/generation/quantities:98/98,6files,9.02s. Эти зелёные тесты не покрывали подтверждённую подмену. Полная браузерная матрица не повторялась. Исходники аудитор не менял. Во всех SUMMARY отсутствует Threat Flags section, unmapped flags не обнаружены.
 
-Security gate остаётся открытым до исправления и независимой перепроверки. Остальные выводы относятся к указанному audited HEAD; последующие изменения требуют delta review.
+Первоначальный security gate оставался открытым до исправления. История finding и исходное воспроизведение выше сохранены.
+
+## Независимая перепроверка — 30.10.2026
+
+T-02-10: CLOSED, ASVS1/high. Исправление e3f65a3; независимый gsd-security-auditor вернул SECURED. Остальные24CLOSED сохранены из первичного аудита без повторного сканирования.
+
+Реестр хранит приватный Map и detached/frozen validated catalogs (`trustedCatalogs.ts:15,18,23,26`), default доверяет compiled bundledCatalog (`:33`). Полное сравнение до projection (`activePlan.ts:29,47`), source/recipe snapshots связаны schema validation (`plan.ts:142,168`). Проверка действует на load/save (`activePlan.ts:69,78`) и controller custom-port/candidate (`controller.ts:88,148`). Guards перед setItem и write-block сохранены. App использует defaults; программная инъекция не получает trust из storage/URL.
+
+Аудитор независимо выполнил52/52 activePlan/controller unit tests, exit0. Исходный реальный probe: baseline loaded/purchase93.5054022407407274RUB. Nutrition0+price1e-7 теперь UNTRUSTED_CATALOG_SNAPSHOT; согласованная unknown version — UNSUPPORTED_CATALOG_VERSION. Load=corrupt, presence=error, replacement=blocked, tampered save=error, bytes/sourceIDs прежние, setItem0. Safety/source/recipe/conversion/unused-food проверены отдельными регрессиями. Историческая зарегистрированная версия сохраняет свою цену; допустимые нулевые факты и защита от мутации реестра подтверждены.
+
+Security-файлы соответствуют e3f65a3. Последующий UI-only App diff ограничен InitialLoadStatus/импортом PlanLoading; trust injection/guards не менялись (root проверил git diff). UI/type/build отдельно в docs/qa/phase02-ui-fixes.md; они не выдаются за повтор security-аудита. Реальное localStorage не менялось; браузерная матрица аудитором не повторялась.
+
+**Итог:25/25 CLOSED, threats_open0, accepted/transfer risks нет.** Проверен существующий реестр, новые угрозы вне него не сканировались.

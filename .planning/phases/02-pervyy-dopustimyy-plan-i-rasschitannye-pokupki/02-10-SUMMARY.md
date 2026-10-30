@@ -70,6 +70,10 @@ completed: 2026-10-29
 
 ## Post-audit fixes — 30.10.2026
 
+Финальный совместный результат после последующих CR-01/CR-02:359/359unit, typecheck/lint/build exit0,140case prior-phase Chromium coverage(133из исходного140+7исправленных случаев; не новый единый140green-run). Production build прошёл настоящий no-fish7dates/28slots→shopping→reload, pageerror0; локальные LCP164/180/360ms не являются оценкой публичногоhosting/телефона. Подробности: `docs/qa/phase02-final-validation.md`.
+
+CR-01 исправлен5160dee; CR-02 —50c1295; независимый code re-review0Critical/0Warning/0Info, оба dispositionsfixed. Последующий test-onlybf1414f согласовал legacyguestjourney с теперь допустимым no-fish успехом, сохранил прежние проверки и независимо просмотрен. История исходных Critical сохранена в02-REVIEW-INITIAL.md.
+
 Независимый аудит выявилT-02-10: сохранённый каталог сравнивался только с самим собой. Исправлениеe3f65a3 создало `src/adapters/trustedCatalogs.ts` и обновило activePlan/controller/App и unit/browser fixtures. Trusted-version comparison предшествует projection/presence/promotion/save. Независимый recheck52/52 и исходный tamper probe подтвердили CLOSED;25/25threats закрыты. Доказательства: `docs/qa/phase02-persistence-trust-fix.md`, `02-SECURITY.md`.
 
 Исполнитель проверил342/342unit, typecheck/lint/build и11storage+6synthetic-consumer Chromium cases. UI7warnings исправлены9834678/8605fe7, создан `src/features/plan/PlanLoading.tsx`, обновлены GenerationPage/MenuPage/ShoppingPage/PlanSummary/tokensCSS/App presentation и e2e/generation.spec.ts. Независимый UI re-review PASS, latestChromium20/20/typecheck/lint/build. Отчёт: `docs/qa/phase02-ui-fixes.md`.

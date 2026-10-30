@@ -1,14 +1,16 @@
 ---
 phase: 02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki
-reviewed: 2026-10-30T11:45:19Z
+reviewed: 2026-10-30T12:05:41Z
 depth: standard
 review_kind: delta-re-review
 diff_base: c797a1d6fe5c4a05af29557c7cf789bf1c3fcc19
-reviewed_head: fe11863bba0197097267102d412913ed7e430a62
-files_reviewed: 10
+reviewed_head: bf1414f46d16ae266f8ba76714662dc75517edd9
+source_reviewed_head: fe11863bba0197097267102d412913ed7e430a62
+files_reviewed: 11
 files_reviewed_list:
   - e2e/entry-policies.spec.ts
   - e2e/no-fish.spec.ts
+  - e2e/presentation.spec.ts
   - e2e/products.spec.ts
   - src/adapters/activePlan.test.ts
   - src/adapters/activePlan.ts
@@ -29,7 +31,7 @@ status: clean
 
 **Reviewed:** 2026-10-30T11:45:19Z  
 **Depth:** standard, delta re-review  
-**Files Reviewed:** 10  
+**Files Reviewed:** 11 (10 исправлений + 1 test-only addendum)
 **Status:** clean
 
 ## Summary
@@ -73,6 +75,10 @@ npm run test:unit -- --run src/domain/appliedSettings.test.ts src/domain/generat
 Результат: **4 test files passed, 19 tests passed, 87 skipped по фильтру**, exit 0. Выбранные тесты включают production no-fish generation/validation/save/load, explicit allergy unknown/false/true, отрицательные ingredient restriction cases, canonical optional unit и строгие resource/input boundaries.
 
 Новых browser/build/typecheck/lint запусков в этой независимой дельте не было. Совместная полная регрессия и build остаются отдельной проверкой оркестратора. Review не изменял исходники, тесты, dependencies, состояние проекта или историю Git.
+
+### Addendum 2026-10-30T12:05:41Z — test-only bf1414f
+
+Проверен только diff `e2e/presentation.spec.ts:150-170` в `bf1414f` и окружающие assertions сценария; app sources не менялись. Новых findings нет, статус **clean** сохранён. Устаревшие ожидания отказа `/plan/generating` заменены проверкой `/menu`, пяти дат и 20 instances — это соответствует исправленному CR-01. Сохранены все прежние проверки raw значений, product IDs, единиц, manual origin, checkbox, исключения томатов и reload. Новое `appliedSettings.raw === saved` дополнительно проверяет перенос всего снимка; побайтное равенство active после возврата в мастер и точный набор двух owned storage keys заменяют прежнее ожидание отсутствующего плана. Ослабления assertions, скрытого пропуска или допуска обоих исходов не найдено. Новых тестовых запусков reviewer не выполнял. Прочитанные evidence оркестратора фиксируют исходные **133 passed / 7 failed** и отдельный повтор **7/7**; coverage JSON содержит **missing: []** и `single_full_green_run_claimed: false`. Эти результаты не названы собственным запуском reviewer или единым полным green-run. История независимой проверки CR-01/CR-02 выше сохранена; финальные unit/build evidence находятся в [phase02-final-validation.md](../../../docs/qa/phase02-final-validation.md).
 
 ---
 

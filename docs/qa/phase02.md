@@ -1,5 +1,7 @@
 # Phase 2 — фактическая проверка
 
+> Этот отчёт сохраняет историю release-матрицы и ограничений до post-audit исправлений. Актуальная совместная проверка30.10.2026 (359unit, текущие type/lint/build,140case prior-phase regression coverage и production smoke) — в `phase02-final-validation.md`. Исправления источников доверия, UI, no-fish и optionalunit имеют отдельные phase02-*-fix.md. Прежние full-browser результаты не выдаются за новый full-run текущегоHEAD.
+
 Проверка 28–29.10.2026, основной checkout `D:/Projects/meal-plan`, ветка
 `codex/phase01-execution`, Node24.12.0, установленные Vitest5.0.5 и Playwright1.64.1.
 Новые зависимости, платные API, runtime-флаги и публикация не вводились.

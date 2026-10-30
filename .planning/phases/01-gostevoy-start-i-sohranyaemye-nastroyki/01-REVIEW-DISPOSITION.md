@@ -14,8 +14,12 @@ findings:
     severity: warning
     disposition: fixed
     commit: 8cd5872
+  - id: CR-02
+    severity: critical
+    disposition: fixed
+    commit: 1789eea
 open: 0
-total: 3
+total: 4
 ---
 
 # Phase 1: Code Review Disposition
@@ -50,3 +54,10 @@ gsd-verifier независимо перечитал `src/app/App.tsx` (`change`
 `git log 8cd5872..HEAD -- src e2e scripts package.json playwright.config.ts vite.config.ts tsconfig.json eslint.config.js index.html` и diff тех же путей от `8cd5872` до рабочего состояния пусты. Новых изменений приложения, тестов или конфигурации после трёх исправлений нет; самостоятельная повторная проверка их реализации здесь не заявляется. Исходные findings и история исправлений выше сохранены.
 
 Принятие H1–H9 зафиксировано как пользовательские сообщения «pass». Агент не проводил дополнительные device/LCP/контраст/zoom проверки, не добавлял измерения, сведения об устройствах или новые результаты автоматизации; Q-17 детали воспроизводимости не выдумываются. Тесты в этом delta review не запускались. Итоговый verifier должен обновить покрытие по принятому UI-контракту и источнику human UAT; этот addendum сам по себе не объявляет фазу завершённой.
+## Повторное ревью 30.10.2026 — исправленный дефект совместимости
+
+| Finding | Severity | Disposition | Evidence / next action |
+|---|---|---|---|
+| CR-02: прямой crypto.randomUUID блокирует запуск на Safari 15.0–15.3 | Critical / BLOCKER | fixed | 1789eea; независимый re-review clean, два named unit passed; реальный quickstart/submit/retry и сохранение/reload в 15/15 browser tests, production smoke 2/2; детали в 01-REVIEW.md и docs/qa/phase02-seed-compatibility-fix.md. |
+
+Новые результаты не отменяют исторические пользовательские UAT pass. Первоначальный owner refresh остановился на воспроизведённом дефекте; после исправления и независимого re-review возобновлён. Диспозиции исправленных CR-01/WR-01/WR-02 выше сохранены. Реальный Safari 15.0 не запускался: проверялось отсутствие/исключение API в установленных браузерных движках.

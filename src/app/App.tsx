@@ -17,6 +17,7 @@ import { GenerationPage } from '../features/generation/GenerationPage';
 import { MenuPage } from '../features/menu/MenuPage';
 import { ShoppingPage } from '../features/shopping/ShoppingPage';
 import { PlanLoading } from '../features/plan/PlanLoading';
+import { createGenerationSeed } from './generationSeed';
 import '../shared/styles/tokens.css';
 
 export const appConfig = { brand: 'MealPlan' };
@@ -234,7 +235,7 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
     const origin = { returnRoute: pathname, focusAnchor: quick ? 'quick-start' : focusAnchor };
     launch.current = { settings: applied.settings, origin };
     navigate('/plan/generating');
-    if (catalog.status === 'loaded') void controller.start(createPlanInputs(applied.settings, catalog.catalog, { seed: crypto.randomUUID() }), origin);
+    if (catalog.status === 'loaded') void controller.start(createPlanInputs(applied.settings, catalog.catalog, { seed: createGenerationSeed() }), origin);
   }
   function settings(budget = false) {
     catalogAttempt.current++; controller.cancel(); setCatalogError(false);
@@ -253,7 +254,7 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
     if (atAttempt !== catalogAttempt.current || previousRoute.current !== '/plan/generating' || !launch.current) return;
     if (loaded.status === 'loaded') {
       setCatalogError(false);
-      await controller.start(createPlanInputs(launch.current.settings, loaded.catalog, { seed: crypto.randomUUID() }), launch.current.origin);
+      await controller.start(createPlanInputs(launch.current.settings, loaded.catalog, { seed: createGenerationSeed() }), launch.current.origin);
     }
   }
   const basis = operation.lastApplied ? 'Используем последние применённые настройки' : sameSnapshot(draft, createDraft())

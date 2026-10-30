@@ -61,6 +61,21 @@ export function sameSnapshot(left: unknown, right: unknown): boolean {
     && sameSnapshot((left as Record<string, unknown>)[key], (right as Record<string, unknown>)[key]));
 }
 const invalid = (step: Step, errors: StepErrors): AppliedSettingsResult => ({ status: 'invalid', step, errors });
+const plainRecord = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object'
+  && Object.getPrototypeOf(value) === Object.prototype;
+/** HomeDraftRow permits an omitted unit. Retain every other field for strict snapshot validation. */
+function canonicalDraftUnits(input: unknown): unknown {
+  if (!plainRecord(input) || !Array.isArray(input.home)) return input;
+  if (input.home.length > 5000) throw new RangeError('SNAPSHOT_SIZE_LIMIT');
+  const home = input.home.map(row => {
+    if (!plainRecord(row) || !Object.prototype.hasOwnProperty.call(row, 'unit') || row.unit !== undefined) return row;
+    const keys = Object.keys(row);
+    // Enforce the original bound before omitting the legal optional field.
+    if (keys.length > 100) throw new RangeError('INVALID_SNAPSHOT');
+    return Object.fromEntries(keys.filter(key => key !== 'unit').map(key => [key, row[key]]));
+  });
+  return { ...input, home };
+}
 /** Preserve duplicate rows for step validation; the storage guard rejects duplicates too early. */
 function hasDraftShape(value: unknown): value is SettingsDraft {
   if (isSettingsDraft(value)) return true;
@@ -76,7 +91,7 @@ function hasDraftShape(value: unknown): value is SettingsDraft {
 export function buildAppliedSettings(input: unknown): AppliedSettingsResult {
   let raw: SettingsDraft;
   try {
-    const detached = immutableSnapshot(input);
+    const detached = immutableSnapshot(canonicalDraftUnits(input));
     if (!hasDraftShape(detached)) return invalid(1, { people: 'Сохранённые настройки повреждены. Проверьте мастер' });
     raw = detached;
   } catch { return invalid(1, { people: 'Сохранённые настройки повреждены. Проверьте мастер' }); }
@@ -111,7 +126,9 @@ export function buildAppliedSettings(input: unknown): AppliedSettingsResult {
 /** Applied settings are validated against their raw source, never accepted because truthy. */
 export function validateAppliedSettings(input: unknown): AppliedSettingsResult {
   try {
-    const snapshot = immutableSnapshot(input);
+    const canonical = plainRecord(input) && Object.prototype.hasOwnProperty.call(input, 'raw')
+      ? { ...input, raw: canonicalDraftUnits(input.raw) } : input;
+    const snapshot = immutableSnapshot(canonical);
     if (!snapshot || typeof snapshot !== 'object' || !('raw' in snapshot)) return invalid(1, { people: 'Настройки повреждены' });
     const rebuilt = buildAppliedSettings(snapshot.raw);
     return rebuilt.status === 'applied' && sameSnapshot(rebuilt.settings, snapshot) ? rebuilt : invalid(1, { people: 'Настройки повреждены' });

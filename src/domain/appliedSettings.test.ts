@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createDraft } from './settings';
-import { buildAppliedSettings, selectQuickStartInput } from './appliedSettings';
+import { createDraft, validateStep } from './settings';
+import { buildAppliedSettings, immutableSnapshot, selectQuickStartInput, validateAppliedSettings } from './appliedSettings';
 
 describe('applied settings gate', () => {
   it('applies a valid guest draft with absent target and family purchase budget', () => {
@@ -48,6 +48,59 @@ describe('applied settings gate', () => {
       restrictions: ['no-fish'], exclusionIds: ['egg'], home: [{ productId: 'rice', quantity: { status: 'unknown' }, expiresSoon: true }],
     } });
     expect(draft.home[0].quantity).toBe('');
+  });
+  it('canonicalizes a cleared optional unit without changing unknown quantity before or after persistence', () => {
+    const draft = createDraft(); draft.step = 4;
+    draft.home = [{ productId: 'rice', quantity: '', unit: undefined, expiresSoon: true }];
+    for (const step of [1, 2, 3, 4] as const) expect(validateStep(draft, step)).toEqual({});
+    const result = buildAppliedSettings(draft);
+    expect(result.status).toBe('applied');
+    if (result.status !== 'applied') return;
+    expect(result.settings.home).toEqual([{ productId: 'rice', quantity: { status: 'unknown' }, expiresSoon: true }]);
+    expect(result.settings.raw.home).toEqual([{ productId: 'rice', quantity: '', expiresSoon: true }]);
+    expect(Object.prototype.hasOwnProperty.call(result.settings.raw.home[0], 'unit')).toBe(false);
+    expect(Object.isFrozen(result.settings.raw.home[0])).toBe(true);
+    expect(Object.prototype.hasOwnProperty.call(draft.home[0], 'unit')).toBe(true);
+    const restoredDraft = JSON.parse(JSON.stringify(draft));
+    expect(buildAppliedSettings(restoredDraft)).toEqual(result);
+    const legacyApplied = { ...result.settings, raw: draft };
+    expect(validateAppliedSettings(legacyApplied)).toEqual(result);
+    expect(validateAppliedSettings(result.settings)).toEqual(result);
+    const changedDraft = { ...createDraft(), people: '5' };
+    expect(selectQuickStartInput(changedDraft, legacyApplied)).toEqual(result);
+    expect(selectQuickStartInput(changedDraft, result.settings)).toEqual(result);
+    expect(selectQuickStartInput(draft)).toEqual(result);
+    expect(selectQuickStartInput(restoredDraft)).toEqual(result);
+  });
+  it('reports a positive quantity with cleared unit at step four instead of corrupt people', () => {
+    const draft = createDraft(); draft.step = 4;
+    draft.home = [{ productId: 'rice', quantity: '100', unit: undefined, expiresSoon: false }];
+    expect(buildAppliedSettings(draft)).toMatchObject({ status: 'invalid', step: 4, errors: { 'unit-rice': expect.any(String) } });
+  });
+  it.each(['oz', '', null, 0])('still rejects a specified invalid home unit: %j', unit => {
+    const draft = { ...createDraft(), home: [{ productId: 'rice', quantity: '', unit, expiresSoon: false }] };
+    expect(buildAppliedSettings(draft)).toMatchObject({ status: 'invalid' });
+  });
+  it('never sanitizes other undefined, nonfinite, cyclic, nonplain or oversized values', () => {
+    const row = { productId: 'rice', quantity: '', unit: undefined, expiresSoon: false };
+    const base = { ...createDraft(), home: [row] };
+    const cyclic = { ...base, extra: {} }; cyclic.extra = cyclic;
+    const tooManyRowKeys = { ...row, ...Object.fromEntries(Array.from({ length: 97 }, (_, i) => [`extra-${i}`, i])) };
+    const invalidInputs = [
+      { ...base, unexpected: undefined }, { ...base, home: [{ ...row, unexpected: undefined }] },
+      { ...base, manualNutrition: { ...base.manualNutrition, unexpected: undefined } },
+      { ...base, targetSource: { kind: 'manual', unexpected: undefined } },
+      { ...base, unexpected: NaN }, cyclic, Object.assign(Object.create(null), base),
+      { ...base, home: [Object.assign(Object.create(null), row)] },
+      { ...base, home: [tooManyRowKeys] }, { ...base, people: '2'.repeat(4097) },
+      { ...base, home: Array(5001).fill(row) },
+    ];
+    for (const input of invalidInputs) expect(buildAppliedSettings(input)).toMatchObject({ status: 'invalid' });
+    expect(() => immutableSnapshot(base)).toThrow();
+    const valid = buildAppliedSettings(createDraft());
+    if (valid.status !== 'applied') throw new Error('Expected valid baseline');
+    expect(validateAppliedSettings({ ...valid.settings, raw: base, unexpected: undefined })).toMatchObject({ status: 'invalid' });
+    expect(validateAppliedSettings({ ...valid.settings, raw: { ...base, unexpected: undefined } })).toMatchObject({ status: 'invalid' });
   });
   it('returns detached recursively frozen nested values', () => {
     const draft = createDraft(); draft.restrictions = ['no-fish'];

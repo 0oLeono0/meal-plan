@@ -23,6 +23,43 @@ async function appliedRaw(page: Page): Promise<SettingsDraft> {
   });
 }
 
+for (const action of ['Составить меню', 'Пропустить']) {
+  test(`cleared optional home unit keeps unknown quantity on ${action} and reload`, async ({ page }) => {
+    await seedDraft(page, { step: 4, days: '1' });
+    await page.getByRole('group', { name: 'Популярные продукты' }).getByRole('button', { name: 'Рис', exact: true }).click();
+    await page.getByLabel('Единица Рис', { exact: true }).selectOption('g');
+    await page.getByLabel('Единица Рис', { exact: true }).selectOption('');
+    await page.getByLabel('Скоро испортится Рис', { exact: true }).check();
+    await expect(page.getByLabel('Количество Рис', { exact: true })).toHaveValue('');
+    await page.getByRole('button', { name: action, exact: true }).click();
+    await expect(page.getByText('Сохранённые настройки повреждены. Проверьте мастер', { exact: true })).toBeHidden();
+    await page.waitForURL('**/menu');
+    const raw = await appliedRaw(page);
+    expect(raw.home).toEqual([{ productId: 'rice', quantity: '', expiresSoon: true }]);
+    const home = await page.evaluate(async () => {
+      const path = '/src/adapters/activePlan.ts';
+      const { createActivePlanAdapter } = await import(path);
+      const loaded = await createActivePlanAdapter().load();
+      if (loaded.status !== 'loaded') throw new Error('Expected validated plan');
+      return loaded.bundle.plan.inputs.appliedSettings.home;
+    });
+    expect(home).toEqual([{ productId: 'rice', quantity: { status: 'unknown' }, expiresSoon: true }]);
+    await page.reload();
+    await expect(page.getByRole('heading', { level: 1, name: 'Меню на 1 день', exact: true })).toBeVisible();
+    expect(await appliedRaw(page)).toEqual(raw);
+  });
+
+  test(`cleared home unit with numeric quantity focuses step four on ${action}`, async ({ page }) => {
+    await seedDraft(page, { step: 4, days: '1', home: [{ productId: 'rice', quantity: '100', unit: 'g', expiresSoon: false }] });
+    await page.getByLabel('Единица Рис', { exact: true }).selectOption('');
+    await page.getByRole('button', { name: action, exact: true }).click();
+    await expect(page.getByText('Шаг 4 из 4')).toBeVisible();
+    await expect(page.getByLabel('Единица Рис', { exact: true })).toBeFocused();
+    await expect(page.getByLabel('Количество Рис', { exact: true })).toHaveValue('100');
+    expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'))).toBeNull();
+  });
+}
+
 test('skip retains restrictions exclusions home quantities and global pantry', async ({ page }) => {
   const restrictions = ['vegetarian'], exclusionIds = ['egg'];
   const home = [{ productId: 'rice', quantity: '100', unit: 'g' as const, expiresSoon: true }];

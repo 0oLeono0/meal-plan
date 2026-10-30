@@ -147,12 +147,16 @@ for (const width of widths) test(`presentation ${width === 360 ? 'smoke ' : ''}$
   expect(saved).toMatchObject({ step: 4, people: '3', days: '5', budget: '1050', targetSource: { kind: 'manual' }, manualNutrition: { calories: ' 1800,5 ', protein: '90', fat: '0', carbohydrates: '240' }, exclusionIds: ['tomato'] });
   expect(saved.home).toEqual(expect.arrayContaining([expect.objectContaining({ productId: 'rice', quantity: ' 1,25 ', unit: 'kg', expiresSoon: true }), expect.objectContaining({ productId: 'egg', quantity: '' })]));
   await page.getByRole('button', { name: 'Составить меню', exact: true }).click();
-  await expect(page).toHaveURL('/plan/generating');
-  // A restrictive high-variety request may be refused; constraints must stay intact.
-  await expect(page.getByRole('heading', { level: 1 })).not.toHaveText('Составляем меню');
-  await expect(page.getByRole('button', { name: 'Изменить настройки', exact: true })).toBeVisible();
+  // Reviewed no-fish ingredient classification is supported; it is not an allergy guarantee.
+  await expect(page).toHaveURL('/menu');
+  await expect(page.locator('[data-date]')).toHaveCount(5);
+  await expect(page.locator('[data-instance-id]')).toHaveCount(20);
+  const activeKey = 'mealplan:guest:active-plan:v1';
+  const activeBytes = await page.evaluate(key => localStorage.getItem(key), activeKey);
+  expect(activeBytes).not.toBeNull();
+  expect(JSON.parse(activeBytes!).plan.inputs.appliedSettings.raw).toEqual(saved);
   await capture('operation');
-  await page.getByRole('button', { name: 'Изменить настройки', exact: true }).click();
+  await page.getByRole('link', { name: /Новое меню/ }).click();
   await page.reload();
   await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '4');
   await expect(page.getByLabel('Количество Рис', { exact: true })).toHaveValue(' 1,25 ');
@@ -162,7 +166,8 @@ for (const width of widths) test(`presentation ${width === 360 ? 'smoke ' : ''}$
   await expect(page.getByRole('button', { name: 'Удалить исключение Помидоры' })).toBeVisible();
   await next(page, 4);
   expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).draft, draftKey)).toEqual(saved);
-  expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([draftKey]);
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(activeBytes);
+  expect(await page.evaluate(() => Object.keys(localStorage).sort())).toEqual([draftKey, activeKey].sort());
 });
 
 test('presentation manual absence and partial correction preserve optional contract without averages', async ({ page }) => {

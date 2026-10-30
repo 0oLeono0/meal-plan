@@ -19,7 +19,7 @@ key-files:
   modified: []
 key-decisions:
   - "Use full enumeration only for spaces up to256; larger searches use a cheapest baseline and beam32 local substitutions, default512 evaluations with hard ceiling20000. Exhaustion never proves impossibility."
-  - "No-fish requires both no-fish restriction evidence and seafood allergen suitability; optional allergen keys are an injected safety policy until allergy UI/input is separately specified."
+  - "Corrected by CR-01 (5160dee, 2026-10-30): reviewed no-fish restriction evidence covers fish and all seafood ingredients. A separately requested allergen key still requires its own suitability evidence; no allergen-free guarantee is inferred from diet classification. The original implementation incorrectly required both for no-fish."
   - "Value stock bounds through the same nutrition quantity basis as shared projection; missing mandatory alternatives prevent budget-impossibility claims."
 requirements-completed: []
 requirements-contributed: [DATA-02, DATA-03, GEN-01, GEN-02, GEN-03, GEN-04, GEN-05]

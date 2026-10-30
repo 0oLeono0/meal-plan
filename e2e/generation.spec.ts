@@ -183,3 +183,103 @@ test('deep generation entry never resurrects a request', async ({ page }) => {
   await page.getByRole('link', { name: 'К настройкам', exact: true }).click();
   await expect(page).toHaveURL(/\/plan\/new$/);
 });
+
+// The real presentation components receive controlled read states; generation is tested above.
+async function mountReadState(page: import('@playwright/test').Page, state: 'pending' | 'price' | 'nutrition' | 'safety' | 'unknown' | 'budget' | 'menu-load' | 'shopping-load') {
+  await page.goto('/plan/new');
+  await expect(page.getByLabel('Число людей', { exact: true })).toBeVisible();
+  await page.evaluate(async state => {
+    const urls = performance.getEntriesByType('resource').map(row => row.name);
+    const { default: { createElement } } = await import(urls.find(url => /\/react\.js\?/.test(url))!);
+    const { default: { createRoot } } = await import(urls.find(url => /\/react-dom_client\.js\?/.test(url))!);
+    const controllerPath = '/src/features/generation/controller.ts', catalogPath = '/src/data/catalog.ts';
+    const { createGenerationController } = await import(controllerPath);
+    const { bundledCatalogPort } = await import(catalogPath);
+    const controller = createGenerationController({ generation: {}, activePlan: {} });
+    const snapshot = { ...controller.getSnapshot(), status: state === 'pending' ? 'pending' : 'error', loadStatus: 'pending', error: {
+      code: state === 'budget' ? 'BUDGET_TOO_LOW' : 'GENERATION_DATA_INCOMPLETE',
+      diagnostics: [{ code: ({ price: 'PRICE_UNKNOWN', nutrition: 'NUTRITION_UNKNOWN', safety: 'SAFETY_FACT_MISSING' } as Record<string, string>)[state] ?? 'FUTURE_DIAGNOSTIC', path: 'nutrition', message: '' }],
+    } };
+    const componentPath = state === 'menu-load' ? '/src/features/menu/MenuPage.tsx' : state === 'shopping-load' ? '/src/features/shopping/ShoppingPage.tsx' : '/src/features/generation/GenerationPage.tsx';
+    const components = await import(componentPath);
+    const Component = components.MenuPage ?? components.ShoppingPage ?? components.GenerationPage;
+    const catalog = await bundledCatalogPort.load();
+    const props = { snapshot, catalog, requestedSettings: { people: 2, days: 7, cookingMinutes: 30, restrictions: [], exclusionIds: ['egg', 'tomato'] }, draftSaved: true,
+      onCancel() {}, onRetry() {}, onSettings() {}, onRetrySave() {}, onRetryLoad() {} };
+    const container = document.createElement('div'); container.className = 'app-shell fullscreen';
+    document.body.replaceChildren(container);
+    createRoot(container).render(createElement('main', null, createElement(Component, props)));
+  }, state);
+}
+
+test('pending indicator occupies visible space and remains visible without motion or a fake percentage', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 812 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await mountReadState(page, 'pending');
+  const indicator = page.getByRole('progressbar', { name: 'Подбор меню' });
+  await expect(indicator).toBeVisible();
+  const box = await indicator.boundingBox();
+  expect(box!.height).toBeGreaterThanOrEqual(4);
+  expect(box!.width).toBeGreaterThan(40);
+  expect(await indicator.getAttribute('aria-valuenow')).toBeNull();
+  const visibleMark = indicator.locator('span');
+  await expect(visibleMark).toBeVisible();
+  expect(await visibleMark.evaluate(el => getComputedStyle(el).animationName)).toBe('none');
+  await expect(page.getByRole('button', { name: 'Отмена', exact: true })).toBeEnabled();
+  await page.screenshot({ path: '.tmp/phase02-ui-fixes/pending-reduced-motion-360.png' });
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  expect(await visibleMark.evaluate(el => getComputedStyle(el).animationName)).not.toBe('none');
+});
+
+test('budget refusal resolves excluded products into readable names', async ({ page }) => {
+  await mountReadState(page, 'budget');
+  await expect(page.getByRole('alert')).toContainText('Исключены: Яйца,');
+  await expect(page.getByRole('alert')).toContainText('Помидоры');
+  await expect(page.getByRole('alert')).not.toContainText('egg');
+  await expect(page.getByRole('alert')).not.toContainText('tomato');
+});
+
+for (const [state, reason] of [['price', 'данные о цене'], ['nutrition', 'данные о КБЖУ'], ['safety', 'данные о выбранном ограничении'], ['unknown', 'Не хватает проверенных данных для расчёта']] as const) {
+  test(`missing-data recovery identifies ${state} without guessing other facts`, async ({ page }) => {
+    await mountReadState(page, state);
+    await expect(page.getByRole('alert')).toContainText(reason);
+    await expect(page.getByRole('alert')).not.toContainText('цене / КБЖУ /');
+    if (state === 'price') await expect(page.getByRole('alert')).not.toContainText('КБЖУ');
+    if (state === 'nutrition') await expect(page.getByRole('alert')).not.toContainText('цене');
+  });
+}
+
+for (const state of ['menu-load', 'shopping-load'] as const) {
+  test(`${state} presents a decorative skeleton and one honest loading status`, async ({ page }) => {
+    await mountReadState(page, state);
+    await expect(page.getByRole('status')).toContainText('Загружаем');
+    await expect(page.locator('[aria-busy="true"] [role="status"]')).toHaveCount(0);
+    const skeleton = page.locator('[data-loading-skeleton]');
+    await expect(skeleton).toBeVisible();
+    await expect(skeleton).toHaveAttribute('aria-hidden', 'true');
+    expect((await skeleton.boundingBox())!.height).toBeGreaterThan(40);
+    await expect(page.locator('[data-plan-id]')).toHaveCount(0);
+  });
+}
+
+
+test('menu and shopping retain readable hierarchy and the same three costs across viewport widths', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Меню за 1 клик', exact: true }).click();
+  await expect(page).toHaveURL(/\/menu$/);
+  await expect(page.getByRole('region', { name: 'Бюджет меню' }).locator('dd')).toHaveCount(3);
+  const costs = await page.getByRole('region', { name: 'Бюджет меню' }).locator('dd').allTextContents();
+  expect(costs).toHaveLength(3);
+  for (const width of [360, 768, 1280]) {
+    await page.setViewportSize({ width, height: 812 });
+    for (const route of ['/menu', '/shopping']) {
+      await page.goto(route);
+      const budget = page.getByRole('region', { name: 'Бюджет меню' });
+      await expect(budget.locator('dd')).toHaveText(costs);
+      await expect(page.locator('h3').first()).toHaveCSS('font-size', '16px');
+      await expect(page.locator('h3').first()).toHaveCSS('font-weight', '600');
+      for (const dd of await budget.locator('dd').all()) await expect(dd).toHaveCSS('margin-inline-start', '0px');
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+    }
+  }
+});

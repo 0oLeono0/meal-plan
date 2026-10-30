@@ -16,7 +16,7 @@ const sourceLabel = (count: string) => `Из ${count.replace(/блюдо$|блю
 export function ShoppingPage({ snapshot, onRetryLoad }: { snapshot: GenerationSnapshot; onRetryLoad(): void }) {
   const bundle = snapshot.active;
   if (!bundle) {
-    if (snapshot.loadStatus === 'pending' || snapshot.loadStatus === 'unloaded') return <Status>Загружаем покупки…</Status>;
+    if (snapshot.loadStatus === 'pending' || snapshot.loadStatus === 'unloaded') return <section><Status>Загружаем покупки…</Status><div className="plan-loading-skeleton" data-loading-skeleton="" aria-hidden="true"><div /><div /><div /></div></section>;
     if (snapshot.loadStatus === 'error' || snapshot.loadStatus === 'corrupt') return <section><h1 tabIndex={-1}>{snapshot.loadStatus === 'corrupt' ? 'Сохранённое меню повреждено или несовместимо с текущей версией' : 'Не удалось загрузить покупки'}</h1><p>Исходная запись не изменена. Повторите загрузку или составьте новое меню</p><Button onClick={onRetryLoad}>Повторить загрузку</Button><Link className="action-link" to="/plan/new">К настройкам</Link></section>;
     return <section><h1 tabIndex={-1}>Сначала составьте меню</h1><p>Начните с настроек питания</p><Link className="primary action-link" to="/plan/new">Составить меню</Link></section>;
   }
@@ -30,7 +30,7 @@ export function ShoppingPage({ snapshot, onRetryLoad }: { snapshot: GenerationSn
     name: projection.rows.find(row => row.productId === issue.productId && row.profileId === issue.profileId)!.name,
     reason: issue.code === 'UNKNOWN_PANTRY_QUANTITY' ? 'количество не указано — запас не вычтен' : 'единицы запаса и потребности несовместимы — запас не вычтен',
   }));
-  return <section data-plan-id={plan.activeVariantId} className="[overflow-wrap:anywhere]">
+  return <section data-plan-id={plan.activeVariantId} className="plan-read-model [overflow-wrap:anywhere]">
     <h1 tabIndex={-1}>Список покупок</h1>
     <p>{formatDateOnly(plan.inputs.dates[0])} — {formatDateOnly(plan.inputs.dates[plan.inputs.dates.length - 1])} · На {view.people}</p>
     <p className="tabular-nums">{view.itemCount} · ≈ {view.costs.purchase}</p>

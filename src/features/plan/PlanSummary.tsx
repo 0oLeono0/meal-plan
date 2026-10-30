@@ -15,7 +15,7 @@ export function PlanSummary({ bundle, projection }: { bundle: ActiveBundle; proj
       <p>Лимит дополнительных покупок для всей семьи на {view.period}</p><p>Осталось {view.costs.remaining}</p>
       <p className="tabular-nums">Использовано бюджета: {percent}%</p>
       <progress className="w-full accent-[var(--color-accent)]" aria-label="Использовано бюджета" max={100} value={percent} />
-      <dl className="tabular-nums"><dt>Все ингредиенты</dt><dd>{view.costs.ingredient}</dd><dt>Покрыто запасами</dt><dd>{view.costs.covered}</dd><dt>Нужно купить</dt><dd>{view.costs.purchase}</dd></dl>
+      <dl className="plan-costs tabular-nums"><dt>Все ингредиенты</dt><dd>{view.costs.ingredient}</dd><dt>Покрыто запасами</dt><dd>{view.costs.covered}</dd><dt>Нужно купить</dt><dd>{view.costs.purchase}</dd></dl>
       <p>Цены ориентировочные, проверяйте в магазине</p><p className="hint">Оценка цен: {scopes.join('; ')}</p>
       {hasWebScope && <p className="hint">Веб-витрина не подтверждает наличие цены в вашем регионе</p>}
     </section>

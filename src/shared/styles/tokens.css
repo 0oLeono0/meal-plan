@@ -147,3 +147,42 @@ body { margin: 0; min-width: 0; }
   .app-shell :is(a, button, input, select, textarea, summary, h1) { scroll-margin-bottom: var(--space-md); }
 }
 @media (prefers-reduced-motion: reduce) { .app-shell :is(*, button), .app-shell *::before, .app-shell *::after { transition: none; animation: none; scroll-behavior: auto; } }
+
+/* Phase 2 read models: do not reset the existing wizard heading rhythm. */
+.app-shell .plan-read-model h3 {
+  font-size: var(--text-body);
+  font-weight: 600;
+  line-height: 1.5;
+  margin: var(--space-md) 0 var(--space-sm);
+  overflow-wrap: anywhere;
+}
+.app-shell .plan-costs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-xs);
+  margin: var(--space-md) 0;
+}
+.app-shell .plan-costs dd { margin: 0 0 var(--space-sm); }
+.app-shell .generation-progress {
+  height: var(--space-sm);
+  margin: var(--space-lg) 0;
+  background: var(--color-disabled);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.app-shell .generation-progress span {
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: inherit;
+  animation: generation-indeterminate 1.6s ease-in-out infinite alternate;
+}
+@keyframes generation-indeterminate { from { transform: translateX(0); } to { transform: translateX(150%); } }
+.app-shell .plan-loading-skeleton { display: grid; gap: var(--space-md); margin: var(--space-lg) 0; }
+.app-shell .plan-loading-skeleton > div {
+  height: var(--space-3xl);
+  background: var(--color-disabled);
+  border-radius: var(--radius-field);
+}
+@media (prefers-reduced-motion: reduce) { .app-shell .generation-progress span { animation: none; } }

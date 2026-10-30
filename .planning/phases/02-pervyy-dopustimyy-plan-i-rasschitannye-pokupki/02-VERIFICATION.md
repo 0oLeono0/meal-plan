@@ -1,13 +1,20 @@
 ---
 phase: 02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki
-verified: 2026-10-30T12:16:00Z
+verified: 2026-10-30T13:27:51Z
 status: passed
-score: 19/20 must-haves verified
-covered_files: [".planning/phases/01-gostevoy-start-i-sohranyaemye-nastroyki/01-UAT.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-01-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-01-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-02-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-02-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-03-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-03-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-04-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-04-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-05-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-05-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-06-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-06-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-07-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-07-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-08-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-08-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-09-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-09-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-10-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-10-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-CONTEXT.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-REVIEW-DISPOSITION.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-REVIEW.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-SECURITY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-UI-REVIEW.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-UI-SPEC.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-VALIDATION.md","AGENTS.md","data/sources/food.snapshot.json","data/sources/prices.snapshot.json","data/sources/safety.snapshot.json","docs/data/phase02-sources.md","docs/decisions/home-product-addition.json","docs/decisions/nutrition-calculator-amendment.md","docs/decisions/nutrition-calculator.json","docs/qa/phase02-cr01-fix.md","docs/qa/phase02-cr02-fix.md","docs/qa/phase02-final-validation.md","docs/qa/phase02-persistence-trust-fix.md","docs/qa/phase02-ui-fixes.md","docs/qa/phase02-webkit-assessment.md","docs/qa/phase02.md","e2e/accessibility.spec.ts","e2e/budget.spec.ts","e2e/entry-policies.spec.ts","e2e/fixtures.ts","e2e/generation-fixtures.ts","e2e/generation-races.spec.ts","e2e/generation-storage.spec.ts","e2e/generation.spec.ts","e2e/guest.spec.ts","e2e/menu.spec.ts","e2e/navigation.spec.ts","e2e/no-fish.spec.ts","e2e/nutrition.spec.ts","e2e/phase02-presentation.spec.ts","e2e/plan-fixtures.ts","e2e/presentation.spec.ts","e2e/products.spec.ts","e2e/shopping.spec.ts","e2e/storage-retry.spec.ts","e2e/storage.spec.ts","e2e/wizard.spec.ts","eslint.config.js","index.html","package-lock.json","package.json","playwright.config.ts","src/adapters/activePlan.test.ts","src/adapters/activePlan.ts","src/adapters/catalog.test.ts","src/adapters/catalog.ts","src/adapters/generation.test.ts","src/adapters/generation.ts","src/adapters/guestDraft.test.ts","src/adapters/guestDraft.ts","src/adapters/products.ts","src/adapters/trustedCatalogs.ts","src/app/App.tsx","src/data/catalog.test.ts","src/data/catalog.ts","src/data/foodSources.ts","src/data/recipes.ts","src/data/sources.test.ts","src/domain/appliedSettings.test.ts","src/domain/appliedSettings.ts","src/domain/budget.test.ts","src/domain/budget.ts","src/domain/catalog.ts","src/domain/generatePlan.test.ts","src/domain/generatePlan.ts","src/domain/nutritionTarget.test.ts","src/domain/nutritionTarget.ts","src/domain/plan.test.ts","src/domain/plan.ts","src/domain/planProjection.test.ts","src/domain/planProjection.ts","src/domain/presentation.test.ts","src/domain/presentation.ts","src/domain/quantities.test.ts","src/domain/quantities.ts","src/domain/settings.test.ts","src/domain/settings.ts","src/features/generation/GenerationPage.tsx","src/features/generation/controller.test.ts","src/features/generation/controller.ts","src/features/menu/MenuPage.tsx","src/features/plan/PlanLoading.tsx","src/features/plan/PlanSummary.tsx","src/features/shopping/ShoppingPage.tsx","src/features/wizard/BudgetStep.tsx","src/features/wizard/ExclusionsStep.tsx","src/features/wizard/HomeProductsStep.tsx","src/features/wizard/NutritionFields.tsx","src/features/wizard/PeopleStep.tsx","src/features/wizard/Wizard.tsx","src/features/wizard/copy.ts","src/shared/ProductCombobox.tsx","src/shared/styles/tokens.css","src/shared/ui.tsx","tsconfig.json","vite.config.ts"]
-covered_digest: "v3:sha256:957879b3aa748901ebaa3de4add69ac9adb5b3b7aa2abd5eaa5034a5265e055b"
+score: 20/20 must-haves verified
+covered_files: [".planning/phases/01-gostevoy-start-i-sohranyaemye-nastroyki/01-UAT.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-01-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-01-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-02-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-02-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-03-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-03-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-04-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-04-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-05-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-05-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-06-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-06-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-07-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-07-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-08-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-08-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-09-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-09-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-10-PLAN.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-10-SUMMARY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-CONTEXT.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-REVIEW-DISPOSITION.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-REVIEW.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-SECURITY.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-UAT.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-UI-REVIEW.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-UI-SPEC.md",".planning/phases/02-pervyy-dopustimyy-plan-i-rasschitannye-pokupki/02-VALIDATION.md",".tmp/phase02-refresh-unit.log","AGENTS.md","data/sources/food.snapshot.json","data/sources/prices.snapshot.json","data/sources/safety.snapshot.json","docs/data/phase02-sources.md","docs/decisions/home-product-addition.json","docs/decisions/nutrition-calculator-amendment.md","docs/decisions/nutrition-calculator.json","docs/qa/phase02-cr01-fix.md","docs/qa/phase02-cr02-fix.md","docs/qa/phase02-final-validation.md","docs/qa/phase02-persistence-trust-fix.md","docs/qa/phase02-seed-compatibility-fix.md","docs/qa/phase02-ui-fixes.md","docs/qa/phase02-webkit-assessment.md","docs/qa/phase02.md","e2e/accessibility.spec.ts","e2e/budget.spec.ts","e2e/entry-policies.spec.ts","e2e/fixtures.ts","e2e/generation-fixtures.ts","e2e/generation-races.spec.ts","e2e/generation-storage.spec.ts","e2e/generation.spec.ts","e2e/guest.spec.ts","e2e/menu.spec.ts","e2e/navigation.spec.ts","e2e/no-fish.spec.ts","e2e/nutrition.spec.ts","e2e/phase02-presentation.spec.ts","e2e/plan-fixtures.ts","e2e/presentation.spec.ts","e2e/products.spec.ts","e2e/seed-compatibility.spec.ts","e2e/shopping.spec.ts","e2e/storage-retry.spec.ts","e2e/storage.spec.ts","e2e/wizard.spec.ts","eslint.config.js","index.html","package-lock.json","package.json","playwright.config.ts","src/adapters/activePlan.test.ts","src/adapters/activePlan.ts","src/adapters/catalog.test.ts","src/adapters/catalog.ts","src/adapters/generation.test.ts","src/adapters/generation.ts","src/adapters/guestDraft.test.ts","src/adapters/guestDraft.ts","src/adapters/products.ts","src/adapters/trustedCatalogs.ts","src/app/App.tsx","src/app/generationSeed.test.ts","src/app/generationSeed.ts","src/data/catalog.test.ts","src/data/catalog.ts","src/data/foodSources.ts","src/data/recipes.ts","src/data/sources.test.ts","src/domain/appliedSettings.test.ts","src/domain/appliedSettings.ts","src/domain/budget.test.ts","src/domain/budget.ts","src/domain/catalog.ts","src/domain/generatePlan.test.ts","src/domain/generatePlan.ts","src/domain/nutritionTarget.test.ts","src/domain/nutritionTarget.ts","src/domain/plan.test.ts","src/domain/plan.ts","src/domain/planProjection.test.ts","src/domain/planProjection.ts","src/domain/presentation.test.ts","src/domain/presentation.ts","src/domain/quantities.test.ts","src/domain/quantities.ts","src/domain/settings.test.ts","src/domain/settings.ts","src/features/generation/GenerationPage.tsx","src/features/generation/controller.test.ts","src/features/generation/controller.ts","src/features/menu/MenuPage.tsx","src/features/plan/PlanLoading.tsx","src/features/plan/PlanSummary.tsx","src/features/shopping/ShoppingPage.tsx","src/features/wizard/BudgetStep.tsx","src/features/wizard/ExclusionsStep.tsx","src/features/wizard/HomeProductsStep.tsx","src/features/wizard/NutritionFields.tsx","src/features/wizard/PeopleStep.tsx","src/features/wizard/Wizard.tsx","src/features/wizard/copy.ts","src/shared/ProductCombobox.tsx","src/shared/styles/tokens.css","src/shared/ui.tsx","tsconfig.json","vite.config.ts"]
+covered_digest: "v3:sha256:d8cf688e191ae8097509d89727cf8a764d5fccdc7763fa50a1db32c873ce2d49"
 behavior_unverified: 0
 overrides_applied: 0
 flagged_prohibitions: 0
+re_verification:
+  previous_status: passed
+  previous_score: 19/20
+  reason: "source seed compatibility delta1789eea; user UAT6/6 recorded after original report"
+  gaps_closed: ["Seed fallback for Safari15.0–15.3 verified independently", "H1–H6 accepted by user"]
+  gaps_remaining: []
+  regressions: []
 decision_coverage:
   honored: 20
   total: 20
@@ -35,23 +42,36 @@ must_haves:
     - "Route/cancel/error поддерживают предусмотренный focus и один подходящий live status."
     - "Unit/type/lint/build и полные трёхдвижковые проверки фактически исполнены; failures и ограничения не скрыты."
   prohibitions: []
-human_verification:
+human_verification: []
+accepted_human_verification:
   - test: "H1 — Реальный Safari: saved menu/shopping. Пройти Tab и Shift+Tab через ссылки, раскрытия источников и запасов, открыть покупки и вернуться; отдельно проверить поддерживаемый Safari 15."
+    result: pass
+    acceptance_source: user
     expected: "Все ссылки достижимы последовательной клавиатурой; Enter выполняет переход, Space/Enter раскрывает детали, фокус виден и не скрыт навигацией; active snapshot и суммы прежние."
     why_human: "Два Windows WebKit link-Tab теста остаются failed. Независимый plain-HTML контроль воспроизводит пропуск обычных ссылок вне приложения; это не доказательство поведения Safari на macOS/iOS."
   - test: "H2 — Реальный Safari: recovery. На экране прерванной генерации последовательно пройти ссылки к настройкам/текущему меню; при наблюдаемой ошибке проверить действия восстановления и возврат фокуса."
+    result: pass
+    acceptance_source: user
     expected: "Каждое действие доступно с клавиатуры, приводит к указанному экрану и сохраняет прежнее меню и черновик. Отмена возвращает фокус инициатору либо заголовку."
     why_human: "Второй native Windows WebKit sequential case не даёт доказательства Safari. Полноценного нового пользовательского pass нет; программный focus не заменяет Tab."
   - test: "H3 — Реальный телефон: новые экраны и клавиатура. Создать меню, открыть покупки и длинные источники, вернуться в мастер и открыть поле с экранной клавиатурой; проверить поворот и safe area."
+    result: pass
+    acceptance_source: user
     expected: "На узком экране контент, ошибки и фокус доступны; навигация и footer не закрывают последнюю строку и ввод; отсутствует непреднамеренный горизонтальный скролл."
     why_human: "360/390/430/768/1280 и границы1199/1200 проверены эмуляцией/геометрией. Она не воспроизводит физическую клавиатуру, системные панели и аппаратные safe areas."
   - test: "H4 — Screen reader новых состояний. Пройти генерацию, ошибку/повтор, menu, shopping, источники блюд и блок запасов с VoiceOver либо NVDA."
+    result: pass
+    acceptance_source: user
     expected: "Заголовки, суммы, единицы и состояния понятны на слух; ошибка объявляется один раз, status не дублируется; изменения строк не крадут фокус."
     why_human: "ARIA/DOM и активные browser assertions присутствуют, но фактическая речь screen reader и понятность объявлений не наблюдались. Phase1 UAT не покрывает новые экраны."
   - test: "H5 — Новые экраны при настоящем browser zoom200% и визуальная оценка. Проверить menu/shopping/ошибку, длинные суммы и URL, focus/hover/error/disabled contrast."
+    result: pass
+    acceptance_source: user
     expected: "Все показатели читаемы без обрезания, controls и фокус доступны, sticky элементы не закрывают содержимое; контраст применимых состояний соответствует AA."
     why_human: "Есть CSS zoom/text200, tokens/computed-style tests и просмотренные агентами снимки. Настоящий browser zoom, полный контраст состояний и пользовательская визуальная приёмка не подтверждены."
   - test: "H6 — Итоговая пользовательская оценка меню и покупок. Из мастера/быстрого запуска получить план, найти даты и КБЖУ, сравнить три стоимости, раскрыть нужные продукты и запасы, перезагрузить."
+    result: pass
+    acceptance_source: user
     expected: "Пользователь без помощи понимает выбранный период, семейный лимит покупок, расход запаса и недостающие количества; различает оценочные цены, необязательную ручную цель и сохранённый план. Видимое ограничение растительного каталога не воспринимается как обещание полноценного рациона."
     why_human: "Это end-of-phase human-check из02-10 и MVP user-story UAT. Автоматизированный сквозной путь выполнен; обратная связь человека о понятности, удобстве и ощущаемой скорости не получена."
 ---
@@ -60,13 +80,41 @@ human_verification:
 
 **Phase Goal:** As a гость, I want to получить допустимое меню выбранного периода и проверяемые расчёты меню и покупок через локальные адаптеры, so that я могу питаться по сохранённым настройкам и понимать состав, бюджет и недостающие продукты без регистрации и платных сервисов.
 
-**Verified:** 2026-10-30T12:16:00Z  
-**Status:** human_needed  
-**Score:** 19/20 объединённых must-haves; 1 UNCERTAIN/WARNING; 0 FAILED/BLOCKER.  
-**Re-verification:** Нет — начальная независимая проверка этой фазы. Предыдущего02-VERIFICATION.md не было. Отчёты исправлений не подменяют её.  
-**Source HEAD:** 23c781ce8eacc3256a683bd40ab51f38548bdb9b.
+**Verified:** 2026-10-30T13:27:51Z  
+**Status:** passed  
+**Score:** 20/20 объединённых must-haves; 0 текущих UNCERTAIN/FAILED/BLOCKER.  
+**Re-verification:** Да — bounded seed compatibility delta после1789eea и учёт пользовательской UAT6/6. Исходная независимая матрица ниже сохранена как история.  
+**Source HEAD:** 1789eea.
 
-Цель реализована в коде и автоматизированном пользовательском пути в пределах locked CONTEXT. Полная приёмка требует ручных наблюдений ниже. Никакого пользовательского pass, исключения для Safari или разрешения завершить фазу этим отчётом не создано.
+Цель реализована в коде и автоматизированном пользовательском пути в пределах locked CONTEXT. Шесть ручных наблюдений приняты по отдельным ответам пользователя pass в02-UAT.md; агент не выдумывает device-результаты и не выдаёт их за собственные автоматические проверки.
+
+## User Flow Coverage — актуальная повторная проверка30.10.2026
+
+**Текущий verdict: passed,20/20 must-haves, behavior_unverified0, BLOCKER0, human_pending0.** Пользователь отдельно ответил pass на все H1–H6; канонический02-UAT.md complete/6passed/0issues/0pending. Это reported human acceptance, не собственные device/Safari/reader/zoom результаты агента. Прежние причины ручной проверки сохранены в accepted_human_verification как история, а актуальный human_verification пуст.
+
+| Шаг user story | Текущее evidence | Итог |
+|---|---|---|
+| Мастер/quickstart/skip → допустимый план | App→buildAppliedSettings/selectQuickStartInput→controller.start; ранее проверенный реальный local search и новый seed regression quickstart/submit | VERIFIED |
+| Отмена/ошибка/30s/повтор/сохранение | Существующие controller/adapter lifecycle tests; новый catalog retry с missingUUID сохраняет реальное меню и raw snapshot | VERIFIED |
+| Даты,КБЖУ,лимит,три стоимости и покупки | Без изменений: одна exact projection, прежние независимые numerical/source oracles и фактический menu/shopping regression | VERIFIED |
+| Безопасное сохранение и reload | trusted compiled catalog до projection/promotion, существующие tamper tests; seed15browser и production2smoke проверяют sameID и неизменные bytes | VERIFIED |
+| Понятность на целевых устройствах | H1–H6: шесть отдельных пользовательских pass в02-UAT.md; numeric/device сведения дополнительно не предоставлены | VERIFIED (reported human UAT) |
+
+### Owner refresh после исправления seed
+
+Проверена единственная изменённая прежняя coveredsource App.tsx на1789eea: оба прямыхrandomUUID заменены createGenerationSeed. Helper проверяет native API, пробует getRandomValues, затем использует ограниченные время+локальный счётчик исключительно для входа порядка поиска. Он не создаёт секреты или persistentID. Совместимая обработка отсутствующего API и отказов не меняет пищевые ограничения, рациональную арифметику, budget gates, источник данных или projection. Новых зависимостей/платных сервисов нет. Сверка `git diff1789eea -- src e2e scripts package.json package-lock.json vite.config.ts playwright.config.ts` пуста.
+
+Официальная последовательность verify-phase-goal выполнена: verify:post Nyquist (20scopedREQ covered, исторические2native gaps не скрыты), SECURITY25closed/0open/ASVS1; audit append через владельца, UI-review`--auto` reuse existing без нового выдуманного балла; code-review seed delta использует независимый re-review той же правкиclean0/0/0 с2namedunit reviewer passed, dispositions закрыты. Gap-closure-artifacts excluded by init manifest. Требования20/20 и decision coverage20/20 сохранены.
+
+**Regression gate исполнен заново самим verifier:** нормализованная одноразовая `npm run test:unit -- --run`, официальный `run-with-timeout600` —365/365,17files,10.52s,exit0; `.tmp/phase02-refresh-unit.log`. В нём входят старые unitPhase1 и новый seedunit. Это единственный fullunit запуск этого owner refresh. Prior browser evidence:140casepasses=133unchanged+7corrected, missing0, не единыйfullgreen140run; новая seedbrowser delta15/15C/FF/WK и production4180smoke2/2 (28slots/sameID/bytes/pageerrors0) реально выполнены исполнителем. Логи/assertions сверены с1789eea; browser/full historical matrix самим verifier заново не запускались. Type/lint/build нового sourceHEAD успешны по `.tmp/seed-*.log`; details docs/qa/phase02-seed-compatibility-fix.md. Историческое RED missingUUID сохранено, оно не заменено fakepass.
+
+**Ограничения сохранены:** WindowsWebKit238passed/2failed исторического releaseHEAD остаётся именно таким результатом, без нового автоматическогоfullpass. Targeted missingAPI моделирование — не запуск настоящегоSafari15.0. Пользовательские UAT pass не являются собственными измерениями агентом; точная версия/физическая модель/сырые reader/zoom/LCP observations пользователем дополнительно не переданы. Ограниченный растительный каталог и оценочные источники цен не стали подтверждением полноценного рациона или ценами чека. Варианты/полный рецепт/мутации/globalpantry/manualshopping/PDF остаются будущими фазами, весьP0 не завершён.
+
+Новые отключённые sole-coverage tests, circular expected-file writers, TBD/FIXME/XXX или source regressions в seed delta не обнаружены независимым reviewer и source-check verifier. Новых unresolved/advisory findings нет. Собственный отчёт/финальный fingerprint обновлены после остальных auditartefacts; helper/tests/QA и канонический02-UAT включены. Phase01 отчёты, STATE/ROADMAP, исходники,тесты и пользовательские результаты verifier не менял; phase.complete не вызывал.
+
+## Историческая исходная проверка до пользовательской приёмки —12:16UTC
+
+Ниже исходная матрица19/20 и первоначальные human_needed формулировки оставлены для сохранения истории. Актуальные статус20/20, ответ пользователя6/6 и evidence исправленногоseed находятся выше; исторические pending не являются текущими открытыми gates.
 
 ## User Flow Coverage
 

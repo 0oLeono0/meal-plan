@@ -71,3 +71,11 @@ Security-файлы соответствуют e3f65a3. Последующий U
 **Итог:25/25 CLOSED, threats_open0, accepted/transfer risks нет.** Проверен существующий реестр, новые угрозы вне него не сканировались.
 
 Последующая CR-01(5160dee) согласовала diet no-fish с проверенной классификацией отсутствия рыбы/всехморепродуктов; явно запрошенный allergenKeys по-прежнему требует отдельного подтверждения и отказывает при unknown. Отдельная аллергенная гарантия не выдумывается из растения. Production/source/persistence regression и независимый code re-review подтвердили поведение. T-02-07/T-02-14 не снимаются и не принимаются как риск. Full trusted-catalog comparison и write guards T-02-10/11 сохранены; data/sources не изменились. CR-02 не меняет общий strict immutableSnapshot, нормализует только разрешённое optional home.unit перед проверкой.
+
+## Security Audit 2026-10-30
+
+| Metric | Count |
+|---|---|
+| Threats found | 25 |
+| Closed | 25 |
+| Open | 0 |

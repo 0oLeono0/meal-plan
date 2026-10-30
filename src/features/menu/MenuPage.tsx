@@ -1,12 +1,13 @@
 import { Link } from 'react-router';
 import type { GenerationSnapshot } from '../generation/controller';
-import { Button, Status } from '../../shared/ui';
+import { Button } from '../../shared/ui';
 import { formatCurrency, formatDateOnly, formatNutrition, selectPlanPresentation } from '../../domain/presentation';
 import type { TargetComparison } from '../../domain/presentation';
 import { divide, formatExact, roundHalfUp } from '../../domain/quantities';
 import { localDateOnly } from '../../domain/plan';
 import type { Nutrition } from '../../domain/catalog';
 import { PlanSummary } from '../plan/PlanSummary';
+import { PlanLoading } from '../plan/PlanLoading';
 
 const labels = { calories: 'Калории', protein: 'Белки', fat: 'Жиры', carbohydrates: 'Углеводы' } as const;
 const slots = { breakfast: 'Завтрак', lunch: 'Обед', dinner: 'Ужин', snack: 'Перекус' } as const;
@@ -23,7 +24,7 @@ function NutritionSummary({ values, target }: { values: ReturnType<typeof format
 export function MenuPage({ snapshot, onRetryLoad }: { snapshot: GenerationSnapshot; onRetryLoad(): void }) {
   const bundle = snapshot.active;
   if (!bundle) {
-    if (snapshot.loadStatus === 'pending' || snapshot.loadStatus === 'unloaded') return <section><Status>Загружаем меню…</Status><div className="plan-loading-skeleton" data-loading-skeleton="" aria-hidden="true"><div /><div /><div /></div></section>;
+    if (snapshot.loadStatus === 'pending' || snapshot.loadStatus === 'unloaded') return <PlanLoading kind="menu" />;
     if (snapshot.loadStatus === 'error' || snapshot.loadStatus === 'corrupt') return <section><h1 tabIndex={-1}>{snapshot.loadStatus === 'corrupt' ? 'Сохранённое меню повреждено или несовместимо с текущей версией' : 'Не удалось загрузить меню'}</h1><p>Исходная запись не изменена. Повторите загрузку или составьте новое меню</p><Button onClick={onRetryLoad}>Повторить загрузку</Button><Link className="action-link" to="/plan/new">К настройкам</Link></section>;
     return <section><h1 tabIndex={-1}>Меню пока нет</h1><p>Начните с настроек питания</p><Link className="primary action-link" to="/plan/new">Составить меню</Link></section>;
   }

@@ -1,8 +1,9 @@
 import { Link } from 'react-router';
 import type { GenerationSnapshot } from '../generation/controller';
-import { Button, Status } from '../../shared/ui';
+import { Button } from '../../shared/ui';
 import { formatDateOnly, selectPlanPresentation } from '../../domain/presentation';
 import { PlanSummary } from '../plan/PlanSummary';
+import { PlanLoading } from '../plan/PlanLoading';
 
 const categoryOrder = ['Овощи и фрукты', 'Мясо и рыба', 'Молочное', 'Бакалея', 'Хлеб', 'Прочее'] as const;
 type Category = typeof categoryOrder[number];
@@ -16,7 +17,7 @@ const sourceLabel = (count: string) => `Из ${count.replace(/блюдо$|блю
 export function ShoppingPage({ snapshot, onRetryLoad }: { snapshot: GenerationSnapshot; onRetryLoad(): void }) {
   const bundle = snapshot.active;
   if (!bundle) {
-    if (snapshot.loadStatus === 'pending' || snapshot.loadStatus === 'unloaded') return <section><Status>Загружаем покупки…</Status><div className="plan-loading-skeleton" data-loading-skeleton="" aria-hidden="true"><div /><div /><div /></div></section>;
+    if (snapshot.loadStatus === 'pending' || snapshot.loadStatus === 'unloaded') return <PlanLoading kind="shopping" />;
     if (snapshot.loadStatus === 'error' || snapshot.loadStatus === 'corrupt') return <section><h1 tabIndex={-1}>{snapshot.loadStatus === 'corrupt' ? 'Сохранённое меню повреждено или несовместимо с текущей версией' : 'Не удалось загрузить покупки'}</h1><p>Исходная запись не изменена. Повторите загрузку или составьте новое меню</p><Button onClick={onRetryLoad}>Повторить загрузку</Button><Link className="action-link" to="/plan/new">К настройкам</Link></section>;
     return <section><h1 tabIndex={-1}>Сначала составьте меню</h1><p>Начните с настроек питания</p><Link className="primary action-link" to="/plan/new">Составить меню</Link></section>;
   }

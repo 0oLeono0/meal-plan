@@ -16,6 +16,7 @@ import { createPlanInputs, type GenerationPort } from '../domain/plan';
 import { GenerationPage } from '../features/generation/GenerationPage';
 import { MenuPage } from '../features/menu/MenuPage';
 import { ShoppingPage } from '../features/shopping/ShoppingPage';
+import { PlanLoading } from '../features/plan/PlanLoading';
 import '../shared/styles/tokens.css';
 
 export const appConfig = { brand: 'MealPlan' };
@@ -196,7 +197,8 @@ export function App({ draftPort = guestDraft, planPresencePort, brand = appConfi
 
 function InitialLoadStatus() {
   const { pathname } = useLocation();
-  return <Status>{pathname === '/shopping' ? 'Загружаем покупки…' : pathname === '/menu' ? 'Загружаем меню…' : 'Восстанавливаем настройки…'}</Status>;
+  if (pathname === '/shopping' || pathname === '/menu') return <PlanLoading kind={pathname === '/menu' ? 'menu' : 'shopping'} />;
+  return <Status>Восстанавливаем настройки…</Status>;
 }
 
 function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCatalog, presence, recovery, saved, resetDraft }: {

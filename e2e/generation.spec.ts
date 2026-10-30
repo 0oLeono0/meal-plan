@@ -263,6 +263,36 @@ for (const state of ['menu-load', 'shopping-load'] as const) {
 }
 
 
+for (const route of ['/menu', '/shopping']) {
+  test(`initial ${route} hydration shows a skeleton before routes mount`, async ({ page }) => {
+    await page.goto('/plan/new');
+    await expect(page.getByLabel('Число людей', { exact: true })).toBeVisible();
+    await page.evaluate(async route => {
+      const urls = performance.getEntriesByType('resource').map(row => row.name);
+      const { default: { createElement } } = await import(urls.find(url => /\/react\.js\?/.test(url))!);
+      const { default: { createRoot } } = await import(urls.find(url => /\/react-dom_client\.js\?/.test(url))!);
+      const appPath = '/src/app/App.tsx', catalogPath = '/src/data/catalog.ts';
+      const { App } = await import(appPath);
+      const { bundledCatalogPort } = await import(catalogPath);
+      const catalogPort = { async load() {
+        await new Promise<void>(resolve => window.addEventListener('release-catalog', () => resolve(), { once: true }));
+        return bundledCatalogPort.load();
+      } };
+      document.getElementById('root')?.remove();
+      history.replaceState(null, '', route);
+      const container = document.createElement('div'); document.body.append(container);
+      createRoot(container).render(createElement(App, { catalogPort }));
+    }, route);
+    await expect(page.getByRole('status')).toHaveText(route === '/menu' ? 'Загружаем меню…' : 'Загружаем покупки…');
+    await expect(page.locator('[data-loading-skeleton]')).toBeVisible();
+    await expect(page.locator('[data-loading-skeleton]')).toHaveAttribute('aria-hidden', 'true');
+    await expect(page.locator('[data-plan-id]')).toHaveCount(0);
+    await page.evaluate(() => window.dispatchEvent(new Event('release-catalog')));
+    await expect(page.locator('[data-loading-skeleton]')).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: route === '/menu' ? 'Меню пока нет' : 'Сначала составьте меню' })).toBeVisible();
+  });
+}
+
 test('menu and shopping retain readable hierarchy and the same three costs across viewport widths', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Меню за 1 клик', exact: true }).click();

@@ -415,11 +415,11 @@ This is new projection design under D-15; there are no guessed nutrient numbers 
 
 Обе гипотезы — операционные неопределённости, не новые locked policies: подтвердить реальным инструментом/benchmark во время выполнения. D-02 и D-16 уже задают поведение; не просить пользователя выбирать эквивалентную реализацию и не заявлять production success заранее. [CITED: 03-CONTEXT.md D-02,D-16,D-17]
 
-## Open Questions
+## Open Questions (RESOLVED FOR PLANNING)
 
-1. Все52 готовых медиа пока не произведены. Конкретный бесплатный included путь, исходный sample, exact mapping и acceptance gate определены. План должен выделить resumable production/review tasks; quota не выдумывать, при фактической недоступности сохранить ledger и сообщить реальный runtime blocker. [CITED: imagegen skill; D-16]
-2. Human quality/кухонная оценка рецептов, nutrition adequacy, nativeSafari15/physical devices не доказаны этим проходом; сохранить отдельные UAT/limitations. Это не повод менять source facts или выдавать Windows WebKit за Safari. [CITED: D-12,D-18; docs/qa/phase02-seed-compatibility-fix.md]
-3. Exact Router8.5 Context7 index отсутствовал в ответе, поэтому применимы stable Link/search/state patterns с installed declarations/typecheck; не вводить latest-only APIs. [CITED: Context7 resolve response2026-11-04; https://reactrouter.com/api/components/Link]
+1. **RESOLVED FOR PLANNING — способ и gate определены, производство не выполнено.** Все52 готовых медиа пока не произведены. Конкретный бесплатный included путь, исходный sample, exact mapping и acceptance gate определены. Resumable production/review назначены планам03-04–03-09; quota не выдумывать, при фактической недоступности сохранить ledger и сообщить реальный runtime blocker. [CITED: imagegen skill; D-16; 03-SOURCE-AUDIT.md]
+2. **RESOLVED FOR PLANNING — ограничения классифицированы, наблюдения не выполнены.** Human quality/кухонная оценка рецептов, nutrition adequacy, nativeSafari15/physical devices не доказаны этим проходом; отдельные UAT/limitations обязательны в03-12 и03-VALIDATION.md. Медицинская/кухонная оценка не объявляется результатом этой фазы. Это не повод менять source facts или выдавать Windows WebKit за Safari. [CITED: D-12,D-18; docs/qa/phase02-seed-compatibility-fix.md]
+3. **RESOLVED — выбран совместимый способ проверки API.** Exact Router8.5 Context7 index отсутствовал в ответе, поэтому применимы stable Link/search/state patterns с installed declarations/typecheck и фактическими route/browser tests; не вводить latest-only APIs. Отсутствие записи в индексе не заменяется заявлением о проверке другой версии. [CITED: Context7 resolve response2026-11-04; https://reactrouter.com/api/components/Link]
 
 ## Environment Availability
 

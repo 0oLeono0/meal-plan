@@ -1,5 +1,103 @@
 {
   "date": "2026-11-04",
+  "scope_sanity_revision": {
+    "iteration": 1,
+    "issue": "scope_sanity warning for03-01/03-11",
+    "required_property": "Each plan fits manageable execution context",
+    "resolution": "Checker-permitted documented rationale; no split, scope/task/wave changes",
+    "plans": {
+      "03-01": {
+        "unique_files": 11,
+        "production_files": 5,
+        "test_files": 5,
+        "fixture_files": 1,
+        "task_paths": [
+          5,
+          4,
+          3
+        ],
+        "task_token_allocation": [
+          16000,
+          10000,
+          8000
+        ],
+        "tokens": 34000,
+        "smart_zone_reference": 100000,
+        "estimate_confidence": "low"
+      },
+      "03-11": {
+        "unique_files": 12,
+        "existing_production_files": 8,
+        "browser_specs": 3,
+        "qa_docs": 1,
+        "task_paths": [
+          5,
+          4,
+          5
+        ],
+        "task_token_allocation": [
+          12000,
+          9000,
+          9000
+        ],
+        "tokens": 30000,
+        "smart_zone_reference": 100000,
+        "estimate_confidence": "low"
+      }
+    },
+    "changes": [
+      "scope_budget in both PLANs: coherent postcondition, exact ownership, bounded task-level reads/verification and context allocation",
+      "03-SOURCE-AUDIT.md scope-sanity rationale"
+    ],
+    "validation": [
+      {
+        "name": "frontmatter01",
+        "exit_code": 0,
+        "valid": true,
+        "errors": [],
+        "warnings": []
+      },
+      {
+        "name": "structure01",
+        "exit_code": 0,
+        "valid": true,
+        "errors": [],
+        "warnings": []
+      },
+      {
+        "name": "frontmatter11",
+        "exit_code": 0,
+        "valid": true,
+        "errors": [],
+        "warnings": []
+      },
+      {
+        "name": "structure11",
+        "exit_code": 0,
+        "valid": true,
+        "errors": [],
+        "warnings": []
+      },
+      {
+        "name": "sourceaudit",
+        "exit_code": 0,
+        "valid": true,
+        "errors": [],
+        "warnings": []
+      }
+    ],
+    "preserved": {
+      "plans": 12,
+      "tasks": 33,
+      "waves": 8,
+      "requirements": 8,
+      "decisions": 18,
+      "edge_predicates": 46,
+      "ui_pairs": 52,
+      "planned_media_assets": 52
+    },
+    "execution_tests_run": false
+  },
   "scope": "Phase03 planning artifacts only; no implementation/app/browser tests executed",
   "frontmatter": {
     "command": "python -X utf8 .tmp/gsd_invoke.py query frontmatter.validate <each PLAN> --schema plan",

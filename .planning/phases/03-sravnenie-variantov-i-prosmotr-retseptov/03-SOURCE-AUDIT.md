@@ -327,6 +327,17 @@ Legacy schema1/key/trust retained; no mandatory persisted fields, deletion or on
 
 Estimate calibration actually returned factor1/sample_count0/confidence low; no subjective confidence. Code slices18–34k raw tokens, bounded media18k; no fake execution metrics. Tracer plan01 first path uses real adapters and storage; each later tracer extends a reachable user path, media batches serve actual new recipe heroes. All tasks≤5 modified paths,2–3/plan,33tasks total.
 
+## Scope sanity revision — checker iteration1
+
+Required property: каждый execution plan помещается в управляемый context budget. Номинальный счётчик unique files03-01=11 и03-11=12 разобран по типам/задачам, а не уменьшен скрытым исключением scope.
+
+| Plan | File composition | Task path counts | Raw/calibrated context | Reason for coherent plan |
+|---|---|---|---|---|
+| 03-01 |5 production +5 tests +1 legacy fixture |5/4/3 |34000/34000;34% от100000 |Один real alternatives/select/persist/reload tracer; оставшиеся задачи уточняют его count/identity/legacy contracts |
+| 03-11 |8 existing-by-wave7 production +3 browser +1 QA |5/4/5 |30000/30000;30% от100000 |Recovery/return-focus/geometry patches поверх принятых upstream contracts, без новой domain/storage architecture |
+
+Оценки сохранены, factor1/sample_count0/confidence low подтверждены прежним estimate-calibration; проценты не объявлены измерением расхода или гарантией. В обоих PLAN добавлены task-level token allocation, exact ownership, последовательное чтение только relevant sources, reuse уже прочитанных signatures и scoped automated feedback/commit. Это аргументируемое исключение к advisory unique-file warning, а не к hard limits2–3tasks/plan и≤5modified paths/task. Зависимости, waves, все8requirements/18decisions/46edges/52UIpairs/52images и обязательные verification gates сохранены. Большие horizontal handoffs и дробление уже связанных recovery branches не добавлены.
+
 ## Planned checks and evidence honesty
 
 npm run test:unit -- --run (watch forbidden); root package scripts typecheck/lint/build confirmed. Browser tests are actual actions/data/bytes, not headings/presence. New test paths created RED by named task, profile command after each, full unit/static/build after wave, relevant browser gates. Full browser and image production can exceed60s; interactive updates/waits remain bounded. Existing365unit/15seed browser from prior acceptance are historical, must be rerun and preserved; WindowsWebKit nativeTab limits recorded by name, never Safari15 pass. Current planner ran no implementation/app/browser tests.

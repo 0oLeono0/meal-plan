@@ -111,17 +111,32 @@
 5. После перезагрузки пользователь получает валидированное согласованное состояние активного варианта; повреждённые данные и сбои сохранения дают явную ошибку/восстановление, а не ложное подтверждение записи.
 
 **Plans:** 0/12 plans executed
+**Wave 1**
 - [ ] 03-01-PLAN.md
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 03-02-PLAN.md
+
+**Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 03-03-PLAN.md
+
+**Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 03-04-PLAN.md
+
+**Wave 5** *(blocked on Wave 4 completion)*
 - [ ] 03-05-PLAN.md
 - [ ] 03-06-PLAN.md
 - [ ] 03-07-PLAN.md
 - [ ] 03-08-PLAN.md
-- [ ] 03-09-PLAN.md
 - [ ] 03-10-PLAN.md
+
+**Wave 6** *(blocked on Wave 5 completion)*
+- [ ] 03-09-PLAN.md
+
+**Wave 7** *(blocked on Wave 6 completion)*
 - [ ] 03-11-PLAN.md
+
+**Wave 8** *(blocked on Wave 7 completion)*
 - [ ] 03-12-PLAN.md
 
 **UI hint:** yes

@@ -29,7 +29,47 @@ created: "2026-11-04"
 
 ## Per-Task Verification Map
 
-Plan/task/wave и phase-unique threat IDs заполняются планировщиком из конечных PLAN; требования ниже не могут потеряться.
+Plan/task/wave и phase-unique threat IDs назначены конечными PLAN; статус всех задач pending до реального исполнения. Карта не означает пройденные tests.
+
+| Task | Wave | Requirements | Threat Ref | Automated command | Status |
+|---|---|---|---|---|---|
+|03-01-01|1|DATA-04, GEN-06, MENU-03|T-03-01, T-03-02, T-03-SC|`npm run test:e2e -- e2e/phase03-variants.spec.ts --project=chromium --workers=1`|pending|
+|03-01-02|1|DATA-04, GEN-06, MENU-03|T-03-01, T-03-02, T-03-SC|`npm run test:unit -- --run src/domain/plan.test.ts src/domain/generatePlan.test.ts`|pending|
+|03-01-03|1|DATA-04, GEN-06, MENU-03|T-03-01, T-03-02, T-03-SC|`npm run test:unit -- --run src/adapters/activePlan.test.ts src/features/generation/controller.test.ts`|pending|
+|03-02-01|2|GEN-07, DATA-04, GEN-06|T-03-03, T-03-04, T-03-SC|`npm run test:e2e -- e2e/phase03-append.spec.ts --project=chromium --workers=1`|pending|
+|03-02-02|2|GEN-07, DATA-04, GEN-06|T-03-03, T-03-04, T-03-SC|`npm run test:e2e -- e2e/phase03-append.spec.ts --project=chromium --workers=1`|pending|
+|03-02-03|2|GEN-07, DATA-04, GEN-06|T-03-03, T-03-04, T-03-SC|`npm run test:unit -- --run src/adapters/generation.test.ts src/features/generation/controller.test.ts`|pending|
+|03-03-01|3|DATA-04, REC-01, REC-02, REC-04, MENU-03|T-03-05, T-03-06, T-03-SC|`npm run test:e2e -- e2e/phase03-recipes.spec.ts --project=chromium --workers=1`|pending|
+|03-03-02|3|DATA-04, REC-01, REC-02, REC-04, MENU-03|T-03-05, T-03-06, T-03-SC|`npm run test:unit -- --run src/domain/planProjection.test.ts src/domain/recipeView.test.ts`|pending|
+|03-03-03|3|DATA-04, REC-01, REC-02, REC-04, MENU-03|T-03-05, T-03-06, T-03-SC|`npm run test:e2e -- e2e/phase03-recipes.spec.ts --project=chromium --workers=1`|pending|
+|03-04-01|4|MENU-03, REC-01, DATA-04|T-03-07, T-03-08, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep sample --project=chromium --workers=1`|pending|
+|03-04-02|4|MENU-03, REC-01, DATA-04|T-03-07, T-03-08, T-03-SC|`npm run test:unit -- --run src/data/recipeMedia.test.ts`|pending|
+|03-05-01|5|MENU-03, REC-01|T-03-09, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-01-01 --project=chromium --workers=1`|pending|
+|03-05-02|5|MENU-03, REC-01|T-03-09, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-01-02 --project=chromium --workers=1`|pending|
+|03-05-03|5|MENU-03, REC-01|T-03-09, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-01-03 --project=chromium --workers=1`|pending|
+|03-06-01|5|MENU-03, REC-01|T-03-10, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-02-01 --project=chromium --workers=1`|pending|
+|03-06-02|5|MENU-03, REC-01|T-03-10, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-02-02 --project=chromium --workers=1`|pending|
+|03-06-03|5|MENU-03, REC-01|T-03-10, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-02-03 --project=chromium --workers=1`|pending|
+|03-07-01|5|MENU-03, REC-01|T-03-11, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-03-01 --project=chromium --workers=1`|pending|
+|03-07-02|5|MENU-03, REC-01|T-03-11, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-03-02 --project=chromium --workers=1`|pending|
+|03-07-03|5|MENU-03, REC-01|T-03-11, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-03-03 --project=chromium --workers=1`|pending|
+|03-08-01|5|MENU-03, REC-01|T-03-12, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-04-01 --project=chromium --workers=1`|pending|
+|03-08-02|5|MENU-03, REC-01|T-03-12, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-04-02 --project=chromium --workers=1`|pending|
+|03-08-03|5|MENU-03, REC-01|T-03-12, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-04-03 --project=chromium --workers=1`|pending|
+|03-09-01|6|MENU-03, REC-01, DATA-04|T-03-13, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-05-01 --project=chromium --workers=1`|pending|
+|03-09-02|6|MENU-03, REC-01, DATA-04|T-03-13, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep full-media --project=chromium --workers=1`|pending|
+|03-09-03|6|MENU-03, REC-01, DATA-04|T-03-13, T-03-SC|`node scripts/check-recipe-media.mjs --all`|pending|
+|03-10-01|5|MENU-02, MENU-03, DATA-04, REC-01|T-03-14, T-03-15, T-03-SC|`npm run test:e2e -- e2e/phase03-presentation.spec.ts --project=chromium --workers=1`|pending|
+|03-10-02|5|MENU-02, MENU-03, DATA-04, REC-01|T-03-14, T-03-15, T-03-SC|`npm run test:unit -- --run src/domain/menuView.test.ts src/domain/presentation.test.ts`|pending|
+|03-11-01|7|DATA-04, GEN-06, GEN-07, MENU-02, MENU-03, REC-01, REC-02, REC-04|T-03-16, T-03-17, T-03-SC|`npm run test:e2e -- e2e/phase03-recovery.spec.ts --project=chromium --workers=1`|pending|
+|03-11-02|7|DATA-04, GEN-06, GEN-07, MENU-02, MENU-03, REC-01, REC-02, REC-04|T-03-16, T-03-17, T-03-SC|`npm run test:e2e -- e2e/phase03-recipes.spec.ts --project=chromium --workers=1`|pending|
+|03-11-03|7|DATA-04, GEN-06, GEN-07, MENU-02, MENU-03, REC-01, REC-02, REC-04|T-03-16, T-03-17, T-03-SC|`npm run test:e2e -- e2e/phase03-presentation.spec.ts --workers=1`|pending|
+|03-12-01|8|DATA-04, GEN-06, GEN-07, MENU-02, MENU-03, REC-01, REC-02, REC-04|T-03-18, T-03-SC|`npm run test:e2e -- e2e/phase03-acceptance.spec.ts --workers=1`|pending|
+|03-12-02|8|DATA-04, GEN-06, GEN-07, MENU-02, MENU-03, REC-01, REC-02, REC-04|T-03-18, T-03-SC|`npm run test:unit -- --run`|pending|
+
+### Requirement sampling
+
+
 
 | Requirement | Secure behavior | Type | Command | File exists | Status |
 |---|---|---|---|---|---|

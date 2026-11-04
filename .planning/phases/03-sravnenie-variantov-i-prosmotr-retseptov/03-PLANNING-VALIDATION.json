@@ -1,0 +1,88 @@
+{
+  "date": "2026-11-04",
+  "scope": "Phase03 planning artifacts only; no implementation/app/browser tests executed",
+  "frontmatter": {
+    "command": "python -X utf8 .tmp/gsd_invoke.py query frontmatter.validate <each PLAN> --schema plan",
+    "plans": 12,
+    "valid": 12,
+    "errors": 0
+  },
+  "structure": {
+    "command": "python -X utf8 .tmp/gsd_invoke.py query verify.plan-structure <each PLAN>",
+    "plans": 12,
+    "valid": 12,
+    "warnings": 0,
+    "errors": 0,
+    "tail": "All12 end with </output>; no continuation sentinel",
+    "after_edits_rechecked": [
+      "03-01",
+      "03-04"
+    ]
+  },
+  "decision_coverage": {
+    "command": "query check.decision-coverage-plan <phase-dir> --context <03-CONTEXT.md>",
+    "passed": true,
+    "total": 18,
+    "covered": 18,
+    "uncovered": [],
+    "initial_call_error": "Missing --context argument corrected; no false skip accepted."
+  },
+  "api_coverage": {
+    "detector": true,
+    "signal": "Safari15 API browser-platform wording",
+    "runtime_external_integration": false,
+    "reasoned_declaration": "COVERAGE.md",
+    "initial_schema_error": "Reason exceeded200chars; shortened and gate rerun",
+    "passed": true
+  },
+  "source_audit": {
+    "valid": true,
+    "errors": [],
+    "plans": 12,
+    "tasks": 33,
+    "waves": 8,
+    "requirements": [
+      "DATA-04",
+      "GEN-06",
+      "GEN-07",
+      "MENU-02",
+      "MENU-03",
+      "REC-01",
+      "REC-02",
+      "REC-04"
+    ],
+    "edge_truths": 46,
+    "ui_pairs": 52,
+    "planned_media_files": 52,
+    "unique_threat_ids": 18,
+    "task_max_files": 5,
+    "same_wave_file_overlap": false,
+    "execution_tests_run": false
+  },
+  "roadmap": {
+    "handler": "query roadmap.update-plan-progress 3",
+    "updated": true,
+    "plan_count": 12,
+    "status": "Planned"
+  },
+  "assumption_delta": {
+    "detected": false,
+    "skip": false
+  },
+  "schema_gate": {
+    "orm_paths": false,
+    "push_required": false
+  },
+  "prohibitions": {
+    "kept": 6,
+    "descriptorless": true,
+    "flagged_unverified": 6,
+    "serializer": "installed probe-core.cjs projectProhibitions"
+  },
+  "notes": [
+    "No source/implementation edits by planner.",
+    "Full media production and runtime tests are future execution tasks, not completed.",
+    "NativeSafari15/device/AT/human UAT and6 descriptorless prohibitions remain explicit acceptance flags."
+  ]
+}
+

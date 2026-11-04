@@ -1,10 +1,11 @@
 ---
 phase: "3"
 slug: "sravnenie-variantov-i-prosmotr-retseptov"
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: "2026-11-04"
+reviewed_at: "2026-11-04T11:41:16Z"
 ---
 
 # Phase 3 — UI Design Contract
@@ -192,6 +193,9 @@ Shopping sticky над bottom nav(<1200), внизу main desktop; white/border-
 Все failure notices постоянны до recovery/dismiss и не исчезают таймером. «Прежнее меню не изменено» показывается только когда оно существует. Успех/сохранность заявлять только после подтверждения адаптера. Изменение day/mode не требует сохранения набора и не даёт сообщения «Меню сохранено».
 
 ## UI Considerations
+
+Детерминированный `ui-consideration-probe.cjs` выполнен оркестратором после одобрения checker: 8 поверхностей E1–E8, 52 применимые пары элемент/состояние, 52 resolved/explicit, 0 backstop/unresolved/unclassified. English classifier inputs и authored union kinds проверены в --auto; evidence: `.tmp/phase03-ui-elements.json`, `.tmp/phase03-ui-resolutions.json`, `.tmp/phase03-ui-resolved.json`. Это полнота спецификации, не browser pass.
+
 
 Applicable state considerations resolved: 8 категорий, 0 backstop, 0 unresolved; explicit contract ниже покрывает применимые элементы. «covered» означает определённое поведение, не выполненную проверку.
 

@@ -44,7 +44,11 @@ export function createGenerationController({ generation, activePlan, trustedCata
   const cancelled = Symbol('cancelled');
   const publish = (patch: Partial<GenerationSnapshot>) => {
     if (disposed) return;
-    snapshot = immutableSnapshot({ ...snapshot, ...patch });
+    // Bundles are already detached/frozen by validateActiveBundle. Copying both old
+    // and candidate together would exceed the trust-boundary node budget at cap12.
+    const { active, candidate, ...metadata } = patch;
+    snapshot = Object.freeze({ ...snapshot, ...immutableSnapshot(metadata),
+      ...(active !== undefined ? { active } : {}), ...(candidate !== undefined ? { candidate } : {}) });
     for (const listener of [...listeners]) listener();
   };
   const owned = (op: Operation) => !disposed && operation === op && !op.abort.signal.aborted && (op.baseRevision === undefined || op.baseRevision === revision);

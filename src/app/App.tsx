@@ -211,18 +211,20 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
   const { pathname } = useLocation();
   const [launchErrors, setLaunchErrors] = useState<ReturnType<typeof buildAppliedSettings> | null>(null);
   const [catalogError, setCatalogError] = useState(false);
+  const [launchConfirmation, setLaunchConfirmation] = useState<{ settings: AppliedSettings; origin: { returnRoute: string; focusAnchor: string }; trigger: HTMLElement | null } | null>(null);
   const returningFocus = useRef<string | null>(null);
   const previousRoute = useRef(pathname);
   const launch = useRef<{ settings: AppliedSettings; origin: { returnRoute: string; focusAnchor: string } } | null>(null);
   const catalogAttempt = useRef(0);
   useEffect(() => {
-    if (previousRoute.current === '/plan/generating' && pathname !== '/plan/generating') { catalogAttempt.current++; controller.cancel(); }
+    if ((previousRoute.current === '/plan/generating' && pathname !== '/plan/generating')
+      || (previousRoute.current === '/menu' && pathname !== '/menu' && (operation.status === 'pending' || operation.status === 'saving'))) { catalogAttempt.current++; controller.cancel(); }
     previousRoute.current = pathname;
     if (returningFocus.current) {
       const anchor = returningFocus.current; returningFocus.current = null;
       requestAnimationFrame(() => (document.getElementById(anchor) ?? document.querySelector<HTMLElement>('h1'))?.focus());
     }
-  }, [pathname, controller]);
+  }, [pathname, controller, operation.status]);
   useEffect(() => {
     if (operation.status === 'succeeded' && pathname === '/plan/generating') navigate('/menu', { replace: true });
   }, [operation.status, pathname, navigate]);
@@ -233,9 +235,15 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
     if (applied.status === 'invalid') { change({ type: 'step', value: applied.step }); navigate('/plan/new'); return; }
     setCatalogError(catalog.status !== 'loaded');
     const origin = { returnRoute: pathname, focusAnchor: quick ? 'quick-start' : focusAnchor };
-    launch.current = { settings: applied.settings, origin };
+    if (operation.active) {
+      setLaunchConfirmation({ settings: applied.settings, origin, trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null }); return;
+    }
+    performStart(applied.settings, origin);
+  }
+  function performStart(settings: AppliedSettings, origin: { returnRoute: string; focusAnchor: string }) {
+    launch.current = { settings, origin };
     navigate('/plan/generating');
-    if (catalog.status === 'loaded') void controller.start(createPlanInputs(applied.settings, catalog.catalog, { seed: createGenerationSeed() }), origin);
+    if (catalog.status === 'loaded') void controller.start(createPlanInputs(settings, catalog.catalog, { seed: createGenerationSeed() }), origin);
   }
   function settings(budget = false) {
     catalogAttempt.current++; controller.cancel(); setCatalogError(false);
@@ -259,16 +267,18 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
   }
   const basis = operation.lastApplied ? 'Используем последние применённые настройки' : sameSnapshot(draft, createDraft())
     ? '2 человека · 7 дней · 3 000 ₽ · до 30 минут · среднее разнообразие · без ограничений' : 'Используем настройки из черновика';
-  return <Routes>
+  return <><Routes>
     <Route path="/" element={presence.status === 'valid' ? <Navigate replace to="/menu" /> : <WelcomePage brand={brand} onStart={() => navigate('/plan/new')} onQuickStart={() => start(true)} quickStartBasis={basis} />} />
     <Route path="/plan/new" element={<Wizard draft={draft} onChange={change} recovery={recovery} saved={saved} onReset={resetDraft} onStart={anchor => start(false, anchor)} launchErrors={launchErrors?.status === 'invalid' ? launchErrors.errors : undefined} editingNext={!!operation.lastApplied && !sameSnapshot(draft, operation.lastApplied.raw)} />} />
     <Route path="/plan/generating" element={<GenerationPage snapshot={operation} requestedSettings={launch.current?.settings} catalog={catalog} catalogError={catalogError} draftSaved={saved} onCancel={cancel} onRetry={() => void retryGeneration()} onSettings={settings} onRetrySave={() => void controller.retrySave()} onRetryLoad={() => void controller.retryLoad()} />} />
-    <Route path="/menu" element={<MenuPage snapshot={operation} onRetryLoad={() => void controller.retryLoad()} onSelectVariant={id => void controller.selectVariant(id, { returnRoute: '/menu', focusAnchor: 'variants' })} onRetrySave={() => void controller.retrySave()} onCancel={controller.cancel} onAppend={() => void controller.appendVariant({ returnRoute: '/menu', focusAnchor: 'append-variant' })} onRetryGeneration={() => void controller.retryGeneration()} />} />
+    <Route path="/menu" element={<MenuPage snapshot={operation} onRetryLoad={() => void controller.retryLoad()} onSelectVariant={id => void controller.selectVariant(id, { returnRoute: '/menu', focusAnchor: 'variants' })} onRetrySave={() => void controller.retrySave()} onCancel={controller.cancel} onAppend={() => void controller.appendVariant({ returnRoute: '/menu', focusAnchor: 'append-variant' })} onRetryGeneration={() => void controller.retryGeneration()} onRecreate={focusAnchor => void controller.recreateSet({ returnRoute: '/menu', focusAnchor })} />} />
     <Route path="/shopping" element={<ShoppingPage snapshot={operation} onRetryLoad={() => void controller.retryLoad()} />} />
     <Route path="/pantry" element={<GuestSectionPage section="pantry" />} />
     <Route path="/recipe/:id" element={<RouteStatePage title="Такого рецепта нет" description="Рецепт не найден. Вы можете вернуться к своему меню." to="/menu" action="Вернуться к меню" />} />
     <Route path="*" element={<RouteStatePage title="Страница не найдена" description="Проверьте адрес или начните с главной страницы." to="/" action="На главную" />} />
-  </Routes>;
+  </Routes>{launchConfirmation && <ConfirmDialog title="Составить меню с новыми настройками?" description={`После успешного сохранения новое меню заменит прежний набор вариантов.${saved ? ' Черновик настроек сохранится' : ''}`} cancelLabel="Оставить варианты" confirmLabel="Составить меню" returnFocus={launchConfirmation.trigger} fallbackFocusId="wizard-title" onCancel={() => setLaunchConfirmation(null)} onConfirm={() => {
+    const confirmed = launchConfirmation; setLaunchConfirmation(null); performStart(confirmed.settings, confirmed.origin);
+  }} />}</>;
 }
 
 export function RouteStatePage({ title, description, to, action }: { title: string; description: string; to: string; action: string }) {

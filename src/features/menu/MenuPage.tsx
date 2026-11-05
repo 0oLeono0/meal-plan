@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
+import { useEffect, useState } from 'react';
 import type { GenerationSnapshot } from '../generation/controller';
-import { Button } from '../../shared/ui';
+import { Button, ConfirmDialog } from '../../shared/ui';
 import { formatCurrency, formatDateOnly, formatNutrition, selectPlanPresentation } from '../../domain/presentation';
 import type { TargetComparison } from '../../domain/presentation';
 import { divide, formatExact, roundHalfUp } from '../../domain/quantities';
@@ -21,7 +22,11 @@ function NutritionSummary({ values, target }: { values: ReturnType<typeof format
     </dd></div>;
   })}</dl>;
 }
-export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, onCancel, onAppend, onRetryGeneration }: { snapshot: GenerationSnapshot; onRetryLoad(): void; onSelectVariant?(id: string): void; onRetrySave?(): void; onCancel?(): void; onAppend?(): void; onRetryGeneration?(): void }) {
+export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, onCancel, onAppend, onRetryGeneration, onRecreate }: { snapshot: GenerationSnapshot; onRetryLoad(): void; onSelectVariant?(id: string): void; onRetrySave?(): void; onCancel?(): void; onAppend?(): void; onRetryGeneration?(): void; onRecreate?(focusAnchor: string): void }) {
+  const [replacementTrigger, setReplacementTrigger] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    if (snapshot.status === 'succeeded' && snapshot.intent === 'replace' && document.activeElement === document.body) document.getElementById('menu-title')?.focus();
+  }, [snapshot.status, snapshot.intent]);
   const bundle = snapshot.active;
   if (!bundle) {
     if (snapshot.loadStatus === 'pending' || snapshot.loadStatus === 'unloaded') return <PlanLoading kind="menu" />;
@@ -40,7 +45,7 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
     minutes: row.instance.recipeSnapshot.cookingMinutes, servings: formatExact(row.instance.selectedServings), nutrition: formatNutrition(row.perPortionNutrition),
     cost: formatCurrency(roundHalfUp(divide(row.ingredientCost, row.instance.selectedServings), 2)) }));
   return <section data-plan-id={plan.activeVariantId} className="plan-read-model [overflow-wrap:anywhere]">
-    <h1 tabIndex={-1}>{view.days.length === 7 ? 'Меню на неделю' : `Меню на ${view.period}`}</h1>
+    <h1 id="menu-title" tabIndex={-1}>{view.days.length === 7 ? 'Меню на неделю' : `Меню на ${view.period}`}</h1>
     <p>{formatDateOnly(plan.inputs.dates[0])} — {formatDateOnly(plan.inputs.dates[plan.inputs.dates.length - 1])} · На {view.people}</p>
     <p className="hint">Меню сохранено на этом устройстве</p>
     <section className="card" aria-label="Варианты меню" aria-busy={busy}>
@@ -58,8 +63,10 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
         return <li key={variant.id}><Button className="w-full text-left" aria-pressed={selected} disabled={busy} onClick={() => onSelectVariant?.(variant.id)}>Вариант {index + 1} · Купить: ≈ {costs.purchase}{selected ? ' · Выбран' : ''}</Button></li>;
       })}</ul>
       <Button id="append-variant" disabled={busy || snapshot.status === 'memory-only' || plan.variants.length >= 12} onClick={onAppend}>Пересобрать</Button>
-      {snapshot.status === 'pending' && <div><p role="status">Подбираем новый вариант… Прежнее меню остаётся доступным</p><Button onClick={onCancel}>Отмена</Button></div>}
-      {saving && <div><p role="status">{snapshot.intent === 'append' ? 'Сохраняем новый вариант…' : 'Сохраняем выбор…'} Предыдущее меню остаётся активным</p><Button onClick={onCancel}>Отмена</Button></div>}
+      {plan.variants.length >= 12 && <div><p>В наборе 12 вариантов — это предел хранения на этом устройстве. Чтобы продолжить подбор, создайте новый набор</p><Button id="create-new-set" disabled={busy} onClick={event => setReplacementTrigger(event.currentTarget)}>Создать новый набор</Button></div>}
+      <details><summary className="min-h-[44px] py-2">Действия с меню</summary><div className="grid gap-2"><Button id="recreate-set" disabled={busy} onClick={event => setReplacementTrigger(event.currentTarget)}>Составить заново</Button><Link className="action-link" to="/plan/new">Изменить настройки</Link></div></details>
+      {snapshot.status === 'pending' && <div><p role="status">{snapshot.intent === 'replace' ? 'Подбираем новый набор…' : 'Подбираем новый вариант…'} Прежнее меню остаётся доступным</p><Button onClick={onCancel}>Отмена</Button></div>}
+      {saving && <div><p role="status">{snapshot.intent === 'append' ? 'Сохраняем новый вариант…' : snapshot.intent === 'replace' ? 'Сохраняем новый набор…' : 'Сохраняем выбор…'} Предыдущее меню остаётся активным</p><Button onClick={onCancel}>Отмена</Button></div>}
       {snapshot.status === 'succeeded' && <p role="status">{snapshot.intent === 'append' ? `Новый вариант добавлен и выбран. В наборе ${plan.variants.length} вариантов` : `Выбран вариант ${activeIndex + 1} из ${plan.variants.length}. Меню и список покупок обновлены`}</p>}
       {snapshot.status === 'memory-only' && <div role="alert"><p>{snapshot.intent === 'append' ? 'Новый вариант рассчитан, но не сохранён' : snapshot.intent === 'replace' ? 'Новый набор рассчитан, но не сохранён' : 'Не удалось сохранить выбор варианта'}</p><p>Результат доступен только до закрытия страницы. Прежнее меню не изменено</p><Button onClick={onRetrySave}>Повторить сохранение</Button><Button onClick={onCancel}>Оставить текущее меню</Button>{snapshot.saveError === 'blocked' && <Button onClick={onRetryLoad}>Повторить загрузку</Button>}</div>}
       {snapshot.status === 'no-new-result' && <div role="alert"><h3>Новый вариант не найден</h3><p>За отведённый поиск не удалось найти ещё один допустимый вариант. Прежние варианты сохранены</p><Button onClick={onRetryGeneration}>Повторить</Button><Link className="action-link" to="/plan/new">Изменить настройки</Link></div>}
@@ -81,5 +88,9 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
       <h3 className="font-semibold mt-4">На человека за день</h3><NutritionSummary values={day.personNutrition} target={day.targetComparison} />
       <p>{day.costBasis}: {day.ingredientCost}</p><details><summary className="min-h-[44px] py-2">КБЖУ семьи за день</summary><NutritionSummary values={day.familyNutrition} /></details>
     </section>)}
+    {replacementTrigger && <ConfirmDialog title="Создать новый набор меню?" description={`После успешного сохранения нового набора прежние ${plan.variants.length} ${plan.variants.length === 1 ? 'вариант' : plan.variants.length < 5 ? 'варианта' : 'вариантов'} будут заменены. До этого текущее меню останется доступным`} cancelLabel="Оставить варианты" confirmLabel="Создать новый набор" returnFocus={replacementTrigger} fallbackFocusId="menu-title" onCancel={() => setReplacementTrigger(null)} onConfirm={() => {
+      const anchor = replacementTrigger.id;
+      setReplacementTrigger(null); onRecreate?.(anchor);
+    }} />}
   </section>;
 }

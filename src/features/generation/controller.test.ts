@@ -10,6 +10,7 @@ import { decimal } from '../../domain/quantities';
 import { createGenerationController as productionController } from './controller';
 import type { GenerationControllerOptions } from './controller';
 import { createTrustedCatalogRegistry } from '../../adapters/trustedCatalogs';
+import legacyRaw from '../../test/fixtures/phase02-active-plan-v1.json?raw';
 
 const origin = { returnRoute: '/plan/new', focusAnchor: 'generate' };
 // Synthetic test catalog only. No production data or adapter depends on these values.
@@ -28,6 +29,30 @@ function fixture(seed = 'one') {
 function deferred<T>() { let resolve!: (value: T) => void; let reject!: (reason: unknown) => void; const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; }
 const trustedCatalogs = createTrustedCatalogRegistry([fixture().inputs.catalog]);
 const createGenerationController = (options: GenerationControllerOptions) => productionController({ trustedCatalogs, ...options });
+
+it('retains a real twelve-variant bundle and three-result candidate through quota and cancellation', async () => {
+  const map = new Map([[ACTIVE_PLAN_KEY, legacyRaw]]); let quota = false;
+  const port = createActivePlanAdapter(() => ({ getItem: key => map.get(key) ?? null,
+    setItem(key, value) { if (quota) throw new Error('quota'); map.set(key, value); } }));
+  const loaded = await port.load(); if (loaded.status !== 'loaded') throw new Error('legacy');
+  const original = loaded.bundle.plan;
+  const variants = Array.from({ length: 12 }, (_, i) => ({ id: `large-${i}`, instances: original.variants[0].instances.map(row => ({
+    ...row, id: `large-${i}/${row.date}/${row.slot}`, selectedServings: decimal(((i + 5) / 10).toFixed(1)),
+  })) }));
+  const plan = buildActivePlanEnvelope(original.inputs, variants, variants[0].id);
+  expect((await port.save(plan, { isCurrent: () => true })).status).toBe('saved');
+  const bytes = map.get(ACTIVE_PLAN_KEY);
+  const generate = vi.fn<GenerationPort['generate']>(async request => ({ status: 'success', plan: buildActivePlanEnvelope(request.inputs, variants.slice(0, 3), variants[0].id) }));
+  const c = productionController({ generation: { generate }, activePlan: port }); await c.load(); quota = true;
+  await c.recreateSet({ returnRoute: '/menu', focusAnchor: 'create-new-set' });
+  expect(c.getSnapshot().status).toBe('memory-only');
+  expect(c.getSnapshot().active?.plan).toEqual(plan);
+  expect(c.getSnapshot().candidate?.plan.variants).toHaveLength(3);
+  expect(map.get(ACTIVE_PLAN_KEY)).toBe(bytes);
+  c.cancel();
+  expect(c.getSnapshot().candidate).toBeNull(); expect(c.getSnapshot().active?.plan).toEqual(plan);
+  expect(map.get(ACTIVE_PLAN_KEY)).toBe(bytes); expect(generate).toHaveBeenCalledTimes(1); c.dispose();
+});
 function setup(generation?: GenerationPort) {
   const map = new Map<string, string>(); let failWrite = false;
   const port = createActivePlanAdapter(() => ({ getItem: key => map.get(key) ?? null, setItem(key, value) { if (failWrite) throw new Error('quota'); map.set(key, value); } }), trustedCatalogs);

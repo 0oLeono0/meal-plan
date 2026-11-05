@@ -8,7 +8,7 @@ import { projectPlan } from './planProjection';
 import { decimal, formatExact } from './quantities';
 import { createDraft, dietaryRestrictions } from './settings';
 import type { SettingsDraft } from './settings';
-import { createPlanSearch } from './generatePlan';
+import { createPlanSearch, variantFingerprint } from './generatePlan';
 import type { SearchOptions } from './generatePlan';
 
 // Synthetic arithmetic/safety oracles only. These are not production food claims.
@@ -45,6 +45,81 @@ function success(result: GenerationResult) {
 }
 function error(result: GenerationResult) { expect(result.status).toBe('error'); if (result.status !== 'error') throw new Error('Expected error'); return result.error; }
 const stock = (amount: string, unit: 'g' | 'ml' = 'g'): readonly PantrySnapshotRow[] => [{ productId: 'rice', expiresSoon: true, quantity: { status: 'known', value: { amount: decimal(amount), unit } } }];
+
+describe('semantic alternative search', () => {
+  const catalog = (count: number): Catalog => ({ version: 'finite', foods: [food('rice')], recipes: [
+    ...Array.from({ length: count }, (_, index) => recipe(`choice-${index}`, 'rice', '100', ['breakfast'])),
+    recipe('fixed', 'rice', '100', ['lunch', 'dinner', 'snack']),
+  ] });
+  const assignments = (plan: ReturnType<typeof success>['plan']) => plan.variants.map(variant => variant.instances.map(row => row.recipeId).join('/')).sort();
+  // Intersection keeps the RED test executable before the optional public fields exist.
+  const options = (targetCount: number, excludedFingerprints: readonly string[] = []): SearchOptions & { targetCount: number; excludedFingerprints: readonly string[] } => ({ targetCount, excludedFingerprints });
+  it.each([1, 2, 3])('returns the exact independent finite set of %i feasible assignments', count => {
+    const { plan } = success(run(fixture({}, catalog(count))).result);
+    expect(assignments(plan)).toEqual(Array.from({ length: count }, (_, i) => `choice-${i}/fixed/fixed/fixed`));
+    for (const variant of plan.variants) {
+      const result = projectPlan(plan.inputs, variant);
+      expect(result.status).toBe('projected');
+      if (result.status === 'projected') expect(result.projection.costs.exact.purchase).toEqual({ numerator: 400n, denominator: 1n });
+    }
+    expect(new Set(plan.variants.flatMap(row => row.instances.map(instance => instance.id))).size).toBe(count * 4);
+  });
+  it('has no fake alternative for an empty admissible slot', () => {
+    expect(error(run(fixture({}, catalog(0))).result).code).toBe('NO_RECIPES');
+  });
+  it('honors targetCount and excludes outputs without skipping their search evaluation', () => {
+    const inputs = fixture({}, catalog(3)), all = success(run(inputs).result).plan;
+    const first = success(run(inputs, options(1)).result).plan;
+    expect(first.variants).toHaveLength(1);
+    expect(first.variants[0]).toEqual(all.variants[0]);
+    const excluded = [variantFingerprint(all.variants[0])];
+    const next = run(inputs, options(3, excluded));
+    const selected = success(next.result).plan;
+    expect(assignments(selected)).toEqual(assignments({ ...all, variants: all.variants.slice(1) }));
+    expect(next.progress.evaluatedCandidates).toBe(3);
+    expect(run(inputs, options(3, excluded))).toEqual(next);
+    expect(error(run(inputs, options(3, all.variants.map(variantFingerprint))).result).code).toBe('SEARCH_EXHAUSTED');
+    expect(inputs.catalog.recipes).toHaveLength(4);
+  });
+  it.each([0, 4, 1.5, NaN])('rejects invalid target count %s', target => {
+    const refusal = error(run(fixture({}, catalog(3)), options(target)).result);
+    expect(refusal.code).toBe('GENERATION_DATA_INCOMPLETE');
+    expect(refusal.diagnostics.some(row => row.code === 'INVALID_SEARCH_OPTIONS')).toBe(true);
+  });
+  it.each([
+    { name: 'thirteen fingerprints', values: Array.from({ length: 13 }, (_, i) => String(i)) },
+    { name: 'empty fingerprint', values: [''] },
+    { name: 'oversized fingerprint', values: ['x'.repeat(32769)] },
+  ])('bounds exclusions: $name', ({ values: excluded }) => {
+    expect(error(run(fixture({}, catalog(3)), options(3, excluded)).result).code).toBe('GENERATION_DATA_INCOMPLETE');
+  });
+  it('uses normalized servings and canonical date-slot assignments, never opaque IDs or order', () => {
+    const { plan } = success(run(fixture({}, catalog(1))).result), variant = plan.variants[0];
+    const equivalent = { id: 'renamed', instances: [...variant.instances].reverse().map(row => ({ ...row, id: `new/${row.id}`, selectedServings: { numerator: 2n, denominator: 2n } })) };
+    expect(variantFingerprint(equivalent)).toBe(variantFingerprint(variant));
+    expect(JSON.parse(variantFingerprint(variant))).toEqual([
+      ['2026-10-28', 'breakfast', 'choice-0', '1', '1'], ['2026-10-28', 'lunch', 'fixed', '1', '1'],
+      ['2026-10-28', 'dinner', 'fixed', '1', '1'], ['2026-10-28', 'snack', 'fixed', '1', '1'],
+    ]);
+    for (const changed of [{ ...variant.instances[0], recipeId: 'different' }, { ...variant.instances[0], selectedServings: decimal('1.5') }]) {
+      expect(variantFingerprint({ ...variant, instances: [changed, ...variant.instances.slice(1)] })).not.toBe(variantFingerprint(variant));
+    }
+  });
+  it('accepts exact budget equality and rejects the next fractional alternative independently', () => {
+    const finite = { ...catalog(0), recipes: [recipe('equal', 'rice', '200', ['breakfast']), recipe('above', 'rice', '200.0001', ['breakfast']), recipe('fixed', 'rice', '100', ['lunch', 'dinner', 'snack'])] };
+    const { plan, projection } = success(run(fixture({ budget: '500' }, finite)).result);
+    expect(assignments(plan)).toEqual(['equal/fixed/fixed/fixed']);
+    expect(projection.costs.exact.purchase).toEqual({ numerator: 500n, denominator: 1n });
+    const aboveOnly = { ...finite, recipes: finite.recipes.filter(row => row.id !== 'equal') };
+    const refusal = error(run(fixture({ budget: '500' }, aboveOnly)).result);
+    expect(refusal.code).toBe('BUDGET_TOO_LOW');
+    expect(refusal.budgetEvidence?.amount).toEqual({ numerator: 5000001n, denominator: 10000n });
+  });
+  it('returns tied alternatives deterministically independent of recipe and food input order', () => {
+    const finite = catalog(3), inputs = fixture({}, finite);
+    expect(success(run(inputs).result).plan.variants).toEqual(success(run(fixture({}, { ...finite, recipes: [...finite.recipes].reverse() })).result).plan.variants);
+  });
+});
 
 describe('bounded deterministic generation', () => {
   it('evaluates a complete period with independently expected amounts and totals', () => {

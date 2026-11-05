@@ -3,6 +3,7 @@ import { createDraft } from './settings';
 import { buildAppliedSettings } from './appliedSettings';
 import { decimal } from './quantities';
 import type { Catalog, Recipe } from './catalog';
+import type { PlanVariant } from './plan';
 import { foodSources } from '../data/foodSources';
 import * as plan from './plan';
 
@@ -30,6 +31,27 @@ function envelopeFixture(days = '1') {
   const instances = plan.createRecipeInstances(inputs, Array(Number(days) * 4).fill('test-recipe'), (date, slot) => `${date}/${slot}`);
   return plan.buildActivePlanEnvelope(inputs, [{ id: 'variant-1', instances }], 'variant-1');
 }
+
+describe('alternative envelope boundaries', () => {
+  function alternatives(count: number) {
+    const original = envelopeFixture();
+    const variants: PlanVariant[] = Array.from({ length: count }, (_, index) => ({ id: `v${index}`,
+      instances: original.variants[0].instances.map(row => ({ ...row, id: `v${index}/${row.id}` })) }));
+    return { ...original, variants, activeVariantId: 'v0' };
+  }
+  it('accepts twelve variants without changing schema1 and rejects thirteen', () => {
+    expect(plan.validateActivePlanEnvelope(alternatives(12)).status).toBe('valid');
+    expect(plan.validateActivePlanEnvelope(alternatives(13)).status).toBe('invalid');
+    expect(plan.PLAN_SCHEMA_VERSION).toBe(1);
+  });
+  it('rejects global instance collisions, variant collisions and unknown active membership', () => {
+    const valid = alternatives(3), [first, second, third] = valid.variants;
+    expect(plan.validateActivePlanEnvelope(valid).status).toBe('valid');
+    expect(plan.validateActivePlanEnvelope({ ...valid, variants: [first, { ...second, instances: first.instances }, third] }).status).toBe('invalid');
+    expect(plan.validateActivePlanEnvelope({ ...valid, variants: [first, { ...second, id: first.id }, third] }).status).toBe('invalid');
+    expect(plan.validateActivePlanEnvelope({ ...valid, activeVariantId: 'absent' }).status).toBe('invalid');
+  });
+});
 function corrupt(change: (value: Record<string, unknown>) => void) {
   const encoded = plan.encodePlanEnvelope(envelopeFixture()) as Record<string, unknown>;
   change(encoded);

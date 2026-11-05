@@ -34,7 +34,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
 } }: GenerationControllerOptions) {
   let snapshot: GenerationSnapshot = immutableSnapshot({ status: 'idle', loadStatus: 'unloaded', active: null, candidate: null, lastApplied: null,
     presence: { status: 'absent' }, error: null, saveError: null, requestId: null, pendingTextIndex: 0, startedAt: null, origin: null, initialSearchCount: null });
-  interface Operation { readonly id: string; readonly abort: AbortController; readonly inputs: PlanInputs; readonly origin: GenerationOrigin; readonly baseRevision?: number; timeout?: unknown; rotation?: unknown }
+  interface Operation { readonly id: string; readonly abort: AbortController; readonly inputs: PlanInputs; readonly origin: GenerationOrigin; readonly baseRevision?: number; initialSearchCount?: number; timeout?: unknown; rotation?: unknown }
   let operation: Operation | null = null, sequence = 0, disposed = false, revision = 0, loadSequence = 0, writeAllowed = false;
   let lastRequest: { inputs: PlanInputs; origin: GenerationOrigin } | null = null;
   let writes: Promise<unknown> = Promise.resolve();
@@ -88,8 +88,13 @@ export function createGenerationController({ generation, activePlan, trustedCata
       if (result.status === 'loaded') {
         const checked = validateActiveBundle(result.bundle.plan, trustedCatalogs);
         if (checked.status !== 'valid') { writeAllowed = false; publish({ loadStatus: 'corrupt', presence: snapshot.active ? snapshot.presence : { status: 'error' } }); return; }
+        // A selection belongs to the revision it inspected. Reload replaces that base;
+        // release its pending UI and timers as well as rejecting its final write.
+        const cancelledSelection = operation?.baseRevision !== undefined;
+        if (cancelledSelection) invalidate();
         writeAllowed = true; revision++;
-        publish({ loadStatus: 'loaded', active: checked.bundle, initialSearchCount: null, lastApplied: checked.bundle.plan.inputs.appliedSettings,
+        publish({ ...(cancelledSelection ? { status: 'idle' as const, candidate: null, requestId: null, error: null, saveError: null } : {}),
+          loadStatus: 'loaded', active: checked.bundle, initialSearchCount: null, lastApplied: checked.bundle.plan.inputs.appliedSettings,
           presence: { status: 'valid', planId: checked.bundle.plan.activeVariantId } });
       } else {
         writeAllowed = result.status === 'missing';
@@ -120,7 +125,8 @@ export function createGenerationController({ generation, activePlan, trustedCata
     if (result.status === 'saved') {
       revision++; writeAllowed = true;
       publish({ status: 'succeeded', active: candidate, candidate: null, lastApplied: candidate.plan.inputs.appliedSettings,
-        loadStatus: 'loaded', presence: { status: 'valid', planId: candidate.plan.activeVariantId }, saveError: null });
+        loadStatus: 'loaded', presence: { status: 'valid', planId: candidate.plan.activeVariantId }, saveError: null,
+        ...(op.initialSearchCount !== undefined ? { initialSearchCount: op.initialSearchCount } : {}) });
     } else if (result.status === 'cancelled') {
       invalidate(); publish({ status: 'idle', candidate: null, requestId: null });
     } else {
@@ -150,7 +156,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
       if (candidate.status !== 'valid' || !sameSnapshot(result.plan.inputs, op.inputs)) {
         stopTimers(op); publish({ status: 'error', error: { code: 'GENERATION_DATA_INCOMPLETE', message: 'Получено несогласованное меню', diagnostics: candidate.status === 'invalid' ? candidate.diagnostics : [] } }); return;
       }
-      publish({ initialSearchCount: candidate.bundle.plan.variants.length });
+      op.initialSearchCount = candidate.bundle.plan.variants.length;
       await save(op, candidate.bundle);
     } catch {
       if (!owned(op)) return;
@@ -166,7 +172,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
     if (disposed || snapshot.status !== 'memory-only' || !candidate || !previous) return;
     invalidate();
     if (previous.baseRevision !== undefined && previous.baseRevision !== revision) return;
-    const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: previous.inputs, origin: previous.origin, baseRevision: previous.baseRevision };
+    const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: previous.inputs, origin: previous.origin, baseRevision: previous.baseRevision, initialSearchCount: previous.initialSearchCount };
     operation = op; armTimeout(op);
     publish({ requestId: op.id, startedAt: clock.now() });
     await save(op, candidate);

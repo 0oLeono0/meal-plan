@@ -44,6 +44,56 @@ describe('whole-period exact projection', () => {
     expect(result.rows[0].covered.amount).toEqual(decimal('200'));
     expect(result.rows[0].sources.map(row => row.instanceId)).toEqual(['early300', 'late200']);
   });
+  it('conserves required covered and purchase for every instance across stock sizes and permutations', () => {
+    for (const amount of ['1', '199', '200', '201', '499', '500', '1000']) {
+      const data = fixture(stock(amount));
+      for (const instances of [data.variant.instances, [...data.variant.instances].reverse()]) {
+        const result = projected({ ...data, variant: { ...data.variant, instances } });
+        const allocations = result.instances.flatMap(row => row.ingredients);
+        const values = allocations.map(row => [row.required.amount, row.covered.amount, row.purchase.amount].map(value => {
+          expect(value.denominator).toBe(1n); return value.numerator;
+        }));
+        const expectedCovered = BigInt(amount) < 500n ? BigInt(amount) : 500n;
+        expect(values.reduce((sum, row) => sum + row[1], 0n)).toBe(expectedCovered);
+        expect(values.reduce((sum, row) => sum + row[2], 0n)).toBe(500n - expectedCovered);
+        for (const [required, covered, purchase] of values) {
+          expect(required).toBe(covered + purchase); expect(covered >= 0n && purchase >= 0n).toBe(true);
+        }
+        expect(result.rows[0].covered.amount).toEqual(rational(expectedCovered));
+        expect(result.rows[0].purchase.amount).toEqual(rational(500n - expectedCovered));
+      }
+    }
+  });
+  it('keeps source ingredient priority across profiles regardless of foods array order', () => {
+    const other = { ...food, profileId: 'second' };
+    const data = fixture(stock('200'), [food, other]);
+    const recipe = { ...data.inputs.catalog.recipes[0], ingredients: [
+      { productId: 'rice', profileId: 'second', quantity: { amount: decimal('300'), unit: 'g' as const } },
+      { productId: 'rice', profileId: 'raw', quantity: { amount: decimal('200'), unit: 'g' as const } },
+    ] };
+    for (const foods of [[food, other], [other, food]]) {
+      const inputs = createPlanInputs(data.inputs.appliedSettings, { ...data.inputs.catalog, foods, recipes: [recipe] }, { seed: 'test', now: () => new Date(2026, 9, 27), pantrySnapshot: stock('0.2', 'kg') });
+      const variant = { id: 'profiles', instances: [{ ...data.variant.instances[0], recipeSnapshot: recipe }] };
+      const result = projected({ inputs, variant });
+      expect(result.instances[0].ingredients.map(row => [row.index, row.profileId, formatExact(row.covered.amount), formatExact(row.purchase.amount)])).toEqual([[0, 'second', '200', '100'], [1, 'raw', '0', '200']]);
+      expect(result.rows.map(row => [row.profileId, formatExact(row.covered.amount)])).toEqual([['second', '200'], ['raw', '0']]);
+      expect(result.costs.exact).toEqual({ ingredient: decimal('100'), purchase: decimal('60'), covered: decimal('40') });
+      // An alternative gets the original stock independently; no cross-variant depletion.
+      expect(projected({ inputs, variant: { ...variant, id: 'alternative' } }).costs).toEqual(result.costs);
+    }
+  });
+  it('records unknown or incompatible stock for each allocation without changing nutrition', () => {
+    const baseline = projected(fixture());
+    for (const [pantry, issue] of [
+      [[{ productId: 'rice', quantity: { status: 'unknown' as const }, expiresSoon: false }], 'UNKNOWN_PANTRY_QUANTITY'],
+      [stock('200', 'ml'), 'INCOMPATIBLE_PANTRY_UNIT'],
+    ] as const) {
+      const result = projected(fixture(pantry));
+      expect(result.instances.flatMap(row => row.ingredients).map(row => [row.issue, formatExact(row.covered.amount), formatExact(row.purchase.amount)])).toEqual([[issue, '0', '200'], [issue, '0', '300']]);
+      expect(result.familyNutrition).toEqual(baseline.familyNutrition);
+      expect(result.pantryIssues).toHaveLength(1);
+    }
+  });
   it('aggregates 200+300g before spending pantry 200g once and reconciles all costs', () => {
     const result = projected(); const row = result.rows[0];
     expect(formatExact(row.required.amount)).toBe('500');

@@ -20,6 +20,14 @@ export interface ProjectionRow {
 export interface InstanceProjection {
   readonly instance: RecipeInstance; readonly familyNutrition: Nutrition; readonly perPortionNutrition: Nutrition;
   readonly ingredientCost: Rational;
+  readonly ingredients: readonly IngredientAllocation[];
+}
+export type PantryIssue = 'UNKNOWN_PANTRY_QUANTITY' | 'INCOMPATIBLE_PANTRY_UNIT';
+export interface IngredientAllocation {
+  readonly index: number; readonly productId: string; readonly profileId: string;
+  readonly required: Quantity; readonly covered: Quantity; readonly purchase: Quantity;
+  readonly issue: PantryIssue | null; readonly familyNutrition: Nutrition; readonly perPortionNutrition: Nutrition;
+  readonly ingredientCost: Rational;
 }
 export interface DayProjection {
   readonly date: string; readonly familyNutrition: Nutrition; readonly personNutrition: Nutrition; readonly ingredientCost: Rational;
@@ -65,9 +73,15 @@ export function projectPlan(rawInputs: PlanInputs, variant: PlanVariant): Projec
     const inputs = validated.inputs;
     if (!validId(variant.id) || !Array.isArray(variant.instances) || variant.instances.length > inputs.dates.length * mealSlots.length) fail('INVALID_VARIANT');
     const ids = new Set<string>(), slots = new Set<string>();
-    const aggregates = new Map<string, { food: FoodProfile; quantity: Quantity; sources: Contribution[] }>();
+    const aggregates = new Map<string, { food: FoodProfile; quantity: Quantity; coveredAmount: Rational; sources: Contribution[] }>();
+    // The only stock remainder in this projection. Alternatives start from their own snapshot.
+    const stock = new Map(inputs.pantrySnapshot.filter(row => row.quantity.status === 'known').map(row => [row.productId, row.quantity.status === 'known' ? row.quantity.value : fail('INVALID_PANTRY')]));
+    const pantryIssues: PlanProjection['pantryIssues'][number][] = [];
+    const issueKeys = new Set<string>();
     const instanceRows: InstanceProjection[] = [];
-    for (const instance of variant.instances) {
+    // Validate before sorting: malformed dates/slots must not participate in ordering.
+    const ordered = [...variant.instances].sort((left, right) => inputs.dates.indexOf(left.date) - inputs.dates.indexOf(right.date) || mealSlots.indexOf(left.slot) - mealSlots.indexOf(right.slot));
+    for (const instance of ordered) {
       const recipe = inputs.catalog.recipes.find(entry => entry.id === instance.recipeId);
       if (!validId(instance.id) || ids.has(instance.id) || !inputs.dates.includes(instance.date) || !mealSlots.includes(instance.slot)
         || slots.has(`${instance.date}/${instance.slot}`) || instance.catalogVersion !== inputs.catalogVersion
@@ -77,7 +91,8 @@ export function projectPlan(rawInputs: PlanInputs, variant: PlanVariant): Projec
       ids.add(instance.id); slots.add(`${instance.date}/${instance.slot}`);
       const scale = divide(servings, recipe.baseServings);
       let familyNutrition = zeroNutrition(), ingredientCost = zero();
-      for (const original of recipe.ingredients) {
+      const ingredients: IngredientAllocation[] = [];
+      for (const [index, original] of recipe.ingredients.entries()) {
         const food = inputs.catalog.foods.find(entry => entry.productId === original.productId && entry.profileId === original.profileId);
         if (!food || food.nutrition.status !== 'known') fail('NUTRITION_UNKNOWN');
         const ingredient = { ...original, quantity: { ...original.quantity, amount: multiply(original.quantity.amount, scale) } };
@@ -88,34 +103,38 @@ export function projectPlan(rawInputs: PlanInputs, variant: PlanVariant): Projec
         ingredientCost = add(ingredientCost, evaluated.price.amount);
         // A food's verified nutrient basis provides a single compatible row, including evidenced cross-unit conversions.
         const quantity = normalizeQuantity(convertQuantity(ingredient.quantity, food.nutrition.reference.unit, food, food.conversions));
+        let coveredAmount = zero(), issue: PantryIssue | null = null;
+        const pantry = inputs.pantrySnapshot.find(row => row.productId === food.productId);
+        const remainder = stock.get(food.productId);
+        if (pantry?.quantity.status === 'unknown') issue = 'UNKNOWN_PANTRY_QUANTITY';
+        if (remainder) {
+          try {
+            const available = convertQuantity(remainder, quantity.unit, food, food.conversions);
+            coveredAmount = compare(available.amount, quantity.amount) > 0 ? quantity.amount : available.amount;
+            const consumed = convertQuantity({ amount: coveredAmount, unit: quantity.unit }, remainder.unit, food, food.conversions);
+            stock.set(food.productId, { ...remainder, amount: subtract(remainder.amount, consumed.amount) });
+          } catch (error) {
+            if (!(error instanceof Error) || error.message !== 'INCOMPATIBLE_DIMENSION') throw error;
+            issue = 'INCOMPATIBLE_PANTRY_UNIT';
+          }
+        }
+        if (issue) {
+          const issueKey = JSON.stringify([food.productId, food.profileId, issue]);
+          if (!issueKeys.has(issueKey)) { issueKeys.add(issueKey); pantryIssues.push({ productId: food.productId, profileId: food.profileId, code: issue }); }
+        }
+        ingredients.push({ index, productId: food.productId, profileId: food.profileId, required: quantity,
+          covered: { ...quantity, amount: coveredAmount }, purchase: { ...quantity, amount: subtract(quantity.amount, coveredAmount) }, issue,
+          familyNutrition: evaluated.nutrition, perPortionNutrition: divideNutrition(evaluated.nutrition, servings), ingredientCost: evaluated.price.amount });
         const key = JSON.stringify([food.productId, food.profileId, quantity.unit]);
         const contribution: Contribution = { instanceId: instance.id, recipeId: recipe.id, date: instance.date, slot: instance.slot, quantity };
         const row = aggregates.get(key);
-        if (row) { row.quantity = { ...quantity, amount: add(row.quantity.amount, quantity.amount) }; row.sources.push(contribution); }
-        else aggregates.set(key, { food, quantity, sources: [contribution] });
+        if (row) { row.quantity = { ...quantity, amount: add(row.quantity.amount, quantity.amount) }; row.coveredAmount = add(row.coveredAmount, coveredAmount); row.sources.push(contribution); }
+        else aggregates.set(key, { food, quantity, coveredAmount, sources: [contribution] });
       }
-      instanceRows.push({ instance, familyNutrition, perPortionNutrition: divideNutrition(familyNutrition, servings), ingredientCost });
+      instanceRows.push({ instance, familyNutrition, perPortionNutrition: divideNutrition(familyNutrition, servings), ingredientCost, ingredients });
     }
-    // One remainder per product, shared across every instance and profile. Never modify the pantry snapshot.
-    const stock = new Map(inputs.pantrySnapshot.filter(row => row.quantity.status === 'known').map(row => [row.productId, row.quantity.status === 'known' ? row.quantity.value : fail('INVALID_PANTRY')]));
-    const pantryIssues: PlanProjection['pantryIssues'][number][] = [];
     const rows: ProjectionRow[] = [];
-    for (const { food, quantity: required, sources } of aggregates.values()) {
-      let coveredAmount = zero();
-      const pantry = inputs.pantrySnapshot.find(row => row.productId === food.productId);
-      const remainder = stock.get(food.productId);
-      if (pantry?.quantity.status === 'unknown') pantryIssues.push({ productId: food.productId, profileId: food.profileId, code: 'UNKNOWN_PANTRY_QUANTITY' });
-      if (remainder) {
-        try {
-          const available = convertQuantity(remainder, required.unit, food, food.conversions);
-          coveredAmount = compare(available.amount, required.amount) > 0 ? required.amount : available.amount;
-          const consumed = convertQuantity({ amount: coveredAmount, unit: required.unit }, remainder.unit, food, food.conversions);
-          stock.set(food.productId, { ...remainder, amount: subtract(remainder.amount, consumed.amount) });
-        } catch (error) {
-          if (!(error instanceof Error) || error.message !== 'INCOMPATIBLE_DIMENSION') throw error;
-          pantryIssues.push({ productId: food.productId, profileId: food.profileId, code: 'INCOMPATIBLE_PANTRY_UNIT' });
-        }
-      }
+    for (const { food, quantity: required, coveredAmount, sources } of aggregates.values()) {
       const covered = { ...required, amount: coveredAmount }, purchase = { ...required, amount: subtract(required.amount, coveredAmount) };
       const evaluated = evaluateIngredient(food, { productId: food.productId, profileId: food.profileId, quantity: required });
       if (evaluated.status === 'invalid') return evaluated;

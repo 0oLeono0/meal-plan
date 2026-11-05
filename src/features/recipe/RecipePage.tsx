@@ -41,7 +41,11 @@ export function RecipePage({ snapshot, catalog, onRetry }: { snapshot: Generatio
     <p>Время приготовления: {view.recipe.cookingMinutes} мин</p>
     <section className="card" aria-label="На одну порцию"><h2>На одну порцию</h2><dl className="grid grid-cols-2 sm:grid-cols-5 gap-4"><NutritionValues fact={view.perPortionNutrition} /><div><dt>Цена</dt><dd>{view.perPortionCost === null ? 'Нет данных' : `≈ ${formatCurrency(roundHalfUp(view.perPortionCost, 2))}`}</dd></div></dl></section>
     <section className="card"><h2>Ингредиенты на {formatExact(view.servings)} порции</h2><p>Полная стоимость ингредиентов до вычета запасов</p><ul className="space-y-4">
-      {view.ingredients.map(row => <li key={row.index}><h3 className="font-semibold">{row.food.name}</h3><p>{formatQuantity(row.required)} · {row.familyCost === null ? 'Цена неизвестна' : `≈ ${formatCurrency(roundHalfUp(row.familyCost, 2))}`}</p></li>)}
+      {view.ingredients.map(row => <li key={row.index}><h3 className="font-semibold">{row.food.name}</h3><p>{formatQuantity(row.required)} · {row.familyCost === null ? 'Цена неизвестна' : `≈ ${formatCurrency(roundHalfUp(row.familyCost, 2))}`}</p>
+        {row.stock && <div>{row.stock.issue ? <p>{row.stock.issue === 'UNKNOWN_PANTRY_QUANTITY' ? 'Количество запаса не указано — запас не вычтен' : 'Единицы запаса и потребности несовместимы — запас не вычтен'}</p>
+          : row.stock.covered.amount.numerator > 0n ? row.stock.purchase.amount.numerator === 0n ? <p>Есть дома: {formatQuantity(row.stock.covered)}</p> : <p>Частично из запасов</p> : <p>Нет количественного покрытия запасами</p>}
+          <p>Нужно {formatQuantity(row.required)} · Из запасов {formatQuantity(row.stock.covered)} · Докупить {formatQuantity(row.stock.purchase)}</p></div>}
+      </li>)}
     </ul></section>
     <details className="card"><summary className="min-h-[44px] py-2 cursor-pointer">Состав — КБЖУ каждого ингредиента на одну порцию</summary><ul className="space-y-4">{view.ingredients.map(row => <li key={row.index}><h3>{row.food.name}</h3><dl className="grid grid-cols-2 sm:grid-cols-4 gap-4"><NutritionValues fact={row.perPortionNutrition} /></dl></li>)}</ul></details>
     <section className="card"><h2>Приготовление</h2><ol aria-label="Шаги приготовления" className="list-decimal pl-6 space-y-4 leading-relaxed">{view.recipe.steps.map((step, index) => <li key={index}>{step}</li>)}</ol></section>

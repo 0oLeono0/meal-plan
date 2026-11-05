@@ -1,7 +1,6 @@
 import { encodePlanEnvelope, validateActivePlanEnvelope } from '../domain/plan';
 import type { ActivePlanEnvelope } from '../domain/plan';
 import { projectPlan } from '../domain/planProjection';
-import { immutableSnapshot } from '../domain/appliedSettings';
 import type { PlanProjection } from '../domain/planProjection';
 import type { CatalogDiagnostic } from '../domain/catalog';
 import { trustedCatalogs } from './trustedCatalogs';
@@ -49,7 +48,10 @@ export function validateActiveBundle(input: unknown, registry: TrustedCatalogReg
     if (!result.projection.budget.check.accepted) return invalid('PLAN_OVER_BUDGET', variant.id);
     projections.push(result.projection);
   }
-  return { status: 'valid', bundle: immutableSnapshot({ plan, projections }) };
+  // Both values have already crossed their own bounded copy/validation gate.
+  // Copying the entire derived ledger alongside all twelve variants again
+  // would reject valid plans merely for duplicating validated data.
+  return { status: 'valid', bundle: Object.freeze({ plan, projections: Object.freeze(projections) }) };
 }
 export function createActivePlanAdapter(getStorage: () => PlanStorage = () => window.localStorage, registry: TrustedCatalogRegistry = trustedCatalogs): ActivePlanPort {
   let writable = false, inspectedRaw: string | null = null;

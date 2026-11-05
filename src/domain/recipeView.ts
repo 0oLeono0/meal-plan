@@ -3,6 +3,8 @@ import type { Catalog, CatalogLoadResult, FoodProfile, Nutrition, Recipe, Unknow
 import { evaluateIngredient, nutrientKeys } from './catalog';
 import { calendarDates } from './plan';
 import type { RecipeInstance } from './plan';
+import type { IngredientAllocation } from './planProjection';
+import { sameSnapshot } from './appliedSettings';
 import { add, compare, convertQuantity, decimal, divide, multiply } from './quantities';
 import type { Quantity, Rational } from './quantities';
 
@@ -66,6 +68,7 @@ export type NutritionFact = { readonly status: 'known'; readonly value: Nutritio
 export interface RecipeIngredientView {
   readonly index: number; readonly food: FoodProfile; readonly required: Quantity;
   readonly perPortionNutrition: NutritionFact; readonly familyCost: Rational | null;
+  readonly stock?: Pick<IngredientAllocation, 'covered' | 'purchase' | 'issue'>;
 }
 export interface RecipeView {
   readonly status: 'direct' | 'context'; readonly recipe: Recipe; readonly catalogVersion: string;
@@ -86,10 +89,19 @@ export function projectRecipeView(request: RecipeRequest): RecipeView | Failure 
     if (!recipe.ingredients.length || !recipe.steps.length || recipe.steps.some(step => !step.trim())
       || compare(servings, decimal('0')) <= 0 || compare(servings, decimal('1000')) > 0 || compare(recipe.baseServings, decimal('0')) <= 0) return incomplete();
     const scale = divide(servings, recipe.baseServings);
+    const saved = resolved.active?.projections.find(row => row.variantId === resolved.active?.plan.activeVariantId)?.instances.find(row => row.instance.id === resolved.instance?.id);
+    if (resolved.status === 'context' && (!saved || !sameSnapshot(saved.instance, resolved.instance) || saved.ingredients.length !== recipe.ingredients.length)) return incomplete();
     const ingredients: RecipeIngredientView[] = [];
     for (const [index, original] of recipe.ingredients.entries()) {
       const food = catalog.foods.find(food => food.productId === original.productId && food.profileId === original.profileId);
       if (!food) return incomplete();
+      if (saved) {
+        const row = saved.ingredients[index];
+        if (row.index !== index || row.productId !== food.productId || row.profileId !== food.profileId || food.nutrition.status !== 'known' || food.price.status !== 'known') return incomplete();
+        ingredients.push({ index, food, required: row.required, perPortionNutrition: { status: 'known', value: row.perPortionNutrition }, familyCost: row.ingredientCost,
+          stock: { covered: row.covered, purchase: row.purchase, issue: row.issue } });
+        continue;
+      }
       const required = { ...original.quantity, amount: multiply(original.quantity.amount, scale) };
       const evaluated = evaluateIngredient(food, { ...original, quantity: required });
       if (evaluated.status === 'invalid' && (resolved.status === 'context' || food.nutrition.status === 'known')) return incomplete();

@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { buildAppliedSettings } from './appliedSettings';
 import type { ActiveBundle } from '../adapters/activePlan';
+import { validateActiveBundle } from '../adapters/activePlan';
+import legacyRaw from '../test/fixtures/phase02-active-plan-v1.json?raw';
 import type { Catalog, FoodProfile, Recipe } from './catalog';
 import { createPlanInputs } from './plan';
 import { projectPlan } from './planProjection';
-import { decimal, rational } from './quantities';
+import { decimal, rational, roundHalfUp } from './quantities';
+import { formatNutrition } from './presentation';
 import { createDraft } from './settings';
 import { projectRecipeView, resolveRecipeContext } from './recipeView';
 import type { RecipeRequest } from './recipeView';
@@ -37,6 +40,39 @@ function viewed(request = fixture().request) {
 }
 
 describe('recipe basis and shared ledger', () => {
+  it('keeps validated bundle detached from caller mutations and rejects mutation of derived allocations', () => {
+    const caller = JSON.parse(legacyRaw).plan;
+    const step = caller.variants[0].instances[0].recipeSnapshot.steps[0];
+    const checked = validateActiveBundle(caller);
+    expect(checked.status).toBe('valid');
+    if (checked.status !== 'valid') throw new Error('Legacy validation');
+    caller.variants[0].instances[0].recipeSnapshot.steps[0] = 'forged after validation';
+    caller.inputs.catalog.foods[0].name = 'forged external alias';
+    expect(checked.bundle.plan.variants[0].instances[0].recipeSnapshot.steps[0]).toBe(step);
+    expect(checked.bundle.plan.inputs.catalog.foods[0].name).not.toBe('forged external alias');
+    const allocation = checked.bundle.projections[0].instances[0].ingredients[0];
+    const before = allocation.covered.amount;
+    expect(Reflect.set(allocation.covered, 'amount', decimal('999999'))).toBe(false);
+    expect(allocation.covered.amount).toEqual(before);
+    expect(Reflect.set(checked.bundle.projections, '0', null)).toBe(false);
+  });
+  it('adds exact ingredient composition before half-up display rounding in source order', () => {
+    const { request, catalog } = fixture();
+    const recipe = { ...catalog.recipes[0], ingredients: [
+      { productId: 'rice', profileId: 'raw', quantity: { amount: rational(1n, 3n), unit: 'g' as const } },
+      { productId: 'rice', profileId: 'raw', quantity: { amount: rational(2n, 3n), unit: 'g' as const } },
+    ] };
+    const view = viewed({ ...request, search: '', catalog: { status: 'loaded', catalog: { ...catalog, recipes: [recipe] } } });
+    expect(view.ingredients.map(row => row.required.amount)).toEqual([rational(1n, 3n), rational(2n, 3n)]);
+    expect(view.perPortionNutrition).toEqual({ status: 'known', value: { calories: rational(247n, 400n), protein: rational(29n, 800n), fat: decimal('0'), carbohydrates: rational(23n, 400n) } });
+    expect(view.ingredients.map(row => row.perPortionNutrition)).toEqual([
+      { status: 'known', value: { calories: rational(247n, 1200n), protein: rational(29n, 2400n), fat: decimal('0'), carbohydrates: rational(23n, 1200n) } },
+      { status: 'known', value: { calories: rational(247n, 600n), protein: rational(29n, 1200n), fat: decimal('0'), carbohydrates: rational(23n, 600n) } },
+    ]);
+    expect(view.perPortionCost).toEqual(rational(1n, 10n));
+    expect(roundHalfUp(rational(247n, 2n))).toBe(124n);
+    expect(formatNutrition({ calories: rational(247n, 2n), protein: rational(29n, 4n), fat: decimal('0'), carbohydrates: rational(23n, 2n) })).toEqual({ calories: '124', protein: '7,3', fat: '0,0', carbohydrates: '11,5' });
+  });
   it('uses the saved instance allocation, never subtracting the same rice stock again', () => {
     const { request } = fixture();
     const first = viewed(request), next = viewed({ ...request, pathname: '/recipe/r300', search: '?variant=v1&instance=i1' });

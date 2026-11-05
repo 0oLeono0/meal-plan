@@ -4,7 +4,7 @@ import { buildActivePlanEnvelope, mealSlots, validatePlanInputs } from './plan';
 import type { BudgetEvidence, GenerationErrorCode, GenerationResult, PlanInputs, PlanVariant } from './plan';
 import { projectPlan } from './planProjection';
 import type { PlanProjection } from './planProjection';
-import { add, compare, convertQuantity, decimal, divide, multiply, subtract } from './quantities';
+import { add, compare, convertQuantity, decimal, divide, multiply, rational, subtract } from './quantities';
 import type { Rational } from './quantities';
 
 export interface SearchOptions {
@@ -16,6 +16,13 @@ export interface SearchProgress { readonly transitions: number; readonly evaluat
 export const SEARCH_LIMITS = Object.freeze({ beamWidth: 32, maxEvaluations: 512, evaluationCeiling: 20000, maxTransitions: 200000, batchSize: 128, exhaustiveSize: 256 });
 interface Candidate { readonly recipe: Recipe; readonly ingredientCost: Rational }
 interface Ranked { readonly ids: readonly string[]; readonly projection: PlanProjection; readonly variant: PlanVariant; readonly score: readonly Rational[]; readonly tie: number; readonly key: string }
+/** Semantic identity excludes IDs, titles, seed and array order. */
+export function variantFingerprint(variant: PlanVariant): string {
+  return JSON.stringify(variant.instances.map(instance => {
+    const servings = rational(instance.selectedServings.numerator, instance.selectedServings.denominator);
+    return [instance.date, instance.slot, instance.recipeId, String(servings.numerator), String(servings.denominator)];
+  }).sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : mealSlots.indexOf(a[1] as typeof mealSlots[number]) - mealSlots.indexOf(b[1] as typeof mealSlots[number])));
+}
 const zero = () => decimal('0');
 const diagnostic = (code: string, path: string, message = code): CatalogDiagnostic => ({ code, path, message });
 const absolute = (value: Rational) => value.numerator < 0n ? subtract(zero(), value) : value;
@@ -151,7 +158,8 @@ export function* createPlanSearch(rawInputs: PlanInputs, options: SearchOptions 
     }
     if (lowerBound.numerator < 0n) lowerBound = zero();
     if (!incomplete.length && compare(lowerBound, inputs.appliedSettings.budget.limit) > 0) return refuse('BUDGET_TOO_LOW', evidence('lower-bound', lowerBound, false));
-    let best: Ranked | undefined, cheapest: Rational | undefined;
+    const retained: Ranked[] = [];
+    let cheapest: Rational | undefined;
     let projectionFailure = false;
     const seen = new Set<string>();
     const evaluate = (ids: readonly string[]): Ranked | undefined => {
@@ -163,7 +171,10 @@ export function* createPlanSearch(rawInputs: PlanInputs, options: SearchOptions 
       const projection = result.projection;
       if (!cheapest || compare(projection.costs.exact.purchase, cheapest) < 0) cheapest = projection.costs.exact.purchase;
       const ranked = { ids: [...ids], variant, projection, score: score(inputs, projection, ids), tie: hash(`${inputs.seed}:${key}`), key };
-      if (projection.budget.check.accepted && (!best || compareRank(ranked, best) < 0)) best = ranked;
+      if (projection.budget.check.accepted && !retained.some(row => variantFingerprint(row.variant) === variantFingerprint(variant))) {
+        retained.push(ranked); retained.sort(compareRank);
+        if (retained.length > 3) retained.pop();
+      }
       return ranked;
     };
     // Product computation is capped; no integer overflow or construction of huge spaces.
@@ -204,7 +215,14 @@ export function* createPlanSearch(rawInputs: PlanInputs, options: SearchOptions 
         beam = next;
       }
     }
-    if (best) return { status: 'success', plan: buildActivePlanEnvelope(inputs, [best.variant], best.variant.id) };
+    if (retained.length) {
+      const set = `set-${hash(JSON.stringify([inputs.seed, inputs.startDate, inputs.catalogVersion]))}`;
+      const variants = retained.map((row, index) => {
+        const id = `${set}-${index + 1}`;
+        return { id, instances: row.variant.instances.map(instance => ({ ...instance, id: `${id}/${instance.date}/${instance.slot}` })) };
+      });
+      return { status: 'success', plan: buildActivePlanEnvelope(inputs, variants, variants[0].id) };
+    }
     if (incomplete.length || projectionFailure) return refuse('GENERATION_DATA_INCOMPLETE');
     if (complete && cheapest) return refuse('BUDGET_TOO_LOW', evidence('exhaustive-minimum', cheapest, true));
     return refuse('SEARCH_EXHAUSTED', evidence('lower-bound', lowerBound, false));

@@ -20,6 +20,7 @@ export interface GenerationSnapshot {
   readonly pendingTextIndex: number;
   readonly startedAt: number | null;
   readonly origin: GenerationOrigin | null;
+  readonly initialSearchCount: number | null;
 }
 export interface GenerationScheduler { setTimeout(callback: () => void, milliseconds: number): unknown; clearTimeout(handle: unknown): void }
 export interface GenerationControllerOptions {
@@ -32,8 +33,8 @@ export function createGenerationController({ generation, activePlan, trustedCata
   clearTimeout: handle => globalThis.clearTimeout(handle as ReturnType<typeof setTimeout>),
 } }: GenerationControllerOptions) {
   let snapshot: GenerationSnapshot = immutableSnapshot({ status: 'idle', loadStatus: 'unloaded', active: null, candidate: null, lastApplied: null,
-    presence: { status: 'absent' }, error: null, saveError: null, requestId: null, pendingTextIndex: 0, startedAt: null, origin: null });
-  interface Operation { readonly id: string; readonly abort: AbortController; readonly inputs: PlanInputs; readonly origin: GenerationOrigin; timeout?: unknown; rotation?: unknown }
+    presence: { status: 'absent' }, error: null, saveError: null, requestId: null, pendingTextIndex: 0, startedAt: null, origin: null, initialSearchCount: null });
+  interface Operation { readonly id: string; readonly abort: AbortController; readonly inputs: PlanInputs; readonly origin: GenerationOrigin; readonly baseRevision?: number; timeout?: unknown; rotation?: unknown }
   let operation: Operation | null = null, sequence = 0, disposed = false, revision = 0, loadSequence = 0, writeAllowed = false;
   let lastRequest: { inputs: PlanInputs; origin: GenerationOrigin } | null = null;
   let writes: Promise<unknown> = Promise.resolve();
@@ -44,7 +45,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
     snapshot = immutableSnapshot({ ...snapshot, ...patch });
     for (const listener of [...listeners]) listener();
   };
-  const owned = (op: Operation) => !disposed && operation === op && !op.abort.signal.aborted;
+  const owned = (op: Operation) => !disposed && operation === op && !op.abort.signal.aborted && (op.baseRevision === undefined || op.baseRevision === revision);
   const stopTimers = (op: Operation) => {
     if (op.timeout !== undefined) scheduler.clearTimeout(op.timeout);
     if (op.rotation !== undefined) scheduler.clearTimeout(op.rotation);
@@ -88,7 +89,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
         const checked = validateActiveBundle(result.bundle.plan, trustedCatalogs);
         if (checked.status !== 'valid') { writeAllowed = false; publish({ loadStatus: 'corrupt', presence: snapshot.active ? snapshot.presence : { status: 'error' } }); return; }
         writeAllowed = true; revision++;
-        publish({ loadStatus: 'loaded', active: checked.bundle, lastApplied: checked.bundle.plan.inputs.appliedSettings,
+        publish({ loadStatus: 'loaded', active: checked.bundle, initialSearchCount: null, lastApplied: checked.bundle.plan.inputs.appliedSettings,
           presence: { status: 'valid', planId: checked.bundle.plan.activeVariantId } });
       } else {
         writeAllowed = result.status === 'missing';
@@ -149,6 +150,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
       if (candidate.status !== 'valid' || !sameSnapshot(result.plan.inputs, op.inputs)) {
         stopTimers(op); publish({ status: 'error', error: { code: 'GENERATION_DATA_INCOMPLETE', message: 'Получено несогласованное меню', diagnostics: candidate.status === 'invalid' ? candidate.diagnostics : [] } }); return;
       }
+      publish({ initialSearchCount: candidate.bundle.plan.variants.length });
       await save(op, candidate.bundle);
     } catch {
       if (!owned(op)) return;
@@ -163,15 +165,29 @@ export function createGenerationController({ generation, activePlan, trustedCata
     const candidate = snapshot.candidate, previous = operation;
     if (disposed || snapshot.status !== 'memory-only' || !candidate || !previous) return;
     invalidate();
-    const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: previous.inputs, origin: previous.origin };
+    if (previous.baseRevision !== undefined && previous.baseRevision !== revision) return;
+    const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: previous.inputs, origin: previous.origin, baseRevision: previous.baseRevision };
     operation = op; armTimeout(op);
     publish({ requestId: op.id, startedAt: clock.now() });
     await save(op, candidate);
   }
+  async function selectVariant(variantId: string, origin: GenerationOrigin) {
+    const active = snapshot.active;
+    if (disposed || !active || variantId === active.plan.activeVariantId || !active.plan.variants.some(variant => variant.id === variantId)) return;
+    invalidate();
+    const candidate = validateActiveBundle({ ...active.plan, activeVariantId: variantId }, trustedCatalogs);
+    if (candidate.status !== 'valid') {
+      publish({ status: 'error', error: failure('GENERATION_DATA_INCOMPLETE', 'Не удалось проверить выбранный вариант') }); return;
+    }
+    const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: active.plan.inputs, origin: immutableSnapshot(origin), baseRevision: revision };
+    operation = op; armTimeout(op);
+    publish({ requestId: op.id, startedAt: clock.now(), origin: op.origin });
+    await save(op, candidate.bundle);
+  }
   return {
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { if (!disposed) listeners.add(listener); return () => { listeners.delete(listener); }; },
-    load, retryLoad: load, start, cancel, retrySave,
+    load, retryLoad: load, start, cancel, retrySave, selectVariant,
     async retryGeneration() { if (lastRequest && snapshot.status === 'error') await start(lastRequest.inputs, lastRequest.origin); },
     dispose() { if (disposed) return; cancel(); disposed = true; ++loadSequence; listeners.clear(); },
   };

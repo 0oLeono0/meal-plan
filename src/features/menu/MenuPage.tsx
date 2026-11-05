@@ -21,7 +21,7 @@ function NutritionSummary({ values, target }: { values: ReturnType<typeof format
     </dd></div>;
   })}</dl>;
 }
-export function MenuPage({ snapshot, onRetryLoad }: { snapshot: GenerationSnapshot; onRetryLoad(): void }) {
+export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, onCancel }: { snapshot: GenerationSnapshot; onRetryLoad(): void; onSelectVariant?(id: string): void; onRetrySave?(): void; onCancel?(): void }) {
   const bundle = snapshot.active;
   if (!bundle) {
     if (snapshot.loadStatus === 'pending' || snapshot.loadStatus === 'unloaded') return <PlanLoading kind="menu" />;
@@ -31,6 +31,8 @@ export function MenuPage({ snapshot, onRetryLoad }: { snapshot: GenerationSnapsh
   const { plan } = bundle;
   const projection = bundle.projections.find(item => item.variantId === plan.activeVariantId)!;
   const settings = plan.inputs.appliedSettings;
+  const activeIndex = plan.variants.findIndex(variant => variant.id === plan.activeVariantId);
+  const saving = snapshot.status === 'saving';
   const view = selectPlanPresentation(projection, settings.target);
   const today = localDateOnly(new Date());
   const instances = projection.instances.map(row => ({ id: row.instance.id, date: row.instance.date, slot: slots[row.instance.slot], name: row.instance.recipeSnapshot.name,
@@ -40,6 +42,23 @@ export function MenuPage({ snapshot, onRetryLoad }: { snapshot: GenerationSnapsh
     <h1 tabIndex={-1}>{view.days.length === 7 ? 'Меню на неделю' : `Меню на ${view.period}`}</h1>
     <p>{formatDateOnly(plan.inputs.dates[0])} — {formatDateOnly(plan.inputs.dates[plan.inputs.dates.length - 1])} · На {view.people}</p>
     <p className="hint">Меню сохранено на этом устройстве</p>
+    <section className="card" aria-label="Варианты меню" aria-busy={saving}>
+      <h2>Вариант {activeIndex + 1} из {plan.variants.length}</h2>
+      {snapshot.initialSearchCount !== null && snapshot.initialSearchCount < 3 && <p>Найдено {snapshot.initialSearchCount} из 3 вариантов. Поиск ограничен; другие допустимые меню могут существовать.</p>}
+      <p className="hint">Покупки для той же семьи на весь период. Запасы учитываются в каждом варианте отдельно.</p>
+      <div className="flex gap-2">
+        <Button aria-label="Предыдущий вариант" disabled={saving || activeIndex === 0} onClick={() => onSelectVariant?.(plan.variants[activeIndex - 1].id)}><span aria-hidden="true">←</span></Button>
+        <Button aria-label="Следующий вариант" disabled={saving || activeIndex === plan.variants.length - 1} onClick={() => onSelectVariant?.(plan.variants[activeIndex + 1].id)}><span aria-hidden="true">→</span></Button>
+      </div>
+      <ul className="grid gap-2 p-0 list-none">{plan.variants.map((variant, index) => {
+        const costs = selectPlanPresentation(bundle.projections.find(row => row.variantId === variant.id)!, settings.target).costs;
+        const selected = variant.id === plan.activeVariantId;
+        return <li key={variant.id}><Button className="w-full text-left" aria-pressed={selected} disabled={saving} onClick={() => onSelectVariant?.(variant.id)}>Вариант {index + 1} · Купить: ≈ {costs.purchase}{selected ? ' · Выбран' : ''}</Button></li>;
+      })}</ul>
+      {saving && <p role="status">Сохраняем выбор… Предыдущее меню остаётся активным</p>}
+      {snapshot.status === 'memory-only' && <div role="alert"><p>Не удалось сохранить выбор. Предыдущее меню не изменено</p><Button onClick={onRetrySave}>Повторить сохранение</Button><Button onClick={onCancel}>Отмена</Button>{snapshot.saveError === 'blocked' && <Button onClick={onRetryLoad}>Повторить загрузку</Button>}</div>}
+      {snapshot.status === 'error' && <p role="alert">{snapshot.error?.message}. Предыдущее меню не изменено</p>}
+    </section>
     <PlanSummary bundle={bundle} projection={projection} />
     <section className="card"><h2>Среднее на человека в день</h2><NutritionSummary values={view.averagePersonDayNutrition} target={view.targetComparison} />
       <p>{settings.target.status === 'absent' ? 'Ручная цель КБЖУ не задана' : settings.target.source.kind === 'manual' ? 'Цель введена вручную · на человека в день' : 'Цель из сохранённого расчёта · на человека в день'}</p>

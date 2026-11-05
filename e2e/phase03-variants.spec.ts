@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { writeFileSync } from 'node:fs';
 
 test('real wizard generates three semantic alternatives and selection survives shopping and reload', async ({ page }) => {
   test.setTimeout(70_000);
@@ -15,13 +14,14 @@ test('real wizard generates three semantic alternatives and selection survives s
   await expect(page).toHaveURL(/\/menu$/, { timeout: 32_000 });
   const raw = await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'));
   expect(raw).not.toBeNull();
-  if (process.env.CAPTURE_PHASE02_LEGACY === '1') writeFileSync('.tmp/phase03-legacy-active-plan.json', raw!);
   const saved = JSON.parse(raw!);
   expect(saved.plan.variants).toHaveLength(3);
   // Independent oracle: literal canonical assignments, no production fingerprint/UUID/name.
   const fingerprints = saved.plan.variants.map((variant: { instances: { date: string; slot: string; recipeId: string; selectedServings: { numerator: string; denominator: string } }[] }) => JSON.stringify(variant.instances.map(row => [row.date, row.slot, row.recipeId, row.selectedServings.numerator, row.selectedServings.denominator])));
   expect(new Set(fingerprints).size).toBe(3);
-  expect(Date.now() - started).toBeLessThan(30_000);
+  const elapsed = Date.now() - started;
+  console.info(`Default corpus generation and saved acknowledgement: ${elapsed} ms`);
+  expect(elapsed).toBeLessThan(30_000);
   const active = saved.plan.activeVariantId;
   await expect(page.getByRole('button', { name: 'Предыдущий вариант', exact: true })).toBeDisabled();
   await page.getByRole('button', { name: 'Следующий вариант', exact: true }).click();

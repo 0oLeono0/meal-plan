@@ -1,4 +1,14 @@
 import { test, expect } from '@playwright/test';
+import legacyPlan from '../src/test/fixtures/phase02-active-plan-v1.json' with { type: 'json' };
+
+test('actual Phase2 single menu shows saved cardinality with both arrows disabled', async ({ page }) => {
+  await page.addInitScript(raw => localStorage.setItem('mealplan:guest:active-plan:v1', raw), JSON.stringify(legacyPlan));
+  await page.goto('/menu');
+  await expect(page.getByText('В сохранённом наборе 1 вариант', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Предыдущий вариант', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Следующий вариант', exact: true })).toBeDisabled();
+  await expect(page.getByText(/Найдено .* из 3 вариантов/)).toHaveCount(0);
+});
 
 test('real wizard generates three semantic alternatives and selection survives shopping and reload', async ({ page }) => {
   test.setTimeout(70_000);

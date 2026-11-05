@@ -61,6 +61,75 @@ function setup(generation?: GenerationPort) {
   return { controller, map, port, generate, failWrite: (value: boolean) => { failWrite = value; } };
 }
 
+describe('append operation ownership and deadlines', () => {
+  beforeEach(() => vi.useFakeTimers()); afterEach(() => vi.useRealTimers());
+  const menuOrigin = { returnRoute: '/menu', focusAnchor: 'append-variant' };
+  function candidate(inputs = fixture().inputs) {
+    return buildActivePlanEnvelope(inputs, [{ id: 'candidate', instances: fixture().plan.variants[0].instances.map(row => ({
+      ...row, id: `candidate/${row.id}`, selectedServings: decimal('1.5'),
+    })) }], 'candidate');
+  }
+  async function prepared(gate?: ReturnType<typeof deferred<GenerationResult>>, clock?: { now(): number }) {
+    const real = setup(); await real.port.load(); await real.port.save(fixture().plan, { isCurrent: () => true });
+    const generate = vi.fn<GenerationPort['generate']>(async request => gate ? gate.promise : ({ status: 'success', plan: candidate(request.inputs) }));
+    const save = vi.fn<ActivePlanPort['save']>((...args) => real.port.save(...args));
+    const c = createGenerationController({ generation: { generate }, activePlan: { load: () => real.port.load(), save }, clock }); await c.load();
+    return { ...real, c, generate, save };
+  }
+  it('deduplicates identical direct starts before disabled UI can intervene', async () => {
+    const gate = deferred<GenerationResult>(), { c, generate } = await prepared(gate);
+    const one = c.start(fixture().inputs, menuOrigin), two = c.start(fixture().inputs, menuOrigin);
+    expect(generate).toHaveBeenCalledTimes(1);
+    c.cancel(); await Promise.all([one, two]); c.dispose();
+  });
+  it('deduplicates append and rejects late ignored-abort success after cancellation', async () => {
+    const gate = deferred<GenerationResult>(), { c, map, generate, save } = await prepared(gate), bytes = map.get(ACTIVE_PLAN_KEY);
+    const one = c.appendVariant(menuOrigin), two = c.appendVariant(menuOrigin);
+    expect(generate).toHaveBeenCalledTimes(1); c.cancel(); await Promise.all([one, two]);
+    gate.resolve({ status: 'success', plan: candidate() }); await vi.advanceTimersByTimeAsync(0);
+    expect(map.get(ACTIVE_PLAN_KEY)).toBe(bytes); expect(save).not.toHaveBeenCalled(); expect(vi.getTimerCount()).toBe(0); c.dispose();
+  });
+  it.each([30000, 30001])('checks elapsed%sms even before a delayed timer callback can run', async elapsed => {
+    let now = 0; const gate = deferred<GenerationResult>(), { c, map, save } = await prepared(gate, { now: () => now });
+    const bytes = map.get(ACTIVE_PLAN_KEY), running = c.appendVariant(menuOrigin);
+    now = elapsed; gate.resolve({ status: 'success', plan: candidate() }); await running;
+    expect(save).not.toHaveBeenCalled(); expect(map.get(ACTIVE_PLAN_KEY)).toBe(bytes); expect(c.getSnapshot().error?.code).toBe('TIMEOUT'); c.dispose();
+  });
+  it('accepts29999ms success and rejects repeated retrySave after saved', async () => {
+    let now = 0; const gate = deferred<GenerationResult>(), { c, generate, save } = await prepared(gate, { now: () => now });
+    const running = c.appendVariant(menuOrigin); now = 29999; gate.resolve({ status: 'success', plan: candidate() }); await running;
+    expect(c.getSnapshot().active?.plan.variants).toHaveLength(2); await c.retrySave();
+    expect(generate).toHaveBeenCalledTimes(1); expect(save).toHaveBeenCalledTimes(1); c.dispose();
+  });
+  it.each(['cancel', 'dispose', 'reload', 'recreate'] as const)('does not apply late append after%s', async action => {
+    const gate = deferred<GenerationResult>(), { c, map, generate } = await prepared(gate), bytes = map.get(ACTIVE_PLAN_KEY);
+    const running = c.appendVariant(menuOrigin);
+    if (action === 'cancel') c.cancel();
+    else if (action === 'dispose') c.dispose();
+    else if (action === 'reload') await c.load();
+    else { generate.mockImplementation(async request => ({ status: 'success', plan: candidate(request.inputs) })); await c.recreateSet(menuOrigin); }
+    const after = c.getSnapshot().active, afterBytes = map.get(ACTIVE_PLAN_KEY);
+    gate.resolve({ status: 'success', plan: candidate() }); await running; await vi.advanceTimersByTimeAsync(0);
+    expect(c.getSnapshot().active).toEqual(after); expect(map.get(ACTIVE_PLAN_KEY)).toBe(afterBytes);
+    if (action !== 'recreate') expect(afterBytes).toBe(bytes); c.dispose();
+  });
+  it('blocks external byte conflict and retries the same memory candidate without search', async () => {
+    const gate = deferred<GenerationResult>(), { c, map, generate, save } = await prepared(gate);
+    const running = c.appendVariant(menuOrigin); map.set(ACTIVE_PLAN_KEY, 'external exact bytes');
+    gate.resolve({ status: 'success', plan: candidate() }); await running;
+    expect(c.getSnapshot().status).toBe('memory-only'); const held = c.getSnapshot().candidate;
+    await c.retrySave(); expect(c.getSnapshot().candidate).toEqual(held); expect(generate).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledTimes(2); expect(map.get(ACTIVE_PLAN_KEY)).toBe('external exact bytes'); c.dispose();
+  });
+  it('never saves a duplicate semantic result or a mismatched input snapshot', async () => {
+    for (const invalid of [fixture().plan, fixture('different-inputs').plan]) {
+      const gate = deferred<GenerationResult>(), { c, map, save } = await prepared(gate), bytes = map.get(ACTIVE_PLAN_KEY);
+      const running = c.appendVariant(menuOrigin); gate.resolve({ status: 'success', plan: invalid }); await running;
+      expect(save).not.toHaveBeenCalled(); expect(map.get(ACTIVE_PLAN_KEY)).toBe(bytes); expect(c.getSnapshot().status).toBe('error'); c.dispose();
+    }
+  });
+});
+
 describe('guarded alternative selection', () => {
   beforeEach(() => vi.useFakeTimers()); afterEach(() => vi.useRealTimers());
   const menuOrigin = { returnRoute: '/menu', focusAnchor: 'variants' };

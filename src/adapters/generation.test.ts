@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildAppliedSettings } from '../domain/appliedSettings';
 import type { Catalog, CatalogPort, Recipe } from '../domain/catalog';
 import { createPlanSearch } from '../domain/generatePlan';
@@ -31,6 +31,55 @@ const tick = () => new Promise<void>(resolve => setTimeout(resolve, 0));
 function expectError(result: GenerationResult, code: string) {
   expect(result.status).toBe('error'); if (result.status === 'error') expect(result.error.code).toBe(code);
 }
+
+describe('request options and one common deadline', () => {
+  beforeEach(() => vi.useFakeTimers()); afterEach(() => vi.useRealTimers());
+  it.each([0, 4, 1.5, NaN, null])('rejects malformed target %s before catalog load', async targetCount => {
+    const load = vi.fn(async () => ({ status: 'loaded' as const, catalog: catalog() }));
+    const adapter = createLocalGeneration({ ...createLocalCatalog(catalog()), load });
+    const result = await adapter.generate({ ...request(), targetCount } as unknown as GenerationRequest, new AbortController().signal);
+    expectError(result, 'GENERATION_DATA_INCOMPLETE'); expect(load).not.toHaveBeenCalled(); expect(vi.getTimerCount()).toBe(0);
+  });
+  it.each([Array(13).fill('x'), [''], ['x'.repeat(32769)], 'x', null])('rejects malformed exclusions before load: %s', async excludedFingerprints => {
+    const load = vi.fn(async () => ({ status: 'loaded' as const, catalog: catalog() }));
+    const result = await createLocalGeneration({ ...createLocalCatalog(catalog()), load }).generate({ ...request(), excludedFingerprints } as unknown as GenerationRequest, new AbortController().signal);
+    expectError(result, 'GENERATION_DATA_INCOMPLETE'); expect(load).not.toHaveBeenCalled(); expect(vi.getTimerCount()).toBe(0);
+  });
+  it('detaches exclusions before catalog await and actually forwards target1/output exclusions', async () => {
+    const data = catalog(), req = request(data), gate = deferred<Awaited<ReturnType<CatalogPort['load']>>>();
+    const fingerprint = JSON.stringify(mealSlots.map(slot => [req.inputs.dates[0], slot, 'recipe-000', '2', '1']));
+    const excludedFingerprints = [fingerprint];
+    const running = createLocalGeneration({ ...createLocalCatalog(data), load: () => gate.promise }).generate({ ...req, targetCount: 1, excludedFingerprints }, new AbortController().signal);
+    excludedFingerprints.length = 0; gate.resolve({ status: 'loaded', catalog: data });
+    expectError(await running, 'SEARCH_EXHAUSTED'); expect(vi.getTimerCount()).toBe(0);
+  });
+  it.each([1, 3])('finishes target%s at29999ms and cleans its timer/listener', async targetCount => {
+    const data = catalog(2), gate = deferred<Awaited<ReturnType<CatalogPort['load']>>>(), abort = new AbortController();
+    const add = vi.spyOn(abort.signal, 'addEventListener'), remove = vi.spyOn(abort.signal, 'removeEventListener');
+    const running = createLocalGeneration({ ...createLocalCatalog(data), load: () => gate.promise }).generate({ ...request(data), targetCount }, abort.signal);
+    await vi.advanceTimersByTimeAsync(29999); gate.resolve({ status: 'loaded', catalog: data });
+    const result = await running; expect(result.status).toBe('success');
+    if (result.status === 'success') expect(result.plan.variants).toHaveLength(targetCount);
+    expect(vi.getTimerCount()).toBe(0); expect(remove.mock.calls[0][1]).toBe(add.mock.calls[0][1]);
+  });
+  it.each([30000, 30001])('rejects a late catalog at%sms without a restarted deadline', async elapsed => {
+    const data = catalog(2), gate = deferred<Awaited<ReturnType<CatalogPort['load']>>>();
+    const running = createLocalGeneration({ ...createLocalCatalog(data), load: () => gate.promise }).generate({ ...request(data), targetCount: 1 }, new AbortController().signal);
+    await vi.advanceTimersByTimeAsync(elapsed); expectError(await running, 'TIMEOUT');
+    gate.resolve({ status: 'loaded', catalog: data }); await Promise.resolve(); expect(vi.getTimerCount()).toBe(0);
+  });
+  it.each([1, 3])('shares target%s catalog and stalled-yield time in one30s deadline', async targetCount => {
+    const data = catalog(60), load = deferred<Awaited<ReturnType<CatalogPort['load']>>>(), yielded = deferred<void>();
+    const yieldTask = vi.fn(() => yielded.promise);
+    const running = createLocalGeneration({ ...createLocalCatalog(data), load: () => load.promise }, { yieldTask }).generate({ ...request(data), targetCount }, new AbortController().signal);
+    await vi.advanceTimersByTimeAsync(25000); load.resolve({ status: 'loaded', catalog: data });
+    await vi.advanceTimersByTimeAsync(0); expect(yieldTask).toHaveBeenCalledTimes(1);
+    let settled = false; void running.then(() => { settled = true; });
+    await vi.advanceTimersByTimeAsync(4999); expect(settled).toBe(false);
+    await vi.advanceTimersByTimeAsync(1); expectError(await running, 'TIMEOUT');
+    yielded.resolve(); await vi.advanceTimersByTimeAsync(1); expect(yieldTask).toHaveBeenCalledTimes(1); expect(vi.getTimerCount()).toBe(0);
+  });
+});
 
 describe('local cooperative generation', () => {
   it('loads validated catalog and evaluates a real complete plan without artificial wait', async () => {

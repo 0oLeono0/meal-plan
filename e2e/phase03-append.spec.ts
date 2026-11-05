@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { mountGeneration, activeKey } from './generation-fixtures';
+import { mountGeneration, activeKey, finishWizard, release, count } from './generation-fixtures';
 import legacyPlan from '../src/test/fixtures/phase02-active-plan-v1.json' with { type: 'json' };
 
 test('real append preserves saved inputs and alternatives across reload', async ({ page }) => {
@@ -33,4 +33,67 @@ test('no new result preserves exact bytes and exposes persistent honest recovery
   await page.getByRole('link', { name: /^Список покупок ·/ }).click();
   await page.goBack();
   await expect(page.getByText('Новый вариант не найден', { exact: true })).toBeVisible();
+});
+
+function savedAlternatives(amount: number) {
+  const source = legacyPlan.plan.variants[0];
+  const variants = Array.from({ length: amount }, (_, i) => ({ ...source, id: `saved-${i}`, instances: source.instances.map(row => ({
+    ...row, id: `saved-${i}/${row.date}/${row.slot}`, selectedServings: { numerator: String(5 + i), denominator: '10' },
+  })) }));
+  return JSON.stringify({ ...legacyPlan, plan: { ...legacyPlan.plan, variants, activeVariantId: variants[0].id } });
+}
+
+test('cap twelve confirms replacement and preserves old bytes through cancel and failed write', async ({ page }) => {
+  test.setTimeout(65_000);
+  const bytes = savedAlternatives(12);
+  await mountGeneration(page, { route: '/menu', activeRaw: bytes, failWrite: true });
+  await expect(page.getByText('Вариант 1 из 12', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Пересобрать', exact: true })).toBeDisabled();
+  const create = page.getByRole('button', { name: 'Создать новый набор', exact: true });
+  await create.click({ timeout: 5000 });
+  await expect(page.getByRole('dialog', { name: 'Создать новый набор меню?' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Оставить варианты', exact: true })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(create).toBeFocused();
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(bytes);
+  expect(await count(page, 'generation-calls')).toBe(0);
+  await create.click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Создать новый набор', exact: true }).click();
+  await expect(page.getByText('Новый набор рассчитан, но не сохранён', { exact: true })).toBeVisible({ timeout: 32_000 });
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(bytes);
+  await expect(page.getByText('Вариант 1 из 12', { exact: true })).toBeVisible();
+  await page.evaluate(() => sessionStorage.setItem('allow-write', 'yes'));
+  await page.getByRole('button', { name: 'Повторить сохранение', exact: true }).click();
+  await expect(page.getByText('Вариант 1 из 3', { exact: true })).toBeVisible();
+  expect(await count(page, 'generation-calls')).toBe(1);
+  const next = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).plan, activeKey);
+  expect(next.inputs).toEqual(JSON.parse(bytes).plan.inputs);
+  expect(next.variants).toHaveLength(3);
+  await expect(page.getByRole('button', { name: /Заменить блюдо|Удалить блюдо|PNG|Избранное/ })).toHaveCount(0);
+});
+
+test('changed draft launch needs confirmation and installs only after save acknowledgement', async ({ page }) => {
+  test.setTimeout(65_000);
+  const bytes = JSON.stringify(legacyPlan);
+  await mountGeneration(page, { route: '/menu', activeRaw: bytes, draft: { days: '1', budget: '1777.50' }, deferSave: true });
+  await page.getByText('Действия с меню', { exact: true }).click({ timeout: 5000 });
+  await page.getByRole('link', { name: 'Изменить настройки', exact: true }).click();
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(bytes);
+  await finishWizard(page);
+  await expect(page.getByRole('dialog', { name: 'Составить меню с новыми настройками?' })).toBeVisible();
+  const oldDraft = await page.evaluate(() => localStorage.getItem('mealplan:guest:draft:v1'));
+  await page.getByRole('button', { name: 'Оставить варианты', exact: true }).click();
+  expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:draft:v1'))).toBe(oldDraft);
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(bytes);
+  await expect(page.getByRole('button', { name: 'Составить меню', exact: true })).toBeFocused();
+  await page.getByRole('button', { name: 'Составить меню', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Составить меню', exact: true }).click();
+  await expect.poll(() => count(page, 'save-calls'), { timeout: 32_000 }).toBe(1);
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(bytes);
+  await release(page, 'save-1');
+  await expect(page).toHaveURL(/\/menu$/);
+  const next = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).plan, activeKey);
+  expect(next.inputs.appliedSettings.raw.budget).toBe('1777.50');
+  expect(next.inputs.dates).toHaveLength(1);
+  expect(next.variants).toHaveLength(3);
 });

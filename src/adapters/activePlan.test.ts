@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { buildAppliedSettings } from '../domain/appliedSettings';
 import { buildActivePlanEnvelope, createPlanInputs, createRecipeInstances, encodePlanEnvelope, mealSlots } from '../domain/plan';
 import type { Catalog } from '../domain/catalog';
@@ -8,6 +8,7 @@ import { createDraft } from '../domain/settings';
 import { ACTIVE_PLAN_KEY, ACTIVE_PLAN_MAX_BYTES, createActivePlanAdapter, createActivePlanPresencePort, validateActiveBundle } from './activePlan';
 import { bundledCatalog } from '../data/catalog';
 import { createTrustedCatalogRegistry } from './trustedCatalogs';
+import legacyRaw from '../test/fixtures/phase02-active-plan-v1.json?raw';
 
 // Synthetic test data, never a production catalog or factual food claim.
 function fixture(change = {}): ActivePlanEnvelope {
@@ -27,6 +28,65 @@ function storage() {
 }
 const current = { isCurrent: () => true };
 const rawPlan = (plan = fixture()) => JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
+
+describe('Phase2 legacy and all-alternative persistence', () => {
+  // Real producer1789eea, captured before production changes on2026-11-04.
+  // Exact UTF8 SHA256: f8aed6836ac1d28a27dcc9a187ec5e49a0b3ca7f928b45b550406532bc855b73.
+  it('loads actual Phase2 schema1 bytes without rewrite, regenerated IDs or catalog migration', async () => {
+    const store = storage(); store.map.set(ACTIVE_PLAN_KEY, legacyRaw);
+    const setItem = vi.fn(store.setItem), port = createActivePlanAdapter(() => ({ ...store, setItem }));
+    for (let read = 0; read < 2; read++) {
+      const loaded = await port.load(); expect(loaded.status).toBe('loaded');
+      if (loaded.status !== 'loaded') throw new Error('Legacy load failed');
+      const { plan } = loaded.bundle;
+      expect(plan.activeVariantId).toBe('generated-1'); expect(plan.variants).toHaveLength(1);
+      expect(plan.inputs.catalogVersion).toBe('mealplan-2026-10-28-1');
+      expect(plan.inputs.seed).toBe('22cf714e-f1e2-4166-afaf-a853ba63b716');
+      expect(plan.inputs.dates).toEqual(['2026-11-04', '2026-11-05', '2026-11-06', '2026-11-07', '2026-11-08', '2026-11-09', '2026-11-10']);
+      expect(plan.variants[0].instances.map(row => row.id)).toEqual(plan.inputs.dates.flatMap(date => mealSlots.map(slot => `${date}/${slot}`)));
+      expect(encodePlanEnvelope(plan)).toEqual(JSON.parse(legacyRaw).plan);
+      expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(legacyRaw);
+    }
+    expect(setItem).not.toHaveBeenCalled();
+  });
+  function alternatives() {
+    const first = fixture();
+    return buildActivePlanEnvelope(first.inputs, ['1', '1.5', '2'].map((servings, index) => ({ id: `alternative-${index}`,
+      instances: first.variants[0].instances.map(row => ({ ...row, id: `alternative-${index}/${row.id}`, selectedServings: decimal(servings) })) })), 'alternative-0');
+  }
+  const registry = createTrustedCatalogRegistry([fixture().inputs.catalog]);
+  it('reloads every alternative in original order with independent exact projections', async () => {
+    const store = storage(), plan = alternatives(), port = createActivePlanAdapter(() => store, registry);
+    await port.load();
+    for (const variant of plan.variants) {
+      expect((await port.save({ ...plan, activeVariantId: variant.id }, current)).status).toBe('saved');
+      const loaded = await createActivePlanAdapter(() => store, registry).load();
+      expect(loaded.status).toBe('loaded');
+      if (loaded.status !== 'loaded') throw new Error('Load failed');
+      expect(loaded.bundle.plan).toEqual({ ...plan, activeVariantId: variant.id });
+      expect(loaded.bundle.projections.map(row => row.variantId)).toEqual(['alternative-0', 'alternative-1', 'alternative-2']);
+      expect(loaded.bundle.projections.map(row => row.costs.exact.purchase)).toEqual([decimal('400'), decimal('600'), decimal('800')]);
+      expect(loaded.bundle.projections.map(row => row.familyNutrition.calories)).toEqual([decimal('480'), decimal('720'), decimal('960')]);
+    }
+  });
+  it.each(['budget', 'snapshot', 'active', 'catalog'] as const)('rejects tampered inactive %s without changing bytes', async kind => {
+    const encoded = JSON.parse(rawPlan(alternatives()));
+    if (kind === 'budget') encoded.plan.variants[2].instances.forEach((row: { selectedServings: unknown }) => { row.selectedServings = { numerator: '3', denominator: '1' }; });
+    if (kind === 'snapshot') encoded.plan.variants[2].instances[0].recipeSnapshot.steps = ['forged'];
+    if (kind === 'active') encoded.plan.activeVariantId = 'absent';
+    if (kind === 'catalog') encoded.plan.inputs.catalog.foods[0].nutrition.values.calories = '0';
+    const raw = JSON.stringify(encoded), store = storage(); store.map.set(ACTIVE_PLAN_KEY, raw);
+    const port = createActivePlanAdapter(() => store, registry);
+    expect((await port.load()).status).toBe('corrupt');
+    expect((await port.save(alternatives(), current)).status).toBe('blocked');
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+  });
+  it.each(['', 'null'])('preserves invalid empty envelope bytes %j', async raw => {
+    const store = storage(); store.map.set(ACTIVE_PLAN_KEY, raw);
+    expect((await createActivePlanAdapter(() => store, registry).load()).status).toBe('corrupt');
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+  });
+});
 
 function sourcePlan(catalog: Catalog = bundledCatalog, restrictions: string[] = []) {
   const applied = buildAppliedSettings({ ...createDraft(), days: '1', people: '1', budget: '1000', restrictions });

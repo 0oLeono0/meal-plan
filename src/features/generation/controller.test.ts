@@ -35,6 +35,78 @@ function setup(generation?: GenerationPort) {
   const controller = createGenerationController({ generation: { generate }, activePlan: port, clock: { now: () => Date.now() } });
   return { controller, map, port, generate, failWrite: (value: boolean) => { failWrite = value; } };
 }
+
+describe('guarded alternative selection', () => {
+  beforeEach(() => vi.useFakeTimers()); afterEach(() => vi.useRealTimers());
+  const menuOrigin = { returnRoute: '/menu', focusAnchor: 'variants' };
+  function alternatives() {
+    const first = fixture();
+    return buildActivePlanEnvelope(first.inputs, ['1', '1.5', '2'].map((servings, index) => ({ id: `v${index}`,
+      instances: first.plan.variants[0].instances.map(row => ({ ...row, id: `v${index}/${row.id}`, selectedServings: decimal(servings) })) })), 'v0');
+  }
+  async function selectionSetup(delay?: ReturnType<typeof deferred<void>>) {
+    const real = setup(), plan = alternatives();
+    await real.port.load(); await real.port.save(plan, { isCurrent: () => true });
+    const save = vi.fn<ActivePlanPort['save']>(async (...args) => { if (delay) await delay.promise; return real.port.save(...args); });
+    const c = createGenerationController({ generation: { generate: real.generate }, activePlan: { load: () => real.port.load(), save } });
+    await c.load();
+    return { ...real, c, save, plan };
+  }
+  it('installs only saved selection and keeps every consumer and byte unchanged before acknowledgement', async () => {
+    const gate = deferred<void>(), { c, save, map, generate, plan } = await selectionSetup(gate), bytes = map.get(ACTIVE_PLAN_KEY);
+    const running = c.selectVariant('v1', menuOrigin); await vi.advanceTimersByTimeAsync(0);
+    expect(c.getSnapshot().status).toBe('saving'); expect(c.getSnapshot().active?.plan.activeVariantId).toBe('v0');
+    expect(c.getSnapshot().candidate?.plan.activeVariantId).toBe('v1'); expect(map.get(ACTIVE_PLAN_KEY)).toBe(bytes);
+    gate.resolve(); await running;
+    expect(c.getSnapshot().active?.plan).toEqual({ ...plan, activeVariantId: 'v1' });
+    expect(c.getSnapshot().active?.projections.map(row => row.costs.exact.purchase)).toEqual([decimal('400'), decimal('600'), decimal('800')]);
+    expect(save).toHaveBeenCalledTimes(1); expect(generate).not.toHaveBeenCalled();
+    await c.selectVariant('v1', menuOrigin); await c.selectVariant('absent', menuOrigin);
+    expect(save).toHaveBeenCalledTimes(1);
+    for (const id of ['v2', 'v0']) { await c.selectVariant(id, menuOrigin); expect(c.getSnapshot().active?.plan.activeVariantId).toBe(id); }
+    const loaded = await createActivePlanAdapter(() => ({ getItem: key => map.get(key) ?? null, setItem: vi.fn() }), trustedCatalogs).load();
+    expect(loaded.status).toBe('loaded'); if (loaded.status === 'loaded') expect(loaded.bundle.plan).toEqual(plan);
+    c.dispose();
+  });
+  it('retries a quota-failed selection without another generation or losing old bytes', async () => {
+    const { c, map, failWrite, generate, save } = await selectionSetup(), bytes = map.get(ACTIVE_PLAN_KEY);
+    failWrite(true); await c.selectVariant('v2', menuOrigin);
+    expect(c.getSnapshot().status).toBe('memory-only'); expect(c.getSnapshot().saveError).toBe('error');
+    expect(c.getSnapshot().active?.plan.activeVariantId).toBe('v0'); expect(map.get(ACTIVE_PLAN_KEY)).toBe(bytes);
+    failWrite(false); await c.retrySave();
+    expect(c.getSnapshot().active?.plan.activeVariantId).toBe('v2'); expect(save).toHaveBeenCalledTimes(2); expect(generate).not.toHaveBeenCalled(); c.dispose();
+  });
+  it.each(['cancel', 'dispose'] as const)('%s rejects a late selection before the real final write', async action => {
+    const gate = deferred<void>(), { c, map } = await selectionSetup(gate), bytes = map.get(ACTIVE_PLAN_KEY);
+    const running = c.selectVariant('v1', menuOrigin); await vi.advanceTimersByTimeAsync(0);
+    c[action](); await running; gate.resolve(); await vi.advanceTimersByTimeAsync(0);
+    expect(c.getSnapshot().active?.plan.activeVariantId).toBe('v0'); expect(map.get(ACTIVE_PLAN_KEY)).toBe(bytes); expect(vi.getTimerCount()).toBe(0);
+  });
+  it('a reloaded base revision cancels pending selection and leaves a usable idle state', async () => {
+    const gate = deferred<void>(), { c, map } = await selectionSetup(gate), bytes = map.get(ACTIVE_PLAN_KEY);
+    const running = c.selectVariant('v1', menuOrigin); await vi.advanceTimersByTimeAsync(0);
+    await c.retryLoad(); gate.resolve(); await running;
+    expect(c.getSnapshot().status).toBe('idle'); expect(c.getSnapshot().candidate).toBeNull();
+    expect(c.getSnapshot().active?.plan.activeVariantId).toBe('v0'); expect(map.get(ACTIVE_PLAN_KEY)).toBe(bytes); expect(vi.getTimerCount()).toBe(0); c.dispose();
+  });
+  it('external storage bytes block selection and preserve the visible old active bundle', async () => {
+    const { c, map, generate } = await selectionSetup(); map.set(ACTIVE_PLAN_KEY, 'external');
+    await c.selectVariant('v1', menuOrigin);
+    expect(c.getSnapshot().status).toBe('memory-only'); expect(c.getSnapshot().saveError).toBe('blocked');
+    expect(map.get(ACTIVE_PLAN_KEY)).toBe('external'); expect(c.getSnapshot().active?.plan.activeVariantId).toBe('v0'); expect(generate).not.toHaveBeenCalled(); c.dispose();
+  });
+  it('does not publish a new shortage count before the new generation is saved', async () => {
+    const plan = alternatives(); let calls = 0;
+    const real = setup({ generate: async () => ({ status: 'success', plan: ++calls === 1 ? fixture().plan : plan }) });
+    await real.controller.load(); await real.controller.start(fixture().inputs, origin);
+    expect(real.controller.getSnapshot().initialSearchCount).toBe(1);
+    real.failWrite(true); await real.controller.start(fixture().inputs, origin);
+    expect(real.controller.getSnapshot().status).toBe('memory-only');
+    expect(real.controller.getSnapshot().initialSearchCount).toBe(1);
+    real.failWrite(false); await real.controller.retrySave();
+    expect(real.controller.getSnapshot().initialSearchCount).toBe(3); real.controller.dispose();
+  });
+});
 describe('generation lifecycle', () => {
   beforeEach(() => vi.useFakeTimers()); afterEach(() => vi.useRealTimers());
   it.each(['unknown-version', 'altered-facts'] as const)('does not promote a custom port loaded %s plan or permit writes', async kind => {

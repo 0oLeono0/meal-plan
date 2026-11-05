@@ -21,7 +21,7 @@ function NutritionSummary({ values, target }: { values: ReturnType<typeof format
     </dd></div>;
   })}</dl>;
 }
-export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, onCancel }: { snapshot: GenerationSnapshot; onRetryLoad(): void; onSelectVariant?(id: string): void; onRetrySave?(): void; onCancel?(): void }) {
+export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, onCancel, onAppend, onRetryGeneration }: { snapshot: GenerationSnapshot; onRetryLoad(): void; onSelectVariant?(id: string): void; onRetrySave?(): void; onCancel?(): void; onAppend?(): void; onRetryGeneration?(): void }) {
   const bundle = snapshot.active;
   if (!bundle) {
     if (snapshot.loadStatus === 'pending' || snapshot.loadStatus === 'unloaded') return <PlanLoading kind="menu" />;
@@ -33,6 +33,7 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
   const settings = plan.inputs.appliedSettings;
   const activeIndex = plan.variants.findIndex(variant => variant.id === plan.activeVariantId);
   const saving = snapshot.status === 'saving';
+  const busy = saving || snapshot.status === 'pending';
   const view = selectPlanPresentation(projection, settings.target);
   const today = localDateOnly(new Date());
   const instances = projection.instances.map(row => ({ id: row.instance.id, date: row.instance.date, slot: slots[row.instance.slot], name: row.instance.recipeSnapshot.name,
@@ -42,24 +43,27 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
     <h1 tabIndex={-1}>{view.days.length === 7 ? 'Меню на неделю' : `Меню на ${view.period}`}</h1>
     <p>{formatDateOnly(plan.inputs.dates[0])} — {formatDateOnly(plan.inputs.dates[plan.inputs.dates.length - 1])} · На {view.people}</p>
     <p className="hint">Меню сохранено на этом устройстве</p>
-    <section className="card" aria-label="Варианты меню" aria-busy={saving}>
+    <section className="card" aria-label="Варианты меню" aria-busy={busy}>
       <h2>Вариант {activeIndex + 1} из {plan.variants.length}</h2>
       {snapshot.initialSearchCount === null && plan.variants.length === 1 && <p>В сохранённом наборе 1 вариант</p>}
       {snapshot.initialSearchCount !== null && snapshot.initialSearchCount < 3 && <p>Найдено {snapshot.initialSearchCount} из 3 вариантов. Поиск ограничен; другие допустимые меню могут существовать.</p>}
       <p className="hint">Покупки для той же семьи на весь период. Запасы учитываются в каждом варианте отдельно.</p>
       <div className="flex gap-2">
-        <Button aria-label="Предыдущий вариант" disabled={saving || activeIndex === 0} onClick={() => onSelectVariant?.(plan.variants[activeIndex - 1].id)}><span aria-hidden="true">←</span></Button>
-        <Button aria-label="Следующий вариант" disabled={saving || activeIndex === plan.variants.length - 1} onClick={() => onSelectVariant?.(plan.variants[activeIndex + 1].id)}><span aria-hidden="true">→</span></Button>
+        <Button aria-label="Предыдущий вариант" disabled={busy || activeIndex === 0} onClick={() => onSelectVariant?.(plan.variants[activeIndex - 1].id)}><span aria-hidden="true">←</span></Button>
+        <Button aria-label="Следующий вариант" disabled={busy || activeIndex === plan.variants.length - 1} onClick={() => onSelectVariant?.(plan.variants[activeIndex + 1].id)}><span aria-hidden="true">→</span></Button>
       </div>
       <ul className="grid gap-2 p-0 list-none">{plan.variants.map((variant, index) => {
         const costs = selectPlanPresentation(bundle.projections.find(row => row.variantId === variant.id)!, settings.target).costs;
         const selected = variant.id === plan.activeVariantId;
-        return <li key={variant.id}><Button className="w-full text-left" aria-pressed={selected} disabled={saving} onClick={() => onSelectVariant?.(variant.id)}>Вариант {index + 1} · Купить: ≈ {costs.purchase}{selected ? ' · Выбран' : ''}</Button></li>;
+        return <li key={variant.id}><Button className="w-full text-left" aria-pressed={selected} disabled={busy} onClick={() => onSelectVariant?.(variant.id)}>Вариант {index + 1} · Купить: ≈ {costs.purchase}{selected ? ' · Выбран' : ''}</Button></li>;
       })}</ul>
-      {saving && <p role="status">Сохраняем выбор… Предыдущее меню остаётся активным</p>}
-      {snapshot.status === 'succeeded' && <p role="status">Выбран вариант {activeIndex + 1} из {plan.variants.length}. Меню и список покупок обновлены</p>}
-      {snapshot.status === 'memory-only' && <div role="alert"><p>Не удалось сохранить выбор. Предыдущее меню не изменено</p><Button onClick={onRetrySave}>Повторить сохранение</Button><Button onClick={onCancel}>Отмена</Button>{snapshot.saveError === 'blocked' && <Button onClick={onRetryLoad}>Повторить загрузку</Button>}</div>}
-      {snapshot.status === 'error' && <p role="alert">{snapshot.error?.message}. Предыдущее меню не изменено</p>}
+      <Button id="append-variant" disabled={busy || snapshot.status === 'memory-only' || plan.variants.length >= 12} onClick={onAppend}>Пересобрать</Button>
+      {snapshot.status === 'pending' && <div><p role="status">Подбираем новый вариант… Прежнее меню остаётся доступным</p><Button onClick={onCancel}>Отмена</Button></div>}
+      {saving && <div><p role="status">{snapshot.intent === 'append' ? 'Сохраняем новый вариант…' : 'Сохраняем выбор…'} Предыдущее меню остаётся активным</p><Button onClick={onCancel}>Отмена</Button></div>}
+      {snapshot.status === 'succeeded' && <p role="status">{snapshot.intent === 'append' ? `Новый вариант добавлен и выбран. В наборе ${plan.variants.length} вариантов` : `Выбран вариант ${activeIndex + 1} из ${plan.variants.length}. Меню и список покупок обновлены`}</p>}
+      {snapshot.status === 'memory-only' && <div role="alert"><p>{snapshot.intent === 'append' ? 'Новый вариант рассчитан, но не сохранён' : snapshot.intent === 'replace' ? 'Новый набор рассчитан, но не сохранён' : 'Не удалось сохранить выбор варианта'}</p><p>Результат доступен только до закрытия страницы. Прежнее меню не изменено</p><Button onClick={onRetrySave}>Повторить сохранение</Button><Button onClick={onCancel}>Оставить текущее меню</Button>{snapshot.saveError === 'blocked' && <Button onClick={onRetryLoad}>Повторить загрузку</Button>}</div>}
+      {snapshot.status === 'no-new-result' && <div role="alert"><h3>Новый вариант не найден</h3><p>За отведённый поиск не удалось найти ещё один допустимый вариант. Прежние варианты сохранены</p><Button onClick={onRetryGeneration}>Повторить</Button><Link className="action-link" to="/plan/new">Изменить настройки</Link></div>}
+      {snapshot.status === 'error' && <div role="alert"><p>{snapshot.error?.message}. Предыдущее меню не изменено</p><Button onClick={onRetryGeneration}>Повторить</Button><Link className="action-link" to="/plan/new">Изменить настройки</Link></div>}
     </section>
     <PlanSummary bundle={bundle} projection={projection} />
     <section className="card"><h2>Среднее на человека в день</h2><NutritionSummary values={view.averagePersonDayNutrition} target={view.targetComparison} />

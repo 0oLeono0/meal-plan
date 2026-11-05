@@ -27,6 +27,11 @@ export function createLocalGeneration(catalog: CatalogPort, options: GenerationO
     if (!Number.isFinite(timeoutMs) || timeoutMs <= 0 || timeoutMs > 30000) return failure('FAILED');
     // Detach before the first await: caller mutations during catalog loading cannot alter work.
     const validated = validatePlanInputs(request.inputs);
+    const targetCount = request.targetCount ?? searchOptions.targetCount ?? 3;
+    const exclusions = request.excludedFingerprints ?? searchOptions.excludedFingerprints ?? [];
+    if (!Number.isSafeInteger(targetCount) || targetCount < 1 || targetCount > 3 || !Array.isArray(exclusions)
+      || exclusions.length > 12 || exclusions.some(key => typeof key !== 'string' || !key.trim() || key.length > 32768)) return failure('GENERATION_DATA_INCOMPLETE');
+    const selection = { targetCount, excludedFingerprints: [...exclusions] };
     if (validated.status === 'invalid' || typeof request.requestId !== 'string' || !request.requestId.trim() || request.requestId.length > 256) {
       return validated.status === 'invalid' ? { status: 'error', error: { code: 'GENERATION_DATA_INCOMPLETE', message: 'Настройки не прошли проверку', diagnostics: validated.diagnostics } } : failure('FAILED');
     }
@@ -52,7 +57,7 @@ export function createLocalGeneration(catalog: CatalogPort, options: GenerationO
         if (checked.status !== 'loaded') return { status: 'error', error: { code: 'GENERATION_DATA_INCOMPLETE', message: 'Каталог не прошёл проверку', diagnostics: checked.diagnostics } };
         if (!sameSnapshot(checked.catalog, validated.inputs.catalog)) return { status: 'error', error: { code: 'GENERATION_DATA_INCOMPLETE', message: 'Каталог изменился. Запустите подбор снова',
           diagnostics: [{ code: 'CATALOG_SNAPSHOT_MISMATCH', path: 'catalog', message: 'CATALOG_SNAPSHOT_MISMATCH' }] } };
-        const search = createPlanSearch(validated.inputs, searchOptions);
+        const search = createPlanSearch(validated.inputs, { ...searchOptions, ...selection });
         while (true) {
           for (let step = 0; step < SEARCH_LIMITS.batchSize; step++) {
             const stop = interrupted(); if (stop) return stop;

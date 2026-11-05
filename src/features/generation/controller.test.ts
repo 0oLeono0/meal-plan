@@ -52,6 +52,26 @@ describe('guarded alternative selection', () => {
     await c.load();
     return { ...real, c, save, plan };
   }
+  it('appends one detached candidate with exact saved inputs and retries only its write', async () => {
+    const real = setup(), plan = alternatives();
+    await real.port.load(); await real.port.save(plan, { isCurrent: () => true });
+    const generate = vi.fn<GenerationPort['generate']>(async request => ({ status: 'success', plan: buildActivePlanEnvelope(request.inputs,
+      [{ id: 'new', instances: plan.variants[0].instances.map(row => ({ ...row, id: `new/${row.id}`, selectedServings: decimal('1.75') })) }], 'new') }));
+    const c = createGenerationController({ generation: { generate }, activePlan: real.port }); await c.load();
+    const bytes = real.map.get(ACTIVE_PLAN_KEY); real.failWrite(true);
+    await c.appendVariant(menuOrigin);
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(generate.mock.calls[0][0].inputs).toEqual(plan.inputs);
+    expect(generate.mock.calls[0][0].targetCount).toBe(1);
+    expect(generate.mock.calls[0][0].excludedFingerprints).toHaveLength(3);
+    expect(c.getSnapshot().active?.plan).toEqual(plan); expect(real.map.get(ACTIVE_PLAN_KEY)).toBe(bytes);
+    const candidate = c.getSnapshot().candidate;
+    expect(candidate?.plan.variants).toHaveLength(4);
+    expect(candidate?.plan.variants.slice(0, 3)).toEqual(plan.variants);
+    real.failWrite(false); await c.retrySave();
+    expect(c.getSnapshot().active).toEqual(candidate); expect(generate).toHaveBeenCalledTimes(1);
+    await c.retrySave(); expect(generate).toHaveBeenCalledTimes(1); c.dispose();
+  });
   it('installs only saved selection and keeps every consumer and byte unchanged before acknowledgement', async () => {
     const gate = deferred<void>(), { c, save, map, generate, plan } = await selectionSetup(gate), bytes = map.get(ACTIVE_PLAN_KEY);
     const running = c.selectVariant('v1', menuOrigin); await vi.advanceTimersByTimeAsync(0);

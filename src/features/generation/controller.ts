@@ -2,13 +2,15 @@ import { validateActiveBundle } from '../../adapters/activePlan';
 import type { ActiveBundle, ActivePlanPort, ActivePlanSaveResult } from '../../adapters/activePlan';
 import type { GenerationError, GenerationPort, PlanInputs } from '../../domain/plan';
 import { validatePlanInputs } from '../../domain/plan';
+import { variantFingerprint } from '../../domain/generatePlan';
 import { immutableSnapshot, sameSnapshot } from '../../domain/appliedSettings';
 import { trustedCatalogs as defaultTrustedCatalogs } from '../../adapters/trustedCatalogs';
 import type { TrustedCatalogRegistry } from '../../adapters/trustedCatalogs';
 
 export interface GenerationOrigin { readonly returnRoute: string; readonly focusAnchor: string; readonly firstErroneousStep?: number }
 export interface GenerationSnapshot {
-  readonly status: 'idle' | 'pending' | 'error' | 'saving' | 'memory-only' | 'succeeded';
+  readonly status: 'idle' | 'pending' | 'error' | 'saving' | 'memory-only' | 'succeeded' | 'no-new-result';
+  readonly intent?: 'append' | 'replace' | 'select';
   readonly loadStatus: 'unloaded' | 'pending' | 'missing' | 'loaded' | 'corrupt' | 'error';
   readonly active: ActiveBundle | null;
   readonly candidate: ActiveBundle | null;
@@ -34,9 +36,9 @@ export function createGenerationController({ generation, activePlan, trustedCata
 } }: GenerationControllerOptions) {
   let snapshot: GenerationSnapshot = immutableSnapshot({ status: 'idle', loadStatus: 'unloaded', active: null, candidate: null, lastApplied: null,
     presence: { status: 'absent' }, error: null, saveError: null, requestId: null, pendingTextIndex: 0, startedAt: null, origin: null, initialSearchCount: null });
-  interface Operation { readonly id: string; readonly abort: AbortController; readonly inputs: PlanInputs; readonly origin: GenerationOrigin; readonly baseRevision?: number; initialSearchCount?: number; timeout?: unknown; rotation?: unknown }
+  interface Operation { readonly id: string; readonly abort: AbortController; readonly inputs: PlanInputs; readonly origin: GenerationOrigin; readonly baseRevision?: number; readonly intent?: 'append' | 'replace' | 'select'; readonly base?: ActiveBundle; initialSearchCount?: number; timeout?: unknown; rotation?: unknown }
   let operation: Operation | null = null, sequence = 0, disposed = false, revision = 0, loadSequence = 0, writeAllowed = false;
-  let lastRequest: { inputs: PlanInputs; origin: GenerationOrigin } | null = null;
+  let lastRequest: { inputs: PlanInputs; origin: GenerationOrigin; intent: 'append' | 'replace'; base?: ActiveBundle; baseRevision?: number } | null = null;
   let writes: Promise<unknown> = Promise.resolve();
   const listeners = new Set<() => void>();
   const cancelled = Symbol('cancelled');
@@ -133,7 +135,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
       publish({ status: 'memory-only', candidate, saveError: result.status });
     }
   }
-  async function start(rawInputs: PlanInputs, origin: GenerationOrigin) {
+  async function run(rawInputs: PlanInputs, origin: GenerationOrigin, intent: 'append' | 'replace', base?: ActiveBundle, baseRevision?: number) {
     if (disposed) return;
     // Only installation of active memory advances revision. Starting a request must
     // not abandon an outstanding read's status and write-permission bookkeeping.
@@ -142,26 +144,54 @@ export function createGenerationController({ generation, activePlan, trustedCata
     if (checked.status !== 'valid') {
       publish({ status: 'error', candidate: null, origin, error: { code: 'GENERATION_DATA_INCOMPLETE', message: 'Проверьте настройки и исходные данные', diagnostics: checked.diagnostics } }); return;
     }
-    const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: checked.inputs, origin: immutableSnapshot(origin) };
-    operation = op; lastRequest = { inputs: op.inputs, origin: op.origin };
-    publish({ status: 'pending', candidate: null, error: null, saveError: null, requestId: op.id, pendingTextIndex: 0, startedAt: clock.now(), origin: op.origin });
+    const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: checked.inputs, origin: immutableSnapshot(origin), intent, base, baseRevision };
+    operation = op; lastRequest = { inputs: op.inputs, origin: op.origin, intent, base, baseRevision };
+    publish({ status: 'pending', intent, candidate: null, error: null, saveError: null, requestId: op.id, pendingTextIndex: 0, startedAt: clock.now(), origin: op.origin });
     if (!owned(op)) return;
     armTimeout(op); rotate(op);
     try {
-      const result = await wait(generation.generate({ requestId: op.id, inputs: op.inputs }, op.abort.signal), op);
+      const excludedFingerprints = base?.plan.variants.map(variantFingerprint) ?? [];
+      const result = await wait(generation.generate({ requestId: op.id, inputs: op.inputs, targetCount: intent === 'append' ? 1 : 3,
+        ...(intent === 'append' ? { excludedFingerprints } : {}) }, op.abort.signal), op);
       if (!owned(op) || result === cancelled) return;
       if (result.status === 'cancelled') { cancel(); return; }
-      if (result.status === 'error') { stopTimers(op); publish({ status: 'error', error: result.error }); return; }
+      if (result.status === 'error') { stopTimers(op); publish({ status: intent === 'append' && result.error.code === 'SEARCH_EXHAUSTED' ? 'no-new-result' : 'error', error: result.error }); return; }
       const candidate = validateActiveBundle(result.plan, trustedCatalogs);
       if (candidate.status !== 'valid' || !sameSnapshot(result.plan.inputs, op.inputs)) {
         stopTimers(op); publish({ status: 'error', error: { code: 'GENERATION_DATA_INCOMPLETE', message: 'Получено несогласованное меню', diagnostics: candidate.status === 'invalid' ? candidate.diagnostics : [] } }); return;
       }
-      op.initialSearchCount = candidate.bundle.plan.variants.length;
-      await save(op, candidate.bundle);
+      if (intent === 'append') {
+        const variant = candidate.bundle.plan.variants[0];
+        if (!base || candidate.bundle.plan.variants.length !== 1 || excludedFingerprints.includes(variantFingerprint(variant)) || !sameSnapshot(snapshot.active, base)) {
+          stopTimers(op); publish({ status: 'error', error: failure('GENERATION_DATA_INCOMPLETE', 'Получено несогласованное меню') }); return;
+        }
+        // Search IDs are local to its result. Give only the new alternative a free namespace.
+        const ids = new Set(base.plan.variants.map(row => row.id));
+        let id = `append-${base.plan.variants.length + 1}`;
+        while (ids.has(id)) id += '-new';
+        const added = { ...variant, id, instances: variant.instances.map(row => ({ ...row, id: `${id}/${row.date}/${row.slot}` })) };
+        const merged = validateActiveBundle({ ...base.plan, variants: [...base.plan.variants, added], activeVariantId: id }, trustedCatalogs);
+        if (merged.status !== 'valid') { stopTimers(op); publish({ status: 'error', error: failure('GENERATION_DATA_INCOMPLETE', 'Не удалось проверить новый вариант') }); return; }
+        await save(op, merged.bundle);
+      } else {
+        op.initialSearchCount = candidate.bundle.plan.variants.length;
+        await save(op, candidate.bundle);
+      }
     } catch {
       if (!owned(op)) return;
       stopTimers(op); publish({ status: 'error', error: failure('FAILED', 'Не получилось составить меню') });
     }
+  }
+  async function start(rawInputs: PlanInputs, origin: GenerationOrigin) { await run(rawInputs, origin, 'replace', snapshot.active ?? undefined, snapshot.active ? revision : undefined); }
+  async function appendVariant(origin: GenerationOrigin) {
+    const base = snapshot.active;
+    if (disposed || !base || base.plan.variants.length >= 12 || snapshot.status === 'pending' || snapshot.status === 'saving' || snapshot.status === 'memory-only') return;
+    await run(base.plan.inputs, origin, 'append', base, revision);
+  }
+  async function recreateSet(origin: GenerationOrigin) {
+    const base = snapshot.active;
+    if (disposed || !base) return;
+    await run(base.plan.inputs, origin, 'replace', base, revision);
   }
   function cancel() {
     if (disposed) return;
@@ -172,7 +202,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
     if (disposed || snapshot.status !== 'memory-only' || !candidate || !previous) return;
     invalidate();
     if (previous.baseRevision !== undefined && previous.baseRevision !== revision) return;
-    const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: previous.inputs, origin: previous.origin, baseRevision: previous.baseRevision, initialSearchCount: previous.initialSearchCount };
+    const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: previous.inputs, origin: previous.origin, baseRevision: previous.baseRevision, initialSearchCount: previous.initialSearchCount, intent: previous.intent, base: previous.base };
     operation = op; armTimeout(op);
     publish({ requestId: op.id, startedAt: clock.now() });
     await save(op, candidate);
@@ -185,16 +215,17 @@ export function createGenerationController({ generation, activePlan, trustedCata
     if (candidate.status !== 'valid') {
       publish({ status: 'error', error: failure('GENERATION_DATA_INCOMPLETE', 'Не удалось проверить выбранный вариант') }); return;
     }
-    const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: active.plan.inputs, origin: immutableSnapshot(origin), baseRevision: revision };
+    const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: active.plan.inputs, origin: immutableSnapshot(origin), baseRevision: revision, intent: 'select' };
     operation = op; armTimeout(op);
-    publish({ requestId: op.id, startedAt: clock.now(), origin: op.origin });
+    publish({ requestId: op.id, startedAt: clock.now(), origin: op.origin, intent: 'select' });
     await save(op, candidate.bundle);
   }
   return {
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { if (!disposed) listeners.add(listener); return () => { listeners.delete(listener); }; },
-    load, retryLoad: load, start, cancel, retrySave, selectVariant,
-    async retryGeneration() { if (lastRequest && snapshot.status === 'error') await start(lastRequest.inputs, lastRequest.origin); },
+    load, retryLoad: load, start, cancel, retrySave, selectVariant, appendVariant, recreateSet,
+    async retryGeneration() { if (lastRequest && (snapshot.status === 'error' || snapshot.status === 'no-new-result')
+      && (lastRequest.baseRevision === undefined || lastRequest.baseRevision === revision)) await run(lastRequest.inputs, lastRequest.origin, lastRequest.intent, lastRequest.base, lastRequest.baseRevision); },
     dispose() { if (disposed) return; cancel(); disposed = true; ++loadSequence; listeners.clear(); },
   };
 }

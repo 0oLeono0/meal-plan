@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: P0 MVP
 current_phase: 03
 current_phase_name: Сравнение вариантов и просмотр рецептов
-current_plan: 2
+current_plan: 3
 status: executing
-stopped_at: Completed 03-01-PLAN.md; ready for 03-02
-last_updated: "2026-11-05T11:50:38.783Z"
+stopped_at: Completed 03-02-PLAN.md; ready for 03-03
+last_updated: "2026-11-05T12:18:57.095Z"
 last_activity: 2026-11-04
 last_activity_desc: Phase 03 execution started
-state_head: 8b9b0e0e47f4c3c406d4443a5865716973567a35
+state_head: 14bb7b469031e5e77dd9fb7c09026a001d2e8d37
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 30
-  completed_plans: 19
+  completed_plans: 20
 ---
 
 # Project State
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-10-30)
 ## Current Position
 
 Phase: 03 (Сравнение вариантов и просмотр рецептов) — EXECUTING
-Current Plan: 2
+Current Plan: 3
 Total Plans in Phase: 12
 Status: Ready to execute
 Last activity: 2026-11-04 — Phase 03 execution started
@@ -78,6 +78,7 @@ Progress: Phase1–2 приняты (2/7 фаз). Phase3: 1/12 планов вы
 | Phase 02 P09 | 18min observed; initial reads not separately timed | 3 tasks | 8 files |
 | Phase 02 P10 | 1379min observed wall through assessment; active unknown | 3 tasks | 15 range files including metadata/assessment |
 | Phase 03 P01 | 1398min observed wall; active unknown due to usage-limit interruption | 3 tasks | 11 files |
+| Phase 03 P02 | 25 min observed; initial reads not timed | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,8 @@ Progress: Phase1–2 приняты (2/7 фаз). Phase3: 1/12 планов вы
 - [Phase 02]: Orchestrator auto-mode approved only continuing independent phase checks after plain-HTML WebKit reproduction (45777d6). Two failed native linkTab cases remain manual-unverified; no user pass or phase completion.
 - [Phase 03]: Retain semantic top3 in one bounded search; output exclusions preserve transitions and hard gates
 - [Phase 03]: Selection and shortage cardinality publish only after saved acknowledgement; reloading its base cancels selection ownership
+- [Phase 03]: Append preserves exact saved inputs and prior identities; only saved acknowledgement installs its merged candidate
+- [Phase 03]: Reuse independently validated immutable bundles in frozen controller snapshots; metadata remains bounded without widening trust limits at cap12
 
 ### Pending Todos
 
@@ -125,6 +128,6 @@ Progress: Phase1–2 приняты (2/7 фаз). Phase3: 1/12 планов вы
 
 ## Session Continuity
 
-Last session: 2026-11-05T11:47:52.518Z
-Stopped at: Completed 03-01-PLAN.md; ready for 03-02
+Last session: 2026-11-05T12:18:55.740Z
+Stopped at: Completed 03-02-PLAN.md; ready for 03-03
 Resume file: None

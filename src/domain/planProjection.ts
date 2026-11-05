@@ -79,7 +79,7 @@ export function projectPlan(rawInputs: PlanInputs, variant: PlanVariant): Projec
     const pantryIssues: PlanProjection['pantryIssues'][number][] = [];
     const issueKeys = new Set<string>();
     const instanceRows: InstanceProjection[] = [];
-    // Validate before sorting: malformed dates/slots must not participate in ordering.
+    // Canonical order is independent of the caller's instance array; integrity is checked below.
     const ordered = [...variant.instances].sort((left, right) => inputs.dates.indexOf(left.date) - inputs.dates.indexOf(right.date) || mealSlots.indexOf(left.slot) - mealSlots.indexOf(right.slot));
     for (const instance of ordered) {
       const recipe = inputs.catalog.recipes.find(entry => entry.id === instance.recipeId);

@@ -97,6 +97,7 @@ describe('recipe basis and shared ledger', () => {
   it('scales base2 to family3 exactly once with four per portion facts including known zero', () => {
     const view = viewed();
     expect(view.servings).toEqual(decimal('3'));
+    expect(view.servingsLabel).toBe('3 порции'); expect(view.ingredientBasis).toBe('Ингредиенты на 3 порции');
     expect(view.ingredients[0].required.amount).toEqual(decimal('300'));
     expect(view.ingredients[0].familyCost).toEqual(decimal('60'));
     expect(view.perPortionCost).toEqual(decimal('20'));
@@ -113,6 +114,78 @@ describe('recipe basis and shared ledger', () => {
     expect(resolveRecipeContext({ ...request, search: '?variant=v1&instance=i0&view=day&day=2026-10-27' })).toMatchObject({ status: 'context', returnTo: '/menu?view=day&day=2026-10-27' });
     for (const search of ['?variant=v2&instance=i0', '?variant=v1&instance=i1', '?instance=i0', '?variant=v1&instance=i0&variant=v1', '?return=https://example.org', '?view=bad', '?day=2026-02-30', '?instance=%QQ']) {
       expect(resolveRecipeContext({ ...request, search }).status, search).toBe('stale');
+    }
+  });
+  it.each([
+    ['/recipe', '', 'notfound'], ['/recipe/absent', '', 'notfound'], ['/recipe/R200', '', 'notfound'],
+    ['/recipe/%QQ', '', 'stale'], ['/recipe/r200', '?variant=%E0%A4&instance=i0', 'stale'],
+    ['/recipe/r200', '?variant=v1&instance=i0&instance=i0', 'stale'],
+    ['/recipe/r200', '?variant=v1&instance=i0&view=day&view=day', 'stale'],
+    ['/recipe/r200', '?variant=v1&instance=i0&return=//evil.invalid', 'stale'],
+    ['/recipe/r200', '?variant=v1&instance=i0&day=2026-02-29', 'stale'],
+    ['/recipe/r200', '?variant=v1&instance=i0&view=DAY', 'stale'],
+    [`/recipe/${'x'.repeat(257)}`, '', 'stale'],
+    ['/recipe/r200', `?variant=${'x'.repeat(257)}&instance=i0`, 'stale'],
+    ['/recipe/r200', '?variant=&instance=', 'stale'],
+    ['/recipe/%2572', '', 'notfound'], // Decode once; never reinterpret an encoded percent.
+  ])('keeps URL branch %s%s as %s', (pathname, search, status) => {
+    expect(projectRecipeView({ ...fixture().request, pathname, search }).status).toBe(status);
+  });
+  it('distinguishes adapter pending error and corrupted context from absence without using another snapshot', () => {
+    const { request } = fixture();
+    expect(projectRecipeView({ ...request, search: '', catalog: null }).status).toBe('pending');
+    expect(projectRecipeView({ ...request, search: '', catalog: { status: 'invalid', diagnostics: [] } }).status).toBe('error');
+    expect(projectRecipeView({ ...request, loadStatus: 'pending' }).status).toBe('pending');
+    expect(projectRecipeView({ ...request, active: null, loadStatus: 'error' }).status).toBe('error');
+    expect(projectRecipeView({ ...request, active: null, loadStatus: 'corrupt' }).status).toBe('incomplete');
+    expect(projectRecipeView({ ...request, active: null, loadStatus: 'missing' }).status).toBe('stale');
+    // Context belongs to the saved catalog and is independent of a late direct-catalog read.
+    expect(viewed({ ...request, catalog: { status: 'invalid', diagnostics: [] } }).recipe.id).toBe('r200');
+  });
+  it('keeps incomplete recipes distinct from a complete one-ingredient one-step direct recipe', () => {
+    const { request, catalog } = fixture();
+    for (const recipe of [{ ...catalog.recipes[0], ingredients: [] }, { ...catalog.recipes[0], steps: [] }, { ...catalog.recipes[0], steps: [' '] }]) {
+      expect(projectRecipeView({ ...request, search: '', catalog: { status: 'loaded', catalog: { ...catalog, recipes: [recipe] } } }).status).toBe('incomplete');
+    }
+    const view = viewed({ ...request, search: '' });
+    expect(view.ingredients).toHaveLength(1); expect(view.recipe.steps).toEqual(['Полный единственный шаг']);
+  });
+  it('shows unknown direct facts explicitly and rejects missing mandatory contextual facts', () => {
+    const { request, active, catalog } = fixture();
+    const unknownFood = { ...rice, nutrition: { status: 'unknown' as const, reason: 'Test unknown' }, price: { status: 'unknown' as const, reason: 'Test price unknown' } };
+    const alteredCatalog = { ...catalog, foods: [unknownFood] };
+    const direct = viewed({ ...request, search: '', catalog: { status: 'loaded', catalog: alteredCatalog } });
+    expect(direct.perPortionNutrition.status).toBe('unknown');
+    expect(direct.ingredients[0].perPortionNutrition.status).toBe('unknown');
+    expect(direct.perPortionCost).toBeNull(); expect(direct.ingredients[0].familyCost).toBeNull();
+    expect(projectRecipeView({ ...request, active: { ...active, plan: { ...active.plan, inputs: { ...active.plan.inputs, catalog: alteredCatalog } } } }).status).toBe('incomplete');
+  });
+  it('does not rebind repeated recipe occurrences or reuse a previous active variant', () => {
+    const { request, active } = fixture();
+    const first = active.plan.variants[0].instances[0];
+    const later = { ...first, id: 'repeat', slot: 'lunch' as const, selectedServings: decimal('1') };
+    const variant = { id: 'v1', instances: [first, later] };
+    const projection = projectPlan(active.plan.inputs, variant);
+    if (projection.status !== 'projected') throw new Error('Repeated fixture');
+    const repeated: ActiveBundle = { plan: { ...active.plan, variants: [variant] }, projections: [projection.projection] };
+    const last = viewed({ ...request, active: repeated, search: '?variant=v1&instance=repeat' });
+    expect(last.instance?.id).toBe('repeat'); expect(last.servings).toEqual(decimal('1'));
+    expect(last.servingsLabel).toBe('1 порция'); expect(last.ingredientBasis).toBe('Ингредиенты на 1 порцию');
+    expect(last.ingredients[0].required.amount).toEqual(decimal('100'));
+    expect(last.ingredients[0].stock?.covered.amount).toEqual(decimal('0'));
+    const changed = { ...repeated, plan: { ...repeated.plan, activeVariantId: 'another' } };
+    expect(projectRecipeView({ ...request, active: changed }).status).toBe('stale');
+    expect(viewed(request).instance?.id).toBe('i0');
+  });
+  it('accepts selected1000 and positive fractions, rejecting zero and amounts beyond1000', () => {
+    const { request, active } = fixture();
+    for (const selectedServings of [decimal('1000'), rational(1n, 3n), decimal('0'), decimal('1000.001')]) {
+      const instance = { ...active.plan.variants[0].instances[0], selectedServings };
+      const variant = { id: 'v1', instances: [instance] };
+      const projection = projectPlan(active.plan.inputs, variant);
+      const scoped = { plan: { ...active.plan, variants: [variant] }, projections: projection.status === 'projected' ? [projection.projection] : [] };
+      const status = projectRecipeView({ ...request, active: scoped }).status;
+      expect(status).toBe(selectedServings.numerator > 0n && selectedServings.numerator <= selectedServings.denominator * 1000n ? 'context' : 'incomplete');
     }
   });
 });

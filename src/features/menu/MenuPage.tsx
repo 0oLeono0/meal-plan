@@ -44,6 +44,7 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
     <p className="hint">Меню сохранено на этом устройстве</p>
     <section className="card" aria-label="Варианты меню" aria-busy={saving}>
       <h2>Вариант {activeIndex + 1} из {plan.variants.length}</h2>
+      {snapshot.initialSearchCount === null && plan.variants.length === 1 && <p>В сохранённом наборе 1 вариант</p>}
       {snapshot.initialSearchCount !== null && snapshot.initialSearchCount < 3 && <p>Найдено {snapshot.initialSearchCount} из 3 вариантов. Поиск ограничен; другие допустимые меню могут существовать.</p>}
       <p className="hint">Покупки для той же семьи на весь период. Запасы учитываются в каждом варианте отдельно.</p>
       <div className="flex gap-2">
@@ -56,6 +57,7 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
         return <li key={variant.id}><Button className="w-full text-left" aria-pressed={selected} disabled={saving} onClick={() => onSelectVariant?.(variant.id)}>Вариант {index + 1} · Купить: ≈ {costs.purchase}{selected ? ' · Выбран' : ''}</Button></li>;
       })}</ul>
       {saving && <p role="status">Сохраняем выбор… Предыдущее меню остаётся активным</p>}
+      {snapshot.status === 'succeeded' && <p role="status">Выбран вариант {activeIndex + 1} из {plan.variants.length}. Меню и список покупок обновлены</p>}
       {snapshot.status === 'memory-only' && <div role="alert"><p>Не удалось сохранить выбор. Предыдущее меню не изменено</p><Button onClick={onRetrySave}>Повторить сохранение</Button><Button onClick={onCancel}>Отмена</Button>{snapshot.saveError === 'blocked' && <Button onClick={onRetryLoad}>Повторить загрузку</Button>}</div>}
       {snapshot.status === 'error' && <p role="alert">{snapshot.error?.message}. Предыдущее меню не изменено</p>}
     </section>

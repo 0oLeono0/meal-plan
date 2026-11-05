@@ -2,9 +2,9 @@
 schema_version: 1
 open_count: 4
 waived_count: 0
-fixed_count: 13
-total_count: 17
-last_updated: 2026-10-29T16:30:14.130Z
+fixed_count: 14
+total_count: 18
+last_updated: 2026-11-05T11:44:58.489Z
 ---
 
 # Broken Windows Ledger
@@ -32,6 +32,7 @@ last_updated: 2026-10-29T16:30:14.130Z
 | 15 | 02 | unmet-truth | e2e/phase02-presentation.spec.ts | 222 | Windows WebKit native Tab and Alt+Tab omit semantic navigation links; saved-screen sequential keyboard case remains failed/unverified. Actual Chromium and Firefox sequence passes; supported native Safari/environment verification is pending. | open |  | 2026-10-29T16:28:42.422Z |  |
 | 16 | 02 | unmet-truth | e2e/phase02-presentation.spec.ts | 263 | Windows WebKit native Tab and Alt+Tab omit the current-menu anchor during generation recovery; required sequential keyboard case remains failed/unverified. No fake focus, skipped test or system preference workaround is applied. | open |  | 2026-10-29T16:28:43.085Z |  |
 | 17 | 02 | deviation | e2e/phase02-presentation.spec.ts |  | Resolved test-only Firefox focus/subpixel/DOM/async harness mismatches and native WebKit End geometry without CSS, timeout, dependency or production changes; the two native WebKit linkTab gates remain separate open entries15/16. | fixed |  | 2026-10-29T16:29:51.775Z | 2026-10-29T16:30:14.130Z |
+| 18 | 03 | deviation | src/features/generation/controller.ts |  | Plan03-01 reload of a selection base left saving state and count published before save acknowledgement; regression tests and fix0f3b8ef resolve both | fixed |  | 2026-11-05T11:44:51.062Z | 2026-11-05T11:44:58.489Z |
 
 ````json
 [
@@ -254,6 +255,19 @@ last_updated: 2026-10-29T16:30:14.130Z
     "reason": "",
     "recorded_at": "2026-10-29T16:29:51.775Z",
     "resolved_at": "2026-10-29T16:30:14.130Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 18,
+    "kind": "deviation",
+    "phase": "03",
+    "file": "src/features/generation/controller.ts",
+    "line": null,
+    "description": "Plan03-01 reload of a selection base left saving state and count published before save acknowledgement; regression tests and fix0f3b8ef resolve both",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-11-05T11:44:51.062Z",
+    "resolved_at": "2026-11-05T11:44:58.489Z",
     "milestone": "v1.0"
   }
 ]

@@ -33,9 +33,9 @@ Plan/task/wave и phase-unique threat IDs назначены конечными 
 
 | Task | Wave | Requirements | Threat Ref | Automated command | Status |
 |---|---|---|---|---|---|
-|03-01-01|1|DATA-04, GEN-06, MENU-03|T-03-01, T-03-02, T-03-SC|`npm run test:e2e -- e2e/phase03-variants.spec.ts --project=chromium --workers=1`|pending|
-|03-01-02|1|DATA-04, GEN-06, MENU-03|T-03-01, T-03-02, T-03-SC|`npm run test:unit -- --run src/domain/plan.test.ts src/domain/generatePlan.test.ts`|pending|
-|03-01-03|1|DATA-04, GEN-06, MENU-03|T-03-01, T-03-02, T-03-SC|`npm run test:unit -- --run src/adapters/activePlan.test.ts src/features/generation/controller.test.ts`|pending|
+|03-01-01|1|DATA-04, GEN-06, MENU-03|T-03-01, T-03-02, T-03-SC|`npm run test:e2e -- e2e/phase03-variants.spec.ts --project=chromium --workers=1`|passed2026-11-05:2/2Chromium; real+legacy|
+|03-01-02|1|DATA-04, GEN-06, MENU-03|T-03-01, T-03-02, T-03-SC|`npm run test:unit -- --run src/domain/plan.test.ts src/domain/generatePlan.test.ts`|passed2026-11-05:68/68|
+|03-01-03|1|DATA-04, GEN-06, MENU-03|T-03-01, T-03-02, T-03-SC|`npm run test:unit -- --run src/adapters/activePlan.test.ts src/features/generation/controller.test.ts`|passed2026-11-05:70/70|
 |03-02-01|2|GEN-07, DATA-04, GEN-06|T-03-03, T-03-04, T-03-SC|`npm run test:e2e -- e2e/phase03-append.spec.ts --project=chromium --workers=1`|pending|
 |03-02-02|2|GEN-07, DATA-04, GEN-06|T-03-03, T-03-04, T-03-SC|`npm run test:e2e -- e2e/phase03-append.spec.ts --project=chromium --workers=1`|pending|
 |03-02-03|2|GEN-07, DATA-04, GEN-06|T-03-03, T-03-04, T-03-SC|`npm run test:unit -- --run src/adapters/generation.test.ts src/features/generation/controller.test.ts`|pending|
@@ -103,6 +103,8 @@ Plan/task/wave и phase-unique threat IDs назначены конечными 
 Real start→unique alternatives→select→shopping→reload; append with unsaved draft→same applied settings; no-result/cancel/error/quota/late response preserve bytes; retry save without search. Recreate confirmation+cancel restores focus. Contextual and direct recipe, repeated recipe across days, stale IDs, ingredient totals, pantry conservation. Widths360/390/430/768/1280 and1/3/7dates, desktop four meal types, no page overflow, bottomCTA access,4:3/404/offline local media. Preserve seed missing/throwingAPI tests. Historical WindowsWebKit keyboard limits remain explicit, never renamed passed.
 
 ## Validation Sign-Off
+
+Plan03-01 evidence: `docs/qa/phase03-plan01.md`; full unit397/397, typecheck/lint/build exit0, real+legacy Chromium2/2. Остальные планы/фазовые требования и общий sign-off остаются pending. Historical seed browser results не являются новым запуском;6seed unit assertions выполнены в текущем полном наборе.
 
 - [ ] All tasks mapped to actual automated checks
 - [ ] Wave0 references created

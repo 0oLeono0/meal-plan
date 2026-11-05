@@ -12,15 +12,14 @@ test('real generation opens the exact saved recipe instance and returns without 
   const saved = JSON.parse(raw!).plan;
   const variant = saved.variants.find((row: { id: string }) => row.id === saved.activeVariantId);
   const instance = variant.instances[variant.instances.length - 1];
-  const query = new URLSearchParams({ variant: variant.id, instance: instance.id, view: 'day', day: instance.date });
-  await page.goto(`/recipe/${encodeURIComponent(instance.recipeId)}?${query}`);
+  await page.locator(`[data-instance-id="${instance.id}"]`).getByRole('link', { name: instance.recipeSnapshot.name, exact: true }).click();
   await expect(page.getByRole('heading', { name: instance.recipeSnapshot.name, exact: true })).toBeVisible();
   await expect(page.locator('[data-instance-id]')).toHaveAttribute('data-instance-id', instance.id);
   await expect(page.getByText('Порций для семьи: 2', { exact: true })).toBeVisible();
   await expect(page.getByRole('region', { name: 'На одну порцию' }).locator('dt')).toHaveText(['Калории', 'Белки', 'Жиры', 'Углеводы', 'Цена']);
   await expect(page.getByRole('list', { name: 'Шаги приготовления' }).getByRole('listitem')).toHaveText(instance.recipeSnapshot.steps);
   await page.getByRole('link', { name: 'К меню', exact: true }).click();
-  await expect(page).toHaveURL(`/menu?view=day&day=${instance.date}`);
+  await expect(page).toHaveURL(`/menu?view=week&day=${instance.date}`);
   expect(await page.evaluate(key => localStorage.getItem(key), key)).toBe(raw);
 });
 

@@ -42,6 +42,7 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
   const view = selectPlanPresentation(projection, settings.target);
   const today = localDateOnly(new Date());
   const instances = projection.instances.map(row => ({ id: row.instance.id, date: row.instance.date, slot: slots[row.instance.slot], name: row.instance.recipeSnapshot.name,
+    recipeUrl: `/recipe/${encodeURIComponent(row.instance.recipeId)}?${new URLSearchParams({ variant: plan.activeVariantId, instance: row.instance.id, view: 'week', day: row.instance.date })}`,
     minutes: row.instance.recipeSnapshot.cookingMinutes, servings: formatExact(row.instance.selectedServings), nutrition: formatNutrition(row.perPortionNutrition),
     cost: formatCurrency(roundHalfUp(divide(row.ingredientCost, row.instance.selectedServings), 2)) }));
   return <section data-plan-id={plan.activeVariantId} className="plan-read-model [overflow-wrap:anywhere]">
@@ -82,7 +83,7 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
     {view.days.map(day => <section className="card" key={day.dateOnly} data-date={day.dateOnly} aria-label={day.date}>
       <h2>{day.date}{day.dateOnly === today ? ' · Сегодня' : ''}</h2>
       {instances.filter(instance => instance.date === day.dateOnly).map(instance => <article className="border-b border-[var(--color-border)] py-4" key={instance.id} data-instance-id={instance.id}>
-        <h3 className="font-semibold">{instance.slot}</h3><p>{instance.name}</p><p className="hint">{instance.minutes} мин · Порций для семьи: {instance.servings}</p>
+        <h3 className="font-semibold">{instance.slot}</h3><Link className="action-link underline" to={instance.recipeUrl}>{instance.name}</Link><p className="hint">{instance.minutes} мин · Порций для семьи: {instance.servings}</p>
         <p className="tabular-nums">На порцию: {instance.nutrition.calories} ккал · Б {instance.nutrition.protein} г · Ж {instance.nutrition.fat} г · У {instance.nutrition.carbohydrates} г · ≈ {instance.cost}</p>
       </article>)}
       <h3 className="font-semibold mt-4">На человека за день</h3><NutritionSummary values={day.personNutrition} target={day.targetComparison} />

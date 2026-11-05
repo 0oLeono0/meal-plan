@@ -1,13 +1,13 @@
 import { evaluateIngredient, nutrientKeys } from './catalog';
 import type { CatalogDiagnostic, Recipe } from './catalog';
 import { buildActivePlanEnvelope, mealSlots, validatePlanInputs } from './plan';
-import type { BudgetEvidence, GenerationErrorCode, GenerationResult, PlanInputs, PlanVariant } from './plan';
+import type { BudgetEvidence, GenerationErrorCode, GenerationResult, GenerationSelectionOptions, PlanInputs, PlanVariant } from './plan';
 import { projectPlan } from './planProjection';
 import type { PlanProjection } from './planProjection';
 import { add, compare, convertQuantity, decimal, divide, multiply, rational, subtract } from './quantities';
 import type { Rational } from './quantities';
 
-export interface SearchOptions {
+export interface SearchOptions extends GenerationSelectionOptions {
   readonly allergenKeys?: readonly string[];
   readonly maxEvaluations?: number;
   readonly maxTransitions?: number;
@@ -95,10 +95,14 @@ export function* createPlanSearch(rawInputs: PlanInputs, options: SearchOptions 
     if (validated.status === 'invalid') { diagnostics.push(...validated.diagnostics); return refuse('GENERATION_DATA_INCOMPLETE'); }
     const inputs = validated.inputs;
     const maxEvaluations = options.maxEvaluations ?? SEARCH_LIMITS.maxEvaluations, maxTransitions = options.maxTransitions ?? SEARCH_LIMITS.maxTransitions;
+    const targetCount = options.targetCount ?? 3, excludedFingerprints = options.excludedFingerprints ?? [];
     const allergens = [...new Set(options.allergenKeys ?? [])];
     if (!Number.isSafeInteger(maxEvaluations) || maxEvaluations < 1 || maxEvaluations > SEARCH_LIMITS.evaluationCeiling
       || !Number.isSafeInteger(maxTransitions) || maxTransitions < 1 || maxTransitions > SEARCH_LIMITS.maxTransitions
-      || allergens.some(key => typeof key !== 'string' || !key.trim() || key.length > 256)) {
+      || allergens.some(key => typeof key !== 'string' || !key.trim() || key.length > 256)
+      || !Number.isSafeInteger(targetCount) || targetCount < 1 || targetCount > 3
+      || !Array.isArray(excludedFingerprints) || excludedFingerprints.length > 12
+      || excludedFingerprints.some(key => typeof key !== 'string' || !key.trim() || key.length > 32768)) {
       diagnostics.push(diagnostic('INVALID_SEARCH_OPTIONS', 'search')); return refuse('GENERATION_DATA_INCOMPLETE');
     }
     // Reviewed no-fish restriction facts cover fish and seafood ingredients.
@@ -159,6 +163,8 @@ export function* createPlanSearch(rawInputs: PlanInputs, options: SearchOptions 
     if (lowerBound.numerator < 0n) lowerBound = zero();
     if (!incomplete.length && compare(lowerBound, inputs.appliedSettings.budget.limit) > 0) return refuse('BUDGET_TOO_LOW', evidence('lower-bound', lowerBound, false));
     const retained: Ranked[] = [];
+    const excluded = new Set(excludedFingerprints);
+    let foundFeasible = false;
     let cheapest: Rational | undefined;
     let projectionFailure = false;
     const seen = new Set<string>();
@@ -171,9 +177,11 @@ export function* createPlanSearch(rawInputs: PlanInputs, options: SearchOptions 
       const projection = result.projection;
       if (!cheapest || compare(projection.costs.exact.purchase, cheapest) < 0) cheapest = projection.costs.exact.purchase;
       const ranked = { ids: [...ids], variant, projection, score: score(inputs, projection, ids), tie: hash(`${inputs.seed}:${key}`), key };
-      if (projection.budget.check.accepted && !retained.some(row => variantFingerprint(row.variant) === variantFingerprint(variant))) {
+      if (projection.budget.check.accepted) foundFeasible = true;
+      const fingerprint = variantFingerprint(variant);
+      if (projection.budget.check.accepted && !excluded.has(fingerprint) && !retained.some(row => variantFingerprint(row.variant) === fingerprint)) {
         retained.push(ranked); retained.sort(compareRank);
-        if (retained.length > 3) retained.pop();
+        if (retained.length > targetCount) retained.pop();
       }
       return ranked;
     };
@@ -224,7 +232,7 @@ export function* createPlanSearch(rawInputs: PlanInputs, options: SearchOptions 
       return { status: 'success', plan: buildActivePlanEnvelope(inputs, variants, variants[0].id) };
     }
     if (incomplete.length || projectionFailure) return refuse('GENERATION_DATA_INCOMPLETE');
-    if (complete && cheapest) return refuse('BUDGET_TOO_LOW', evidence('exhaustive-minimum', cheapest, true));
+    if (complete && cheapest && !foundFeasible) return refuse('BUDGET_TOO_LOW', evidence('exhaustive-minimum', cheapest, true));
     return refuse('SEARCH_EXHAUSTED', evidence('lower-bound', lowerBound, false));
   } catch (error) {
     diagnostics.push(diagnostic(error instanceof Error ? error.message : 'INVALID_SEARCH', 'search'));

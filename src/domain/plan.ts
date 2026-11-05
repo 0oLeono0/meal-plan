@@ -37,7 +37,13 @@ export interface ActivePlanEnvelope {
   readonly variants: readonly PlanVariant[];
   readonly activeVariantId: string;
 }
-export interface GenerationRequest { readonly requestId: string; readonly inputs: PlanInputs }
+export interface GenerationSelectionOptions {
+  /** Initial target3; append requests may ask for1. Runtime boundary accepts only1..3. */
+  readonly targetCount?: number;
+  /** Canonical assignments already retained by the caller, at most12. */
+  readonly excludedFingerprints?: readonly string[];
+}
+export interface GenerationRequest extends GenerationSelectionOptions { readonly requestId: string; readonly inputs: PlanInputs }
 export type GenerationErrorCode = 'GENERATION_DATA_INCOMPLETE' | 'NO_RECIPES' | 'SEARCH_EXHAUSTED' | 'BUDGET_TOO_LOW' | 'TIMEOUT' | 'FAILED';
 export interface BudgetEvidence {
   readonly kind: 'lower-bound' | 'exhaustive-minimum';
@@ -212,7 +218,7 @@ export function validateActivePlanEnvelope(input: unknown): PlanValidation {
     const value = immutableSnapshot(decodeValues(immutableSnapshot(input)));
     if (!record(value)) fail('INVALID_PLAN');
     keys(value, 'schemaVersion,inputs,variants,activeVariantId');
-    if (value.schemaVersion !== PLAN_SCHEMA_VERSION || !text(value.activeVariantId) || !Array.isArray(value.variants) || value.variants.length < 1 || value.variants.length > 4) fail('INVALID_PLAN');
+    if (value.schemaVersion !== PLAN_SCHEMA_VERSION || !text(value.activeVariantId) || !Array.isArray(value.variants) || value.variants.length < 1 || value.variants.length > 12) fail('INVALID_PLAN');
     assertInputs(value.inputs);
     const variants = new Set<string>(), instances = new Set<string>();
     for (const variant of value.variants) {

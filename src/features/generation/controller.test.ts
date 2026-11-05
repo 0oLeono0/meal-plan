@@ -121,6 +121,50 @@ describe('append operation ownership and deadlines', () => {
     await c.retrySave(); expect(c.getSnapshot().candidate).toEqual(held); expect(generate).toHaveBeenCalledTimes(1);
     expect(save).toHaveBeenCalledTimes(2); expect(map.get(ACTIVE_PLAN_KEY)).toBe('external exact bytes'); c.dispose();
   });
+  it('selection supersedes a pending append without restoring the prior active ID', async () => {
+    const real = setup(), first = fixture().plan;
+    const plan = buildActivePlanEnvelope(first.inputs, [first.variants[0], candidate().variants[0]], first.activeVariantId);
+    await real.port.load(); await real.port.save(plan, { isCurrent: () => true });
+    const gate = deferred<GenerationResult>(), generate = vi.fn<GenerationPort['generate']>(() => gate.promise);
+    const c = createGenerationController({ generation: { generate }, activePlan: real.port }); await c.load();
+    const running = c.appendVariant(menuOrigin); await c.selectVariant('candidate', menuOrigin);
+    const bytes = real.map.get(ACTIVE_PLAN_KEY);
+    gate.resolve({ status: 'success', plan: buildActivePlanEnvelope(first.inputs, [{ id: 'late', instances: candidate().variants[0].instances.map(row => ({ ...row, id: `late/${row.id}`, selectedServings: decimal('1.75') })) }], 'late') });
+    await running;
+    expect(c.getSnapshot().active?.plan.activeVariantId).toBe('candidate'); expect(c.getSnapshot().active?.plan.variants).toHaveLength(2);
+    expect(real.map.get(ACTIVE_PLAN_KEY)).toBe(bytes); c.dispose();
+  });
+  it('a read replacing the base cancels a deferred final append write', async () => {
+    const real = setup(), first = fixture().plan;
+    await real.port.load(); await real.port.save(first, { isCurrent: () => true });
+    const write = deferred<void>();
+    const save = vi.fn<ActivePlanPort['save']>(async (...args) => { await write.promise; return real.port.save(...args); });
+    const c = createGenerationController({ generation: { generate: async request => ({ status: 'success', plan: candidate(request.inputs) }) }, activePlan: { load: () => real.port.load(), save } });
+    await c.load(); const bytes = real.map.get(ACTIVE_PLAN_KEY), running = c.appendVariant(menuOrigin);
+    await vi.advanceTimersByTimeAsync(0); expect(c.getSnapshot().status).toBe('saving');
+    await c.load(); write.resolve(); await running; await vi.advanceTimersByTimeAsync(0);
+    expect(c.getSnapshot().status).toBe('idle'); expect(c.getSnapshot().active?.plan).toEqual(first);
+    expect(real.map.get(ACTIVE_PLAN_KEY)).toBe(bytes); expect(vi.getTimerCount()).toBe(0); c.dispose();
+  });
+  it('the final save guard rejects elapsed30000ms before a queued write can mutate bytes', async () => {
+    let now = 0; const real = setup(); await real.port.load(); await real.port.save(fixture().plan, { isCurrent: () => true });
+    const gate = deferred<void>(), save = vi.fn<ActivePlanPort['save']>(async (...args) => { await gate.promise; return real.port.save(...args); });
+    const c = createGenerationController({ clock: { now: () => now }, generation: { generate: async request => ({ status: 'success', plan: candidate(request.inputs) }) }, activePlan: { load: () => real.port.load(), save } });
+    await c.load(); const bytes = real.map.get(ACTIVE_PLAN_KEY), running = c.appendVariant(menuOrigin);
+    await vi.advanceTimersByTimeAsync(0); expect(c.getSnapshot().status).toBe('saving'); now = 30000; gate.resolve(); await running;
+    expect(real.map.get(ACTIVE_PLAN_KEY)).toBe(bytes); expect(c.getSnapshot().active?.plan.variants).toHaveLength(1);
+    expect(c.getSnapshot().error?.code).toBe('TIMEOUT'); c.dispose();
+  });
+  it('does not start append with no active plan or a full twelve-variant bundle', async () => {
+    const real = setup(); await real.controller.load(); await real.controller.appendVariant(menuOrigin);
+    expect(real.generate).not.toHaveBeenCalled();
+    const first = fixture().plan, variants = Array.from({ length: 12 }, (_, i) => ({ id: `cap-${i}`, instances: first.variants[0].instances.map(row => ({
+      ...row, id: `cap-${i}/${row.id}`, selectedServings: decimal((1 + i / 20).toFixed(2)),
+    })) }));
+    await real.port.save(buildActivePlanEnvelope(first.inputs, variants, variants[0].id), { isCurrent: () => true });
+    await real.controller.load(); const bytes = real.map.get(ACTIVE_PLAN_KEY); await real.controller.appendVariant(menuOrigin);
+    expect(real.generate).not.toHaveBeenCalled(); expect(real.map.get(ACTIVE_PLAN_KEY)).toBe(bytes); real.controller.dispose();
+  });
   it('never saves a duplicate semantic result or a mismatched input snapshot', async () => {
     for (const invalid of [fixture().plan, fixture('different-inputs').plan]) {
       const gate = deferred<GenerationResult>(), { c, map, save } = await prepared(gate), bytes = map.get(ACTIVE_PLAN_KEY);

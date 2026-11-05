@@ -36,7 +36,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
 } }: GenerationControllerOptions) {
   let snapshot: GenerationSnapshot = immutableSnapshot({ status: 'idle', loadStatus: 'unloaded', active: null, candidate: null, lastApplied: null,
     presence: { status: 'absent' }, error: null, saveError: null, requestId: null, pendingTextIndex: 0, startedAt: null, origin: null, initialSearchCount: null });
-  interface Operation { readonly id: string; readonly abort: AbortController; readonly inputs: PlanInputs; readonly origin: GenerationOrigin; readonly baseRevision?: number; readonly intent?: 'append' | 'replace' | 'select'; readonly base?: ActiveBundle; initialSearchCount?: number; timeout?: unknown; rotation?: unknown }
+  interface Operation { readonly id: string; readonly abort: AbortController; readonly inputs: PlanInputs; readonly origin: GenerationOrigin; readonly deadline: number; readonly baseRevision?: number; readonly intent?: 'append' | 'replace' | 'select'; readonly base?: ActiveBundle; initialSearchCount?: number; timeout?: unknown; rotation?: unknown }
   let operation: Operation | null = null, sequence = 0, disposed = false, revision = 0, loadSequence = 0, writeAllowed = false;
   let lastRequest: { inputs: PlanInputs; origin: GenerationOrigin; intent: 'append' | 'replace'; base?: ActiveBundle; baseRevision?: number } | null = null;
   let writes: Promise<unknown> = Promise.resolve();
@@ -70,12 +70,17 @@ export function createGenerationController({ generation, activePlan, trustedCata
     promise.then(value => { cleanup(); resolve(value); }, error => { cleanup(); reject(error); });
   });
   const failure = (code: GenerationError['code'], message: string): GenerationError => ({ code, message, diagnostics: [] });
+  const timeOut = (op: Operation) => {
+    if (!owned(op)) return;
+    invalidate();
+    publish({ status: 'error', error: failure('TIMEOUT', op.intent === 'append' ? 'Не удалось найти новый вариант за 30 секунд. Прежнее меню не изменено' : 'Подбор прерван: время ожидания 30 секунд истекло'), candidate: null, saveError: null });
+  };
+  const rejectExpired = (op: Operation) => {
+    if (clock.now() < op.deadline) return false;
+    timeOut(op); return true;
+  };
   const armTimeout = (op: Operation) => {
-    op.timeout = scheduler.setTimeout(() => {
-      if (!owned(op)) return;
-      invalidate();
-      publish({ status: 'error', error: failure('TIMEOUT', 'Подбор прерван: время ожидания 30 секунд истекло'), candidate: null, saveError: null });
-    }, 30_000);
+    op.timeout = scheduler.setTimeout(() => timeOut(op), Math.max(0, op.deadline - clock.now()));
   };
   const rotate = (op: Operation) => {
     op.rotation = scheduler.setTimeout(() => {
@@ -113,20 +118,20 @@ export function createGenerationController({ generation, activePlan, trustedCata
     }
   }
   async function save(op: Operation, candidate: ActiveBundle) {
-    if (!owned(op)) return;
+    if (!owned(op) || rejectExpired(op)) return;
     if (op.rotation !== undefined) scheduler.clearTimeout(op.rotation);
     op.rotation = undefined;
     publish({ status: 'saving', candidate, error: null, saveError: null });
     // Keep one final write in flight. A superseded queued task never calls the port.
     const queued = writes.then(async (): Promise<ActivePlanSaveResult> => {
-      if (!owned(op)) return { status: 'cancelled' };
+      if (!owned(op) || rejectExpired(op)) return { status: 'cancelled' };
       if (!writeAllowed) return { status: 'blocked' };
-      return activePlan.save(candidate.plan, { isCurrent: () => owned(op) && writeAllowed });
+      return activePlan.save(candidate.plan, { isCurrent: () => owned(op) && writeAllowed && clock.now() < op.deadline });
     });
     writes = queued.catch(() => undefined);
     let result: ActivePlanSaveResult | typeof cancelled;
     try { result = await wait(queued, op); } catch { result = { status: 'error' }; }
-    if (!owned(op) || result === cancelled) return;
+    if (!owned(op) || result === cancelled || rejectExpired(op)) return;
     stopTimers(op);
     if (result.status === 'saved') {
       revision++; writeAllowed = true;
@@ -141,6 +146,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
   }
   async function run(rawInputs: PlanInputs, origin: GenerationOrigin, intent: 'append' | 'replace', base?: ActiveBundle, baseRevision?: number) {
     if (disposed) return;
+    if (operation && (snapshot.status === 'pending' || snapshot.status === 'saving') && operation.intent === intent && sameSnapshot(operation.inputs, rawInputs)) return;
     // Only installation of active memory advances revision. Starting a request must
     // not abandon an outstanding read's status and write-permission bookkeeping.
     invalidate();
@@ -148,7 +154,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
     if (checked.status !== 'valid') {
       publish({ status: 'error', candidate: null, origin, error: { code: 'GENERATION_DATA_INCOMPLETE', message: 'Проверьте настройки и исходные данные', diagnostics: checked.diagnostics } }); return;
     }
-    const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: checked.inputs, origin: immutableSnapshot(origin), intent, base, baseRevision };
+    const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: checked.inputs, origin: immutableSnapshot(origin), deadline: clock.now() + 30_000, intent, base, baseRevision };
     operation = op; lastRequest = { inputs: op.inputs, origin: op.origin, intent, base, baseRevision };
     publish({ status: 'pending', intent, candidate: null, error: null, saveError: null, requestId: op.id, pendingTextIndex: 0, startedAt: clock.now(), origin: op.origin });
     if (!owned(op)) return;
@@ -157,7 +163,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
       const excludedFingerprints = base?.plan.variants.map(variantFingerprint) ?? [];
       const result = await wait(generation.generate({ requestId: op.id, inputs: op.inputs, targetCount: intent === 'append' ? 1 : 3,
         ...(intent === 'append' ? { excludedFingerprints } : {}) }, op.abort.signal), op);
-      if (!owned(op) || result === cancelled) return;
+      if (!owned(op) || result === cancelled || rejectExpired(op)) return;
       if (result.status === 'cancelled') { cancel(); return; }
       if (result.status === 'error') { stopTimers(op); publish({ status: intent === 'append' && result.error.code === 'SEARCH_EXHAUSTED' ? 'no-new-result' : 'error', error: result.error }); return; }
       const candidate = validateActiveBundle(result.plan, trustedCatalogs);
@@ -206,7 +212,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
     if (disposed || snapshot.status !== 'memory-only' || !candidate || !previous) return;
     invalidate();
     if (previous.baseRevision !== undefined && previous.baseRevision !== revision) return;
-    const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: previous.inputs, origin: previous.origin, baseRevision: previous.baseRevision, initialSearchCount: previous.initialSearchCount, intent: previous.intent, base: previous.base };
+    const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: previous.inputs, origin: previous.origin, deadline: clock.now() + 30_000, baseRevision: previous.baseRevision, initialSearchCount: previous.initialSearchCount, intent: previous.intent, base: previous.base };
     operation = op; armTimeout(op);
     publish({ requestId: op.id, startedAt: clock.now() });
     await save(op, candidate);
@@ -219,7 +225,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
     if (candidate.status !== 'valid') {
       publish({ status: 'error', error: failure('GENERATION_DATA_INCOMPLETE', 'Не удалось проверить выбранный вариант') }); return;
     }
-    const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: active.plan.inputs, origin: immutableSnapshot(origin), baseRevision: revision, intent: 'select' };
+    const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: active.plan.inputs, origin: immutableSnapshot(origin), deadline: clock.now() + 30_000, baseRevision: revision, intent: 'select' };
     operation = op; armTimeout(op);
     publish({ requestId: op.id, startedAt: clock.now(), origin: op.origin, intent: 'select' });
     await save(op, candidate.bundle);

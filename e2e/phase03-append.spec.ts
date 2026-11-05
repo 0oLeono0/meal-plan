@@ -53,6 +53,12 @@ test('cap twelve confirms replacement and preserves old bytes through cancel and
   const create = page.getByRole('button', { name: 'Создать новый набор', exact: true });
   await create.click({ timeout: 5000 });
   await expect(page.getByRole('dialog', { name: 'Создать новый набор меню?' })).toBeVisible();
+  for (const width of [360, 390, 430, 768, 1280]) {
+    await page.setViewportSize({ width, height: 812 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+  }
+  await page.setViewportSize({ width: 360, height: 812 });
+  await page.screenshot({ path: '.tmp/phase03-plan02-dialog360.png' });
   await expect(page.getByRole('button', { name: 'Оставить варианты', exact: true })).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(create).toBeFocused();
@@ -71,6 +77,8 @@ test('cap twelve confirms replacement and preserves old bytes through cancel and
   const next = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).plan, activeKey);
   expect(next.inputs).toEqual(JSON.parse(bytes).plan.inputs);
   expect(next.variants).toHaveLength(3);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.screenshot({ path: '.tmp/phase03-plan02-recreated1280.png' });
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('mealplan:guest:draft:v1')!).draft.budget)).toBe('777.25');
   await expect(page.getByRole('button', { name: /Заменить блюдо|Удалить блюдо|PNG|Избранное/ })).toHaveCount(0);
 });
@@ -113,4 +121,37 @@ test('changed draft launch needs confirmation and installs only after save ackno
   expect(next.inputs.appliedSettings.raw.budget).toBe('01777');
   expect(next.inputs.dates).toHaveLength(1);
   expect(next.variants).toHaveLength(3);
+});
+
+test('navigation cancels an append already waiting for its final save', async ({ page }) => {
+  test.setTimeout(65_000);
+  const bytes = JSON.stringify(legacyPlan);
+  await mountGeneration(page, { route: '/menu', activeRaw: bytes, deferSave: true });
+  await page.getByRole('button', { name: 'Пересобрать', exact: true }).click();
+  await expect.poll(() => count(page, 'save-calls'), { timeout: 32_000 }).toBe(1);
+  await expect(page.getByText('Вариант 1 из 1', { exact: true })).toBeVisible();
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(bytes);
+  await page.getByRole('link', { name: 'Новое меню', exact: true }).click();
+  await expect(page).toHaveURL(/\/plan\/new$/);
+  await release(page, 'save-1');
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem('save-result-1'))).toBe('cancelled');
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(bytes);
+  await page.goBack();
+  await expect(page.getByText('Вариант 1 из 1', { exact: true })).toBeVisible();
+});
+
+test('pending append exposes indeterminate progress and cancellation keeps the old menu', async ({ page }) => {
+  test.setTimeout(65_000);
+  const bytes = JSON.stringify(legacyPlan);
+  await mountGeneration(page, { route: '/menu', activeRaw: bytes, deferGeneration: true });
+  await page.getByRole('button', { name: 'Пересобрать', exact: true }).click();
+  const progress = page.getByRole('progressbar', { name: 'Подбор нового варианта' });
+  await expect(progress).toBeVisible();
+  await expect(progress).not.toHaveAttribute('value');
+  await expect(page.getByText('Вариант 1 из 1', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Отмена', exact: true }).click();
+  await release(page, 'generation-1');
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(bytes);
+  expect(await count(page, 'save-calls')).toBe(0);
+  await expect(progress).toHaveCount(0);
 });

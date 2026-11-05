@@ -36,9 +36,9 @@ Plan/task/wave и phase-unique threat IDs назначены конечными 
 |03-01-01|1|DATA-04, GEN-06, MENU-03|T-03-01, T-03-02, T-03-SC|`npm run test:e2e -- e2e/phase03-variants.spec.ts --project=chromium --workers=1`|passed2026-11-05:2/2Chromium; real+legacy|
 |03-01-02|1|DATA-04, GEN-06, MENU-03|T-03-01, T-03-02, T-03-SC|`npm run test:unit -- --run src/domain/plan.test.ts src/domain/generatePlan.test.ts`|passed2026-11-05:68/68|
 |03-01-03|1|DATA-04, GEN-06, MENU-03|T-03-01, T-03-02, T-03-SC|`npm run test:unit -- --run src/adapters/activePlan.test.ts src/features/generation/controller.test.ts`|passed2026-11-05:70/70|
-|03-02-01|2|GEN-07, DATA-04, GEN-06|T-03-03, T-03-04, T-03-SC|`npm run test:e2e -- e2e/phase03-append.spec.ts --project=chromium --workers=1`|pending|
-|03-02-02|2|GEN-07, DATA-04, GEN-06|T-03-03, T-03-04, T-03-SC|`npm run test:e2e -- e2e/phase03-append.spec.ts --project=chromium --workers=1`|pending|
-|03-02-03|2|GEN-07, DATA-04, GEN-06|T-03-03, T-03-04, T-03-SC|`npm run test:unit -- --run src/adapters/generation.test.ts src/features/generation/controller.test.ts`|pending|
+|03-02-01|2|GEN-07, DATA-04, GEN-06|T-03-03, T-03-04, T-03-SC|`npm run test:e2e -- e2e/phase03-append.spec.ts --project=chromium --workers=1`|PASS: actual append/no-new/reload; final7/7; QA plan02|
+|03-02-02|2|GEN-07, DATA-04, GEN-06|T-03-03, T-03-04, T-03-SC|`npm run test:e2e -- e2e/phase03-append.spec.ts --project=chromium --workers=1`|PASS: cap11→12, confirm/cancel/focus/quota/draft/ack; final7/7; QA plan02|
+|03-02-03|2|GEN-07, DATA-04, GEN-06|T-03-03, T-03-04, T-03-SC|`npm run test:unit -- --run src/adapters/generation.test.ts src/features/generation/controller.test.ts`|PASS:75/75; RED71/5fail→GREEN; QA plan02|
 |03-03-01|3|DATA-04, REC-01, REC-02, REC-04, MENU-03|T-03-05, T-03-06, T-03-SC|`npm run test:e2e -- e2e/phase03-recipes.spec.ts --project=chromium --workers=1`|pending|
 |03-03-02|3|DATA-04, REC-01, REC-02, REC-04, MENU-03|T-03-05, T-03-06, T-03-SC|`npm run test:unit -- --run src/domain/planProjection.test.ts src/domain/recipeView.test.ts`|pending|
 |03-03-03|3|DATA-04, REC-01, REC-02, REC-04, MENU-03|T-03-05, T-03-06, T-03-SC|`npm run test:e2e -- e2e/phase03-recipes.spec.ts --project=chromium --workers=1`|pending|
@@ -105,6 +105,8 @@ Real start→unique alternatives→select→shopping→reload; append with unsav
 ## Validation Sign-Off
 
 Plan03-01 evidence: `docs/qa/phase03-plan01.md`; full unit397/397, typecheck/lint/build exit0, real+legacy Chromium2/2. Остальные планы/фазовые требования и общий sign-off остаются pending. Historical seed browser results не являются новым запуском;6seed unit assertions выполнены в текущем полном наборе.
+
+Plan03-02 evidence: `docs/qa/phase03-plan02.md`; full unit431/431, focused75/75, typecheck/lint/build passed. Actual Chromium append6+variants2=8passed, затем final append7/7 after explicit pending/cancel indicator assertion. All5 widths without overflow, screenshots inspected; human/native-device judgments remain separate. Only plans01–02 delivered; phase/requirements/manual sign-off remain pending.
 
 - [ ] All tasks mapped to actual automated checks
 - [ ] Wave0 references created

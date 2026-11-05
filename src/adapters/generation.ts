@@ -27,8 +27,8 @@ export function createLocalGeneration(catalog: CatalogPort, options: GenerationO
     if (!Number.isFinite(timeoutMs) || timeoutMs <= 0 || timeoutMs > 30000) return failure('FAILED');
     // Detach before the first await: caller mutations during catalog loading cannot alter work.
     const validated = validatePlanInputs(request.inputs);
-    const targetCount = request.targetCount ?? searchOptions.targetCount ?? 3;
-    const exclusions = request.excludedFingerprints ?? searchOptions.excludedFingerprints ?? [];
+    const targetCount = request.targetCount === undefined ? (searchOptions.targetCount === undefined ? 3 : searchOptions.targetCount) : request.targetCount;
+    const exclusions = request.excludedFingerprints === undefined ? (searchOptions.excludedFingerprints === undefined ? [] : searchOptions.excludedFingerprints) : request.excludedFingerprints;
     if (!Number.isSafeInteger(targetCount) || targetCount < 1 || targetCount > 3 || !Array.isArray(exclusions)
       || exclusions.length > 12 || exclusions.some(key => typeof key !== 'string' || !key.trim() || key.length > 32768)) return failure('GENERATION_DATA_INCOMPLETE');
     const selection = { targetCount, excludedFingerprints: [...exclusions] };

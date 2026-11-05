@@ -32,6 +32,18 @@ function projected(data = fixture(stock('200'))) {
   return result.projection;
 }
 describe('whole-period exact projection', () => {
+  it('allocates the product remainder in canonical date slot order independent of input order', () => {
+    const data = fixture(stock('200'));
+    const first = { ...data.variant.instances[1], id: 'early300', date: data.inputs.dates[0], slot: 'breakfast' as const };
+    const next = { ...data.variant.instances[0], id: 'late200', date: data.inputs.dates[0], slot: 'lunch' as const };
+    const result = projected({ ...data, variant: { id: 'ledger', instances: [next, first] } });
+    expect(result.instances.map(row => row.instance.id)).toEqual(['early300', 'late200']);
+    expect(result.instances[0]).toMatchObject({ ingredients: [{ index: 0, required: { amount: decimal('300'), unit: 'g' }, covered: { amount: decimal('200'), unit: 'g' }, purchase: { amount: decimal('100'), unit: 'g' }, issue: null }] });
+    expect(result.instances[1]).toMatchObject({ ingredients: [{ covered: { amount: decimal('0') }, purchase: { amount: decimal('200') } }] });
+    expect(result.rows[0].purchase.amount).toEqual(decimal('300'));
+    expect(result.rows[0].covered.amount).toEqual(decimal('200'));
+    expect(result.rows[0].sources.map(row => row.instanceId)).toEqual(['early300', 'late200']);
+  });
   it('aggregates 200+300g before spending pantry 200g once and reconciles all costs', () => {
     const result = projected(); const row = result.rows[0];
     expect(formatExact(row.required.amount)).toBe('500');

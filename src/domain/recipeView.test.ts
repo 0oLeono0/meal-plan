@@ -40,6 +40,19 @@ function viewed(request = fixture().request) {
 }
 
 describe('recipe basis and shared ledger', () => {
+  it('accepts exact 256 character unicode identity values without an accidental encoded length limit', () => {
+    const { request, active } = fixture();
+    const variantId = '米'.repeat(256), instanceId = '菜'.repeat(256);
+    const instance = { ...active.plan.variants[0].instances[0], id: instanceId };
+    const scoped = { ...active, plan: { ...active.plan, variants: [{ id: variantId, instances: [instance] }], activeVariantId: variantId } };
+    const search = `?${new URLSearchParams({ variant: variantId, instance: instanceId })}`;
+    expect(resolveRecipeContext({ ...request, search, active: scoped }).status).toBe('context');
+    expect(resolveRecipeContext({ ...request, search: `${search}x`, active: scoped }).status).toBe('stale');
+  });
+  it('rejects a contextual return day outside the actual saved period', () => {
+    const { request } = fixture();
+    expect(resolveRecipeContext({ ...request, search: '?variant=v1&instance=i0&view=day&day=2026-10-28' }).status).toBe('stale');
+  });
   it('keeps validated bundle detached from caller mutations and rejects mutation of derived allocations', () => {
     const caller = JSON.parse(legacyRaw).plan;
     const step = caller.variants[0].instances[0].recipeSnapshot.steps[0];

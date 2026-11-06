@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: P0 MVP
 current_phase: 03
 current_phase_name: Сравнение вариантов и просмотр рецептов
-current_plan: 3
+current_plan: 4
 status: executing
-stopped_at: Completed 03-02-PLAN.md; ready for 03-03
-last_updated: "2026-11-05T12:20:05.805Z"
-last_activity: 2026-11-04
-last_activity_desc: Phase 03 execution started
-state_head: 6d9c952142d2192d12ed8b9b7a85cd07434f41ad
+stopped_at: Completed 03-03-PLAN.md; ready for 03-04 media
+last_updated: "2026-11-06T10:29:31.204Z"
+last_activity: 2026-11-06
+last_activity_desc: Completed 03-03; recipe routing and stock verified; ready for 03-04
+state_head: 5ecf35527d268840d124962d544282c10b48e85f
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 30
-  completed_plans: 20
+  completed_plans: 21
 ---
 
 # Project State
@@ -30,12 +30,12 @@ See: .planning/PROJECT.md (updated 2026-10-30)
 ## Current Position
 
 Phase: 03 (Сравнение вариантов и просмотр рецептов) — EXECUTING
-Current Plan: 3
+Current Plan: 4
 Total Plans in Phase: 12
-Status: Ready to execute
-Last activity: 2026-11-04 — Phase 03 execution started
+Status: executing
+Last activity: 2026-11-06 — Completed 03-03; recipe routing and stock verified; ready for 03-04
 
-Progress: Phase1–2 приняты (2/7 фаз). Phase3: 2/12 планов выполнены; следующая задача — рецепты. Вся фаза ещё не принята.
+Progress: Phase1–2 приняты (2/7 фаз). Phase3: 3/12 планов выполнены; следующий план03-04 — локальные фото. Вся фаза ещё не принята.
 
 ## Performance Metrics
 
@@ -79,6 +79,7 @@ Progress: Phase1–2 приняты (2/7 фаз). Phase3: 2/12 планов вы
 | Phase 02 P10 | 1379min observed wall through assessment; active unknown | 3 tasks | 15 range files including metadata/assessment |
 | Phase 03 P01 | 1398min observed wall; active unknown due to usage-limit interruption | 3 tasks | 11 files |
 | Phase 03 P02 | 25 min observed; initial reads not timed | 3 tasks | 10 files |
+| Phase 03 P03 | 1324min observed wall; active unknown due to overnight interruption | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,8 @@ Progress: Phase1–2 приняты (2/7 фаз). Phase3: 2/12 планов вы
 - [Phase 03]: Selection and shortage cardinality publish only after saved acknowledgement; reloading its base cancels selection ownership
 - [Phase 03]: Append preserves exact saved inputs and prior identities; only saved acknowledgement installs its merged candidate
 - [Phase 03]: Reuse independently validated immutable bundles in frozen controller snapshots; metadata remains bounded without widening trust limits at cap12
+- [Phase 03]: Recipe routes require exact active triple; canonical ingredient allocation feeds recipe and aggregate shopping without double stock subtraction
+- [Phase 03]: Cap12 validates full envelope and reuses only detached deeply frozen plan/projections without widening trust limits
 
 ### Pending Todos
 
@@ -128,6 +131,6 @@ Progress: Phase1–2 приняты (2/7 фаз). Phase3: 2/12 планов вы
 
 ## Session Continuity
 
-Last session: 2026-11-05T12:18:55.740Z
-Stopped at: Completed 03-02-PLAN.md; ready for 03-03
+Last session: 2026-11-06T10:28:38.406Z
+Stopped at: Completed 03-03-PLAN.md; ready for 03-04 media
 Resume file: None

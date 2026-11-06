@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getRecipeMedia } from '../../data/recipeMedia';
+import { RecipeImage } from '../../shared/RecipeImage';
 import { Link, useLocation } from 'react-router';
 import type { CatalogLoadResult } from '../../domain/catalog';
 import type { GenerationSnapshot } from '../generation/controller';
@@ -35,7 +35,7 @@ export function RecipePage({ snapshot, catalog, onRetry }: { snapshot: Generatio
   return <section className="plan-read-model [overflow-wrap:anywhere] max-w-[960px] mx-auto" data-instance-id={view.instance?.id}>
     <Link className="action-link" to={view.returnTo}>К меню</Link>
     <div className="grid md:grid-cols-2 gap-6 items-start">
-    <figure><img src={getRecipeMedia(view.catalogVersion, view.recipe.id)?.src} width={1448} height={1086} loading="eager" decoding="async" alt={`Фотоиллюстрация: ${view.recipe.name}`} className="aspect-[4/3] w-full object-cover rounded-2xl" /><figcaption>Фотоиллюстрация создана с помощью ИИ; внешний вид блюда может отличаться</figcaption></figure>
+    <RecipeImage catalogVersion={view.catalogVersion} recipeId={view.recipe.id} name={view.recipe.name} priority />
     <header className="min-w-0">
     <h1 ref={heading} tabIndex={-1}>{view.recipe.name}</h1>
     {view.instance && <p>{formatDateOnly(view.instance.date)} · {slotNames[view.instance.slot]}</p>}

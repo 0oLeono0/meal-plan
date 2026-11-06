@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test';
+// @ts-expect-error Playwright runs in Node; no @types/node package is installed in this project.
+import { execFileSync as nodeExec } from 'node:child_process';
+const execFileSync: (command: string, args: string[]) => unknown = nodeExec;
 
 test('sample 404 preserves geometry and uses one accessible fallback', async ({ page }) => {
   let requests = 0;
@@ -162,6 +165,8 @@ const groups: Record<string, readonly string[]> = {
 };
 for (const [name, ids] of Object.entries(groups)) test(name, async ({ page }) => {
   test.setTimeout(180_000);
+  const batch = name.match(/^batch-(\d+)/)?.[1];
+  execFileSync('node', ['scripts/check-recipe-media.mjs', '--ledger', batch ? `docs/data/recipe-media-batches/${batch}.json` : 'docs/data/recipe-media.json', ...(batch ? ['--ids', ids.join(',')] : ['--all'])]);
   const external: string[] = [];
   page.on('request', r => { if(r.resourceType()==='image' && !r.url().startsWith('http://127.0.0.1:4173/'))external.push(r.url()); });
   for(const id of ids) {

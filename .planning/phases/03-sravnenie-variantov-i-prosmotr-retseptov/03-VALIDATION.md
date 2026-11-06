@@ -44,9 +44,9 @@ Plan/task/wave и phase-unique threat IDs назначены конечными 
 |03-03-03|3|DATA-04, REC-01, REC-02, REC-04, MENU-03|T-03-05, T-03-06, T-03-SC|`npm run test:e2e -- e2e/phase03-recipes.spec.ts --project=chromium --workers=1`|PASS app scope: final integrated7/8 plus corrected malformed client-route focused1/1; Vite hardGET malformed path HTTP404 limitation retained; QA plan03|
 |03-04-01|4|MENU-03, REC-01, DATA-04|T-03-07, T-03-08, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep sample --project=chromium --workers=1`|pending|
 |03-04-02|4|MENU-03, REC-01, DATA-04|T-03-07, T-03-08, T-03-SC|`npm run test:unit -- --run src/data/recipeMedia.test.ts`|pending|
-|03-05-01|5|MENU-03, REC-01|T-03-09, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-01-01 --project=chromium --workers=1`|pending|
-|03-05-02|5|MENU-03, REC-01|T-03-09, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-01-02 --project=chromium --workers=1`|pending|
-|03-05-03|5|MENU-03, REC-01|T-03-09, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-01-03 --project=chromium --workers=1`|pending|
+|03-05-01|5|MENU-03, REC-01|T-03-09, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-01-01 --project=chromium --workers=1`|PASS:2026-11-06 Chromium batch01 all3/3;scoped audit12;QA plan05|
+|03-05-02|5|MENU-03, REC-01|T-03-09, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-01-02 --project=chromium --workers=1`|PASS:2026-11-06 Chromium batch01 all3/3;scoped audit12;QA plan05|
+|03-05-03|5|MENU-03, REC-01|T-03-09, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-01-03 --project=chromium --workers=1`|PASS:2026-11-06 Chromium batch01 all3/3;scoped audit12;QA plan05|
 |03-06-01|5|MENU-03, REC-01|T-03-10, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-02-01 --project=chromium --workers=1`|pending|
 |03-06-02|5|MENU-03, REC-01|T-03-10, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-02-02 --project=chromium --workers=1`|pending|
 |03-06-03|5|MENU-03, REC-01|T-03-10, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-02-03 --project=chromium --workers=1`|pending|

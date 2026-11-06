@@ -208,5 +208,47 @@
     "height": 1086,
     "bytes": 2188477,
     "sha256": "416560ee3554a68d86baa30e3918cb6cf3cd5f066714346dccc479307cd8f437"
+  },
+  {
+    "recipeId": "rice-millet-mix",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/rice-millet-mix.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b083-2080-7200-bb1d-47f9eb7ad75e/exec-a807f85d-432f-4a9d-885e-10a5903d8a2c.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan local recipe hero native PNG landscape exactly 4:3. Culinary AI illustration of rice-millet-mix, «Каша из риса и пшена». Two portions: rice 80 g, millet 80 g, sugar 12 g, salt 1 g, water 550 ml. Rinse grains separately, scald millet and drain, place both in boiling water with salt, simmer covered 23 minutes, mix sugar and rest off heat 4 minutes, fluff with spoon distributing both grains. Show one finished portion of soft mixed-grain porridge with recognisable white rice grains and tiny yellow millet grains evenly mixed, plain ceramic bowl on neutral table and soft daylight. Only listed ingredients. No milk, butter, oil, meat, carrot, herbs, berries, nuts, sauce, garnish or toppings. No text, branding or watermark. AI generated illustration, not authentic cooked-dish evidence.",
+    "generatedAt": "2026-11-06T11:19:34.656Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:22:26.159Z",
+      "notes": "Native output inspected: soft white rice grains and small yellow millet grains mixed throughout, no visible garnish. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2215840,
+    "sha256": "175003d45c19a216fd8425b4e06948c33b1bc789088c1b1ad37f7dc297b344e5"
+  },
+  {
+    "recipeId": "potato-carrot-soup",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/potato-carrot-soup.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b083-2080-7200-bb1d-47f9eb7ad75e/exec-f24bbd4f-8754-4983-990f-81fd97c0a448.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan local recipe hero native PNG landscape exactly 4:3. Culinary generated illustration of potato-carrot-soup, «Картофельный суп с морковью». Recipe for two portions: sound washed potatoes retaining edible skins 450 g, washed carrots retaining edible skins 180 g, salt 3 g, water 900 ml. Dice potatoes, cut carrots into thin half-moons, add all vegetables and salt to boiling water, cook at moderate simmer 22 minutes until potatoes soft, optionally slightly mash a few cubes to thicken. Show one finished portion of simple potato and carrot soup, visible potato cubes with edible skins and thin orange carrot half-moons in light slightly cloudy water broth, plain neutral ceramic bowl, neutral table, soft daylight. Only listed ingredients. No meat broth, onion, celery, oil, milk, butter, herbs, green garnish, noodles, sauce or toppings. No text, brands or watermark. AI generated illustration, not evidence of an actual cooked dish.",
+    "generatedAt": "2026-11-06T11:22:26.581Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:23:28.298Z",
+      "notes": "Native output inspected: potato cubes retaining edible skin and orange carrot half-moons in light cloudy broth, no garnish or extra ingredients. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2189335,
+    "sha256": "a77d02ab4636f31e622d8cf3334e0061aaa88546f08ecb4fad64f95ec9b10fc5"
   }
 ]

@@ -1,0 +1,86 @@
+[
+  {
+    "recipeId": "cabbage-rice-soup",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/cabbage-rice-soup.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a17472-a227-74d3-aabc-f47c241b9b35/exec-e8b215b1-93f1-46ea-ba87-c527e7c0a043.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan recipe illustration cabbage-rice-soup, Капустный суп с рисом. Native PNG landscape exactly 4:3. Recipe two portions: cabbage300g, rice90g, carrot100g, salt3g, water950ml. Wash cabbage, finely shred leaves, grate edible core; wash carrot retaining edible skin and grate finely. Simmer rinsed rice and carrot8min in water, then cabbage and salt15min until soft; stir and serve. Show one finished portion with soft thin pale cabbage ribbons, visible rice grains and fine orange carrot shreds in light water broth. Plain ceramic deep bowl, neutral table, soft daylight. Only these ingredients. No oil, butter, meat broth, potato, onion, herbs, garnish, dairy, sauces, toppings, text, brands, watermarks. Generated culinary illustration, not actual cooked-dish evidence.",
+    "generatedAt": "2026-11-06T11:30:26Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:31:20Z",
+      "notes": "В native output видны мягкие светлые капустные полоски, рис и тонкая морковь в светлом бульоне, простая миска, лишних ингредиентов/гарнира нет. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2018163,
+    "sha256": "66b5e050a49ce26b14e32768dcdc9fe31b03a0d5e1f4224387c43fd24f5c8bf4"
+  },
+  {
+    "recipeId": "beet-potato-soup",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/beet-potato-soup.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a17472-a227-74d3-aabc-f47c241b9b35/exec-fd8e556e-8fe1-4a59-823e-2aea8e31d1b2.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan beet-potato-soup, Свекольный суп с картофелем. Native PNG landscape exactly4:3 culinary generated illustration. Recipe two portions: beet250g, potato350g, cabbage140g, salt3g, water1000ml. Wash roots retaining edible skins; finely grate beet, dice potato small, shred cabbage including grated core. Simmer potato and beet10min, add cabbage and salt, simmer15min until soft. Do not drain. Show one portion of red beet water soup with small potato cubes retaining bits of skin, soft thin cabbage and fine grated beet, in plain ceramic bowl on neutral table, soft daylight. Only these ingredients. No carrot, onion, meat, oil, sour cream, dairy, dill, herbs, garnish, sauces, text, branding, watermark. Illustration, not authentic cooked evidence.",
+    "generatedAt": "2026-11-06T11:31:21Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:32:25Z",
+      "notes": "Осмотрено: красный свекольный отвар с тёртой свёклой, капустными полосками и картофельными кубиками с кожицей; без сметаны, зелени и иных добавок. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2373108,
+    "sha256": "0d16ce2101303f199429f27ff762bfd09f110f9923c29d045eb2c27abe8631ee"
+  },
+  {
+    "recipeId": "tomato-rice-soup",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/tomato-rice-soup.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a17472-a227-74d3-aabc-f47c241b9b35/exec-f18e89be-edaa-41cd-a3da-9c6145ea9c0c.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan tomato-rice-soup, Томатный суп с рисом. Native PNG landscape exactly4:3. Recipe two portions: tomato400g, rice100g, carrot100g, salt3g, water650ml. Wash and dice tomatoes small retaining skin and juices, finely grate washed carrot with skin. Simmer rinsed rice and carrot in water12min, add all tomato with juice and salt, simmer12min until rice soft. Show one finished portion of thick tomato soup with distinct white rice grains, soft small tomato pieces and fine carrot flecks in naturally reddish tomato-water broth. Plain ceramic bowl, neutral tabletop, soft daylight. Only listed ingredients; no oil, butter, onion, garlic, stock, herbs, green garnish, cream, dairy, sauces, toppings, text, brands or watermarks. Generated culinary illustration, not actual cooked evidence.",
+    "generatedAt": "2026-11-06T11:32:25Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:33:09Z",
+      "notes": "Просмотрено: густой красно-оранжевый суп, белые рисовые зёрна, мягкие кусочки томатов и тонкая морковь, без лишних добавок. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2219954,
+    "sha256": "5449c20c9e6da706149c88f31f691a0f83f1eb5cd0aeb9e7f73910ecf639a50e"
+  },
+  {
+    "recipeId": "buckwheat-potato-soup",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/buckwheat-potato-soup.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a17472-a227-74d3-aabc-f47c241b9b35/exec-4bb9c9e0-7d86-4464-8ad3-f51152b88d93.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan buckwheat-potato-soup, Гречневый суп с картофелем. Native PNG landscape exactly4:3. Recipe for two portions: buckwheat100g, potato320g, carrot120g, salt3g, water900ml. Wash potato and carrot retaining edible skin, dice potato small and coarsely grate carrot. Rinse buckwheat, put in boiling water with vegetables and salt, simmer with partly open lid22min until soft, stir and serve. Show one finished portion in plain ceramic bowl, neutral tabletop, soft daylight: distinct cooked brown triangular buckwheat grains, small potato cubes with some skin, coarse orange carrot shreds in light water broth. Only listed ingredients. No meat, oil, onion, celery, herbs, green garnish, cream, dairy, sauces, toppings, text, logo or watermark. Generated culinary illustration, no actual cooked evidence claim.",
+    "generatedAt": "2026-11-06T11:33:10Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:33:57Z",
+      "notes": "Просмотрено: узнаваемая гречка, небольшие картофельные кубики с кожицей, крупно натёртая морковь в светлом отваре; без зелени и других добавок. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2366241,
+    "sha256": "9b6cf2728d3682d7a46adec57dd46b66d11621a69a186ac3ad748c25204b64a3"
+  }
+]

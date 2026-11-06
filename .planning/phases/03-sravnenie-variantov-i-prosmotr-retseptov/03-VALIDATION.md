@@ -39,9 +39,9 @@ Plan/task/wave и phase-unique threat IDs назначены конечными 
 |03-02-01|2|GEN-07, DATA-04, GEN-06|T-03-03, T-03-04, T-03-SC|`npm run test:e2e -- e2e/phase03-append.spec.ts --project=chromium --workers=1`|PASS: actual append/no-new/reload; final7/7; QA plan02|
 |03-02-02|2|GEN-07, DATA-04, GEN-06|T-03-03, T-03-04, T-03-SC|`npm run test:e2e -- e2e/phase03-append.spec.ts --project=chromium --workers=1`|PASS: cap11→12, confirm/cancel/focus/quota/draft/ack; final7/7; QA plan02|
 |03-02-03|2|GEN-07, DATA-04, GEN-06|T-03-03, T-03-04, T-03-SC|`npm run test:unit -- --run src/adapters/generation.test.ts src/features/generation/controller.test.ts`|PASS:75/75; RED71/5fail→GREEN; QA plan02|
-|03-03-01|3|DATA-04, REC-01, REC-02, REC-04, MENU-03|T-03-05, T-03-06, T-03-SC|`npm run test:e2e -- e2e/phase03-recipes.spec.ts --project=chromium --workers=1`|pending|
-|03-03-02|3|DATA-04, REC-01, REC-02, REC-04, MENU-03|T-03-05, T-03-06, T-03-SC|`npm run test:unit -- --run src/domain/planProjection.test.ts src/domain/recipeView.test.ts`|pending|
-|03-03-03|3|DATA-04, REC-01, REC-02, REC-04, MENU-03|T-03-05, T-03-06, T-03-SC|`npm run test:e2e -- e2e/phase03-recipes.spec.ts --project=chromium --workers=1`|pending|
+|03-03-01|3|DATA-04, REC-01, REC-02, REC-04, MENU-03|T-03-05, T-03-06, T-03-SC|`npm run test:e2e -- e2e/phase03-recipes.spec.ts --project=chromium --workers=1`|PASS: actual click saved triple/direct/error2/2 + tracer rerun2/2; QA plan03|
+|03-03-02|3|DATA-04, REC-01, REC-02, REC-04, MENU-03|T-03-05, T-03-06, T-03-SC|`npm run test:unit -- --run src/domain/planProjection.test.ts src/domain/recipeView.test.ts`|PASS: focused42, final full461; canonical conservation/profile/unit/basis, cap12 reuse and mutation guard; QA plan03|
+|03-03-03|3|DATA-04, REC-01, REC-02, REC-04, MENU-03|T-03-05, T-03-06, T-03-SC|`npm run test:e2e -- e2e/phase03-recipes.spec.ts --project=chromium --workers=1`|PASS app scope: final integrated7/8 plus corrected malformed client-route focused1/1; Vite hardGET malformed path HTTP404 limitation retained; QA plan03|
 |03-04-01|4|MENU-03, REC-01, DATA-04|T-03-07, T-03-08, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep sample --project=chromium --workers=1`|pending|
 |03-04-02|4|MENU-03, REC-01, DATA-04|T-03-07, T-03-08, T-03-SC|`npm run test:unit -- --run src/data/recipeMedia.test.ts`|pending|
 |03-05-01|5|MENU-03, REC-01|T-03-09, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-01-01 --project=chromium --workers=1`|pending|
@@ -114,5 +114,7 @@ Plan03-02 evidence: `docs/qa/phase03-plan02.md`; full unit431/431, focused75/75,
 - [ ] Full current tests/static/build and browser evidence reviewed
 - [ ] Manual observations recorded separately
 - [ ] Set nyquist_compliant only from actual coverage audit
+
+Plan03-03 evidence: `docs/qa/phase03-plan03.md`; source final461/461 unit, typecheck/lint/build exit0. Integrated Chromium7/8 initially, with one Vite hardGET malformed-path404 before SPA startup; corrected client-router case passed1/1 and fresh resume rerun on2026-11-06 passed1/1 (15.0s). All seven unchanged integrated cases passed in that original run. The server boundary remains explicit, not renamed a successful hard navigation. Plans01–03 delivered; media/full menu presentation and independent phase/manual sign-off remain pending.
 
 **Approval:** pending execution and independent audit.

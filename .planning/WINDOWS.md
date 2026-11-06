@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 4
+open_count: 6
 waived_count: 0
 fixed_count: 16
-total_count: 20
-last_updated: 2026-11-05T12:16:19.481Z
+total_count: 22
+last_updated: 2026-11-05T12:45:28.268Z
 ---
 
 # Broken Windows Ledger
@@ -35,6 +35,8 @@ last_updated: 2026-11-05T12:16:19.481Z
 | 18 | 03 | deviation | src/features/generation/controller.ts |  | Plan03-01 reload of a selection base left saving state and count published before save acknowledgement; regression tests and fix0f3b8ef resolve both | fixed |  | 2026-11-05T11:44:51.062Z | 2026-11-05T11:44:58.489Z |
 | 19 | 03 | deviation | src/features/generation/controller.ts |  | Resolved cap12 old-plus-candidate snapshot duplication without increasing trust limits; source-backed quota/cancel regression passes | fixed |  | 2026-11-05T12:15:44.824Z | 2026-11-05T12:16:17.896Z |
 | 20 | 03 | deviation | src/features/generation/controller.ts |  | Resolved delayed timer deadline bypass, repeated identical pending start and null selection options; actual RED5 failures and GREEN75 focused tests | fixed |  | 2026-11-05T12:16:18.657Z | 2026-11-05T12:16:19.481Z |
+| 21 | 03 | lint-warning | src/app/App.tsx |  | Production build passes; primary chunk503.58kB exceeds Vite500kB warning threshold (gzip142.07kB); code splitting not required for plan03-03 | open |  | 2026-11-05T12:45:27.695Z |  |
+| 22 | 03 | stub | src/features/recipe/RecipePage.tsx |  | Intentional neutral recipe photo fallback; real52asset map belongs to dependent plans03-04 through03-09 and does not close MENU03 or REC01 photo scope | open |  | 2026-11-05T12:45:28.268Z |  |
 
 ````json
 [
@@ -296,6 +298,32 @@ last_updated: 2026-11-05T12:16:19.481Z
     "reason": "",
     "recorded_at": "2026-11-05T12:16:18.657Z",
     "resolved_at": "2026-11-05T12:16:19.481Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 21,
+    "kind": "lint-warning",
+    "phase": "03",
+    "file": "src/app/App.tsx",
+    "line": null,
+    "description": "Production build passes; primary chunk503.58kB exceeds Vite500kB warning threshold (gzip142.07kB); code splitting not required for plan03-03",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-11-05T12:45:27.695Z",
+    "resolved_at": null,
+    "milestone": "v1.0"
+  },
+  {
+    "id": 22,
+    "kind": "stub",
+    "phase": "03",
+    "file": "src/features/recipe/RecipePage.tsx",
+    "line": null,
+    "description": "Intentional neutral recipe photo fallback; real52asset map belongs to dependent plans03-04 through03-09 and does not close MENU03 or REC01 photo scope",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-11-05T12:45:28.268Z",
+    "resolved_at": null,
     "milestone": "v1.0"
   }
 ]

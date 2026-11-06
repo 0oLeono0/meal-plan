@@ -1,0 +1,86 @@
+[
+  {
+    "recipeId": "cabbage-buckwheat-pot",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/cabbage-buckwheat-pot.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b0ab-aa9d-78b2-a2b1-9031544ac14b/exec-3e4ac50e-5e95-4d63-97b1-80b6fed1e9c7.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan cabbage-buckwheat-pot, Гречка с капустой в сотейнике. Native PNG landscape exactly 4:3. Recipe for two portions: buckwheat150g, cabbage350g, carrot140g, salt3g. Wash cabbage, finely shred leaves and grate edible core; wash carrot retaining edible skin and coarsely grate. Steam vegetables covered with100ml water5min, add rinsed buckwheat, salt and320ml water. Simmer covered18min, rest3min, mix and divide into two. Show one finished portion: distinct cooked brown buckwheat grains mixed with soft pale cabbage ribbons and coarse orange carrot shreds, moist absorbed-water texture, no soup. Plain ceramic bowl, neutral table, soft daylight. Only listed ingredients. No oil, butter, onion, tomato, meat, herbs, garnish, sauce, dairy, toppings, text, logo or watermark. Generated culinary illustration, no actual cooked-dish evidence claim.",
+    "generatedAt": "2026-11-06T11:44:24.233Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:45:02.692Z",
+      "notes": "Просмотрен native output: цельные зёрна гречки, мягкие светлые капустные полоски и крупно натёртая морковь; без лишних ингредиентов и супового отвара."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2466109,
+    "sha256": "f07bb1b1d7d0d582ef39ca9e9362d101755027268828fb943efdb5ab6ed3cce9"
+  },
+  {
+    "recipeId": "rice-cabbage-pan",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/rice-cabbage-pan.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b0ab-aa9d-78b2-a2b1-9031544ac14b/exec-330f05c9-3f8d-4de7-893e-35a48848bd33.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan rice-cabbage-pan, Рис с капустой и томатами. Native PNG landscape exactly 4:3. Recipe two portions: rice160g, cabbage300g, tomato250g, salt3g, hot water430ml. Wash cabbage, thinly slice leaves and finely grate edible core. Dice washed tomatoes with skin. Put rinsed rice, cabbage and salt in wide pan with430ml hot water, cook covered15min. Mix in all tomatoes and their juice and simmer10min, rest3min, stir and divide. Show one finished portion: softened pale cabbage ribbons intermingled with cooked rice and softened red tomato cubes with skins, moist absorbed tomato juices, not soup. Plain ceramic plate, neutral tabletop, soft daylight. Only listed ingredients; no oil, butter, onion, carrot, meat, herbs, garnish, cream, toppings, sauce, text, brand or watermark. Generated culinary illustration, no actual cooked-dish evidence claim.",
+    "generatedAt": "2026-11-06T11:45:27.563Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:46:01.793Z",
+      "notes": "Просмотрено: мягкие капустные ленты, рис и размягчённые томаты с кожицей; влажная несуповая текстура, лишних добавок не видно."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2342364,
+    "sha256": "26b4f793a06b5ffa245790c43ee45b29d117d4b71024878c2f1f8d6cc080e40a"
+  },
+  {
+    "recipeId": "millet-beet-pot",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/millet-beet-pot.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b0ab-aa9d-78b2-a2b1-9031544ac14b/exec-67d13558-0fa3-4e5d-be06-bf0831be6f3f.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan millet-beet-pot, Пшено с тёртой свёклой. Native PNG landscape exactly 4:3. Recipe two portions: millet150g, beet300g, carrot100g, salt3g, hot water500ml. Rinse millet, scald with boiling water and drain. Wash beet and carrot retaining edible skins and grate finely. Combine millet, grated beet, grated carrot and salt with500ml hot water, bring to gentle boil, cook covered24min stirring occasionally. Loosen the finished thick porridge and serve two portions. Show one cooked portion: small recognizable millet grains deeply tinted beet-red mixed with fine cooked beet and carrot shreds, thick soft moist porridge, not soup. Plain ceramic bowl on neutral table, soft daylight. Only listed ingredients. No rice, onion, oil, butter, dairy, cream, herbs, green garnish, sauce, toppings, text, brand, watermark. Generated culinary illustration, no actual cooked-dish evidence claim.",
+    "generatedAt": "2026-11-06T11:46:18.436Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:46:56.147Z",
+      "notes": "Просмотрено: мелкие округлые зёрна пшена, свекольно-красная густая каша с тёртой свёклой и морковью, без зелени и неучтённых добавок."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2557935,
+    "sha256": "85569e2907e14eac6230ac3ef9790df7279b16c1d88e5ca4a3cc68162785396a"
+  },
+  {
+    "recipeId": "potato-tomato-braise",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/potato-tomato-braise.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b0ab-aa9d-78b2-a2b1-9031544ac14b/exec-9eca5b94-c2d9-4321-8a7e-fd478d62719b.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan potato-tomato-braise, Картофель, тушённый с томатами. Native PNG landscape exactly 4:3. Recipe two portions: potato600g, tomato300g, carrot100g, salt3g, water250ml. Wash sound potatoes and carrots retaining edible skins, cut into small cubes; cut tomatoes separately preserving juice. Braise potato and carrot covered with salt and250ml water18min. Add all tomato pieces and their juice, stir and cook8min until potato is soft, divide all into two portions. Show one finished portion of small soft potato cubes with flecks of edible skin, small orange carrot cubes and softened red tomato pieces in their moist thin cooking juices, a vegetable braise not soup. Plain ceramic shallow bowl, neutral table, soft daylight. Only listed ingredients. No onion, garlic, herbs, parsley, oil, butter, meat, cream, sauce, garnish, toppings, text, logo, watermark. Generated culinary illustration, no actual cooked-dish evidence claim.",
+    "generatedAt": "2026-11-06T11:47:05.494Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:47:41.081Z",
+      "notes": "Просмотрено: мягкие картофельные кубики с кожицей, морковные кубики и размягчённые томаты в небольшом количестве сока; зелени, масла и других добавок не видно."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2458948,
+    "sha256": "312bdff6131edd4ca6fe69cb1cdb9f002cc718ef050008a75d1535de521dc184"
+  }
+]

@@ -82,5 +82,47 @@
     "height": 1086,
     "bytes": 2330465,
     "sha256": "87c5d368cee10319bf3998afcb0ec044c441e663b111ccfa913303b35861cb0a"
+  },
+  {
+    "recipeId": "millet-carrot-mash",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/millet-carrot-mash.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b083-2080-7200-bb1d-47f9eb7ad75e/exec-00ccc04f-bdaf-4fa8-b207-bbb1a7c20e61.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan recipe hero native PNG landscape exactly 4:3. Culinary generated illustration of millet-carrot-mash, «Пшённая каша с морковным пюре». Two portions: millet 120 g, carrot 260 g, sugar 6 g, salt 1 g, water 450 ml. Finely chop washed carrot with edible skin. Rinse and scald millet and drain. Boil carrot in water 5 minutes, add millet and salt, cook covered 20 minutes, mash soft carrots directly into porridge, mix in sugar and warm one minute. Show one finished portion: thick golden orange millet porridge with mashed carrot incorporated and small soft millet grains, plain ceramic bowl, neutral table, daylight. Only listed ingredients. No oil, butter, milk, meat, herbs, nuts, berries, garnish or toppings. No text, branding or watermark. AI illustration, not authentic cooked-dish evidence.",
+    "generatedAt": "2026-11-06T11:08:05.581Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:11:10.875Z",
+      "notes": "Native image inspected: Thick golden-orange mashed carrot and millet porridge; soft small millet grains; no garnish. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2193916,
+    "sha256": "85f9e3d2fc899053fda20ec87f00b08cac8a06c76612db95137a18e7c6167ccd"
+  },
+  {
+    "recipeId": "semolina-carrot",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/semolina-carrot.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b083-2080-7200-bb1d-47f9eb7ad75e/exec-39d99ce0-9123-47cf-b087-70ebb361b211.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan native PNG recipe hero landscape exactly 4:3. Culinary AI illustration of semolina-carrot, «Манная каша с морковной стружкой». For two portions: semolina 100 g, very finely grated washed carrot with edible skin 140 g, sugar 10 g, salt 1 g, water 600 ml. Boil carrot in water 7 minutes, add salt and sugar, stir in semolina gradually, simmer stirring 5 minutes until uniform, rest covered off heat 2 minutes. Show one finished portion of smooth fine pale orange semolina porridge with very fine soft carrot shreds evenly mixed in, plain ceramic bowl, neutral tabletop and daylight. No extra ingredients, milk, oil, butter, meat, nuts, berries, herbs, sauce, garnish or toppings. No text, brands or watermark. Generated illustration, not authentic cooked-dish evidence.",
+    "generatedAt": "2026-11-06T11:08:42.614Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:11:10.880Z",
+      "notes": "Native image inspected: Fine smooth pale-orange semolina with fine softened carrot shreds, no garnish. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2328069,
+    "sha256": "f58901925a1a005189133a80170dcdc9aab635766da5171554e6b3ad7ab1b68f"
   }
 ]

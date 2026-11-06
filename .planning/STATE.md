@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: P0 MVP
 current_phase: 03
 current_phase_name: Сравнение вариантов и просмотр рецептов
-current_plan: 4
+current_plan: 5
 status: executing
-stopped_at: "Phase03 3/12 complete; plan04 not started: Codex service403 twice; resume03-04 when available"
-last_updated: "2026-11-06T10:32:05.902Z"
+stopped_at: Completed 03-04-PLAN.md; 4/12 plans complete; next03-05
+last_updated: "2026-11-06T10:57:56.300Z"
 last_activity: 2026-11-06
-last_activity_desc: Completed 03-03; recipe routing and stock verified; ready for 03-04
-state_head: 79884e5f4e01c45e6db8ced3e6453210d520ec48
+last_activity_desc: Completed03-04; local sample/decode/recovery/auditor verified; ready for03-05
+state_head: 482e4eb39538f903fcf073388adc87896eaf35c0
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 30
-  completed_plans: 21
+  completed_plans: 22
 ---
 
 # Project State
@@ -30,12 +30,12 @@ See: .planning/PROJECT.md (updated 2026-10-30)
 ## Current Position
 
 Phase: 03 (Сравнение вариантов и просмотр рецептов) — EXECUTING
-Current Plan: 4
+Current Plan: 5
 Total Plans in Phase: 12
-Status: executing
-Last activity: 2026-11-06 — Completed 03-03; recipe routing and stock verified; ready for 03-04
+Status: Ready to execute
+Last activity: 2026-11-06 — Completed03-04; local sample/decode/recovery/auditor verified; ready for03-05
 
-Progress: Phase1–2 приняты. Phase3: 3/12 планов выполнены;03-04 не начат из-за ошибки доступа403 сервисаCodex. Вся фаза не принята.
+Progress: Phase1–2 приняты. Phase3: 4/12 планов выполнены; 03-04 завершён, следующий03-05. Вся фаза не принята.
 
 ## Performance Metrics
 
@@ -80,6 +80,7 @@ Progress: Phase1–2 приняты. Phase3: 3/12 планов выполнен�
 | Phase 03 P01 | 1398min observed wall; active unknown due to usage-limit interruption | 3 tasks | 11 files |
 | Phase 03 P02 | 25 min observed; initial reads not timed | 3 tasks | 10 files |
 | Phase 03 P03 | 1324min observed wall; active unknown due to overnight interruption | 3 tasks | 9 files |
+| Phase 03 P04 | 12min observed | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -108,6 +109,7 @@ Progress: Phase1–2 приняты. Phase3: 3/12 планов выполнен�
 - [Phase 03]: Reuse independently validated immutable bundles in frozen controller snapshots; metadata remains bounded without widening trust limits at cap12
 - [Phase 03]: Recipe routes require exact active triple; canonical ingredient allocation feeds recipe and aggregate shopping without double stock subtraction
 - [Phase 03]: Cap12 validates full envelope and reuses only detached deeply frozen plan/projections without widening trust limits
+- [Phase 03]: Local recipe media stays outside factual catalog and persisted snapshots; original sample hash verified, fresh included-tool rice illustration records actual invocation; remaining51assets pending.
 
 ### Pending Todos
 
@@ -131,6 +133,6 @@ Progress: Phase1–2 приняты. Phase3: 3/12 планов выполнен�
 
 ## Session Continuity
 
-Last session: 2026-11-06T10:32:03.355Z
-Stopped at: Phase03 3/12 complete; plan04 not started: Codex service403 twice; resume03-04 when available
-Resume file: .planning/phases/03-sravnenie-variantov-i-prosmotr-retseptov/03-04-RESUME.md
+Last session: 2026-11-06T10:57:18.647Z
+Stopped at: Completed 03-04-PLAN.md; 4/12 plans complete; next03-05
+Resume file: None

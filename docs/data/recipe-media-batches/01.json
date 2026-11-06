@@ -1,0 +1,86 @@
+[
+  {
+    "recipeId": "millet-sweet-porridge",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/millet-sweet-porridge.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b083-2080-7200-bb1d-47f9eb7ad75e/exec-a1ec77d7-3f17-452f-9af0-2dd918050ac4.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: local MealPlan recipe hero, native PNG landscape exactly 4:3. Primary request: culinary generated illustration of «Рассыпчатое пшено с сахаром» (millet-sweet-porridge). Recipe for two portions: millet 150 g, sugar 10 g, salt 1 g, water 400 ml. Steps: rinse millet repeatedly in warm water, scald and drain; cover with fresh hot water and salt, simmer covered 22 minutes; stir sugar, fluff gently with fork, rest 4 minutes. Show one portion of finished fluffy yellow millet with distinct tiny cooked grains in a plain ceramic bowl on a neutral table, daylight. No toppings, garnish, milk, butter, oil, herbs, berries, nuts, meat, sauce or other ingredients. No text, brands or watermark. AI generated illustration, not evidence of an actual cooked dish.",
+    "generatedAt": "2026-11-06T11:03:33.917Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:04:30.622Z",
+      "notes": "Native output inspected: fluffy yellow millet grains in plain bowl; no visible garnish. Matches finished recipe texture; generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2399108,
+    "sha256": "08d6c1506e3fbe0fafc736c66680f12ad2bfaef798916374c7e33685a8f355b3"
+  },
+  {
+    "recipeId": "semolina-smooth",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/semolina-smooth.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b083-2080-7200-bb1d-47f9eb7ad75e/exec-24cb1df9-1900-4e24-9a91-9c5d1d5c6629.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero native PNG landscape exactly 4:3. Culinary AI generated illustration of semolina-smooth, «Нежная манная каша». For two portions: semolina 110 g, sugar 16 g, salt 1 g, water 650 ml. Heat water with sugar and salt almost to boil, whisk in semolina slowly, simmer whisking 5–6 minutes; cover off heat 2 minutes and stir. Show one portion of finished smooth pale ivory semolina porridge, fine uniform thick texture without lumps, plain ceramic bowl, neutral table and soft daylight. Only listed ingredients. No milk, butter, oil, fruit, berries, nuts, herbs, meat, sauces, toppings or garnish. No text, watermark or branding. Generated illustration, not authentic cooked-dish evidence.",
+    "generatedAt": "2026-11-06T11:04:30.631Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:06:26.950Z",
+      "notes": "Native image inspected: Smooth ivory fine semolina, no lumps or garnish. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2133897,
+    "sha256": "2d110fd327f267603903cfa0249ac53c6b9c072b73830d10d1a91bcab89ee9e3"
+  },
+  {
+    "recipeId": "buckwheat-carrot-breakfast",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/buckwheat-carrot-breakfast.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b083-2080-7200-bb1d-47f9eb7ad75e/exec-1e390a6c-89ff-4b94-a050-8f06a5a47f47.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan recipe hero, native PNG exactly landscape 4:3. AI culinary illustration of buckwheat-carrot-breakfast, «Гречка с тёртой морковью». Recipe for two portions: buckwheat 140 g, carrot 160 g, salt 2 g, water 350 ml. Wash carrot retaining edible skin, finely grate; rinse buckwheat. Simmer all together covered 18 minutes, rest off heat 4 minutes, mix. Show one portion of cooked brown buckwheat groats mixed evenly with finely grated softened orange carrot, plain neutral ceramic bowl on neutral table, soft daylight. No extra ingredients, oil, butter, dairy, herbs, green garnish, fruit, nuts, meat, sauce or toppings. No text, watermark, branding or nutrition claims. Generated illustration, not evidence of an actual cooked dish.",
+    "generatedAt": "2026-11-06T11:05:02.182Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:06:26.950Z",
+      "notes": "Native image inspected: Brown cooked buckwheat with softened grated carrot, no garnish. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2456025,
+    "sha256": "b022062687a1d5aa21ffba0e1453d437f01b5d2f596255e444f7078f8801fe75"
+  },
+  {
+    "recipeId": "rice-carrot-porridge",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/rice-carrot-porridge.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b083-2080-7200-bb1d-47f9eb7ad75e/exec-1a031c9d-f34f-4560-a1b3-4ec703d9cb69.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan recipe hero native PNG landscape exactly 4:3. Culinary AI illustration of rice-carrot-porridge, «Густая рисовая каша с морковью». Two portions use rice 130 g, finely grated washed carrot with edible skin 220 g, sugar 8 g, salt 1 g, water 550 ml. Rinse rice, bring rice and water to boil, add grated carrot and salt, gently cook 22 minutes stirring, stir sugar and heat one minute, rest covered 2 minutes. Show one portion thick moist rice porridge with soft visible rice grains and finely grated softened orange carrot mixed throughout, neutral ceramic bowl, soft daylight on neutral table. Only listed ingredients; no milk, butter, oil, herbs, fruit, berries, nuts, meat, sauce, toppings or garnish. No text, branding or watermark. Generated illustration, not actual cooked-dish evidence.",
+    "generatedAt": "2026-11-06T11:05:38.291Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:06:26.950Z",
+      "notes": "Native image inspected: Thick rice with softened fine carrot throughout; no toppings. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2330465,
+    "sha256": "87c5d368cee10319bf3998afcb0ec044c441e663b111ccfa913303b35861cb0a"
+  }
+]

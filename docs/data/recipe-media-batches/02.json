@@ -166,5 +166,89 @@
     "height": 1086,
     "bytes": 2634993,
     "sha256": "12a1ecbaa1f2138e866c861effae2ec74460af2387362f6ba4add1700e5aeeb6"
+  },
+  {
+    "recipeId": "buckwheat-tomato-stew",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/buckwheat-tomato-stew.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a17472-a227-74d3-aabc-f47c241b9b35/exec-87386bba-2bc1-4e5d-8955-a2f12a829acb.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan buckwheat-tomato-stew, Гречка в томатном соке. Native PNG landscape exactly4:3. Two portions: buckwheat160g,tomato320g,carrot100g,salt3g,water100ml+260ml. Wash and dice tomatoes with skin retaining juice, finely grate washed skin-on carrot. Simmer tomatoes and carrot5min with100ml water,add buckwheat,salt,260ml water;cover and simmer18min,rest3min,stir thoroughly and serve. Show one finished portion of soft distinct brown buckwheat grains coated in natural tomato juice with soft tomato pieces and fine carrot shreds, absorbed thick moist texture not soup. Plain ceramic plate,neutral table,soft daylight. Only listed ingredients. No oil,butter,onion,garlic,meat,cheese,dairy,herbs,green garnish,sauce additions,toppings,text,brands,watermark. Generated culinary illustration, not cooked evidence.",
+    "generatedAt": "2026-11-06T11:37:57Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:38:44Z",
+      "notes": "Просмотрено: гречневые зёрна с мягкими кусочками томатов и тёртой морковью, густая влажная текстура, нет супового отвара и гарнира. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2548237,
+    "sha256": "0c34c901d4d02e6f763a30610ca46225ac8c3b0dadbe03c707115b0901dd5087"
+  },
+  {
+    "recipeId": "millet-potato-stew",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/millet-potato-stew.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a17472-a227-74d3-aabc-f47c241b9b35/exec-471b603a-5efe-4c33-b36c-e2594724650b.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan millet-potato-stew, Пшено с картофелем и морковью. Native PNG landscape exactly4:3. Two portions recipe:millet140g,potato300g,carrot120g,salt3g,hot water550ml. Rinse and scald millet,drain; wash roots retaining edible skin,dice small equal cubes. Combine millet,vegetables,salt,hot water,bring to boil,simmer covered24min stirring once halfway. Mash a few potato cubes and serve. Show one finished portion of soft yellow millet and small potato/carrot cubes with some edible skin in a thick moist cohesive dish, no standing soup broth. Plain ceramic bowl,neutral table,soft daylight. Only listed ingredients. No oil,butter,meat,onion,garlic,herbs,green garnish,dairy,sauces,toppings,text,logos,watermarks. Generated illustration, not authentic cooked evidence.",
+    "generatedAt": "2026-11-06T11:38:44Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:39:33Z",
+      "notes": "Просмотрено: мягкое жёлтое пшено с картофельными и морковными кубиками, частично размятый картофель, густая текстура без отдельного бульона, без лишних добавок. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2353361,
+    "sha256": "623e28dff3a518344cdfcf5791bfca6cf672fc4b2257be34e13a9435dee8ea18"
+  },
+  {
+    "recipeId": "cabbage-potato-braise",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/cabbage-potato-braise.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a17472-a227-74d3-aabc-f47c241b9b35/exec-a56a4318-6c8c-44ff-ace1-2df5a2692178.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan cabbage-potato-braise, Капуста, тушённая с картофелем. Native PNG landscape exactly4:3. Recipe two portions:cabbage450g,potato350g,tomato180g,salt3g,water250ml. Wash cabbage,finely shred including grated edible core,wash potato retaining edible skin,dice small. Combine cabbage,potato,salt,water in wide pan,braise covered15min. Add diced washed tomatoes with skin and all juices,braise10min until potato soft,stir and divide. Show one finished portion of soft pale cabbage ribbons with small skin-on potato cubes and softened tomato pieces in a little natural vegetable juice, thick braise not soup. Plain ceramic plate,neutral table,soft daylight. Only listed ingredients. No carrot,onion,oil,butter,meat,garlic,herbs,green garnish,dairy,sauces,toppings,text,brand,watermark. Generated illustration, not actual cooked evidence.",
+    "generatedAt": "2026-11-06T11:39:34Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:40:22Z",
+      "notes": "Просмотрено: мягкая тушёная капуста с картофельными кубиками с кожицей и томатами, немного овощного сока, без моркови, зелени и иных добавок. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2408568,
+    "sha256": "dc60ff3c20b7a15aaaa6741479b3ca164de03a1a0d50ad974b5487cc8556388c"
+  },
+  {
+    "recipeId": "carrot-potato-puree",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/carrot-potato-puree.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a17472-a227-74d3-aabc-f47c241b9b35/exec-824a12ad-5343-4651-bb25-0eb35ca542d4.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan carrot-potato-puree, Картофельно-морковное пюре. Native PNG landscape exactly4:3. Recipe two portions:potato500g,carrot250g,salt3g,water500ml. Thoroughly scrub sound potato and carrot retaining edible skin,cut small equal pieces. Simmer covered in water and salt23min until completely soft. Mash directly with remaining cooking water,do not drain,stir into thick puree and divide. Show one finished portion of thick rustic warm pale orange potato-carrot mash, fork/masher ridges, very small flecks of edible skins, not soup. Plain ceramic plate,neutral table,soft daylight. Only listed ingredients. No milk,cream,butter,oil,cheese,meat,onion,herbs,green garnish,sauces,toppings,text,brand,watermark. Generated culinary illustration, not actual cooked evidence.",
+    "generatedAt": "2026-11-06T11:40:23Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:41:07Z",
+      "notes": "Просмотрено: густое деревенское картофельно-морковное пюре с бороздками толкушки и мелкими частицами кожицы, без сливочного масла, молока, зелени и иных добавок. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2213806,
+    "sha256": "998542d0942bbda076f14849145447b3779707c75e7881ab04f4ff08c97a6904"
   }
 ]

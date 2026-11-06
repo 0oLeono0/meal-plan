@@ -1,5 +1,20 @@
 import { test, expect } from '@playwright/test';
 
+test('sample 404 preserves geometry and uses one accessible fallback', async ({ page }) => {
+  let requests = 0;
+  await page.route('**/recipes/rice-sweet-porridge.png', route => { requests++; return route.fulfill({ status: 404, body: '' }); });
+  await page.goto('/recipe/rice-sweet-porridge');
+  const fallback = page.getByRole('img', { name: 'Фото недоступно' });
+  await expect(fallback).toBeVisible();
+  const box = await fallback.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.width / box!.height).toBeCloseTo(4 / 3, 2);
+  await expect(page.getByRole('heading', { name: 'Рисовая каша на воде', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'К меню', exact: true })).toBeVisible();
+  await expect(page.locator('img[src="/recipes/rice-sweet-porridge.png"]')).toHaveCount(0);
+  expect(requests).toBe(1);
+});
+
 test('sample decodes a local generated recipe illustration', async ({ page }) => {
   const external: string[] = [];
   page.on('request', request => { if (request.resourceType() === 'image' && !request.url().startsWith('http://127.0.0.1:4173/')) external.push(request.url()); });

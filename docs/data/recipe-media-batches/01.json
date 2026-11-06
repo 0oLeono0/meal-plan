@@ -124,5 +124,47 @@
     "height": 1086,
     "bytes": 2328069,
     "sha256": "f58901925a1a005189133a80170dcdc9aab635766da5171554e6b3ad7ab1b68f"
+  },
+  {
+    "recipeId": "buckwheat-tomato-breakfast",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/buckwheat-tomato-breakfast.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b083-2080-7200-bb1d-47f9eb7ad75e/exec-b924513c-3109-4285-afc9-47378710ca3f.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan native PNG recipe hero landscape exactly 4:3. Culinary generated illustration of buckwheat-tomato-breakfast, «Гречка со свежими томатами». Two portions: buckwheat 150 g, fresh tomato 220 g, salt 2 g, water 330 ml. Rinse buckwheat and simmer with water and salt covered 18 minutes; wash ripe tomatoes and remove stems, dice small retaining skins and juices; rest grain 3 minutes, fluff and mix with all fresh tomato pieces and juice. Show one portion warm brown buckwheat groats evenly mixed with small fresh red tomato cubes, plain ceramic bowl, neutral table and soft daylight. Only listed ingredients. No herbs, green stems, garnish, onion, carrot, butter, oil, dairy, meat, nuts, sauce or toppings. No text, branding, watermark. AI illustration, not authentic cooked-dish evidence.",
+    "generatedAt": "2026-11-06T11:13:16.798Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:14:56.501Z",
+      "notes": "Native output inspected: Cooked brown buckwheat with small fresh red tomato pieces, no garnish. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2367395,
+    "sha256": "879ec560c572d1536113a23227482f1d8f7b3a15ac2d3ffc2939deaee0b165d4"
+  },
+  {
+    "recipeId": "flour-dry-flatbread",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/flour-dry-flatbread.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b083-2080-7200-bb1d-47f9eb7ad75e/exec-818963e2-f0c3-43be-9bc5-54bf69100155.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan recipe hero native PNG landscape exactly 4:3. Culinary AI generated illustration of flour-dry-flatbread, «Пресные лепёшки на сухой сковороде». Recipe for two portions: flour 200 g, salt 2 g, sugar 4 g, warm water 120 ml. Mix ingredients, knead soft dough, rest covered 5 minutes, divide into four, flatten thin by hand on dry surface without extra flour; cook on dry nonstick pan 3 minutes per side until cooked through. Show exactly two thin plain unleavened flatbreads as one serving on a simple neutral ceramic plate, lightly browned dry cooked patches, no oily glaze, soft daylight and neutral table. Only listed ingredients. No yeast, butter, oil, milk, eggs, meat, cheese, herbs, garnish, sauce, toppings or filling. No text, brands or watermark. AI generated illustration, not evidence of an actual cooked dish.",
+    "generatedAt": "2026-11-06T11:14:01.131Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:14:56.501Z",
+      "notes": "Native output inspected: Two thin plain flatbreads, dry browned patches, no filling or toppings. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2864680,
+    "sha256": "d8b0e14e6adaa5caaa46da4d726430fb6bfc48d0747a6964d794a52c219fddce"
   }
 ]

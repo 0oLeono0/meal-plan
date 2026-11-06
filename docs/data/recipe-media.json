@@ -1,0 +1,28 @@
+[
+  {
+    "recipeId": "rice-sweet-porridge",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/rice-sweet-porridge.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b069-3b84-7643-95c5-7a5b32253a7d/exec-b8ef7b9a-4de3-4907-95f0-85b2d4eb4cf7.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: local MealPlan recipe hero, native PNG landscape exactly 4:3. Primary request: photorealistic culinary illustration of «Рисовая каша на воде» (rice-sweet-porridge). Recipe ingredients for two portions: dry rice 150 g, sugar 12 g, salt 1 g, water 600 ml. Steps: rinse rice; bring water to boil; add rice and salt; simmer covered 18–20 minutes until soft, stirring near end; stir sugar, rest covered 3 minutes. Show one portion of finished soft white rice porridge with visible cooked grains in a simple ceramic bowl, soft daylight, neutral table. No toppings or garnish, no milk, butter, oil, herbs, berries, nuts, meat or sauces. No text, brands, watermark, nutritional or medical claims. The image is an AI generated illustration, not evidence of an actual cooked dish.",
+    "generatedAt": "2026-11-06T10:47:02.567Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "width": 1448,
+    "height": 1086,
+    "sha256": "1977816661ffd085f826c78f58491c01ab198cb44ac1c71a65ab70a01f16e262",
+    "bytes": 2127720,
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T10:49:31.162Z",
+      "notes": "Inspected native output: soft white rice grains, no visible toppings; matches rice/water/sugar/salt. Generated illustration, not authentic cooked-dish evidence."
+    },
+    "researchEvidence": {
+      "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a18d04-5c7b-7622-98ad-6aa276fffc29/exec-67b1839c-99ad-4116-92f2-4c7c28163495.png",
+      "sha256": "26007bd43e3b5611b576c982aec375f5eba95bbee8c40c16a64cfd8caae4aad5",
+      "reason": "Original prompt/time unavailable; fresh included-tool invocation used."
+    }
+  }
+]

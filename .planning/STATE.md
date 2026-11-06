@@ -6,11 +6,11 @@ current_phase: 03
 current_phase_name: Сравнение вариантов и просмотр рецептов
 current_plan: 5
 status: executing
-stopped_at: 03-05 task1 complete;6/12 batch images saved;image_gen403 blocks task2
-last_updated: "2026-11-06T11:12:26.230Z"
+stopped_at: 03-05 2/3 tasks;10/12 images saved;service403;two images remain
+last_updated: "2026-11-06T11:21:23.714Z"
 last_activity: 2026-11-06
 last_activity_desc: Completed03-04; local sample/decode/recovery/auditor verified; ready for03-05
-state_head: 11fe114d8589ffb42fef7fae713db07315b94cf2
+state_head: 762709b883ececae7136d7d407cdeace8ed8a897
 progress:
   total_phases: 7
   completed_phases: 2
@@ -133,6 +133,6 @@ Progress: Phase1–2 приняты. Phase3: 4/12 планов выполнен�
 
 ## Session Continuity
 
-Last session: 2026-11-06T11:12:25.011Z
-Stopped at: 03-05 task1 complete;6/12 batch images saved;image_gen403 blocks task2
+Last session: 2026-11-06T11:21:22.507Z
+Stopped at: 03-05 2/3 tasks;10/12 images saved;service403;two images remain
 Resume file: .planning/phases/03-sravnenie-variantov-i-prosmotr-retseptov/03-05-RESUME.md

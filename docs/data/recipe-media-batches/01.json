@@ -166,5 +166,47 @@
     "height": 1086,
     "bytes": 2864680,
     "sha256": "d8b0e14e6adaa5caaa46da4d726430fb6bfc48d0747a6964d794a52c219fddce"
+  },
+  {
+    "recipeId": "carrot-water-pancakes",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/carrot-water-pancakes.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b083-2080-7200-bb1d-47f9eb7ad75e/exec-9aa41289-c360-498d-90e1-4c4b3f464cf1.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan recipe hero native PNG landscape exactly 4:3. Culinary generated illustration of carrot-water-pancakes, «Морковные оладьи без масла». Two portions: washed finely grated carrot retaining edible skin 240 g, flour 140 g, sugar 8 g, salt 1 g, water 150 ml. Mix all into thick batter, form six small pancakes on dry nonstick pan, flatten lightly with spoon, cook covered 5 minutes on each side until center cooked. Show exactly three small finished carrot pancakes as one portion on a plain ceramic plate. Orange grated carrot flecks within cooked flour batter, light dry browned patches, no oily shine. Neutral tabletop, soft daylight. No eggs, milk, butter, oil, meat, cheese, herbs, fruit, nuts, sauce, garnish or toppings. No text, brands or watermark. Generated illustration, not evidence of an actual cooked dish.",
+    "generatedAt": "2026-11-06T11:15:36.227Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:18:49.241Z",
+      "notes": "Native output inspected: Exactly three dry browned carrot pancakes with grated carrot flecks, no toppings. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2578171,
+    "sha256": "50d543a92507fc2b19d4a13b7c1ad154d9f24596d410d03939e63ef3f6786ed1"
+  },
+  {
+    "recipeId": "potato-rice-breakfast",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/potato-rice-breakfast.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b083-2080-7200-bb1d-47f9eb7ad75e/exec-c6fcb1a1-4fa1-45f0-a449-dab86010c181.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan recipe hero native PNG landscape exactly 4:3. Culinary AI generated illustration of potato-rice-breakfast, «Картофельная каша с рисом». Two portions: sound washed potatoes retaining edible skins 300 g, rice 100 g, salt 2 g, water 550 ml. Dice potatoes about one centimeter, combine with rinsed rice and water and salt; boil then cook 22 minutes until soft, mash some potato with spoon to thicken and mix. Show one portion of thick soft pale potato rice porridge, visible cooked rice grains and small soft potato pieces with traces of edible skin, partly mashed integrated texture. Plain neutral ceramic bowl, soft daylight and neutral table. Only listed ingredients. No carrot, milk, oil, butter, herbs, onion, meat, sauce, garnish or toppings. No text, brands or watermark. Generated illustration, not authentic cooked-dish evidence.",
+    "generatedAt": "2026-11-06T11:16:54.050Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:18:49.241Z",
+      "notes": "Native output inspected: Soft pale rice and partly mashed potatoes with edible skin traces, no garnish. Generated illustration only."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2188477,
+    "sha256": "416560ee3554a68d86baa30e3918cb6cf3cd5f066714346dccc479307cd8f437"
   }
 ]

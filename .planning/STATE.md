@@ -6,13 +6,13 @@ current_phase: 03
 current_phase_name: Сравнение вариантов и просмотр рецептов
 current_plan: 9
 status: executing
-stopped_at: Completed03-10;9/12plans;49/52media;unit477;fresh affectedChromium8/8;WINDOWS23open;next03-09
-last_updated: "2026-11-07T10:19:30.874Z"
+stopped_at: Added mandatoryPhase03.1CAT01-05;currentPhase3still9/12;continue03-09then11/12;catalogafterPhase3before4
+last_updated: "2026-11-07T10:33:35.485Z"
 last_activity: 2026-11-07
 last_activity_desc: Completed03-10;9/12plans;49/52media;unit477;affectedChromium8/8;next03-09;baselinefocusopen
-state_head: d1653c48338d9ca2afd8d41e35808854e61cc54b
+state_head: 1643d5af003829c4fc1a6cf50d09a6f0076201a6
 progress:
-  total_phases: 7
+  total_phases: 8
   completed_phases: 2
   total_plans: 30
   completed_plans: 27
@@ -130,6 +130,10 @@ Progress: Phase1–2 приняты. Phase3:9/12 планов завершены
 
 -52 авторских рецепта содержательно проверены, кухонная/медицинская оценка не заявлена. Цены имеют разные явные scopes, права ограничены фактическим цитированием; неизвестные gluten/lactose/halal исключают запросы. Safari15 принят поH2; это не подменяется автоматическим WebKit.
 
+### Roadmap Evolution
+
+- Phase 03.1 inserted after Phase 3: Обязательное расширение каталога привычных блюд до приёмки MVP; пользователь подтвердил07.11.2026 (URGENT)
+
 ## Deferred Items
 
 | Category | Item | Status | Deferred At | Milestone |
@@ -139,6 +143,6 @@ Progress: Phase1–2 приняты. Phase3:9/12 планов завершены
 
 ## Session Continuity
 
-Last session: 2026-11-07T10:18:57.014Z
-Stopped at: Completed03-10;9/12plans;49/52media;unit477;fresh affectedChromium8/8;WINDOWS23open;next03-09
-Resume file: None
+Last session: 2026-11-07T10:33:34.312Z
+Stopped at: Added mandatoryPhase03.1CAT01-05;currentPhase3still9/12;continue03-09then11/12;catalogafterPhase3before4
+Resume file: .planning/phases/03-sravnenie-variantov-i-prosmotr-retseptov/03-09-PLAN.md

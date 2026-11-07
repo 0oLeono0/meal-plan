@@ -1,17 +1,88 @@
-import { Link } from 'react-router';
-import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import type { CSSProperties } from 'react';
 import type { GenerationSnapshot } from '../generation/controller';
 import { Button, ConfirmDialog } from '../../shared/ui';
-import { formatCurrency, formatDateOnly, formatNutrition, selectPlanPresentation } from '../../domain/presentation';
+import { formatDateOnly, formatNutrition, selectPlanPresentation } from '../../domain/presentation';
 import type { TargetComparison } from '../../domain/presentation';
-import { divide, formatExact, roundHalfUp } from '../../domain/quantities';
 import { localDateOnly } from '../../domain/plan';
 import type { Nutrition } from '../../domain/catalog';
 import { PlanSummary } from '../plan/PlanSummary';
 import { PlanLoading } from '../plan/PlanLoading';
+import { menuSearch, resolveMenuView } from '../../domain/menuView';
+import type { MenuView } from '../../domain/menuView';
+import type { PlanProjection } from '../../domain/planProjection';
+import { MealCard } from './MealCard';
 
 const labels = { calories: 'Калории', protein: 'Белки', fat: 'Жиры', carbohydrates: 'Углеводы' } as const;
-const slots = { breakfast: 'Завтрак', lunch: 'Обед', dinner: 'Ужин', snack: 'Перекус' } as const;
+const desktopQuery = '(min-width: 1280px)';
+const subscribeDesktop = (notify: () => void) => {
+  const query = window.matchMedia(desktopQuery); query.addEventListener('change', notify);
+  return () => query.removeEventListener('change', notify);
+};
+// Ephemeral local navigation origin only; no saved menu data or totals are copied.
+let recipeOrigin: { variantId: string; instanceId: string } | null = null;
+
+function MenuDays({ projection, catalogVersion, selected, onChange, days, today }: {
+  projection: PlanProjection; catalogVersion: string; selected: MenuView; onChange(value: MenuView): void;
+  days: ReturnType<typeof selectPlanPresentation>['days']; today: string;
+}) {
+  const desktop = useSyncExternalStore(subscribeDesktop, () => window.matchMedia(desktopQuery).matches);
+  const grid = useRef<HTMLDivElement>(null);
+  const dayMode = !desktop && selected.mode === 'day';
+  useLayoutEffect(() => {
+    const main = grid.current?.closest('main');
+    main?.classList.add('menu-main');
+    return () => main?.classList.remove('menu-main');
+  }, []);
+  useEffect(() => {
+    const origin = recipeOrigin;
+    if (!origin) return;
+    recipeOrigin = null;
+    const frame = requestAnimationFrame(() => {
+      const row = origin.variantId === projection.variantId && projection.instances.find(item => item.instance.id === origin.instanceId);
+      const element = row ? [...(grid.current?.querySelectorAll<HTMLElement>('[data-instance-id]') ?? [])].find(item => item.dataset.instanceId === origin.instanceId)?.querySelector<HTMLAnchorElement>('a') : null;
+      (element ?? document.getElementById('menu-title'))?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [projection]);
+  useLayoutEffect(() => {
+    const host = grid.current;
+    if (!desktop || !host) return;
+    let frame = 0;
+    const measure = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        for (const slot of ['breakfast', 'lunch', 'dinner', 'snack']) {
+          const heights = [...host.querySelectorAll<HTMLElement>(`[data-slot="${slot}"] .meal-card-link`)].map(item => item.getBoundingClientRect().height);
+          host.style.setProperty(`--${slot}-height`, `${Math.ceil(Math.max(0, ...heights))}px`);
+        }
+        const headers = [...host.querySelectorAll<HTMLElement>('.menu-day-title')].map(item => item.getBoundingClientRect().height);
+        host.style.setProperty('--day-heading-height', `${Math.ceil(Math.max(0, ...headers))}px`);
+      });
+    };
+    const observer = new ResizeObserver(measure);
+    host.querySelectorAll('.meal-card-link, .menu-day-title').forEach(element => observer.observe(element));
+    measure();
+    return () => { observer.disconnect(); cancelAnimationFrame(frame); };
+  }, [desktop, projection]);
+  return <>
+    <div className="menu-mobile-controls">
+      <div role="group" aria-label="Вид меню" className="menu-mode"><Button aria-pressed={selected.mode === 'day'} onClick={() => onChange({ ...selected, mode: 'day' })}>Текущий день</Button><Button aria-pressed={selected.mode === 'week'} onClick={() => onChange({ ...selected, mode: 'week' })}>Вся неделя</Button></div>
+      {dayMode && <div className="menu-day-tabs" role="tablist" aria-label="Дни меню">{days.map(day => <button type="button" role="tab" key={day.dateOnly} id={`day-tab-${day.dateOnly}`} data-day={day.dateOnly} aria-label={`${day.date}${day.dateOnly === today ? ' · Сегодня' : ''}`} aria-current={day.dateOnly === today ? 'date' : undefined} aria-selected={selected.day === day.dateOnly} aria-controls={`day-panel-${day.dateOnly}`} tabIndex={selected.day === day.dateOnly ? 0 : -1} onClick={() => onChange({ ...selected, day: day.dateOnly })}>{new Intl.DateTimeFormat('ru-RU', { weekday: 'short', day: 'numeric', month: 'numeric', timeZone: 'UTC' }).format(new Date(`${day.dateOnly}T00:00:00Z`))}{day.dateOnly === today && <span>Сегодня</span>}</button>)}</div>}
+    </div>
+    <p className="menu-desktop-label">Вся неделя</p>
+    <p className="hint">Ккал и стоимость — на одну порцию. Цена ингредиентов до вычета запасов</p>
+    <p className="hint">Фотоиллюстрация создана с помощью ИИ; внешний вид блюда может отличаться. Изображение не является источником КБЖУ</p>
+    <div className="menu-days" ref={grid} style={{ '--day-count': days.length } as CSSProperties}>
+      {days.map(day => <section className="card menu-day" key={day.dateOnly} id={`day-panel-${day.dateOnly}`} data-date={day.dateOnly} hidden={dayMode && selected.day !== day.dateOnly} role={dayMode ? 'tabpanel' : undefined} aria-labelledby={dayMode ? `day-tab-${day.dateOnly}` : `day-title-${day.dateOnly}`} tabIndex={dayMode && selected.day === day.dateOnly ? 0 : undefined}>
+        <header><h2 id={`day-title-${day.dateOnly}`} className="menu-day-title">{day.date}{day.dateOnly === today ? ' · Сегодня' : ''}</h2></header>
+        {projection.instances.filter(row => row.instance.date === day.dateOnly).map((row, index) => <MealCard key={row.instance.id} row={row} catalogVersion={catalogVersion} variantId={projection.variantId} view={selected} priority={index === 0 && (desktop ? day.dateOnly === days[0]?.dateOnly : day.dateOnly === selected.day)} onOpen={() => { recipeOrigin = { variantId: projection.variantId, instanceId: row.instance.id }; }} />)}
+        <div className="menu-day-totals"><h3>На человека за день</h3><NutritionSummary values={day.personNutrition} target={day.targetComparison} /><p>{day.costBasis}: {day.ingredientCost}</p><details><summary className="min-h-[44px] py-2">КБЖУ семьи за день</summary><NutritionSummary values={day.familyNutrition} /></details></div>
+      </section>)}
+    </div>
+  </>;
+}
 function NutritionSummary({ values, target }: { values: ReturnType<typeof formatNutrition>; target?: TargetComparison }) {
   const deviations = target?.status === 'known' ? formatNutrition(Object.fromEntries(Object.entries(target.metrics).map(([key, metric]) => [key, metric.delta])) as unknown as Nutrition) : null;
   return <dl className="grid grid-cols-2 gap-2 tabular-nums">{Object.entries(labels).map(([name, label]) => {
@@ -24,6 +95,7 @@ function NutritionSummary({ values, target }: { values: ReturnType<typeof format
 }
 export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, onCancel, onAppend, onRetryGeneration, onRecreate }: { snapshot: GenerationSnapshot; onRetryLoad(): void; onSelectVariant?(id: string): void; onRetrySave?(): void; onCancel?(): void; onAppend?(): void; onRetryGeneration?(): void; onRecreate?(focusAnchor: string): void }) {
   const [replacementTrigger, setReplacementTrigger] = useState<HTMLElement | null>(null);
+  const [params, setParams] = useSearchParams();
   useEffect(() => {
     if (snapshot.status === 'succeeded' && snapshot.intent === 'replace' && document.activeElement === document.body) document.getElementById('menu-title')?.focus();
   }, [snapshot.status, snapshot.intent]);
@@ -41,11 +113,8 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
   const busy = saving || snapshot.status === 'pending';
   const view = selectPlanPresentation(projection, settings.target);
   const today = localDateOnly(new Date());
-  const instances = projection.instances.map(row => ({ id: row.instance.id, date: row.instance.date, slot: slots[row.instance.slot], name: row.instance.recipeSnapshot.name,
-    recipeUrl: `/recipe/${encodeURIComponent(row.instance.recipeId)}?${new URLSearchParams({ variant: plan.activeVariantId, instance: row.instance.id, view: 'week', day: row.instance.date })}`,
-    minutes: row.instance.recipeSnapshot.cookingMinutes, servings: formatExact(row.instance.selectedServings), nutrition: formatNutrition(row.perPortionNutrition),
-    cost: formatCurrency(roundHalfUp(divide(row.ingredientCost, row.instance.selectedServings), 2)) }));
-  return <section data-plan-id={plan.activeVariantId} className="plan-read-model [overflow-wrap:anywhere]">
+  const selected = resolveMenuView(params.toString(), plan.inputs.dates, today);
+  return <section data-plan-id={plan.activeVariantId} className="plan-read-model menu-page [overflow-wrap:anywhere]">
     <h1 id="menu-title" tabIndex={-1}>{view.days.length === 7 ? 'Меню на неделю' : `Меню на ${view.period}`}</h1>
     <p>{formatDateOnly(plan.inputs.dates[0])} — {formatDateOnly(plan.inputs.dates[plan.inputs.dates.length - 1])} · На {view.people}</p>
     <p className="hint">Меню сохранено на этом устройстве</p>
@@ -80,15 +149,7 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
       <p className="hint">Текущий каталог ограничен растительными рецептами. Расчёт не подтверждает полноценность рациона.</p>
     </section>
     <Link className="action-link" to="/shopping">Список покупок · {view.itemCount}</Link>
-    {view.days.map(day => <section className="card" key={day.dateOnly} data-date={day.dateOnly} aria-label={day.date}>
-      <h2>{day.date}{day.dateOnly === today ? ' · Сегодня' : ''}</h2>
-      {instances.filter(instance => instance.date === day.dateOnly).map(instance => <article className="border-b border-[var(--color-border)] py-4" key={instance.id} data-instance-id={instance.id}>
-        <h3 className="font-semibold">{instance.slot}</h3><Link className="action-link underline" to={instance.recipeUrl}>{instance.name}</Link><p className="hint">{instance.minutes} мин · Порций для семьи: {instance.servings}</p>
-        <p className="tabular-nums">На порцию: {instance.nutrition.calories} ккал · Б {instance.nutrition.protein} г · Ж {instance.nutrition.fat} г · У {instance.nutrition.carbohydrates} г · ≈ {instance.cost}</p>
-      </article>)}
-      <h3 className="font-semibold mt-4">На человека за день</h3><NutritionSummary values={day.personNutrition} target={day.targetComparison} />
-      <p>{day.costBasis}: {day.ingredientCost}</p><details><summary className="min-h-[44px] py-2">КБЖУ семьи за день</summary><NutritionSummary values={day.familyNutrition} /></details>
-    </section>)}
+    <MenuDays projection={projection} catalogVersion={plan.inputs.catalogVersion} selected={selected} onChange={next => setParams(menuSearch(next))} days={view.days} today={today} />
     {replacementTrigger && <ConfirmDialog title="Создать новый набор меню?" description={`После успешного сохранения нового набора прежние ${plan.variants.length} ${plan.variants.length === 1 ? 'вариант' : plan.variants.length < 5 ? 'варианта' : 'вариантов'} будут заменены. До этого текущее меню останется доступным`} cancelLabel="Оставить варианты" confirmLabel="Создать новый набор" returnFocus={replacementTrigger} fallbackFocusId="menu-title" onCancel={() => setReplacementTrigger(null)} onConfirm={() => {
       const anchor = replacementTrigger.id;
       setReplacementTrigger(null); onRecreate?.(anchor);

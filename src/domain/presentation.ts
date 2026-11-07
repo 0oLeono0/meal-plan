@@ -24,7 +24,7 @@ export function formatQuantity(quantity: Quantity): string {
   const units = { g: 'г', kg: 'кг', ml: 'мл', l: 'л', pcs: 'шт.' };
   return `${formatExact(quantity.amount).replace('.', ',')} ${units[quantity.unit]}`;
 }
-const forms = { day: ['день', 'дня', 'дней'], person: ['человек', 'человека', 'человек'], item: ['товар', 'товара', 'товаров'], instance: ['блюдо', 'блюда', 'блюд'] } as const;
+const forms = { day: ['день', 'дня', 'дней'], person: ['человек', 'человека', 'человек'], item: ['товар', 'товара', 'товаров'], instance: ['блюдо', 'блюда', 'блюд'], variant: ['вариант', 'варианта', 'вариантов'], serving: ['порция', 'порции', 'порций'] } as const;
 export function formatCount(count: number, kind: keyof typeof forms): string {
   if (!Number.isSafeInteger(count) || count < 0) throw new RangeError('INVALID_COUNT');
   const last = count % 10, lastTwo = count % 100;

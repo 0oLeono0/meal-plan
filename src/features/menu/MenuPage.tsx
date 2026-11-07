@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } fr
 import type { CSSProperties } from 'react';
 import type { GenerationSnapshot } from '../generation/controller';
 import { Button, ConfirmDialog } from '../../shared/ui';
-import { formatDateOnly, formatNutrition, selectPlanPresentation } from '../../domain/presentation';
+import { formatCount, formatDateOnly, formatNutrition, selectPlanPresentation } from '../../domain/presentation';
 import type { TargetComparison } from '../../domain/presentation';
 import { localDateOnly } from '../../domain/plan';
 import type { Nutrition } from '../../domain/catalog';
@@ -23,12 +23,34 @@ const subscribeDesktop = (notify: () => void) => {
 // Ephemeral local navigation origin only; no saved menu data or totals are copied.
 let recipeOrigin: { variantId: string; instanceId: string } | null = null;
 
+function ShoppingAction({ label }: { label: string }) {
+  const bar = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const element = bar.current, main = element?.closest('main');
+    if (!element || !main) return;
+    const viewport = window.visualViewport;
+    const measure = () => {
+      const available = viewport?.height ?? window.innerHeight;
+      const inFlow = available < 500 || window.innerHeight - available > 150 || element.getBoundingClientRect().height > available / 3;
+      element.dataset.inFlow = String(inFlow);
+      main.style.setProperty('--shopping-height', inFlow ? '0px' : `${element.getBoundingClientRect().height}px`);
+    };
+    const observer = new ResizeObserver(measure); observer.observe(element);
+    window.addEventListener('resize', measure); viewport?.addEventListener('resize', measure);
+    measure();
+    return () => { observer.disconnect(); window.removeEventListener('resize', measure); viewport?.removeEventListener('resize', measure); main.style.removeProperty('--shopping-height'); };
+  }, []);
+  return <div ref={bar} className="menu-shopping"><Link className="primary action-link" to="/shopping">Список покупок · {label}</Link></div>;
+}
+
 function MenuDays({ projection, catalogVersion, selected, onChange, days, today }: {
   projection: PlanProjection; catalogVersion: string; selected: MenuView; onChange(value: MenuView): void;
   days: ReturnType<typeof selectPlanPresentation>['days']; today: string;
 }) {
   const desktop = useSyncExternalStore(subscribeDesktop, () => window.matchMedia(desktopQuery).matches);
   const grid = useRef<HTMLDivElement>(null);
+  const tabs = useRef<HTMLDivElement>(null);
+  const [focusedDay, setFocusedDay] = useState<string | null>(null);
   const dayMode = !desktop && selected.mode === 'day';
   useLayoutEffect(() => {
     const main = grid.current?.closest('main');
@@ -53,12 +75,13 @@ function MenuDays({ projection, catalogVersion, selected, onChange, days, today 
     const measure = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        for (const slot of ['breakfast', 'lunch', 'dinner', 'snack']) {
+        const measurements = ['breakfast', 'lunch', 'dinner', 'snack'].map(slot => {
           const heights = [...host.querySelectorAll<HTMLElement>(`[data-slot="${slot}"] .meal-card-link`)].map(item => item.getBoundingClientRect().height);
-          host.style.setProperty(`--${slot}-height`, `${Math.ceil(Math.max(0, ...heights))}px`);
-        }
+          return [`--${slot}-height`, `${Math.ceil(Math.max(0, ...heights))}px`];
+        });
         const headers = [...host.querySelectorAll<HTMLElement>('.menu-day-title')].map(item => item.getBoundingClientRect().height);
-        host.style.setProperty('--day-heading-height', `${Math.ceil(Math.max(0, ...headers))}px`);
+        measurements.push(['--day-heading-height', `${Math.ceil(Math.max(0, ...headers))}px`]);
+        measurements.forEach(([name, value]) => host.style.setProperty(name, value));
       });
     };
     const observer = new ResizeObserver(measure);
@@ -69,7 +92,13 @@ function MenuDays({ projection, catalogVersion, selected, onChange, days, today 
   return <>
     <div className="menu-mobile-controls">
       <div role="group" aria-label="Вид меню" className="menu-mode"><Button aria-pressed={selected.mode === 'day'} onClick={() => onChange({ ...selected, mode: 'day' })}>Текущий день</Button><Button aria-pressed={selected.mode === 'week'} onClick={() => onChange({ ...selected, mode: 'week' })}>Вся неделя</Button></div>
-      {dayMode && <div className="menu-day-tabs" role="tablist" aria-label="Дни меню">{days.map(day => <button type="button" role="tab" key={day.dateOnly} id={`day-tab-${day.dateOnly}`} data-day={day.dateOnly} aria-label={`${day.date}${day.dateOnly === today ? ' · Сегодня' : ''}`} aria-current={day.dateOnly === today ? 'date' : undefined} aria-selected={selected.day === day.dateOnly} aria-controls={`day-panel-${day.dateOnly}`} tabIndex={selected.day === day.dateOnly ? 0 : -1} onClick={() => onChange({ ...selected, day: day.dateOnly })}>{new Intl.DateTimeFormat('ru-RU', { weekday: 'short', day: 'numeric', month: 'numeric', timeZone: 'UTC' }).format(new Date(`${day.dateOnly}T00:00:00Z`))}{day.dateOnly === today && <span>Сегодня</span>}</button>)}</div>}
+      {dayMode && <div ref={tabs} className="menu-day-tabs" role="tablist" aria-label="Дни меню" onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocusedDay(null); }} onKeyDown={event => {
+        const controls = [...event.currentTarget.querySelectorAll<HTMLButtonElement>('[role=tab]')];
+        const index = controls.indexOf(document.activeElement as HTMLButtonElement);
+        if (index < 0) return;
+        const next = event.key === 'Home' ? 0 : event.key === 'End' ? controls.length - 1 : event.key === 'ArrowRight' ? (index + 1) % controls.length : event.key === 'ArrowLeft' ? (index + controls.length - 1) % controls.length : null;
+        if (next !== null) { event.preventDefault(); controls[next].focus(); }
+      }}>{days.map(day => <button type="button" role="tab" key={day.dateOnly} id={`day-tab-${day.dateOnly}`} data-day={day.dateOnly} aria-label={`${day.date}${day.dateOnly === today ? ' · Сегодня' : ''}`} aria-current={day.dateOnly === today ? 'date' : undefined} aria-selected={selected.day === day.dateOnly} aria-controls={`day-panel-${day.dateOnly}`} tabIndex={(focusedDay ?? selected.day) === day.dateOnly ? 0 : -1} onFocus={() => setFocusedDay(day.dateOnly)} onClick={() => onChange({ ...selected, day: day.dateOnly })}>{new Intl.DateTimeFormat('ru-RU', { weekday: 'short', day: 'numeric', month: 'numeric', timeZone: 'UTC' }).format(new Date(`${day.dateOnly}T00:00:00Z`))}{day.dateOnly === today && <span>Сегодня</span>}</button>)}</div>}
     </div>
     <p className="menu-desktop-label">Вся неделя</p>
     <p className="hint">Ккал и стоимость — на одну порцию. Цена ингредиентов до вычета запасов</p>
@@ -137,7 +166,7 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
       <details><summary className="min-h-[44px] py-2">Действия с меню</summary><div className="grid gap-2"><Button id="recreate-set" disabled={busy} onClick={event => setReplacementTrigger(event.currentTarget)}>Составить заново</Button><Link className="action-link" to="/plan/new">Изменить настройки</Link></div></details>
       {snapshot.status === 'pending' && <div><progress aria-label={snapshot.intent === 'replace' ? 'Подбор нового набора' : 'Подбор нового варианта'} /><p role="status">{snapshot.intent === 'replace' ? 'Подбираем новый набор…' : 'Подбираем новый вариант…'} Прежнее меню остаётся доступным</p><Button onClick={onCancel}>Отмена</Button></div>}
       {saving && <div><p role="status">{snapshot.intent === 'append' ? 'Сохраняем новый вариант…' : snapshot.intent === 'replace' ? 'Сохраняем новый набор…' : 'Сохраняем выбор…'} Предыдущее меню остаётся активным</p><Button onClick={onCancel}>Отмена</Button></div>}
-      {snapshot.status === 'succeeded' && <p role="status">{snapshot.intent === 'append' ? `Новый вариант добавлен и выбран. В наборе ${plan.variants.length} вариантов` : `Выбран вариант ${activeIndex + 1} из ${plan.variants.length}. Меню и список покупок обновлены`}</p>}
+      {snapshot.status === 'succeeded' && <p role="status">{snapshot.intent === 'append' ? `Новый вариант добавлен и выбран. В наборе ${formatCount(plan.variants.length, 'variant')}` : `Выбран вариант ${activeIndex + 1} из ${plan.variants.length}. Меню и список покупок обновлены`}</p>}
       {snapshot.status === 'memory-only' && <div role="alert"><p>{snapshot.intent === 'append' ? 'Новый вариант рассчитан, но не сохранён' : snapshot.intent === 'replace' ? 'Новый набор рассчитан, но не сохранён' : 'Не удалось сохранить выбор варианта'}</p><p>Результат доступен только до закрытия страницы. Прежнее меню не изменено</p><Button onClick={onRetrySave}>Повторить сохранение</Button><Button onClick={onCancel}>Оставить текущее меню</Button>{snapshot.saveError === 'blocked' && <Button onClick={onRetryLoad}>Повторить загрузку</Button>}</div>}
       {snapshot.status === 'no-new-result' && <div role="alert"><h3>Новый вариант не найден</h3><p>За отведённый поиск не удалось найти ещё один допустимый вариант. Прежние варианты сохранены</p><Button onClick={onRetryGeneration}>Повторить</Button><Link className="action-link" to="/plan/new">Изменить настройки</Link></div>}
       {snapshot.status === 'error' && <div role="alert"><p>{snapshot.error?.message}. Предыдущее меню не изменено</p><Button onClick={onRetryGeneration}>Повторить</Button><Link className="action-link" to="/plan/new">Изменить настройки</Link></div>}
@@ -148,9 +177,9 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
       <p className="hint">КБЖУ рассчитаны по составу продуктов и не являются медицинской рекомендацией</p>
       <p className="hint">Текущий каталог ограничен растительными рецептами. Расчёт не подтверждает полноценность рациона.</p>
     </section>
-    <Link className="action-link" to="/shopping">Список покупок · {view.itemCount}</Link>
     <MenuDays projection={projection} catalogVersion={plan.inputs.catalogVersion} selected={selected} onChange={next => setParams(menuSearch(next))} days={view.days} today={today} />
-    {replacementTrigger && <ConfirmDialog title="Создать новый набор меню?" description={`После успешного сохранения нового набора прежние ${plan.variants.length} ${plan.variants.length === 1 ? 'вариант' : plan.variants.length < 5 ? 'варианта' : 'вариантов'} будут заменены. До этого текущее меню останется доступным`} cancelLabel="Оставить варианты" confirmLabel="Создать новый набор" returnFocus={replacementTrigger} fallbackFocusId="menu-title" onCancel={() => setReplacementTrigger(null)} onConfirm={() => {
+    <ShoppingAction label={view.itemCount} />
+    {replacementTrigger && <ConfirmDialog title="Создать новый набор меню?" description={`После успешного сохранения нового набора прежние ${formatCount(plan.variants.length, 'variant')} будут заменены. До этого текущее меню останется доступным`} cancelLabel="Оставить варианты" confirmLabel="Создать новый набор" returnFocus={replacementTrigger} fallbackFocusId="menu-title" onCancel={() => setReplacementTrigger(null)} onConfirm={() => {
       const anchor = replacementTrigger.id;
       setReplacementTrigger(null); onRecreate?.(anchor);
     }} />}

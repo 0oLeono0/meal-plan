@@ -224,3 +224,12 @@ body { margin: 0; min-width: 0; }
   .meal-card-link { grid-template-columns: minmax(0, 1fr); gap: var(--space-sm); padding: var(--space-sm); }
   .menu-day-totals dl { grid-template-columns: minmax(0, 1fr); }
 }
+.app-shell main.menu-main { --menu-nav-height: var(--nav-height); padding-bottom: calc(var(--shopping-height, 0px) + var(--menu-nav-height) + var(--space-md)); }
+.menu-shopping { position: fixed; z-index: 9; bottom: var(--menu-nav-height); left: 0; right: 0; max-width: 640px; margin: 0 auto; padding: var(--space-md); background: var(--color-surface); border-top: 1px solid var(--color-border); }
+.app-shell .menu-main :is(a, button, input, select, textarea, summary, h1, [role=tabpanel]) { scroll-margin-bottom: calc(var(--shopping-height, 0px) + var(--menu-nav-height) + var(--space-md)); }
+.menu-shopping[data-in-flow=true] { position: static; margin-top: var(--space-md); }
+@media (max-height: 499px) { .menu-shopping { position: static; } }
+@media (min-width: 1200px) {
+  .app-shell main.menu-main { --menu-nav-height: 0px; }
+  .menu-shopping { left: var(--sidebar-width); max-width: 1600px; }
+}

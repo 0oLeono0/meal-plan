@@ -65,6 +65,8 @@ for (const width of widths) {
     await generateRealPlan(page);
     const saved = await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'));
     await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
+    // Phase03 defaults to the actual selected day below the independent1280 menu boundary.
+    if (width < 1280) await page.getByRole('button', { name: 'Вся неделя', exact: true }).click();
     await expect(page.locator('[data-instance-id]')).toHaveCount(28);
     const first = page.locator('[data-instance-id]').first(), last = page.locator('[data-instance-id]').last();
     await expect(first.getByRole('heading', { name: 'Завтрак' })).toBeVisible();
@@ -174,6 +176,7 @@ for (const width of widths) {
     const previous = await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'));
     await mountAppFixture(page, { draft: { step: 4, days: '2' }, operation: 'save-failure' });
     await page.getByRole('button', { name: 'Составить меню', exact: true }).click();
+    await page.getByRole('dialog', { name: 'Составить меню с новыми настройками?' }).getByRole('button', { name: 'Составить меню', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Меню рассчитано, но не сохранено' })).toBeFocused();
     expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'))).toBe(previous);
     await expect(page.getByRole('navigation')).toHaveCount(0);
@@ -237,6 +240,7 @@ test('phase02 sequential Tab ShiftTab Space and Enter traverse saved screens and
   await tab(page.getByRole('link', { name: 'Новое меню', exact: true }));
   for (const label of ['Меню', 'Покупки', 'Дома']) await tab(nav.getByRole('link', { name: label, exact: true }));
   await tab(nav.getByRole('button', { name: 'Профиль', exact: true }));
+  for (const control of await page.getByRole('region', { name: 'Варианты меню' }).locator('button:enabled:visible, summary:visible').all()) await tab(control);
   const sources = page.getByText('Источники расчёта', { exact: true });
   await tab(sources);
   await page.keyboard.press('Space');
@@ -244,7 +248,18 @@ test('phase02 sequential Tab ShiftTab Space and Enter traverse saved screens and
   await page.keyboard.press('Space');
   await expect(sources.locator('..')).not.toHaveAttribute('open');
   const shopping = page.getByRole('link', { name: /^Список покупок ·/ });
-  await tab(shopping); await tab(sources, true); await tab(shopping);
+  for (const mode of await page.getByRole('group', { name: 'Вид меню' }).getByRole('button').all()) await tab(mode);
+  await tab(page.getByRole('tab', { selected: true }));
+  const panel = page.getByRole('tabpanel');
+  await page.keyboard.press('Tab');
+  await expect(panel).toBeFocused();
+  // A day panel is taller than the viewport; its labelled start must be visible,
+  // then actual Tab traverses each fully visible card rather than clipping the panel.
+  expect((await panel.locator('.menu-day-title').boundingBox())!.y).toBeGreaterThanOrEqual(0);
+  for (const card of await page.getByRole('tabpanel').locator('.meal-card-link').all()) await tab(card);
+  const daySummary = page.getByRole('tabpanel').getByText('КБЖУ семьи за день', { exact: true });
+  await tab(daySummary);
+  await tab(shopping); await tab(daySummary, true); await tab(shopping);
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Список покупок' })).toBeFocused();
   await tab(page.getByRole('link', { name: 'К меню', exact: true }));

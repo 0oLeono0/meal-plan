@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 7
+open_count: 6
 waived_count: 0
-fixed_count: 16
+fixed_count: 17
 total_count: 23
-last_updated: 2026-11-07T10:08:59.058Z
+last_updated: 2026-11-07T10:49:39.087Z
 ---
 
 # Broken Windows Ledger
@@ -36,7 +36,7 @@ last_updated: 2026-11-07T10:08:59.058Z
 | 19 | 03 | deviation | src/features/generation/controller.ts |  | Resolved cap12 old-plus-candidate snapshot duplication without increasing trust limits; source-backed quota/cancel regression passes | fixed |  | 2026-11-05T12:15:44.824Z | 2026-11-05T12:16:17.896Z |
 | 20 | 03 | deviation | src/features/generation/controller.ts |  | Resolved delayed timer deadline bypass, repeated identical pending start and null selection options; actual RED5 failures and GREEN75 focused tests | fixed |  | 2026-11-05T12:16:18.657Z | 2026-11-05T12:16:19.481Z |
 | 21 | 03 | lint-warning | src/app/App.tsx |  | Production build passes; primary chunk503.58kB exceeds Vite500kB warning threshold (gzip142.07kB); code splitting not required for plan03-03 | open |  | 2026-11-05T12:45:27.695Z |  |
-| 22 | 03 | stub | src/features/recipe/RecipePage.tsx |  | Intentional neutral recipe photo fallback; real52asset map belongs to dependent plans03-04 through03-09 and does not close MENU03 or REC01 photo scope | open |  | 2026-11-05T12:45:28.268Z |  |
+| 22 | 03 | stub | src/features/recipe/RecipePage.tsx |  | Intentional neutral recipe photo fallback; real52asset map belongs to dependent plans03-04 through03-09 and does not close MENU03 or REC01 photo scope | fixed |  | 2026-11-05T12:45:28.268Z | 2026-11-07T10:49:39.087Z |
 | 23 | 03 | unmet-truth | src/app/App.tsx | 226 | Pending generation cancellation does not restore generate-menu focus at360px on baseline50b2a30; retained failing test; repair and verify in03-11 recovery/a11y | open |  | 2026-11-07T10:08:59.058Z |  |
 
 ````json
@@ -321,10 +321,10 @@ last_updated: 2026-11-07T10:08:59.058Z
     "file": "src/features/recipe/RecipePage.tsx",
     "line": null,
     "description": "Intentional neutral recipe photo fallback; real52asset map belongs to dependent plans03-04 through03-09 and does not close MENU03 or REC01 photo scope",
-    "status": "open",
+    "status": "fixed",
     "reason": "",
     "recorded_at": "2026-11-05T12:45:28.268Z",
-    "resolved_at": null,
+    "resolved_at": "2026-11-07T10:49:39.087Z",
     "milestone": "v1.0"
   },
   {

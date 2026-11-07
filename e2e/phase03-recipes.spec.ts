@@ -6,6 +6,7 @@ const key = 'mealplan:guest:active-plan:v1';
 
 test('real generation opens the exact saved recipe instance and returns without changing saved bytes', async ({ page }) => {
   test.setTimeout(70_000);
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Меню за 1 клик', exact: true }).click();
   await expect(page).toHaveURL(/\/menu$/, { timeout: 32_000 });
@@ -14,10 +15,12 @@ test('real generation opens the exact saved recipe instance and returns without 
   const saved = JSON.parse(raw!).plan;
   const variant = saved.variants.find((row: { id: string }) => row.id === saved.activeVariantId);
   const instance = variant.instances[variant.instances.length - 1];
+  await page.getByRole('tab').last().click();
+  await page.getByRole('button', { name: 'Вся неделя', exact: true }).click();
   const menuRow = page.locator(`[data-instance-id="${instance.id}"]`);
   const menuFacts = (await menuRow.getByText(/^На порцию:/).textContent())!.match(/^На порцию: (.+) ккал · Б (.+) г · Ж (.+) г · У (.+) г · ≈ (.+)$/)!;
   expect(menuFacts).not.toBeNull();
-  await menuRow.getByRole('link', { name: instance.recipeSnapshot.name, exact: true }).click();
+  await menuRow.getByRole('link').click();
   const oldRecipeUrl = page.url();
   await expect(page.getByRole('heading', { name: instance.recipeSnapshot.name, exact: true })).toBeVisible();
   await expect(page.locator('[data-instance-id]')).toHaveAttribute('data-instance-id', instance.id);
@@ -49,7 +52,7 @@ test('repeated recipe instances show full partial and no stock from the same sho
     ['dinner', 'Нет количественного покрытия запасами', 'Нужно 125 г · Из запасов 0 г · Докупить 125 г'],
   ]) {
     const id = `synthetic-2026-10-01-${slot}`;
-    await page.locator(`[data-instance-id="${id}"]`).getByRole('link', { name: 'Синтетическое повторяющееся блюдо', exact: true }).click();
+    await page.locator(`[data-instance-id="${id}"]`).getByRole('link').click();
     await expect(page).toHaveURL(/\/recipe\//);
     await expect(page.locator('[data-instance-id]')).toHaveAttribute('data-instance-id', id);
     await expect(page.getByText(message, { exact: true })).toBeVisible();

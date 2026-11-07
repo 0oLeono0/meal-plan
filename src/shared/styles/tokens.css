@@ -202,6 +202,7 @@ body { margin: 0; min-width: 0; }
 .meal-card-link:active { background: var(--color-disabled); }
 .meal-card-link figure { margin: 0; width: 100%; }
 .meal-card-link :is(img, [role=img]) { display: block; border-radius: var(--radius-field); aspect-ratio: 4/3; }
+.meal-card-link img { height: auto; }
 .meal-card-link [role=img] { display: flex; font-size: var(--text-label); text-align: center; }
 .meal-card-link [role=img] svg { max-height: 24px; }
 .app-shell .meal-card-link p { margin: var(--space-sm) 0 0; }

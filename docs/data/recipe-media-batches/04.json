@@ -1,0 +1,86 @@
+[
+  {
+    "recipeId": "tomato-carrot-dumplings",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/tomato-carrot-dumplings.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b558-10b6-75b0-a0bb-12e8da4b83b9/exec-7cc41442-9fac-458b-a048-e13e8ff3112a.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan tomato-carrot-dumplings, Клёцки в томатно-морковном соусе. Native PNG landscape exactly 4:3. Recipe two portions: flour170g, tomato350g, carrot150g, salt3g. Wash and dice tomatoes with skin, finely grate washed carrots with edible skin. Braise vegetables with300ml water and2g salt12min. Mix flour,1g salt,110ml water into sticky dough, drop small teaspoon dumplings into the sauce. Cook covered10min, carefully turning until centers cooked, divide entire dish into two plates. Show one finished portion: small irregular spoon-drop pale flour dumplings coated in soft red tomato and finely grated orange carrot sauce. Plain ceramic shallow bowl on neutral table, soft daylight. Only listed ingredients. No potato, egg, oil, butter, dairy, onion, garlic, meat, herbs, garnish, toppings, text, brand or watermark. Generated culinary illustration, not evidence of actual cooked food.",
+    "generatedAt": "2026-11-07T09:30:58.714Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T09:31:30.705Z",
+      "notes": "Просмотрен native output: небольшие светлые клёцки неправильной формы в соусе из томатов с кожицей и тёртой моркови; без зелени и неучтённых добавок."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2503568,
+    "sha256": "e7f179936aa6195818b0b91d09542cf6d9da62959d3428184f82a338655065f5"
+  },
+  {
+    "recipeId": "cabbage-carrot-salad",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/cabbage-carrot-salad.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b558-10b6-75b0-a0bb-12e8da4b83b9/exec-f65ec919-e166-4618-b3b4-4a97232ffe43.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan cabbage-carrot-salad, Капустно-морковный салат. Native PNG landscape exactly4:3. Two portions: fresh cabbage240g, carrot160g, salt1g. Wash cabbage, finely shred leaves and finely grate edible core. Scrub carrot retaining edible skin, grate on medium grater. Combine cabbage, carrot and salt; massage by hand2min, rest5min for own juices, mix and divide two portions. Show one finished portion of fine pale crisp cabbage ribbons mixed with medium orange carrot shreds, lightly softened by massaging, moist only with vegetable juice. Plain ceramic bowl on neutral table, soft daylight. Only listed ingredients. No oil, mayonnaise, vinegar, lemon, sugar, tomato, onion, herbs, garnish, nuts, meat, dairy, sauce, text, logo, watermark. Generated culinary illustration, not actual cooked-dish evidence.",
+    "generatedAt": "2026-11-07T09:31:56.668Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T09:32:34.700Z",
+      "notes": "Просмотрено: тонкие светлые полоски капусты и средне натёртая морковь, влажные от собственного сока; без заправки, зелени и дополнительных продуктов."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2169697,
+    "sha256": "fc5236ea64abe37ad37f4418fede36bd51ebbe04477d7f1c240724fd438b0c21"
+  },
+  {
+    "recipeId": "tomato-cabbage-salad",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/tomato-cabbage-salad.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b558-10b6-75b0-a0bb-12e8da4b83b9/exec-ca1e8db4-1e81-4db1-aea7-ffbc1d918066.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan tomato-cabbage-salad, Томатный салат с хрустящей капустой. Native PNG landscape exactly4:3. Two portions: tomato300g, cabbage180g, salt1g. Wash vegetables. Cut tomatoes into small wedges with skins, preserve all juice. Thinly shred cabbage leaves and finely grate edible core, massage cabbage lightly with salt. Combine vegetables gently with tomato juice, rest3min, serve two equal portions. Show one finished portion: fresh red tomato wedges mixed with thin crisp pale cabbage ribbons and a little natural tomato juice. Plain ceramic bowl, neutral table, soft daylight. Only listed ingredients. No carrot, cucumber, onion, oil, vinegar, lemon, mayonnaise, herbs, garnish, seeds, meat, cheese, sauce, toppings, text, logo, watermark. Generated culinary illustration, not evidence of actual cooked food.",
+    "generatedAt": "2026-11-07T09:32:43.117Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T09:33:16.830Z",
+      "notes": "Просмотрено: свежие дольки томатов с кожицей и тонкая светлая капуста в небольшом количестве собственного сока; моркови и неучтённых добавок не видно."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2416688,
+    "sha256": "89d2fac04a4a17d9c189d9e358f156661734cf691c90a7832c9046af02e3f2a3"
+  },
+  {
+    "recipeId": "carrot-tomato-salad",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/carrot-tomato-salad.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b558-10b6-75b0-a0bb-12e8da4b83b9/exec-8f4c3a30-d253-46c3-a19d-431e9f169e9c.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan carrot-tomato-salad, Салат из моркови и томатов. Native PNG landscape exactly4:3. Two portions: carrot200g, tomato260g, salt1g. Scrub carrots keeping edible skin, grate into thin shreds. Wash tomatoes and cut with skin into small cubes. Combine carrots, tomato cubes and all tomato juice with salt. Mix thoroughly with spoon, rest3min so juice moistens carrot, divide into two small plates. Show one finished portion: raw orange thin grated carrot strands mixed with small fresh red tomato cubes in natural tomato juice. Plain ceramic small plate, neutral tabletop, soft daylight. Only listed ingredients. No cabbage, onion, cucumber, oil, vinegar, lemon, mayonnaise, herbs, garnish, cheese, seeds, nuts, meat, sauce, toppings, text, logo or watermark. Generated culinary illustration, not actual food evidence.",
+    "generatedAt": "2026-11-07T09:33:25.436Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T09:34:00.946Z",
+      "notes": "Просмотрено: сырая тонко натёртая морковь и мелкие кубики свежих томатов с кожицей в собственном соке; капусты, зелени и заправки не видно."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2335294,
+    "sha256": "e116252d207f68d43b16b7b4288ca5dda1ac763c4de10621da491f95c51b70da"
+  }
+]

@@ -33,7 +33,7 @@ describe('compiled presentation media', () => {
     expect(scoped.status, scoped.stderr).toBe(0);
     expect(JSON.parse(scoped.stdout)).toEqual({ checked: 1, full: false });
     const full = spawnSync('node', ['scripts/check-recipe-media.mjs', '--all'], { encoding: 'utf8' });
-    expect(full.status, full.stderr).toBe(0);
+    expect(full.status).toBe(0);
     expect(JSON.parse(full.stdout)).toEqual({ checked: 52, full: true });
     const aggregate = JSON.parse(readFileSync('docs/data/recipe-media.json', 'utf8'));
     for (const batch of ['01', '02', '03', '04', '05']) {
@@ -48,7 +48,7 @@ describe('compiled presentation media', () => {
     try {
       const result = spawnSync('node', ['scripts/check-recipe-media.mjs', '--all'], { encoding: 'utf8' });
       expect(result.status).toBe(1);
-      expect(result.stderr).toContain('Physical PNG set');
+      expect(result.stderr.trim()).toContain('Physical PNG set');
     } finally { unlinkSync(extra); }
   });
   it('rejects mismatched hash, ratio, path, missing identity and unreviewed provenance', () => {

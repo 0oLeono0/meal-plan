@@ -25,6 +25,12 @@ function projected(price = '0.005', budget = '500', secondPrice = price) {
   return result.projection;
 }
 describe('canonical Russian plan presentation', () => {
+  it('formats Russian variants and servings without throwing for supported cardinalities', () => {
+    // New public count kinds: buildable RED against the previous union, runtime assertions stay real.
+    expect(() => presentation.formatCount(1, 'variant' as 'day')).not.toThrow();
+    expect([1, 2, 5, 11, 21].map(count => presentation.formatCount(count, 'variant' as 'day'))).toEqual(['1 вариант', '2 варианта', '5 вариантов', '11 вариантов', '21 вариант']);
+    expect([1, 2, 5].map(count => presentation.formatCount(count, 'serving' as 'day'))).toEqual(['1 порция', '2 порции', '5 порций']);
+  });
   it('formats canonical kopecks with one currency symbol', () => {
     expect(presentation.formatCurrency(123456n)).toBe('1 234,56 ₽');
     expect(presentation.formatCurrency(-1n)).toBe('-0,01 ₽');

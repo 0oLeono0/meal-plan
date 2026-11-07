@@ -61,3 +61,61 @@ test('EC-18/21/25/26/27/30 actual dates slots per-portion facts allocation and r
   expect(await page.locator('.menu-days [data-instance-id]').evaluateAll(rows => rows.map(row => row.getAttribute('data-instance-id')))).toEqual(
     ['01', '02', '03'].flatMap(day => ['breakfast', 'lunch', 'dinner', 'snack'].map(slot => `synthetic-2026-10-${day}-${slot}`)));
 });
+
+test('EC-19/21/23 manual day tabs keep today separate and activate only on Enter or Space', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 812 });
+  await openSyntheticPlan(page, { days: 7 });
+  await page.clock.setFixedTime(new Date('2026-10-02T12:00:00'));
+  await page.evaluate(() => { history.pushState({}, '', '/menu?view=day'); window.dispatchEvent(new PopStateEvent('popstate')); });
+  const raw = await page.evaluate(key => localStorage.getItem(key), key);
+  const tabs = page.getByRole('tab');
+  await expect(tabs.nth(1)).toHaveAttribute('aria-current', 'date');
+  await expect(tabs.nth(1)).toHaveAttribute('aria-selected', 'true');
+  await tabs.nth(1).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(tabs.nth(2)).toBeFocused();
+  await expect(tabs.nth(1)).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('Enter');
+  await expect(tabs.nth(2)).toHaveAttribute('aria-selected', 'true');
+  await expect(tabs.nth(1)).toHaveAttribute('aria-current', 'date');
+  await page.keyboard.press('End');
+  await expect(tabs.last()).toBeFocused();
+  await page.keyboard.press('Home');
+  await expect(tabs.first()).toBeFocused();
+  await page.keyboard.press('Space');
+  await expect(tabs.first()).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('tabpanel')).toBeFocused();
+  const firstRect = (await tabs.first().boundingBox())!, fifthRect = (await tabs.nth(4).boundingBox())!;
+  expect(fifthRect.y).toBeGreaterThan(firstRect.y);
+  for (const width of [1280, 1279, 390]) {
+    await page.setViewportSize({ width, height: 812 });
+    await expect(tabs).toHaveCount(width === 1280 ? 0 : 7);
+    if (width !== 1280) await expect(tabs.first()).toHaveAttribute('aria-selected', 'true');
+  }
+  expect(await page.evaluate(key => localStorage.getItem(key), key)).toBe(raw);
+});
+
+test('EC-20/25 shopping action leaves final content and keyboard focus visible at all boundaries and short height', async ({ page }) => {
+  await page.goto('/menu');
+  await expect(page.getByRole('heading', { name: 'Меню пока нет', exact: true })).toBeVisible();
+  await openSyntheticPlan(page, { days: 1, long: true });
+  for (const width of [360, 390, 430, 768, 1199, 1200, 1279, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    const summary = page.locator('.menu-day-totals summary').last();
+    await summary.focus();
+    await expect(page.locator('.menu-shopping')).toBeVisible();
+    const rect = (await summary.boundingBox())!, action = (await page.locator('.menu-shopping').boundingBox())!;
+    expect(rect.y).toBeGreaterThanOrEqual(0);
+    expect(rect.y + rect.height).toBeLessThanOrEqual(action.y + 1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+    await page.keyboard.press('Tab');
+    await expect(page.locator('.menu-shopping a')).toBeFocused();
+    expect((await page.locator('.menu-shopping a').boundingBox())!.height).toBeGreaterThanOrEqual(48);
+  }
+  await page.setViewportSize({ width: 360, height: 400 });
+  await expect(page.locator('.menu-shopping')).toHaveCSS('position', 'static');
+  // Browser text zoom: rem doubles, content must reflow rather than be clipped.
+  await page.evaluate(() => document.documentElement.style.fontSize = '200%');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(360);
+});

@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 6
+open_count: 7
 waived_count: 0
 fixed_count: 16
-total_count: 22
-last_updated: 2026-11-05T12:45:28.268Z
+total_count: 23
+last_updated: 2026-11-07T10:08:59.058Z
 ---
 
 # Broken Windows Ledger
@@ -37,6 +37,7 @@ last_updated: 2026-11-05T12:45:28.268Z
 | 20 | 03 | deviation | src/features/generation/controller.ts |  | Resolved delayed timer deadline bypass, repeated identical pending start and null selection options; actual RED5 failures and GREEN75 focused tests | fixed |  | 2026-11-05T12:16:18.657Z | 2026-11-05T12:16:19.481Z |
 | 21 | 03 | lint-warning | src/app/App.tsx |  | Production build passes; primary chunk503.58kB exceeds Vite500kB warning threshold (gzip142.07kB); code splitting not required for plan03-03 | open |  | 2026-11-05T12:45:27.695Z |  |
 | 22 | 03 | stub | src/features/recipe/RecipePage.tsx |  | Intentional neutral recipe photo fallback; real52asset map belongs to dependent plans03-04 through03-09 and does not close MENU03 or REC01 photo scope | open |  | 2026-11-05T12:45:28.268Z |  |
+| 23 | 03 | unmet-truth | src/app/App.tsx | 226 | Pending generation cancellation does not restore generate-menu focus at360px on baseline50b2a30; retained failing test; repair and verify in03-11 recovery/a11y | open |  | 2026-11-07T10:08:59.058Z |  |
 
 ````json
 [
@@ -323,6 +324,19 @@ last_updated: 2026-11-05T12:45:28.268Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-11-05T12:45:28.268Z",
+    "resolved_at": null,
+    "milestone": "v1.0"
+  },
+  {
+    "id": 23,
+    "kind": "unmet-truth",
+    "phase": "03",
+    "file": "src/app/App.tsx",
+    "line": 226,
+    "description": "Pending generation cancellation does not restore generate-menu focus at360px on baseline50b2a30; retained failing test; repair and verify in03-11 recovery/a11y",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-11-07T10:08:59.058Z",
     "resolved_at": null,
     "milestone": "v1.0"
   }

@@ -59,8 +59,8 @@ Plan/task/wave и phase-unique threat IDs назначены конечными 
 |03-09-01|6|MENU-03, REC-01, DATA-04|T-03-13, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-05-01 --project=chromium --workers=1`|pending|
 |03-09-02|6|MENU-03, REC-01, DATA-04|T-03-13, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep full-media --project=chromium --workers=1`|pending|
 |03-09-03|6|MENU-03, REC-01, DATA-04|T-03-13, T-03-SC|`node scripts/check-recipe-media.mjs --all`|pending|
-|03-10-01|5|MENU-02, MENU-03, DATA-04, REC-01|T-03-14, T-03-15, T-03-SC|`npm run test:e2e -- e2e/phase03-presentation.spec.ts --project=chromium --workers=1`|pending|
-|03-10-02|5|MENU-02, MENU-03, DATA-04, REC-01|T-03-14, T-03-15, T-03-SC|`npm run test:unit -- --run src/domain/menuView.test.ts src/domain/presentation.test.ts`|pending|
+|03-10-01|5|MENU-02, MENU-03, DATA-04, REC-01|T-03-14, T-03-15, T-03-SC|`npm run test:e2e -- e2e/phase03-presentation.spec.ts --project=chromium --workers=1`|PASS affected5cases in final8/8;real7dates/images5widths;exactcontext/back;REDverified;QA plan10;media49/52pending03-09|
+|03-10-02|5|MENU-02, MENU-03, DATA-04, REC-01|T-03-14, T-03-15, T-03-SC|`npm run test:unit -- --run src/domain/menuView.test.ts src/domain/presentation.test.ts`|PASS26focused;full477/type/lint/build0;final8/8affectedflows;baselinecancel-focusopenWINDOWS23;8paths excluded notverified|
 |03-11-01|7|DATA-04, GEN-06, GEN-07, MENU-02, MENU-03, REC-01, REC-02, REC-04|T-03-16, T-03-17, T-03-SC|`npm run test:e2e -- e2e/phase03-recovery.spec.ts --project=chromium --workers=1`|pending|
 |03-11-02|7|DATA-04, GEN-06, GEN-07, MENU-02, MENU-03, REC-01, REC-02, REC-04|T-03-16, T-03-17, T-03-SC|`npm run test:e2e -- e2e/phase03-recipes.spec.ts --project=chromium --workers=1`|pending|
 |03-11-03|7|DATA-04, GEN-06, GEN-07, MENU-02, MENU-03, REC-01, REC-02, REC-04|T-03-16, T-03-17, T-03-SC|`npm run test:e2e -- e2e/phase03-presentation.spec.ts --workers=1`|pending|

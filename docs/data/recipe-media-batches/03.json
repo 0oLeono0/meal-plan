@@ -166,5 +166,47 @@
     "height": 1086,
     "bytes": 2499063,
     "sha256": "0d13ec808217b10e23c4b48473acc895ea034f884d3fe5c9098f11d90a1145d5"
+  },
+  {
+    "recipeId": "beet-flour-pancakes",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/beet-flour-pancakes.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b0ab-aa9d-78b2-a2b1-9031544ac14b/exec-33afc844-2d4e-4d6d-b756-8e789041eb4e.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan beet-flour-pancakes, Свекольные оладьи. Native PNG landscape exactly 4:3. Recipe two portions: beet300g, wheat flour160g, salt2g, water130ml. Scrub beet clean retaining edible skin, grate very finely. Mix all beet with flour, salt and130ml water. Spread batter into six THIN pancakes on DRY nonstick pan. Reduce heat, cover, bake7min then turn and bake7min until middle cooked. Divide equally into two portions: show exactly THREE thin beet-flour pancakes on one plain ceramic plate. Deep reddish purple cooked beet batter with fine shreds and modest dry-pan browned patches, flattened soft cooked centers, no oily crust. Neutral tabletop, soft daylight. Only listed ingredients. No egg, oil, butter, onion, garlic, cream, dairy, sour cream, herbs, garnish, sauce, toppings, side salad, text, brand, watermark. Generated culinary illustration, not actual cooked evidence.",
+    "generatedAt": "2026-11-06T11:51:59.331Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:52:34.032Z",
+      "notes": "Просмотрено: три тонких свекольно-мучных оладьи насыщенного красного цвета, мелкая свёкла и сухой румянец; без сметаны, зелени и других добавок."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2866446,
+    "sha256": "b171816c6240d13cdd3f9d1551d8aaa5c5c3367dda299ec0fb35a49fc0873cdf"
+  },
+  {
+    "recipeId": "buckwheat-potato-mash",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/buckwheat-potato-mash.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b0ab-aa9d-78b2-a2b1-9031544ac14b/exec-090445f7-6bcf-45bc-8acb-24da4fb5386f.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan buckwheat-potato-mash, Размятая гречка с картофелем. Native PNG landscape exactly 4:3. Recipe two portions: buckwheat120g, potato400g, salt3g, water520ml. Wash sound potatoes retaining edible skin and dice about1cm; sort and rinse buckwheat. Combine potato and grain in pan with salt and520ml water, cook covered on low23min. Mash PART of cooked potato with masher keeping whole buckwheat grains; mix with remaining liquid, serve two portions. Show one finished portion of rustic pale partly mashed potato with a few soft small potato pieces and flecks of skin, generously studded with distinct whole cooked brown buckwheat grains. Thick soft moist mash, NOT pure buckwheat and NOT smooth cream. Plain ceramic bowl, neutral tabletop, soft daylight. Only listed ingredients. No milk, cream, butter, oil, onion, carrot, herbs, green garnish, meat, sauce, toppings, text, logo, watermark. Generated culinary illustration, not actual cooked evidence.",
+    "generatedAt": "2026-11-06T11:52:44.110Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:53:20.788Z",
+      "notes": "Просмотрено: картофель размят частично, сохранены кусочки с кожицей и целые узнаваемые гречневые зёрна; густая влажная текстура без сливок, масла, зелени."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2364472,
+    "sha256": "02993b9dc4b845a205e68bc8e3bc6068171a4af86d573d7126b3fdf2af9bea13"
   }
 ]

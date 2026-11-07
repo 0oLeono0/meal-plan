@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { openSyntheticPlan } from './plan-fixtures';
+import legacyPlan from '../src/test/fixtures/phase02-active-plan-v1.json' with { type: 'json' };
 
 const key = 'mealplan:guest:active-plan:v1';
 
@@ -27,9 +28,42 @@ test('EC-23/24/28/29 real saved day card opens exact occurrence and returns to i
   await expect(page).toHaveURL(`/menu?view=day&day=${occurrence.date}`);
   await expect(link).toBeFocused();
   expect(await page.evaluate(key => localStorage.getItem(key), key)).toBe(raw);
+  await link.click();
+  await expect(page.locator('[data-instance-id]')).toHaveAttribute('data-instance-id', occurrence.id);
+  await page.goBack();
+  await expect(link).toBeFocused();
   await page.getByRole('button', { name: 'Следующий вариант', exact: true }).click();
   await expect(page.getByText('Вариант 2 из 3', { exact: true })).toBeVisible();
   await expect(page.getByRole('tab', { selected: true })).toHaveAttribute('data-day', occurrence.date);
+  await page.getByRole('button', { name: 'Вся неделя', exact: true }).click();
+  for (const width of [360, 390, 430, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.locator('.menu-days').scrollIntoViewIfNeeded();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+    await expect(page.locator('.menu-day')).toHaveCount(7);
+    const actualImage = (await page.locator('.menu-days img').first().boundingBox())!;
+    expect(actualImage.width / actualImage.height).toBeCloseTo(4 / 3, 1);
+    if (width === 1280) {
+      for (const slot of ['breakfast', 'lunch', 'dinner', 'snack']) {
+        const positions = await page.locator(`[data-slot="${slot}"]`).evaluateAll(rows => rows.map(row => row.getBoundingClientRect().y));
+        expect(Math.max(...positions) - Math.min(...positions)).toBeLessThanOrEqual(1);
+      }
+    }
+    await page.screenshot({ path: `.tmp/phase03-qa/03-10-${width}-menu.png` });
+  }
+});
+
+test('EC-27 failed compiled local image keeps four-to-three space and working recipe link', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route('**/recipes/**', route => route.abort());
+  await page.addInitScript(({ key, raw }) => localStorage.setItem(key, raw), { key, raw: JSON.stringify(legacyPlan) });
+  await page.goto('/menu?view=week');
+  const card = page.locator('[data-instance-id]').first();
+  await expect(card.getByRole('img', { name: 'Фото недоступно' })).toBeVisible();
+  const image = (await card.getByRole('img').boundingBox())!;
+  expect(image.width / image.height).toBeCloseTo(4 / 3, 1);
+  await card.getByRole('link').click();
+  await expect(page.locator('[data-instance-id]')).toHaveAttribute('data-instance-id', legacyPlan.plan.variants[0].instances[0].id);
 });
 
 test('EC-18/21/25/26/27/30 actual dates slots per-portion facts allocation and responsive grid', async ({ page }) => {

@@ -53,9 +53,9 @@ Plan/task/wave и phase-unique threat IDs назначены конечными 
 |03-07-01|5|MENU-03, REC-01|T-03-11, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-03-01 --project=chromium --workers=1`|PASS:2026-11-07 Chromium batch03 all3/3;scoped audit12;QA plan07|
 |03-07-02|5|MENU-03, REC-01|T-03-11, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-03-02 --project=chromium --workers=1`|PASS:2026-11-07 Chromium batch03 all3/3;scoped audit12;QA plan07|
 |03-07-03|5|MENU-03, REC-01|T-03-11, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-03-03 --project=chromium --workers=1`|PASS:2026-11-07 focused1/1;final Chromium batch03 all3/3;scoped audit4+12;unit465;QA plan07|
-|03-08-01|5|MENU-03, REC-01|T-03-12, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-04-01 --project=chromium --workers=1`|pending|
-|03-08-02|5|MENU-03, REC-01|T-03-12, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-04-02 --project=chromium --workers=1`|pending|
-|03-08-03|5|MENU-03, REC-01|T-03-12, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-04-03 --project=chromium --workers=1`|pending|
+|03-08-01|5|MENU-03, REC-01|T-03-12, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-04-01 --project=chromium --workers=1`|PASS:2026-11-07 focused1/1+tracer1/1;final batch04 Chromium3/3;scoped audit4+12;typecheck;QA plan08|
+|03-08-02|5|MENU-03, REC-01|T-03-12, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-04-02 --project=chromium --workers=1`|PASS:2026-11-07 focused1/1;final batch04 Chromium3/3;scoped audit4+12;typecheck;QA plan08|
+|03-08-03|5|MENU-03, REC-01|T-03-12, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-04-03 --project=chromium --workers=1`|PASS:2026-11-07 focused1/1;final batch04 Chromium3/3;scoped audit4+12;unit465;typecheck/lint/build;QA plan08|
 |03-09-01|6|MENU-03, REC-01, DATA-04|T-03-13, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-05-01 --project=chromium --workers=1`|pending|
 |03-09-02|6|MENU-03, REC-01, DATA-04|T-03-13, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep full-media --project=chromium --workers=1`|pending|
 |03-09-03|6|MENU-03, REC-01, DATA-04|T-03-13, T-03-SC|`node scripts/check-recipe-media.mjs --all`|pending|

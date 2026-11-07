@@ -1,0 +1,65 @@
+[
+  {
+    "recipeId": "beet-sweet-warm",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/beet-sweet-warm.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b593-08d2-7ae3-84f9-13f5e82a7ef0/exec-1a8c23bc-7ccb-47d7-901f-18c21e7b00d2.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan beet-sweet-warm, Свекольная стружка на пару в сотейнике. Native PNG landscape exactly4:3. Two portions: beet300g, sugar6g, water100ml. Scrub small beets with edible skin, grate on medium grater into a small saute pan. Add100ml water, cover tightly and braise on lowest heat18min, stirring once. Add sugar, warm another2min stirring into remaining liquid, cool slightly and divide ALL into two portions. Show ONE finished warm snack portion: soft medium-grated deep burgundy beet shreds, slightly moist with own sweet cooking juice, not cubes, salad or smooth puree. Plain small ceramic shallow bowl, neutral tabletop, soft daylight. ONLY beet, sugar and water. No carrot, cabbage, oil, butter, cream, cheese, nuts, herbs, seeds, pepper, sauce, toppings, garnish, text, logo or watermark. Generated culinary illustration, not evidence of actual cooking.",
+    "generatedAt": "2026-11-07T10:35:30.553Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T10:36:16.699Z",
+      "notes": "Просмотрен native output: мягкая бордовая свекольная стружка средней тёрки с небольшим количеством собственного сока, без посторонних ингредиентов и украшений."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2556466,
+    "sha256": "9f4e56806c315de283a5f339debbf55f0ed03728b072147d2a0cf93fbf6c037f"
+  },
+  {
+    "recipeId": "potato-cabbage-mash",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/potato-cabbage-mash.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b593-08d2-7ae3-84f9-13f5e82a7ef0/exec-f35b900b-63ec-4a7c-befb-90ed1eb74bf0.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan potato-cabbage-mash, Картофельное пюре с капустой. Native PNG landscape exactly4:3. Two portions: potato500g, cabbage250g, salt3g, water450ml. Wash healthy potatoes retaining edible skin and dice small. Wash cabbage, shred leaves and finely grate edible core. Boil potatoes and salt in450ml water12min, add cabbage and cook covered another12min. Mash potatoes together with cabbage and remaining broth using potato masher. Stir into uniform thick dish; divide two portions. Show ONE finished portion: thick rustic pale beige potato mash with small edible potato skin flecks and soft finely shredded pale cabbage integrated throughout; spoon-mashed somewhat textured, dense not soup; no separate big potato cubes. Plain ceramic plate, neutral table, soft daylight. ONLY potato, cabbage, salt, water. No milk, cream, butter, oil, egg, cheese, meat, onion, herbs, pepper, garnish, sauce, text, logo or watermark. Generated culinary illustration, not actual cooked-food evidence.",
+    "generatedAt": "2026-11-07T10:36:16.699Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T10:37:02.521Z",
+      "notes": "Просмотрен native output: густой размятый картофель с мелкими фрагментами съедобной кожицы и мягкой капустой, без молока, масла, зелени и соуса."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2223304,
+    "sha256": "89a3ea48fc7d55b43317342e1c3fcb3b02a7b09759b9be00ece4c92b5bb31dde"
+  },
+  {
+    "recipeId": "beet-tomato-rice",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/beet-tomato-rice.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b593-08d2-7ae3-84f9-13f5e82a7ef0/exec-3916298d-63d8-4251-afe8-6f1d193657c9.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan beet-tomato-rice, Рис со свёклой и томатами. Native PNG landscape exactly4:3. Two portions: rice140g, beet200g, tomato240g, salt3g, water400ml. Scrub beets retaining edible skin and grate finely. Rinse rice. Wash tomatoes and dice with skin. Combine rice and grated beet with salt and400ml water in saucepan; simmer covered15min. Stir in diced tomatoes and ALL their juice; cook another10min, rest3min off heat. Stir, divide all into two plates. Show ONE finished lunch portion: moist soft rice grains uniformly stained deep beet pink with fine cooked beet shreds, mixed with softened diced red tomatoes with skin. Cooked cohesive rice dish, not soup or raw salad. Plain shallow ceramic plate, neutral tabletop, soft daylight. ONLY listed ingredients. No onion, garlic, carrot, cabbage, herbs, peas, beans, cheese, meat, oil, butter, cream, pepper, spices, sauce, garnish, toppings, text, logo or watermark. Generated culinary illustration, not actual cooked-food evidence.",
+    "generatedAt": "2026-11-07T10:37:02.521Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T10:37:51.252Z",
+      "notes": "Просмотрен native output: мягкий розовый рис со свекольной стружкой и размягчёнными томатными кусочками с кожицей; без лишних продуктов, зелени и соуса."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2721186,
+    "sha256": "aa66dafc5f093bb6615ffc0c3bdf5492780dcc6532ff67d847f33a85b5c5207c"
+  }
+]

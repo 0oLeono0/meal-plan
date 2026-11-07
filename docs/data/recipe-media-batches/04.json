@@ -82,5 +82,89 @@
     "height": 1086,
     "bytes": 2335294,
     "sha256": "e116252d207f68d43b16b7b4288ca5dda1ac763c4de10621da491f95c51b70da"
+  },
+  {
+    "recipeId": "beet-carrot-raw-salad",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/beet-carrot-raw-salad.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b558-10b6-75b0-a0bb-12e8da4b83b9/exec-7b1356e2-76ea-4336-963d-19140d7178b1.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan beet-carrot-raw-salad, Тёртая свёкла с морковью. Native PNG landscape exactly4:3. Two portions: raw beet160g, carrot220g, sugar4g. Choose fresh small roots, scrub and dry retaining edible skins. Grate beet on finest grater and carrot on medium grater. Mix in bowl with all sugar, press and stir with spoon until juice appears. Rest5min, stir again, divide two portions. Show one finished portion of fine raw burgundy beet shreds intermingled with medium orange carrot shreds, lightly stained red and moist with their own juice, crisp uncooked salad texture. Plain ceramic small bowl, neutral table, soft daylight. Only listed ingredients. No cabbage, apple, raisins, walnuts, herbs, oil, mayonnaise, dairy, citrus, onion, garnish, toppings, text, logo or watermark. Generated culinary illustration, not actual food evidence.",
+    "generatedAt": "2026-11-07T09:34:54.791Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T09:35:36.018Z",
+      "notes": "Просмотрено: мелкая сырая свекольная стружка и более крупная морковная, окрашенные свекольным соком; без орехов, зелени и заправки."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2513162,
+    "sha256": "f593117ca231cf71d5d9d8832e4eebd5b2565381e31ea46d8983a2ba2ae200dd"
+  },
+  {
+    "recipeId": "carrot-sweet-ribbons",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/carrot-sweet-ribbons.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b558-10b6-75b0-a0bb-12e8da4b83b9/exec-2edbbb25-976c-48d8-bf38-b0613af7b3b3.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan carrot-sweet-ribbons, Морковная стружка с сахаром. Native PNG landscape exactly4:3. Two portions: fresh carrot320g, sugar8g. Scrub fresh carrots under running water, dry, keep edible skin. Grate into long thin shreds, put in bowl and sprinkle evenly with measured sugar. Stir with spoon1min, rest5min, stir again together with juice, divide two portions. Show one finished snack portion consisting solely of long fine orange raw carrot shreds, moistened with a little own sweet carrot juice and mostly dissolved sugar. Plain small ceramic bowl, neutral tabletop, soft daylight. Only carrot and sugar. No wide vegetable peeler ribbons, no cooked mash, no beet, apple, raisins, nuts, herbs, oil, lemon, dairy, cream, garnish, syrup, toppings, text, logo, watermark. Generated culinary illustration, not actual cooked-food evidence.",
+    "generatedAt": "2026-11-07T09:35:44.517Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T09:36:14.653Z",
+      "notes": "Просмотрено: только длинная тонкая сырая морковная стружка, влажная от собственного сока; без широких лент, орехов, зелени или сиропа."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2120931,
+    "sha256": "bc80d1abe5b4523c19396eba5b1b8e9849dabb085d442617ced81b34981cab60"
+  },
+  {
+    "recipeId": "cabbage-beet-salad",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/cabbage-beet-salad.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b558-10b6-75b0-a0bb-12e8da4b83b9/exec-21998517-4318-4c47-8726-15f337d282d9.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan cabbage-beet-salad, Салат из капусты и сырой свёклы. Native PNG landscape exactly4:3. Two portions: cabbage260g, raw beet140g, salt1g. Wash cabbage, shred leaves as thinly as possible and finely grate edible core. Salt cabbage and massage1min. Scrub beet retaining edible skin and finely grate. Add beet and its juice to cabbage, mix until evenly colored, rest5min to soften, divide all into two portions. Show one finished portion: very fine crisp cabbage ribbons uniformly stained pink-burgundy and mixed with fine raw beet shreds, slightly juicy raw salad. Plain ceramic bowl, neutral table, soft daylight. Only cabbage, beet and salt. No carrot, tomato, onion, apple, oil, mayonnaise, vinegar, dairy, nuts, seeds, herbs, garnish, sauce, toppings, text, logo, watermark. Generated culinary illustration, not actual cooked-food evidence.",
+    "generatedAt": "2026-11-07T09:36:23.566Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T09:36:53.601Z",
+      "notes": "Просмотрено: тонкие капустные полоски равномерно розово окрашены свекольным соком, смешаны с мелкой сырой свёклой; без моркови, зелени и заправки."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2410008,
+    "sha256": "8ebf18c64f3e7351b92ec8e9c178a9169cbab1f2d2a8020951ea6a8f53bbd20a"
+  },
+  {
+    "recipeId": "tomato-carrot-cabbage-salad",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/tomato-carrot-cabbage-salad.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b558-10b6-75b0-a0bb-12e8da4b83b9/exec-1a8717a3-b5fe-4348-b444-97b1619f919e.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan tomato-carrot-cabbage-salad, Трёховощной салат. Native PNG landscape exactly4:3. Two portions: tomato180g, carrot100g, cabbage180g, salt1g. Wash vegetables. Thinly slice cabbage leaves, finely grate edible core; grate carrots on medium grater retaining washed edible skin. Combine cabbage and carrot with salt and lightly massage. Cut tomatoes into small wedges retaining skin. Gently mix tomatoes and all their juice into salad, rest3min, stir carefully and divide two plates. Show one finished portion: fine pale crisp cabbage ribbons, medium orange carrot shreds, fresh small red tomato wedges in own juices. Plain ceramic plate, neutral table, soft daylight. Only listed ingredients. No cucumber, onion, oil, vinegar, mayonnaise, lemon, herbs, garnish, nuts, seeds, meat, cheese, dressing, toppings, text, logo, watermark. Generated culinary illustration, not actual cooked-food evidence.",
+    "generatedAt": "2026-11-07T09:37:01.880Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T09:37:34.436Z",
+      "notes": "Просмотрено: тонкая капуста, средне натёртая морковь и мелкие томатные дольки в собственном соке; без огурцов, зелени и заправки."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2284134,
+    "sha256": "7ff1685e32e452053982b1de6f71891df3f8650be52699c715de272c0740c61c"
   }
 ]

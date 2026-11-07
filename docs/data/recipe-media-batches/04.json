@@ -166,5 +166,89 @@
     "height": 1086,
     "bytes": 2284134,
     "sha256": "7ff1685e32e452053982b1de6f71891df3f8650be52699c715de272c0740c61c"
+  },
+  {
+    "recipeId": "carrot-semolina-pudding",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/carrot-semolina-pudding.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b558-10b6-75b0-a0bb-12e8da4b83b9/exec-21d76c30-95a2-4843-8f99-bec8036d502d.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan carrot-semolina-pudding, Густой морковно-манный перекус. Native PNG landscape exactly4:3. Two portions: carrot160g, semolina60g, sugar10g, water300ml. Wash carrots retaining edible skin and grate very finely. Cook covered in300ml water8min until soft. Add sugar, slowly pour in semolina while continuously stirring, cook low heat5min. Divide thick mixture into two small bowls, rest5min before serving. Show one finished portion in one small plain ceramic bowl: thick soft spoonable pale-orange semolina pudding with very fine visible carrot flecks, water-based dense cooked porridge, not a molded cake, no crust, no sauce. Neutral table, soft daylight. Only listed ingredients. No milk, cream, butter, egg, oil, cinnamon, raisins, nuts, berries, herbs, syrup, garnish, toppings, text, logo or watermark. Generated culinary illustration, not actual cooked-food evidence.",
+    "generatedAt": "2026-11-07T09:38:14.626Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T09:38:46.859Z",
+      "notes": "Просмотрено: густая мягкая манная масса с очень мелкой морковной стружкой, без корки, формы выпечки и неучтённых добавок."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2412366,
+    "sha256": "0176b959d28a233d1d45d2d14f6f2863f584d95fef85c8bb677a67534ea45333"
+  },
+  {
+    "recipeId": "rice-sweet-snack",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/rice-sweet-snack.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b558-10b6-75b0-a0bb-12e8da4b83b9/exec-6de49357-6710-467d-9098-c7220b6dcffb.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan rice-sweet-snack, Рисовый крем на воде. Native PNG landscape exactly4:3. Two portions: rice90g, sugar18g, water500ml. Rinse rice, bring to boil with500ml water, cover and cook on very low heat23min. When rice is very soft add sugar and mash with potato masher directly with remaining liquid into thick creamy mass. Heat2min stirring, divide into two bowls, cool to warm and serve all. Show one finished small snack portion: off-white thick water-based mashed rice cream with softly crushed grains and a gently swirled spoonable surface, no distinct separate rice grains as the main texture, no liquid soup. Plain small ceramic bowl, neutral tabletop, soft daylight. Only rice, sugar, water. No milk, cream, butter, cinnamon, cocoa, nuts, berries, raisins, mint, syrup, garnish, toppings, text, logo or watermark. Generated culinary illustration, not actual cooked-food evidence.",
+    "generatedAt": "2026-11-07T09:38:56.001Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T09:39:21.546Z",
+      "notes": "Просмотрено: густой светлый рисовый крем с размятыми мягкими крупинками и ложечными бороздками, без отдельных рассыпчатых зёрен, молока и топпингов."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2017432,
+    "sha256": "af8f19c032aa72897f0eeec6a0f3fbcf0f81e712648608d0185d78cd40330509"
+  },
+  {
+    "recipeId": "semolina-small-flatbread",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/semolina-small-flatbread.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b558-10b6-75b0-a0bb-12e8da4b83b9/exec-38c3ddaf-6998-4aee-8654-a3b2858bf084.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan semolina-small-flatbread, Манные лепёшки к перекусу. Native PNG landscape exactly4:3. Two portions: semolina90g, flour70g, sugar8g, salt1g, warm water150ml. Mix dry ingredients, stir in warm water, let semolina swell7min. Heat a dry nonstick pan on medium heat. Spoon entire batter into four thin small flatbreads. Cook covered5min each side until centers cooked. Divide into two portions of exactly TWO flatbreads, serve warm. Show one portion: exactly two thin small round rustic semolina-and-flour flatbreads on a plain ceramic plate, pale cream surfaces with subtle golden dry-pan brown patches, fine grain texture and soft edges. No fried oil sheen or thick fluffy pancake stack. Neutral tabletop, soft daylight. Only listed ingredients. No milk, egg, butter, oil, yeast, herbs, seeds, berries, fruit, jam, honey, syrup, powdered sugar dusting, sauce, garnish, toppings, text, logo, watermark. Generated culinary illustration, not actual cooked-food evidence.",
+    "generatedAt": "2026-11-07T09:39:32.006Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T09:40:01.155Z",
+      "notes": "Просмотрено: ровно две тонкие манно-мучные лепёшки с мелкозернистой поверхностью и сухими золотистыми пятнами, без масла, пудры и топпингов."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2745066,
+    "sha256": "f0151ed43e5621aa2ad1e099b295731f0c67ba91daaf03d44b46274c2ef35a1d"
+  },
+  {
+    "recipeId": "warm-tomato-carrot",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/warm-tomato-carrot.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b558-10b6-75b0-a0bb-12e8da4b83b9/exec-556eb777-fb92-4543-b04e-34a65b8bd4fb.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan warm-tomato-carrot, Тёплые томаты с морковью. Native PNG landscape exactly4:3. Two portions: tomato300g, carrot180g, salt1g, water80ml. Wash vegetables. Cut carrots with edible skin into very thin short strips; cut tomatoes with skin into small cubes. Put carrots in small saute pan with80ml water and salt, braise covered8min on low heat. Add tomatoes with their juice, stir and warm5min keeping pieces intact. Transfer entire contents into two small plates. Show one finished warm snack portion: softened very thin short orange carrot strips mixed with gently warmed small red tomato cubes with skins, still recognizable separate pieces, a little natural cooking juice, not soup or puree. Plain small ceramic shallow plate, neutral table, soft daylight. Only listed ingredients. No onion, garlic, cabbage, oil, butter, dairy, meat, herbs, garnish, spices, sauce, toppings, text, logo or watermark. Generated culinary illustration, not actual cooked-food evidence.",
+    "generatedAt": "2026-11-07T09:40:10.071Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T09:40:47.726Z",
+      "notes": "Просмотрено: мягкие тонкие короткие морковные полоски и прогретые томатные кусочки с кожицей в небольшом количестве сока; форма кусочков сохранена, нет зелени, масла и лишних продуктов."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2286365,
+    "sha256": "3924d7adbd69ea6d595cbc492c5e278ab1ec579313b05e1827cfa2bf8bac6c43"
   }
 ]

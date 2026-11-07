@@ -9,6 +9,12 @@ export const expectedIds = JSON.parse(source.match(/recipeMediaIds = (\[[\s\S]*?
 const version = source.match(/mediaCatalogVersion = '([^']+)'/)[1];
 export function auditMedia(rows, ids) {
   if (!Array.isArray(rows) || !Array.isArray(ids) || !ids.length || new Set(ids).size !== ids.length) throw Error('Invalid requested IDs/ledger');
+  const full = ids.length === expectedIds.length && expectedIds.every(id => ids.includes(id));
+  if (full) {
+    const physical = fs.readdirSync(path.join(root, 'public/recipes'), { recursive: true }).filter(file => file.toLowerCase().endsWith('.png')).sort();
+    const expected = expectedIds.map(id => `${id}.png`).sort();
+    if (physical.length !== expected.length || physical.some((file, i) => file !== expected[i])) throw Error('Physical PNG set must match exactly 52 recipe IDs');
+  }
   const hashes = new Set();
   for (const id of ids) {
     if (!expectedIds.includes(id)) throw Error(`Unexpected ID: ${id}`);
@@ -29,7 +35,7 @@ export function auditMedia(rows, ids) {
     if (hash !== row.sha256 || hashes.has(hash) || (row.bytes !== undefined && row.bytes !== png.length)) throw Error(`Hash/duplicate/size mismatch: ${id}`);
     hashes.add(hash);
   }
-  return { checked: ids.length, full: ids.length === 52 && expectedIds.every(id => ids.includes(id)) };
+  return { checked: ids.length, full };
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {

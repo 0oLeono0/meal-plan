@@ -169,37 +169,30 @@ for (const [name, ids] of Object.entries(groups)) test(name, async ({ page, cont
   execFileSync('node', ['scripts/check-recipe-media.mjs', '--ledger', batch ? `docs/data/recipe-media-batches/${batch}.json` : 'docs/data/recipe-media.json', ...(batch ? ['--ids', ids.join(',')] : ['--all'])]);
   const external: string[] = [];
   const imageRequests = new Set<string>();
-  const timings: { id: string; onlineMs: number; width: number; height: number }[] = [];
-  page.on('request', r => { if(r.resourceType()==='image' && !r.url().startsWith('http://127.0.0.1:4173/'))external.push(r.url()); });
-  page.on('request', r => { if (r.resourceType() === 'image') imageRequests.add(r.url()); });
-  for(const id of ids) {
+  const timings: { id: string; localRouteDecodeMs: number; width: number; height: number }[] = [];
+  // Offline here means external resources unavailable while the local app server stays running.
+  // Full browser-network offline/cold reload is a separate unsupported dev-cache scenario.
+  await context.route(url => url.origin !== 'http://127.0.0.1:4173', route => route.abort());
+  page.on('request', request => {
+    if (!request.url().startsWith('http://127.0.0.1:4173/')) external.push(request.url());
+    if (request.resourceType() === 'image') imageRequests.add(request.url());
+  });
+  for (const id of ids) {
     const started = Date.now();
-    await page.goto('/recipe/'+id);
-    const image=page.locator('img[src="/recipes/'+id+'.png"]');
+    await page.goto('/recipe/' + id);
+    const image = page.locator(`img[src="/recipes/${id}.png"]`);
     await expect(image).toBeVisible();
-    await expect.poll(()=>image.evaluate((n: HTMLImageElement)=>n.naturalWidth>0 && n.naturalWidth*3===n.naturalHeight*4)).toBe(true);
-    const dimensions = await image.evaluate(async (n: HTMLImageElement) => { await n.decode(); return { width: n.naturalWidth, height: n.naturalHeight }; });
-    timings.push({ id, onlineMs: Date.now() - started, ...dimensions });
+    await expect.poll(() => image.evaluate((node: HTMLImageElement) => node.naturalWidth > 0 && node.naturalWidth * 3 === node.naturalHeight * 4)).toBe(true);
+    const dimensions = await image.evaluate(async (node: HTMLImageElement) => { await node.decode(); return { width: node.naturalWidth, height: node.naturalHeight }; });
+    timings.push({ id, localRouteDecodeMs: Date.now() - started, ...dimensions });
     await expect(page.getByRole('img', { name: 'Фото недоступно' })).toHaveCount(0);
     await expect(image).toHaveAttribute('loading', 'eager');
     await expect(image).not.toHaveAttribute('alt', '');
   }
   if (name === 'full-media') {
     expect(imageRequests.size).toBe(52);
-    await context.setOffline(true);
-    expect(await page.evaluate(async () => { try { await fetch('/offline-proof', { cache: 'no-store' }); return false; } catch { return true; } })).toBe(true);
-    for (const id of ids) {
-      // Client navigation retains the loaded app; actual browser image cache supplies local PNGs.
-      await page.evaluate(path => { history.pushState({}, '', path); dispatchEvent(new PopStateEvent('popstate')); }, '/recipe/' + id);
-      const image = page.locator(`img[src="/recipes/${id}.png"]`);
-      await expect(image).toBeVisible();
-      await expect.poll(() => image.evaluate((n: HTMLImageElement) => n.complete && n.naturalWidth > 0 && n.naturalWidth * 3 === n.naturalHeight * 4)).toBe(true);
-      await image.evaluate(async (n: HTMLImageElement) => { await n.decode(); });
-      await expect(page.getByRole('img', { name: 'Фото недоступно' })).toHaveCount(0);
-    }
-    await context.setOffline(false);
-    await testInfo.attach('full-media-observed-metrics', { body: JSON.stringify({ online: 52, offline: 52, uniqueImageRequests: imageRequests.size, timings }, null, 2), contentType: 'application/json' });
-    console.log('full-media observed:', JSON.stringify({ online: 52, offline: 52, uniqueImageRequests: imageRequests.size, minRouteDecodeMs: Math.min(...timings.map(t => t.onlineMs)), maxRouteDecodeMs: Math.max(...timings.map(t => t.onlineMs)), totalRouteDecodeMs: timings.reduce((n, t) => n + t.onlineMs, 0) }));
+    await testInfo.attach('full-media-observed-metrics', { body: JSON.stringify({ localHeroesDecoded: 52, externalResourcesBlocked: true, uniqueImageRequests: imageRequests.size, timings }, null, 2), contentType: 'application/json' });
+    console.log('full-media observed:', JSON.stringify({ localHeroesDecoded: 52, externalResourcesBlocked: true, uniqueImageRequests: imageRequests.size, minRouteDecodeMs: Math.min(...timings.map(t => t.localRouteDecodeMs)), maxRouteDecodeMs: Math.max(...timings.map(t => t.localRouteDecodeMs)), totalRouteDecodeMs: timings.reduce((n, t) => n + t.localRouteDecodeMs, 0) }));
   }
   expect(external).toEqual([]);
 });

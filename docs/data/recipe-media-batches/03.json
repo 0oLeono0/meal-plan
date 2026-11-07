@@ -208,5 +208,47 @@
     "height": 1086,
     "bytes": 2364472,
     "sha256": "02993b9dc4b845a205e68bc8e3bc6068171a4af86d573d7126b3fdf2af9bea13"
+  },
+  {
+    "recipeId": "rice-carrot-dinner",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/rice-carrot-dinner.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b551-7054-73a3-bf1f-5a60649bc5d8/exec-5044b25f-0678-401e-a345-a4c23d6c5667.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan rice-carrot-dinner, Рис с морковными полосками. Create native PNG landscape exactly 4:3. Recipe for two portions: rice180g, carrot300g, salt3g, water480ml. Wash carrots retaining edible skin, cut into thin SHORT matchstick strips. Rinse rice and drain in sieve. Place carrots, rice and salt in saucepan, add480ml boiling water. Cook covered on lowest heat22minutes. Turn off and leave covered3minutes. Gently fluff rice together with carrot using fork and divide equally. Show ONE finished portion: fluffy cooked white rice mixed throughout with plentiful soft thin short orange carrot matchsticks, distinct moist grains, no broth. Plain neutral ceramic plate, neutral tabletop, soft daylight, centered three-quarter overhead food view. Only the listed ingredients. No oil, butter, onion, peas, herbs, green garnish, pepper, spices, sauce, toppings, side vegetables, text, brand or watermark. Generated culinary illustration, not evidence of an actual cooked meal.",
+    "generatedAt": "2026-11-07T09:23:40.359Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T09:24:13.321Z",
+      "notes": "Просмотрен native output: одна порция белого риса с короткой тонкой морковной соломкой, различимые влажные зёрна, без бульона, зелени и посторонних добавок."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2399062,
+    "sha256": "79a48559a068ae0b94a427ebae50ebe8cdef473b460ff8fcc02b25ef08958f3d"
+  },
+  {
+    "recipeId": "millet-tomato-dinner",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/millet-tomato-dinner.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b551-7054-73a3-bf1f-5a60649bc5d8/exec-ca9623f5-51d7-4a37-a8e8-f755f0fbff0d.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan millet-tomato-dinner, Пшено с томатами. Create native PNG landscape exactly 4:3. Recipe two portions: millet160g, tomato350g, salt3g, water420ml. Rinse millet and scald with boiling water then drain. Wash tomatoes and chop into small pieces retaining skins. Cook millet with salt in420ml water covered over low heat15minutes. Stir in tomatoes with all their juice. Cook another10minutes, stirring from bottom as needed. Rest3minutes and divide equally between two plates. Show ONE finished portion: soft moist cooked golden-yellow millet with many small softened red tomato pieces and bits of tomato skin mixed throughout, some warm reddish tomato juices absorbed into grains. Recognizable very small round millet grains, thick cohesive but grainy texture, no standing broth. Plain neutral ceramic shallow bowl, neutral tabletop, soft daylight, centered three-quarter overhead food view. Only listed ingredients. No rice, couscous, quinoa, butter, oil, onion, garlic, herbs, green garnish, cheese, cream, pepper, spices, sauce, toppings, side salad, text, logo or watermark. Generated culinary illustration, not evidence of an actual cooked meal.",
+    "generatedAt": "2026-11-07T09:24:33.829Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T09:25:15.314Z",
+      "notes": "Просмотрен native output: одна порция мягкого пшена с мелкими круглыми зёрнами и размягчёнными томатами с кожицей; густая влажная текстура, без бульона, зелени и иных добавок."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2531671,
+    "sha256": "02ad96cb09c4a7007879f88ecf67f999e596ecd4024d5b653fe2eb6c486ad82e"
   }
 ]

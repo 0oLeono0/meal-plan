@@ -50,8 +50,21 @@ function MenuDays({ projection, catalogVersion, selected, onChange, days, today 
   const desktop = useSyncExternalStore(subscribeDesktop, () => window.matchMedia(desktopQuery).matches);
   const grid = useRef<HTMLDivElement>(null);
   const tabs = useRef<HTMLDivElement>(null);
+  const pointerFocus = useRef(false);
   const [focusedDay, setFocusedDay] = useState<string | null>(null);
   const dayMode = !desktop && selected.mode === 'day';
+  useEffect(() => {
+    // Safari can focus the containing tabpanel on pointerdown. Scrolling it
+    // then moves the card before pointerup and cancels the native link click.
+    const pointer = () => { pointerFocus.current = true; };
+    const keyboard = () => { pointerFocus.current = false; };
+    document.addEventListener('pointerdown', pointer, true);
+    document.addEventListener('keydown', keyboard, true);
+    return () => {
+      document.removeEventListener('pointerdown', pointer, true);
+      document.removeEventListener('keydown', keyboard, true);
+    };
+  }, []);
   useLayoutEffect(() => {
     const main = grid.current?.closest('main');
     main?.classList.add('menu-main');
@@ -104,7 +117,7 @@ function MenuDays({ projection, catalogVersion, selected, onChange, days, today 
     <p className="hint">Ккал и стоимость — на одну порцию. Цена ингредиентов до вычета запасов</p>
     <p className="hint">Фотоиллюстрация создана с помощью ИИ; внешний вид блюда может отличаться. Изображение не является источником КБЖУ</p>
     <div className="menu-days" ref={grid} style={{ '--day-count': days.length } as CSSProperties}>
-      {days.map(day => <section className="card menu-day" key={day.dateOnly} id={`day-panel-${day.dateOnly}`} data-date={day.dateOnly} hidden={dayMode && selected.day !== day.dateOnly} role={dayMode ? 'tabpanel' : undefined} aria-labelledby={dayMode ? `day-tab-${day.dateOnly}` : `day-title-${day.dateOnly}`} tabIndex={dayMode && selected.day === day.dateOnly ? 0 : undefined} onFocus={event => { if (event.target === event.currentTarget) event.currentTarget.scrollIntoView({ block: 'start' }); }}>
+      {days.map(day => <section className="card menu-day" key={day.dateOnly} id={`day-panel-${day.dateOnly}`} data-date={day.dateOnly} hidden={dayMode && selected.day !== day.dateOnly} role={dayMode ? 'tabpanel' : undefined} aria-labelledby={dayMode ? `day-tab-${day.dateOnly}` : `day-title-${day.dateOnly}`} tabIndex={dayMode && selected.day === day.dateOnly ? 0 : undefined} onFocus={event => { if (event.target === event.currentTarget && !pointerFocus.current) event.currentTarget.scrollIntoView({ block: 'start' }); }}>
         <header><h2 id={`day-title-${day.dateOnly}`} className="menu-day-title">{day.date}{day.dateOnly === today ? ' · Сегодня' : ''}</h2></header>
         {projection.instances.filter(row => row.instance.date === day.dateOnly).map((row, index) => <MealCard key={row.instance.id} row={row} catalogVersion={catalogVersion} variantId={projection.variantId} view={selected} priority={index === 0 && (desktop ? day.dateOnly === days[0]?.dateOnly : day.dateOnly === selected.day)} onOpen={() => { recipeOrigin = { variantId: projection.variantId, instanceId: row.instance.id }; }} />)}
         <div className="menu-day-totals"><h3>На человека за день</h3><NutritionSummary values={day.personNutrition} target={day.targetComparison} /><p>{day.costBasis}: {day.ingredientCost}</p><details><summary className="min-h-[44px] py-2">КБЖУ семьи за день</summary><NutritionSummary values={day.familyNutrition} /></details></div>

@@ -35,7 +35,7 @@ export function RecipePage({ snapshot, catalog, onRetry }: { snapshot: Generatio
   </section>;
   return <section className="plan-read-model [overflow-wrap:anywhere] max-w-[960px] mx-auto" data-instance-id={view.instance?.id}>
     <Link className="action-link" to={view.returnTo}>К меню</Link>
-    <div className="grid md:grid-cols-2 gap-6 items-start">
+    <div className="recipe-hero grid md:grid-cols-2 gap-6 items-start">
     <RecipeImage catalogVersion={view.catalogVersion} recipeId={view.recipe.id} name={view.recipe.name} priority />
     <header className="min-w-0">
     <h1 ref={heading} tabIndex={-1}>{view.recipe.name}</h1>

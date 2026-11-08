@@ -87,7 +87,10 @@ for (const action of ['cancel', 'navigate'] as const) test(`inline append ${acti
   await mountGeneration(page, { route: '/menu', deferGeneration: true });
   await page.getByRole('button', { name: 'Пересобрать', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Ищем новый вариант…' })).toHaveCount(1);
-  if (action === 'cancel') await page.getByRole('button', { name: 'Отменить подбор', exact: true }).click();
+  if (action === 'cancel') {
+    await page.getByRole('button', { name: 'Отменить подбор', exact: true }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Подбор отменён. Прежнее меню не изменено' })).toHaveCount(1);
+  }
   else await page.getByRole('navigation').getByRole('link', { name: 'Покупки', exact: true }).click();
   await release(page, 'generation-1');
   await expect(page).toHaveURL(action === 'cancel' ? '/menu' : '/shopping');

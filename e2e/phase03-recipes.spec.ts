@@ -101,6 +101,9 @@ test('catalog adapter failure retries with real pending feedback and a late read
   expect((await retry.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await retry.click();
   await expect(page.getByRole('status', { name: '', exact: true }).filter({ hasText: 'Загружаем рецепт…' })).toBeVisible();
+  const loading = page.locator('[aria-busy="true"]').filter({ hasText: 'Загружаем рецепт…' });
+  await expect(loading.locator('[data-loading-skeleton]')).toHaveAttribute('aria-hidden', 'true');
+  await expect(loading.getByRole('status')).toHaveCount(1);
   // Navigate while the real adapter read is still pending, then deliver its late result.
   await page.getByRole('link', { name: 'Новое меню', exact: false }).click();
   await expect(page.getByLabel('Число людей', { exact: true })).toBeVisible();
@@ -113,6 +116,34 @@ test('catalog adapter failure retries with real pending feedback and a late read
     window.dispatchEvent(new PopStateEvent('popstate'));
   });
   await expect(page.getByText(/^Исходный рецепт ·/)).toBeVisible();
+});
+
+test('real Tab Enter and Space open composition and return focus to the exact day card', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openSyntheticPlan(page, { days: 3 });
+  const link = page.locator('[data-instance-id="synthetic-2026-10-01-breakfast"]').getByRole('link');
+  for (let n = 0; n < 40 && !await link.evaluate(node => node === document.activeElement); n++) await page.keyboard.press('Tab');
+  await expect(link).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
+  const summary = page.getByText('Состав — КБЖУ каждого ингредиента на одну порцию', { exact: true });
+  await page.keyboard.press('Tab');
+  await expect(summary).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(summary.locator('..')).toHaveAttribute('open', '');
+  await expect(summary.locator('..').locator('dt')).toHaveText(['Калории', 'Белки', 'Жиры', 'Углеводы']);
+  await page.keyboard.press('Space');
+  await expect(summary.locator('..')).not.toHaveAttribute('open');
+  await expect(summary).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(page.getByRole('link', { name: 'К меню', exact: true })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL('/menu?view=day&day=2026-10-01');
+  await expect(link).toBeFocused();
+  const box = (await link.boundingBox())!;
+  const bar = (await page.locator('.menu-shopping').boundingBox())!;
+  expect(box.y).toBeGreaterThanOrEqual(0);
+  expect(box.y + box.height).toBeLessThanOrEqual(bar.y);
 });
 
 test('direct known recipe has base servings while unknown and invalid contexts have distinct recovery', async ({ page }) => {

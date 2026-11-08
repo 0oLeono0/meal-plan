@@ -189,6 +189,7 @@ body { margin: 0; min-width: 0; }
 
 /* Saved menu: semantic date-first DOM, independent menu/nav breakpoints. */
 .recipe-hero > figure { margin: 0; }
+.recipe-hero img { height: auto; }
 .menu-mode { display: flex; gap: var(--space-sm); margin: var(--space-md) 0; }
 .menu-mode button { flex: 1; }
 .app-shell [aria-pressed=true], .app-shell [role=tab][aria-selected=true] { background: var(--color-selected); color: var(--color-accent); }

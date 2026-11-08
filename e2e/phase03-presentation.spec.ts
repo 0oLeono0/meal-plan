@@ -5,6 +5,21 @@ import { mountGeneration } from './generation-fixtures';
 
 const key = 'mealplan:guest:active-plan:v1';
 
+test('EC-42 actual local recipe hero preserves four-to-three geometry at mobile tablet and desktop', async ({ page }) => {
+  await page.goto('/recipe/rice-sweet-porridge');
+  await expect(page.getByRole('heading', { name: 'Рисовая каша на воде', exact: true })).toBeVisible();
+  const image = page.locator('main figure img');
+  await expect.poll(() => image.evaluate(node => (node as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+  for (const width of [360, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    const box = (await image.boundingBox())!;
+    expect(box.width / box.height).toBeCloseTo(4 / 3, 1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+    await image.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `.tmp/phase03-qa/03-11-actual-hero-${width}.png` });
+  }
+});
+
 test('EC-40 twelve alternatives wrap and native keyboard dialog trap returns its initiator at short height', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 400 });
   await page.emulateMedia({ reducedMotion: 'reduce' });

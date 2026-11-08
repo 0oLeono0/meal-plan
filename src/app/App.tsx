@@ -214,7 +214,7 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
   const [launchErrors, setLaunchErrors] = useState<ReturnType<typeof buildAppliedSettings> | null>(null);
   const [catalogError, setCatalogError] = useState(false);
   const [launchConfirmation, setLaunchConfirmation] = useState<{ settings: AppliedSettings; origin: { returnRoute: string; focusAnchor: string }; trigger: HTMLElement | null } | null>(null);
-  const returningFocus = useRef<string | null>(null);
+  const returningFocus = useRef<{ route: string; anchor: string } | null>(null);
   const previousRoute = useRef(pathname);
   const launch = useRef<{ settings: AppliedSettings; origin: { returnRoute: string; focusAnchor: string } } | null>(null);
   const catalogAttempt = useRef(0);
@@ -222,8 +222,10 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
     if ((previousRoute.current === '/plan/generating' && pathname !== '/plan/generating')
       || (previousRoute.current === '/menu' && pathname !== '/menu' && (operation.status === 'pending' || operation.status === 'saving'))) { catalogAttempt.current++; controller.cancel(); }
     previousRoute.current = pathname;
-    if (returningFocus.current) {
-      const anchor = returningFocus.current; returningFocus.current = null;
+    // Store notifications can commit before React Router's transition. Keep the
+    // origin until its destination exists, rather than consuming it on the old page.
+    if (returningFocus.current?.route === pathname) {
+      const { anchor } = returningFocus.current; returningFocus.current = null;
       requestAnimationFrame(() => (document.getElementById(anchor) ?? document.querySelector<HTMLElement>('h1'))?.focus());
     }
   }, [pathname, controller, operation.status]);
@@ -254,8 +256,10 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
   }
   function cancel() {
     const origin = operation.origin;
-    controller.cancel(); returningFocus.current = origin?.focusAnchor ?? 'wizard-title';
-    navigate(origin?.returnRoute ?? '/plan/new');
+    const route = origin?.returnRoute ?? '/plan/new';
+    returningFocus.current = { route, anchor: origin?.focusAnchor ?? 'wizard-title' };
+    controller.cancel();
+    navigate(route);
   }
   async function retryGeneration() {
     if (!catalogError) { await controller.retryGeneration(); return; }

@@ -307,6 +307,11 @@ test('phase02 sequential Tab ShiftTab and Enter traverse generation recovery', a
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL('/menu');
   await submitByTab('save-failure');
+  // The preceding successful retry installed a saved menu. Replacing it now
+  // requires the same explicit confirmation as every other wizard restart.
+  await expect(page.getByRole('dialog').getByRole('button', { name: 'Оставить варианты', exact: true })).toBeFocused();
+  await tab(page.getByRole('dialog').getByRole('button', { name: 'Составить меню', exact: true }));
+  await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Меню рассчитано, но не сохранено' })).toBeFocused();
   const retrySave = page.getByRole('button', { name: 'Повторить сохранение', exact: true });
   await tab(retrySave);

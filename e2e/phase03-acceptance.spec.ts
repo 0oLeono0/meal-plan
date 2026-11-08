@@ -78,6 +78,8 @@ test('real wizard → distinct variants → select → append ignores edited dra
   const started = Date.now();
   await page.getByRole('button', { name: 'Составить меню', exact: true }).click();
   await expect(page).toHaveURL(/\/menu$/, { timeout: 32_000 });
+  await expect(page.getByRole('status').filter({ hasText: 'Выбран вариант 1 из 3. Меню и список покупок обновлены' })).toBeVisible();
+  await expect(page.getByText('Подбор отменён. Прежнее меню не изменено', { exact: true })).toHaveCount(0);
   const initial = await saved(page), elapsed = Date.now() - started;
   expect(initial.inputs.catalog.foods).toHaveLength(12);
   expect(initial.inputs.catalog.recipes).toHaveLength(52);

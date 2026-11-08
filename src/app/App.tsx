@@ -199,7 +199,7 @@ export function App({ draftPort = guestDraft, planPresencePort, brand = appConfi
 
 function InitialLoadStatus() {
   const { pathname } = useLocation();
-  if (pathname.startsWith('/recipe')) return <Status>Загружаем рецепт…</Status>;
+  if (pathname.startsWith('/recipe')) return <PlanLoading kind="recipe" />;
   if (pathname === '/shopping' || pathname === '/menu') return <PlanLoading kind={pathname === '/menu' ? 'menu' : 'shopping'} />;
   return <Status>Восстанавливаем настройки…</Status>;
 }

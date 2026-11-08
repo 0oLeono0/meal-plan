@@ -7,7 +7,8 @@ import { projectRecipeView } from '../../domain/recipeView';
 import type { NutritionFact } from '../../domain/recipeView';
 import { formatCurrency, formatDateOnly, formatNutrition, formatQuantity } from '../../domain/presentation';
 import { formatExact, roundHalfUp } from '../../domain/quantities';
-import { Button, Status } from '../../shared/ui';
+import { Button } from '../../shared/ui';
+import { PlanLoading } from '../plan/PlanLoading';
 
 const notices = {
   error: ['Не удалось загрузить рецепт', 'Не удалось загрузить рецепт. Повторите загрузку или вернитесь к меню'],
@@ -26,7 +27,7 @@ export function RecipePage({ snapshot, catalog, onRetry }: { snapshot: Generatio
   const heading = useRef<HTMLHeadingElement>(null);
   const view = useMemo(() => projectRecipeView({ pathname, search, active: snapshot.active, loadStatus: snapshot.loadStatus, catalog }), [pathname, search, snapshot.active, snapshot.loadStatus, catalog]);
   useEffect(() => { heading.current?.focus(); }, [pathname, search, view.status]);
-  if (view.status === 'pending' || retrying) return <section aria-busy="true"><h1 ref={heading} tabIndex={-1}>Рецепт</h1><Status>Загружаем рецепт…</Status></section>;
+  if (view.status === 'pending' || retrying) return <PlanLoading kind="recipe" />;
   if (view.status !== 'direct' && view.status !== 'context') return <section className="[overflow-wrap:anywhere]">
     <h1 ref={heading} tabIndex={-1}>{notices[view.status][0]}</h1><p>{notices[view.status][1]}</p>
     {(view.status === 'error' || view.status === 'incomplete') && <Button disabled={retrying} onClick={() => { setRetrying(true); void onRetry(view.retry ?? 'catalog').catch(() => undefined).finally(() => setRetrying(false)); }}>Повторить загрузку</Button>}

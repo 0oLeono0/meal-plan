@@ -73,7 +73,7 @@ test('repeated recipe instances show full partial and no stock from the same sho
   expect(await page.evaluate(key => localStorage.getItem(key), key)).toBe(raw);
 });
 
-test('catalog adapter failure retries with real pending feedback and a late read cannot replace a new route', async ({ page }) => {
+for (const navigateAway of [true, false]) test(`catalog adapter failure retries with real pending feedback ${navigateAway ? 'and a late read cannot replace a new route' : 'and focuses acknowledged recipe'}`, async ({ page }) => {
   await page.goto('/plan/new');
   await expect(page.getByLabel('Число людей', { exact: true })).toBeVisible();
   await page.evaluate(async () => {
@@ -101,9 +101,16 @@ test('catalog adapter failure retries with real pending feedback and a late read
   expect((await retry.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await retry.click();
   await expect(page.getByRole('status', { name: '', exact: true }).filter({ hasText: 'Загружаем рецепт…' })).toBeVisible();
-  const loading = page.locator('[aria-busy="true"]').filter({ hasText: 'Загружаем рецепт…' });
-  await expect(loading.locator('[data-loading-skeleton]')).toHaveAttribute('aria-hidden', 'true');
-  await expect(loading.getByRole('status')).toHaveCount(1);
+  if (navigateAway) {
+    const loading = page.locator('[aria-busy="true"]').filter({ hasText: 'Загружаем рецепт…' });
+    await expect(loading.locator('[data-loading-skeleton]')).toHaveAttribute('aria-hidden', 'true');
+    await expect(loading.getByRole('status')).toHaveCount(1);
+  } else {
+    await page.evaluate(() => window.dispatchEvent(new Event('release-recipe-catalog')));
+    await expect(page.getByText(/^Исходный рецепт ·/)).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
+    return;
+  }
   // Navigate while the real adapter read is still pending, then deliver its late result.
   await page.getByRole('link', { name: 'Новое меню', exact: false }).click();
   await expect(page.getByLabel('Число людей', { exact: true })).toBeVisible();

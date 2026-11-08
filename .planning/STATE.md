@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: P0 MVP
 current_phase: 03
 current_phase_name: Сравнение вариантов и просмотр рецептов
-current_plan: 11
+current_plan: 12
 status: executing
-stopped_at: Completed03-09;Phase3 10/12plans;52/52currentmedia;next03-11;WINDOWS23focusopen;Phase03.1mandatorybefore4
-last_updated: "2026-11-07T10:51:55.984Z"
-last_activity: 2026-11-07
-last_activity_desc: Completed03-09;10/12plans;52/52currentmedia;unit478;Chromiumfull52+sample/group3;next03-11;focusopen
-state_head: 3720e7c21a6790e3bb9f5e083b93a66d2dd51efc
+stopped_at: Completed03-11;Phase3 11/12plans;WINDOWS23fixed;nativeWebKitTab24/25 and human26open;next03-12
+last_updated: "2026-11-08T06:51:24.950Z"
+last_activity: 2026-11-08
+last_activity_desc: Completed03-11;11/12plans;recovery24/24;seed15/15;recipes23/24;unit478;WINDOWS23fixed;nativeTab24/25andhuman26open;next03-12
+state_head: 22b9886b9800d1c1e7e7d99bd6003c6d8dae91d1
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 30
-  completed_plans: 28
+  completed_plans: 29
 ---
 
 # Project State
@@ -30,12 +30,12 @@ See: .planning/PROJECT.md (updated 2026-10-30)
 ## Current Position
 
 Phase: 03 (Сравнение вариантов и просмотр рецептов) — EXECUTING
-Current Plan: 11
+Current Plan: 12
 Total Plans in Phase: 12
 Status: Ready to execute
-Last activity: 2026-11-07 — Completed03-09;10/12plans;52/52currentmedia;unit478;Chromiumfull52+sample/group3;next03-11;focusopen
+Last activity: 2026-11-08 — Completed03-11;11/12plans;recovery24/24;seed15/15;recipes23/24;unit478;WINDOWS23fixed;nativeTab24/25andhuman26open;next03-12
 
-Progress: Phase1–2 приняты. Phase3:10/12 планов завершены;52/52 текущих изображений проверены;следующий03-11. WINDOWS23 cancellationfocus открыт. Всяфаза не принята;03.1 обязательна перед4.
+Progress: Phase1–2 приняты. Phase3:11/12 планов завершены;52/52 текущих изображений сохранены;следующий03-12. WINDOWS23 cancellationfocus закрыт; nativeWebKitTab24/25 и human26 остаются open. Вся фаза не принята;03.1 обязательна перед4. SDK state.update-progress выполнен и отказался менять prose из-за unscoped phase; эта строка синхронизирована вручную с11SUMMARY и29/30 metadata.
 
 ## Performance Metrics
 
@@ -85,6 +85,7 @@ Progress: Phase1–2 приняты. Phase3:10/12 планов завершен�
 | Phase 03 P08 | 12min observed; initial reads not timed | 3 tasks | 16 files |
 | Phase 03 P10 | 28min observed wall; initial reads untimed; interruption included | 2 tasks | 10 files |
 | Phase 03 P09 | 18min observed; initial reads not separately timed | 3 tasks | 17 files |
+| Phase 03 P11 | 1194min wall; active unknown; resumed27min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -118,6 +119,7 @@ Progress: Phase1–2 приняты. Phase3:10/12 планов завершен�
 - [Phase 03]: Exact source ingredients and final textures govern batch04 generation and visual acceptance;12new native images,total49/52,previous37preserved;shared requirements pending
 - [Phase 03]: Validated URL day/mode and exact instance projection drive semantic actual-date menu/cards;1280grid independent from1200nav;baseline cancellationfocus remains WINDOWS23 for03-11
 - [Phase 03]: Current52 actualPNG/provenance and noexternal52localhero decode verified; fullnetworkoffline no-cache unsupported; Phase03.1 requires separate catalog-aware gate
+- [Phase 03]: Route-bound cancellation focus and keyboard-only panel scroll preserve native pointer links; real quota recovery24/24, seed15/15, recipes23/24 with WindowsWebKitTab limitation; next03-12 and shared requirements Pending
 
 ### Pending Todos
 
@@ -145,6 +147,6 @@ Progress: Phase1–2 приняты. Phase3:10/12 планов завершен�
 
 ## Session Continuity
 
-Last session: 2026-11-07T10:51:39.715Z
-Stopped at: Completed03-09;Phase3 10/12plans;52/52currentmedia;next03-11;WINDOWS23focusopen;Phase03.1mandatorybefore4
-Resume file: .planning/phases/03-sravnenie-variantov-i-prosmotr-retseptov/03-11-PLAN.md
+Last session: 2026-11-08T06:51:23.782Z
+Stopped at: Completed03-11;Phase3 11/12plans;WINDOWS23fixed;nativeWebKitTab24/25 and human26open;next03-12
+Resume file: .planning/phases/03-sravnenie-variantov-i-prosmotr-retseptov/03-12-PLAN.md

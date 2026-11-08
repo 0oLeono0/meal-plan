@@ -1,5 +1,9 @@
 # Отложенные дефекты Phase03
 
+## Закрытие WINDOWS23 —08.11.2026,03-11
+
+033e5aa воспроизвёл дефект реальными Tab/Enter. b490011 сохраняет return origin до commit целевого pathname: уведомление external store больше не потребляет его на странице генерации. Фактический Chromium combined run recovery8 + все8legacy paths:16/16,exit0,58.6s, `.tmp/03-11-recovery-green.xml`. В legacy sequential test добавлено обязательное подтверждение замены уже сохранённого меню через реальные Tab/Enter; прежние focus/assertions сохранены. WINDOWS23 fixed08.11.2026. Это закрытие конкретного cancellation дефекта, не native WebKit ссылок WINDOWS15/16 и не всей Phase3. Ниже сохранена исходная история дефекта.
+
 ## Recovery/a11y — 03-11: фокус после отмены генерации
 
 Реальный App с задержанным generation port после отмены возвращает мастер, но `generate-menu` не получает фокус. Существовавший до03-10 дефект подтверждён на исходном `50b2a304c7175b2a980a6d9359322f5b98ab5f4c` в отдельной копии tracked src/e2e/data/configs внутри `.tmp/03-10-baseline`, без новых веток/worktrees и без изменения исходного checkout.

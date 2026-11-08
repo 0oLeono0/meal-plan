@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 6
+open_count: 8
 waived_count: 0
-fixed_count: 17
-total_count: 23
-last_updated: 2026-11-07T10:49:39.087Z
+fixed_count: 18
+total_count: 26
+last_updated: 2026-11-08T06:46:58.550Z
 ---
 
 # Broken Windows Ledger
@@ -37,7 +37,10 @@ last_updated: 2026-11-07T10:49:39.087Z
 | 20 | 03 | deviation | src/features/generation/controller.ts |  | Resolved delayed timer deadline bypass, repeated identical pending start and null selection options; actual RED5 failures and GREEN75 focused tests | fixed |  | 2026-11-05T12:16:18.657Z | 2026-11-05T12:16:19.481Z |
 | 21 | 03 | lint-warning | src/app/App.tsx |  | Production build passes; primary chunk503.58kB exceeds Vite500kB warning threshold (gzip142.07kB); code splitting not required for plan03-03 | open |  | 2026-11-05T12:45:27.695Z |  |
 | 22 | 03 | stub | src/features/recipe/RecipePage.tsx |  | Intentional neutral recipe photo fallback; real52asset map belongs to dependent plans03-04 through03-09 and does not close MENU03 or REC01 photo scope | fixed |  | 2026-11-05T12:45:28.268Z | 2026-11-07T10:49:39.087Z |
-| 23 | 03 | unmet-truth | src/app/App.tsx | 226 | Pending generation cancellation does not restore generate-menu focus at360px on baseline50b2a30; retained failing test; repair and verify in03-11 recovery/a11y | open |  | 2026-11-07T10:08:59.058Z |  |
+| 23 | 03 | unmet-truth | src/app/App.tsx | 226 | Pending generation cancellation does not restore generate-menu focus at360px on baseline50b2a30; retained failing test; repair and verify in03-11 recovery/a11y | fixed |  | 2026-11-07T10:08:59.058Z | 2026-11-08T06:36:10.154Z |
+| 24 | 03 | unmet-truth | e2e/phase03-presentation.spec.ts |  | Windows WebKit EC-20 sequential Tab omits shopping anchor; assertion retained and failed08Nov; native Safari15 and AT remain unverified, related WINDOWS15/16 | open |  | 2026-11-08T06:44:04.010Z |  |
+| 25 | 03 | unmet-truth | e2e/phase03-recipes.spec.ts |  | Windows WebKit real Tab recipe path omits exact meal-card anchor; retained assertion failed08Nov before recipe entry; native Safari15 keyboard and AT remain unverified, related WINDOWS15/16 | open |  | 2026-11-08T06:46:35.389Z |  |
+| 26 | 03 | unrun-verify | docs/qa/phase03-accessibility.md |  | Phase03 native Safari15/device/AT, real safe-area and browser200percent zoom human checks remain unverified; automated text enlargement and Windows WebKit are not substitutes | open |  | 2026-11-08T06:46:58.550Z |  |
 
 ````json
 [
@@ -334,9 +337,48 @@ last_updated: 2026-11-07T10:49:39.087Z
     "file": "src/app/App.tsx",
     "line": 226,
     "description": "Pending generation cancellation does not restore generate-menu focus at360px on baseline50b2a30; retained failing test; repair and verify in03-11 recovery/a11y",
-    "status": "open",
+    "status": "fixed",
     "reason": "",
     "recorded_at": "2026-11-07T10:08:59.058Z",
+    "resolved_at": "2026-11-08T06:36:10.154Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 24,
+    "kind": "unmet-truth",
+    "phase": "03",
+    "file": "e2e/phase03-presentation.spec.ts",
+    "line": null,
+    "description": "Windows WebKit EC-20 sequential Tab omits shopping anchor; assertion retained and failed08Nov; native Safari15 and AT remain unverified, related WINDOWS15/16",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-11-08T06:44:04.010Z",
+    "resolved_at": null,
+    "milestone": "v1.0"
+  },
+  {
+    "id": 25,
+    "kind": "unmet-truth",
+    "phase": "03",
+    "file": "e2e/phase03-recipes.spec.ts",
+    "line": null,
+    "description": "Windows WebKit real Tab recipe path omits exact meal-card anchor; retained assertion failed08Nov before recipe entry; native Safari15 keyboard and AT remain unverified, related WINDOWS15/16",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-11-08T06:46:35.389Z",
+    "resolved_at": null,
+    "milestone": "v1.0"
+  },
+  {
+    "id": 26,
+    "kind": "unrun-verify",
+    "phase": "03",
+    "file": "docs/qa/phase03-accessibility.md",
+    "line": null,
+    "description": "Phase03 native Safari15/device/AT, real safe-area and browser200percent zoom human checks remain unverified; automated text enlargement and Windows WebKit are not substitutes",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-11-08T06:46:58.550Z",
     "resolved_at": null,
     "milestone": "v1.0"
   }

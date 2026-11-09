@@ -19,6 +19,14 @@ async function keyboardVisible(page: Page, control: Locator) {
 
 async function focusedVisible(page: Page, control: Locator) {
   await expect(control).toBeFocused();
+  // Native Firefox focus scrolling can finish after the key event resolves.
+  await expect.poll(async () => {
+    const box = (await control.boundingBox())!;
+    const nav = page.getByRole('navigation');
+    const bottom = await nav.count() && !await control.evaluate(element => Boolean(element.closest('nav'))) && await page.evaluate(() => innerWidth < 1200)
+      ? (await nav.boundingBox())!.y : await page.evaluate(() => innerHeight);
+    return box.y >= 0 && box.y + box.height <= bottom + 1;
+  }).toBe(true);
   const bounds = (await control.boundingBox())!;
   expect(bounds.x).toBeGreaterThanOrEqual(0);
   expect(bounds.x + bounds.width).toBeLessThanOrEqual(await page.evaluate(() => innerWidth) + 1);
@@ -223,6 +231,7 @@ test('phase02 active pending and load error retry use honest recoverable screens
 });
 
 test('phase02 sequential Tab ShiftTab Space and Enter traverse saved screens and navigation', async ({ page }) => {
+  test.setTimeout(60_000);
   await page.setViewportSize({ width: 360, height: 800 });
   const tab = async (control: Locator, backwards = false) => {
     await page.keyboard.press(backwards ? 'Shift+Tab' : 'Tab');

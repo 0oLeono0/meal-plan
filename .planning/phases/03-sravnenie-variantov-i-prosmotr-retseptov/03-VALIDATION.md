@@ -3,7 +3,7 @@ phase: "03"
 slug: "sravnenie-variantov-i-prosmotr-retseptov"
 status: evidence-recorded-with-limitations
 nyquist_compliant: false
-wave_0_complete: false
+wave_0_complete: true
 created: "2026-11-04"
 ---
 
@@ -42,8 +42,8 @@ Plan/task/wave и phase-unique threat IDs назначены конечными 
 |03-03-01|3|DATA-04, REC-01, REC-02, REC-04, MENU-03|T-03-05, T-03-06, T-03-SC|`npm run test:e2e -- e2e/phase03-recipes.spec.ts --project=chromium --workers=1`|PASS: actual click saved triple/direct/error2/2 + tracer rerun2/2; QA plan03|
 |03-03-02|3|DATA-04, REC-01, REC-02, REC-04, MENU-03|T-03-05, T-03-06, T-03-SC|`npm run test:unit -- --run src/domain/planProjection.test.ts src/domain/recipeView.test.ts`|PASS: focused42, final full461; canonical conservation/profile/unit/basis, cap12 reuse and mutation guard; QA plan03|
 |03-03-03|3|DATA-04, REC-01, REC-02, REC-04, MENU-03|T-03-05, T-03-06, T-03-SC|`npm run test:e2e -- e2e/phase03-recipes.spec.ts --project=chromium --workers=1`|PASS app scope: final integrated7/8 plus corrected malformed client-route focused1/1; Vite hardGET malformed path HTTP404 limitation retained; QA plan03|
-|03-04-01|4|MENU-03, REC-01, DATA-04|T-03-07, T-03-08, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep sample --project=chromium --workers=1`|pending|
-|03-04-02|4|MENU-03, REC-01, DATA-04|T-03-07, T-03-08, T-03-SC|`npm run test:unit -- --run src/data/recipeMedia.test.ts`|pending|
+|03-04-01|4|MENU-03, REC-01, DATA-04|T-03-07, T-03-08, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep sample --project=chromium --workers=1`|PASS historical06Nov Chromium2/2 decode/disclosure/404 geometry, plan04 QA; existing evidence reused, no fresh browser run|
+|03-04-02|4|MENU-03, REC-01, DATA-04|T-03-07, T-03-08, T-03-SC|`npm run test:unit -- --run src/data/recipeMedia.test.ts`|PASS historical focused4/4, expanded5 included in latest478/478; fresh09Nov media auditor52/fulltrue; no fresh unit run|
 |03-05-01|5|MENU-03, REC-01|T-03-09, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-01-01 --project=chromium --workers=1`|PASS:2026-11-06 Chromium batch01 all3/3;scoped audit12;QA plan05|
 |03-05-02|5|MENU-03, REC-01|T-03-09, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-01-02 --project=chromium --workers=1`|PASS:2026-11-06 Chromium batch01 all3/3;scoped audit12;QA plan05|
 |03-05-03|5|MENU-03, REC-01|T-03-09, T-03-SC|`npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-01-03 --project=chromium --workers=1`|PASS:2026-11-06 Chromium batch01 all3/3;scoped audit12;QA plan05|
@@ -73,14 +73,14 @@ Plan/task/wave и phase-unique threat IDs назначены конечными 
 
 | Requirement | Secure behavior | Type | Command | File exists | Status |
 |---|---|---|---|---|---|
-| DATA-04 | Старый snapshot читается, trust сохраняется, запись/cancel/races честны | unit/integration | `npm run test:unit -- --run src/adapters/activePlan.test.ts src/features/generation/controller.test.ts` | Existing, extend | pending |
-| GEN-06 | Семантически разные3/2/1/0 результатов, hard constraints и бюджет каждого | unit | `npm run test:unit -- --run src/domain/generatePlan.test.ts src/domain/plan.test.ts` | Existing, extend | pending |
-| GEN-07 | Append1 использует прежние inputs, cap12 не удаляет, late response не применяется | unit/integration | `npm run test:unit -- --run src/features/generation/controller.test.ts src/adapters/generation.test.ts` | Existing, extend | pending |
-| MENU-02 | День/неделя и даты сохраняют корректный контекст | unit/browser | `npm run test:unit -- --run src/domain/menuView.test.ts` | Wave0 new | pending |
-| MENU-03 |4:3 local assets52mapping, реальные порции/stock | unit/browser | `npm run test:unit -- --run src/domain/recipeView.test.ts src/data/recipeMedia.test.ts` | Wave0 new | pending |
-| REC-01 | Recipe/variant/instance проверены, ingredient/stock ledger сохраняет количества | unit/browser | `npm run test:unit -- --run src/domain/recipeView.test.ts` | Wave0 new | pending |
-| REC-02 | Независимые точные ожидания4КБЖУ/ingredient на одной базе | unit | `npm run test:unit -- --run src/domain/recipeView.test.ts` | Wave0 new | pending |
-| REC-04 | Direct/missing/stale/error различены, нет тихой привязки | unit/browser | `npm run test:e2e -- phase03-recipes.spec.ts --project=chromium --workers=1` | Wave0 new | pending |
+| DATA-04 | Старый snapshot читается, trust сохраняется, запись/cancel/races честны | unit/integration | `npm run test:unit -- --run src/adapters/activePlan.test.ts src/features/generation/controller.test.ts` | Existing | COVERED automated scope, latest unit/critical evidence reused |
+| GEN-06 | Семантически разные3/2/1/0 результатов, hard constraints и бюджет каждого | unit | `npm run test:unit -- --run src/domain/generatePlan.test.ts src/domain/plan.test.ts` | Existing | COVERED, real3 and controlled1/2 evidence reused |
+| GEN-07 | Append1 использует прежние inputs, cap12 не удаляет, late response не применяется | unit/integration | `npm run test:unit -- --run src/features/generation/controller.test.ts src/adapters/generation.test.ts` | Existing | COVERED automated scope, saved inputs/bytes/cap12 evidence reused |
+| MENU-02 | День/неделя и даты сохраняют корректный контекст | unit/browser | `npm run test:unit -- --run src/domain/menuView.test.ts` | Existing menuView/presentation specs | PARTIAL, native keyboard gates open |
+| MENU-03 |4:3 local assets52mapping, реальные порции/stock | unit/browser | `npm run test:unit -- --run src/domain/recipeView.test.ts src/data/recipeMedia.test.ts` | Existing recipeView/media specs | PARTIAL UI/manual, fresh media auditor52/fulltrue |
+| REC-01 | Recipe/variant/instance проверены, ingredient/stock ledger сохраняет количества | unit/browser | `npm run test:unit -- --run src/domain/recipeView.test.ts` | Existing recipeView/recipes specs | PARTIAL native keyboard/manual |
+| REC-02 | Независимые точные ожидания4КБЖУ/ingredient на одной базе | unit | `npm run test:unit -- --run src/domain/recipeView.test.ts` | Existing recipeView/acceptance specs | COVERED arithmetic scope, source/literal oracle evidence reused |
+| REC-04 | Direct/missing/stale/error различены, нет тихой привязки | unit/browser | `npm run test:e2e -- phase03-recipes.spec.ts --project=chromium --workers=1` | Existing phase03-recipes.spec.ts | PARTIAL native keyboard, incomplete-data final3/3 |
 
 ## Wave 0 Requirements
 
@@ -108,15 +108,21 @@ Plan03-01 evidence: `docs/qa/phase03-plan01.md`; full unit397/397, typecheck/lin
 
 Plan03-02 evidence: `docs/qa/phase03-plan02.md`; full unit431/431, focused75/75, typecheck/lint/build passed. Actual Chromium append6+variants2=8passed, затем final append7/7 after explicit pending/cancel indicator assertion. All5 widths without overflow, screenshots inspected; human/native-device judgments remain separate. Only plans01–02 delivered; phase/requirements/manual sign-off remain pending.
 
-- [ ] All tasks mapped to actual automated checks
-- [ ] Wave0 references created
+- [x] All tasks mapped to actual automated checks
+- [x] Wave0 references created
 - [ ] No watch mode; feedback latency measured
 - [ ] Full current tests/static/build and browser evidence reviewed
-- [ ] Manual observations recorded separately
+- [x] Manual observations recorded separately
 - [ ] Set nyquist_compliant only from actual coverage audit
 
 Plan03-03 evidence: `docs/qa/phase03-plan03.md`; source final461/461 unit, typecheck/lint/build exit0. Integrated Chromium7/8 initially, with one Vite hardGET malformed-path404 before SPA startup; corrected client-router case passed1/1 and fresh resume rerun on2026-11-06 passed1/1 (15.0s). All seven unchanged integrated cases passed in that original run. The server boundary remains explicit, not renamed a successful hard navigation. Plans01–03 delivered; media/full menu presentation and independent phase/manual sign-off remain pending.
 
 **Approval:** independent audit and human verification pending.
+
+## Независимый аудит покрытия 09.11.2026
+
+gsd-nyquist-auditor сопоставил33 задачи и8требований с meaningful assertions. Две устаревшие task-строки и8sampling-строк синхронизированы. Новых tests и fresh unit/browser runs в этом аудите нет. XML прочитаны непосредственно. Critical60 прошли, focus24 содержат19pass/3assertionfail/2errors, incomplete3passed. Initial960 содержат889pass/68assertionfail/3errors. Один incomplete timeout закрыт отдельным rerun3, native recovery timeout остаётся одним из четырёх native gates. Полного post-fix960pass нет.
+
+UIC12 — длинная ошибка на360px, UIC18 — произвольно длинный confirmation, UIC51/52 — extreme memory-only alert/text требуют отдельной проверки. UIC24 nativeTab иUIC26/40 realzoom, WINDOWS15/16/24/25/26, human UAT/оценка52изображений и6descriptorless prohibitions остаются partial/unverified. Эти gaps не подменяются успешными unit checks. Фаза и shared requirements ожидают приёмки.
 
 Plan03-12 execution evidence consolidated09.11.2026 in `docs/qa/phase03-final-validation.md` and `phase03-security.md`. Latest critical60/60 all3engines passed. Focus/legacy24-case run19passed/5failed retains4nativeWebKit failures and one20s harness timeout, then incomplete-data rerun3/3 passed with test-local60s. Source audit mapped GOAL/8REQ/18decisions/46edges/52UIpairs to concrete named specs/domain cases. UIC12/18/24/26/40/51/52 retain explicit partial/native limits. Six descriptorless prohibitions retain flagged-unverified. Current coverage audit records these gaps, so nyquist_compliant remains false. Automated completion of this QA plan does not accept Phase03 or advance to Phase04. Phase03.1 remains mandatory before04.

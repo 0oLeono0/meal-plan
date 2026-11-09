@@ -75,3 +75,7 @@ Initial960=889pass/71failure-or-error is retained, with separately scoped post-f
 - [x] threats_open0 at high threshold
 - [x] Scoped security status verified
 - [ ] Phase03 human acceptance
+
+## Post-review recovery correction
+
+Независимый code review обнаружил CR-01 в retry dispatch выбора. Исправление ec24f1b связывает retry сtargetID/baseRevision вместо прежнего append/replace descriptor. RED913cd3b иcontrollerGREEN48/48 подтверждают отсутствие новой генерации/замены после timeout для generated иloaded base. T-03-02/03/16 controls сохраняются с этим уточнением. WR-01focus correction прошла6browserchecks all3engines. New endpoints/auth/schema/file boundaries отсутствуют. Более ранний19-row source audit относится кe989842, эти изменения иevidence учтены отдельно.

@@ -95,3 +95,17 @@ export async function generateRealPlan(page: Page, days?: number) {
   await expect(page.getByRole('heading', { level: 1, name: title, exact: true })).toBeVisible();
   await expect(page.locator('[data-instance-id]')).toHaveCount(4 * (days ?? 7));
 }
+
+/** Saved content remains identical; live operation acknowledgements are ephemeral.
+ * Read the actual visible text, omitting only role=status (not alerts or facts).
+ * Cancellation/success messages are asserted independently in acceptance/recovery.
+ */
+export async function savedMenuText(page: Page) {
+  const menu = page.locator('[data-plan-id]');
+  await expect(menu).toBeVisible();
+  return menu.evaluate(node => {
+    let text = (node as HTMLElement).innerText;
+    for (const status of node.querySelectorAll<HTMLElement>('[role="status"]')) text = text.replace(status.innerText, '');
+    return text.replace(/\s+/g, ' ').trim();
+  });
+}

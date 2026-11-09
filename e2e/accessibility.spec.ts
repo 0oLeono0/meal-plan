@@ -19,6 +19,7 @@ async function unobscured(page: Page, field: Locator) {
 test('accessibility smoke keyboard modal trap cancel restoration and first wizard error', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   await page.goto('/shopping');
+  await expect(page.getByRole('heading', { name: 'Сначала составьте меню', exact: true })).toBeFocused();
   const profile = page.getByRole('button', { name: 'Профиль', exact: true });
   await profile.focus();
   await page.keyboard.press('Enter');

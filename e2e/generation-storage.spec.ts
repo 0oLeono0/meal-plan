@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { activeKey, count, finishWizard, mountGeneration, preserved, release } from './generation-fixtures';
-import { generateRealPlan } from './plan-fixtures';
+import { generateRealPlan, savedMenuText } from './plan-fixtures';
 import { mountAppFixture } from './fixtures';
 
 for (const kind of ['nutrition', 'price', 'unknown-version'] as const) test(`source trust rejects altered ${kind} after genuine reload and blocks replacement writes`, async ({ page }) => {
@@ -39,7 +39,7 @@ test('failed save exposes a separate candidate, preserves exact old active and r
   const id = await page.locator('[data-plan-id]').getAttribute('data-plan-id');
   await mountGeneration(page, { failWrite: true });
   await page.getByLabel('Число дней', { exact: true }).fill('2');
-  await finishWizard(page);
+  await finishWizard(page, true);
   await expect(page.getByRole('heading', { name: 'Меню рассчитано, но не сохранено' })).toBeFocused();
   await expect(page.getByRole('alert')).toHaveCount(1);
   await expect(page.getByRole('alert')).toContainText('Предыдущее меню не изменено');
@@ -58,7 +58,7 @@ test('retry-save promotes the existing real candidate, saved dates and sources s
   const old = await page.evaluate(key => localStorage.getItem(key), activeKey);
   await mountGeneration(page, { failWrite: true });
   await page.getByLabel('Число дней', { exact: true }).fill('2');
-  await finishWizard(page);
+  await finishWizard(page, true);
   await expect(page.getByRole('heading', { name: 'Меню рассчитано, но не сохранено' })).toBeVisible();
   await preserved(page, old);
   await page.evaluate(() => sessionStorage.setItem('allow-write', 'yes'));
@@ -76,11 +76,11 @@ test('retry-save promotes the existing real candidate, saved dates and sources s
   expect(sources).toContain('Версия каталога:');
   expect(sources).toMatch(/КБЖУ: .+ \/ .+ · 100 г/);
   expect(sources).toMatch(/Цена: .+ \/ .+ · 1 кг/);
-  const text = await page.locator('[data-plan-id]').innerText();
+  const text = await savedMenuText(page);
   await page.reload();
   await sourceSummary.click();
   await expect(sourceSummary.locator('..')).toHaveText(sources, { useInnerText: true });
-  await expect(page.locator('[data-plan-id]')).toHaveText(text, { useInnerText: true });
+  await expect.poll(() => savedMenuText(page)).toBe(text);
   expect(await page.locator('[data-date]').evaluateAll(rows => rows.map(row => row.getAttribute('data-date')))).toEqual(dates);
   await preserved(page, saved);
 });
@@ -128,12 +128,13 @@ test('cancelled deferred final save is guarded and cannot replace old active eve
   const old = await page.evaluate(key => localStorage.getItem(key), activeKey);
   await mountGeneration(page, { deferSave: true });
   await page.getByLabel('Число дней', { exact: true }).fill('2');
-  await finishWizard(page);
+  await finishWizard(page, true);
   await expect(page.getByText('Сохраняем меню…', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Отмена', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Составить меню', exact: true })).toBeFocused();
   await preserved(page, old);
   await page.getByRole('button', { name: 'Составить меню', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Составить меню с новыми настройками?', exact: true }).getByRole('button', { name: 'Составить меню', exact: true }).click();
   await expect.poll(() => count(page, 'generation-calls')).toBe(2);
   await release(page, 'save-1');
   await expect.poll(() => page.evaluate(() => sessionStorage.getItem('save-result-1'))).toBe('cancelled');
@@ -153,7 +154,7 @@ test('timeout also invalidates a deferred save before its final write', async ({
   const old = await page.evaluate(key => localStorage.getItem(key), activeKey);
   await mountGeneration(page, { deferSave: true });
   await page.clock.install();
-  await finishWizard(page);
+  await finishWizard(page, true);
   await expect(page.getByText('Сохраняем меню…', { exact: true })).toBeVisible();
   await page.clock.pauseAt(await page.evaluate(() => Date.now() + 100));
   await page.clock.fastForward(30_000);

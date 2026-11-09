@@ -103,13 +103,18 @@ export async function release(page: Page, name: string) {
   } else await page.evaluate(name => window.dispatchEvent(new Event(`release-${name}`)), name);
 }
 export async function count(page: Page, key: string) { return page.evaluate(key => Number(sessionStorage.getItem(key) ?? 0), key); }
-export async function finishWizard(page: Page) {
+export async function finishWizard(page: Page, confirmReplacement = false) {
   for (let step = 2; step <= 4; step++) {
     await page.getByRole('button', { name: 'Далее', exact: true }).click();
     await expect(page.getByText(`Шаг ${step} из 4`)).toBeVisible();
     if (step < 4) await page.waitForTimeout(270);
   }
   await page.getByRole('button', { name: 'Составить меню', exact: true }).click();
+  if (confirmReplacement) {
+    const dialog = page.getByRole('dialog', { name: 'Составить меню с новыми настройками?', exact: true });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Составить меню', exact: true }).click();
+  }
 }
 export async function preserved(page: Page, raw: string | null) {
   expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'))).toBe(raw);

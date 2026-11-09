@@ -149,7 +149,7 @@ test('pending append exposes indeterminate progress and cancellation keeps the o
   await expect(progress).toBeVisible();
   await expect(progress).not.toHaveAttribute('value');
   await expect(page.getByText('Вариант 1 из 1', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Отмена', exact: true }).click();
+  await page.getByRole('button', { name: 'Отменить подбор', exact: true }).click();
   await release(page, 'generation-1');
   expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(bytes);
   expect(await count(page, 'save-calls')).toBe(0);

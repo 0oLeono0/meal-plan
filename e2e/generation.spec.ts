@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { savedMenuText } from './plan-fixtures';
 
 test('real catalog wizard saves every dated slot and reloads the same active menu', async ({ page }) => {
   await page.goto('/plan/new');
@@ -32,13 +33,13 @@ test('real catalog wizard saves every dated slot and reloads the same active men
   const average = page.getByRole('heading', { name: 'Среднее на человека в день', exact: true }).locator('..');
   await expect(average).toContainText(`${calculated.nutrition.calories} ккал`);
   for (const value of [calculated.nutrition.protein, calculated.nutrition.fat, calculated.nutrition.carbohydrates]) await expect(average).toContainText(`${value} г`);
-  const values = await page.locator('[data-plan-id]').innerText();
+  const values = await savedMenuText(page);
   const id = await page.locator('[data-plan-id]').getAttribute('data-plan-id');
   const storage = await page.evaluate(() => ({ ...localStorage }));
   expect(Object.keys(storage).some(key => key.includes('active'))).toBe(true);
   await page.reload();
   await expect(page.locator('[data-plan-id]')).toHaveAttribute('data-plan-id', id!);
-  await expect(page.locator('[data-plan-id]')).toHaveText(values, { useInnerText: true });
+  await expect.poll(() => savedMenuText(page)).toBe(values);
   expect(await page.evaluate(() => ({ ...localStorage }))).toEqual(storage);
   await page.goto('/');
   await expect(page).toHaveURL(/\/menu$/);
@@ -81,13 +82,18 @@ export async function mountOperation(page: import('@playwright/test').Page, mode
   await expect(page.getByLabel('Число людей', { exact: true })).toBeVisible();
 }
 
-async function finishWizard(page: import('@playwright/test').Page) {
+async function finishWizard(page: import('@playwright/test').Page, confirmReplacement = false) {
   for (let step = 2; step <= 4; step++) {
     await page.getByRole('button', { name: 'Далее', exact: true }).click();
     await expect(page.getByText(`Шаг ${step} из 4`)).toBeVisible();
     if (step < 4) await page.waitForTimeout(270);
   }
   await page.getByRole('button', { name: 'Составить меню', exact: true }).click();
+  if (confirmReplacement) {
+    const dialog = page.getByRole('dialog', { name: 'Составить меню с новыми настройками?', exact: true });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Составить меню', exact: true }).click();
+  }
 }
 
 test('pending rotates honestly, cancellation restores origin and ignores late result', async ({ page }) => {
@@ -147,7 +153,7 @@ test('save failure preserves the old whole active plan and reloads it', async ({
   await mountOperation(page, 'save-failure');
   // The previous draft finished at step1 because it was a quick start.
   await page.getByLabel('Число дней', { exact: true }).fill('2');
-  await finishWizard(page);
+  await finishWizard(page, true);
   await expect(page.getByText('Расчёт доступен только до закрытия страницы. Предыдущее меню не изменено', { exact: true })).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'))).toBe(previous);
   await page.getByRole('link', { name: 'К текущему меню', exact: true }).click();
@@ -192,6 +198,7 @@ async function mountReadState(page: import('@playwright/test').Page, state: 'pen
     const urls = performance.getEntriesByType('resource').map(row => row.name);
     const { default: { createElement } } = await import(urls.find(url => /\/react\.js\?/.test(url))!);
     const { default: { createRoot } } = await import(urls.find(url => /\/react-dom_client\.js\?/.test(url))!);
+    const { BrowserRouter } = await import(urls.find(url => /\/react-router\.js\?/.test(url))!);
     const controllerPath = '/src/features/generation/controller.ts', catalogPath = '/src/data/catalog.ts';
     const { createGenerationController } = await import(controllerPath);
     const { bundledCatalogPort } = await import(catalogPath);
@@ -208,7 +215,7 @@ async function mountReadState(page: import('@playwright/test').Page, state: 'pen
       onCancel() {}, onRetry() {}, onSettings() {}, onRetrySave() {}, onRetryLoad() {} };
     const container = document.createElement('div'); container.className = 'app-shell fullscreen';
     document.body.replaceChildren(container);
-    createRoot(container).render(createElement('main', null, createElement(Component, props)));
+    createRoot(container).render(createElement(BrowserRouter, null, createElement('main', null, createElement(Component, props))));
   }, state);
 }
 
@@ -253,7 +260,7 @@ for (const state of ['menu-load', 'shopping-load'] as const) {
   test(`${state} presents a decorative skeleton and one honest loading status`, async ({ page }) => {
     await mountReadState(page, state);
     await expect(page.getByRole('status')).toContainText('Загружаем');
-    await expect(page.locator('[aria-busy="true"] [role="status"]')).toHaveCount(0);
+    await expect(page.locator('[aria-busy="true"] [role="status"]')).toHaveCount(1);
     const skeleton = page.locator('[data-loading-skeleton]');
     await expect(skeleton).toBeVisible();
     await expect(skeleton).toHaveAttribute('aria-hidden', 'true');
@@ -306,8 +313,10 @@ test('menu and shopping retain readable hierarchy and the same three costs acros
       await page.goto(route);
       const budget = page.getByRole('region', { name: 'Бюджет меню' });
       await expect(budget.locator('dd')).toHaveText(costs);
-      await expect(page.locator('h3').first()).toHaveCSS('font-size', '16px');
-      await expect(page.locator('h3').first()).toHaveCSS('font-weight', '600');
+      const title = route === '/menu' ? page.locator('.meal-card-name').first() : page.locator('h3').first();
+      await expect(title).toHaveCSS('font-size', '16px');
+      await expect(title).toHaveCSS('font-weight', '600');
+      if (route === '/menu') await expect(page.locator('.meal-slot').first()).toHaveCSS('font-size', '14px');
       for (const dd of await budget.locator('dd').all()) await expect(dd).toHaveCSS('margin-inline-start', '0px');
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
     }

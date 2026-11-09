@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { savedMenuText } from './plan-fixtures';
 
 for (const width of [360, 768, 1280]) test(`real no-fish one-day wizard saves and reloads its reviewed plan at ${width}px`, async ({ page }) => {
   await page.setViewportSize({ width, height: 900 });
@@ -34,9 +35,9 @@ for (const width of [360, 768, 1280]) test(`real no-fish one-day wizard saves an
     return localStorage.getItem(ACTIVE_PLAN_KEY);
   });
   expect(raw).not.toBeNull();
-  const menu = await page.locator('[data-plan-id]').innerText();
+  const menu = await savedMenuText(page);
   await page.reload();
-  await expect(page.locator('[data-plan-id]')).toHaveText(menu, { useInnerText: true });
+  await expect.poll(() => savedMenuText(page)).toBe(menu);
   expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'))).toBe(raw);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

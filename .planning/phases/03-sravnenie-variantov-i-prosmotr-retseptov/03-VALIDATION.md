@@ -1,7 +1,7 @@
 ---
 phase: "03"
 slug: "sravnenie-variantov-i-prosmotr-retseptov"
-status: draft
+status: evidence-recorded-with-limitations
 nyquist_compliant: false
 wave_0_complete: false
 created: "2026-11-04"
@@ -64,8 +64,8 @@ Plan/task/wave и phase-unique threat IDs назначены конечными 
 |03-11-01|7|DATA-04, GEN-06, GEN-07, MENU-02, MENU-03, REC-01, REC-02, REC-04|T-03-16, T-03-17, T-03-SC|`npm run test:e2e -- e2e/phase03-recovery.spec.ts --project=chromium --workers=1`|PASS08Nov:8/8Chromium;final all3engines24/24;legacy8+recovery8=16/16;RED/GREEN QA accessibility;WINDOWS23fixed|
 |03-11-02|7|DATA-04, GEN-06, GEN-07, MENU-02, MENU-03, REC-01, REC-02, REC-04|T-03-16, T-03-17, T-03-SC|`npm run test:e2e -- e2e/phase03-recipes.spec.ts --project=chromium --workers=1`|PASS08Nov:8/8Chromium+8/8Firefox;WebKit7/8,exact nativeTab failure retained WINDOWS25;QA accessibility|
 |03-11-03|7|DATA-04, GEN-06, GEN-07, MENU-02, MENU-03, REC-01, REC-02, REC-04|T-03-16, T-03-17, T-03-SC|`npm run test:e2e -- e2e/phase03-presentation.spec.ts --workers=1`|LIMITED08Nov:21case16pass5fail before fixes;affected pointer/columns/key9/9all3;actualhero3/3all3;nativeTab EC20 stillfail WINDOWS24;unit478/type/lint/build0;seed15/15;native/AT/UAT unverified WINDOWS26|
-|03-12-01|8|DATA-04, GEN-06, GEN-07, MENU-02, MENU-03, REC-01, REC-02, REC-04|T-03-18, T-03-SC|`npm run test:e2e -- e2e/phase03-acceptance.spec.ts --workers=1`|pending|
-|03-12-02|8|DATA-04, GEN-06, GEN-07, MENU-02, MENU-03, REC-01, REC-02, REC-04|T-03-18, T-03-SC|`npm run test:unit -- --run`|pending|
+|03-12-01|8|DATA-04, GEN-06, GEN-07, MENU-02, MENU-03, REC-01, REC-02, REC-04|T-03-18, T-03-SC|`npm run test:e2e -- e2e/phase03-acceptance.spec.ts --workers=1`|PASS: initial6/6; extended8/9 then sync-corrected tracer21/21; final acceptance9/9 inside critical60/60 all3 engines09Nov, independent source/literal oracles, benchmark3 variants each engine; final QA|
+|03-12-02|8|DATA-04, GEN-06, GEN-07, MENU-02, MENU-03, REC-01, REC-02, REC-04|T-03-18, T-03-SC|`npm run test:unit -- --run`|EVIDENCE RECORDED WITH LIMITS: latest478/478 unit; type/lint/build/media52 exit0; initial960=889pass/71unsuccessful; affected81=70pass/11fail before final fixes; critical60/60; final focus/legacy matrix in QA; native WINDOW15/16/24/25 and human26 remain open|
 
 ### Requirement sampling
 
@@ -117,4 +117,6 @@ Plan03-02 evidence: `docs/qa/phase03-plan02.md`; full unit431/431, focused75/75,
 
 Plan03-03 evidence: `docs/qa/phase03-plan03.md`; source final461/461 unit, typecheck/lint/build exit0. Integrated Chromium7/8 initially, with one Vite hardGET malformed-path404 before SPA startup; corrected client-router case passed1/1 and fresh resume rerun on2026-11-06 passed1/1 (15.0s). All seven unchanged integrated cases passed in that original run. The server boundary remains explicit, not renamed a successful hard navigation. Plans01–03 delivered; media/full menu presentation and independent phase/manual sign-off remain pending.
 
-**Approval:** pending execution and independent audit.
+**Approval:** independent audit and human verification pending.
+
+Plan03-12 execution evidence consolidated09.11.2026 in `docs/qa/phase03-final-validation.md` and `phase03-security.md`. Latest critical60/60 all3engines passed. Focus/legacy24-case run19passed/5failed retains4nativeWebKit failures and one20s harness timeout, then incomplete-data rerun3/3 passed with test-local60s. Source audit mapped GOAL/8REQ/18decisions/46edges/52UIpairs to concrete named specs/domain cases. UIC12/18/24/26/40/51/52 retain explicit partial/native limits. Six descriptorless prohibitions retain flagged-unverified. Current coverage audit records these gaps, so nyquist_compliant remains false. Automated completion of this QA plan does not accept Phase03 or advance to Phase04. Phase03.1 remains mandatory before04.

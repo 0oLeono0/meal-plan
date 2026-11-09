@@ -28,7 +28,7 @@ test('navigate away invalidates a request and its late success preserves the old
   const old = await page.evaluate(key => localStorage.getItem(key), activeKey);
   await mountGeneration(page, { deferGeneration: true });
   await page.getByLabel('Число дней', { exact: true }).fill('2');
-  await finishWizard(page);
+  await finishWizard(page, true);
   await page.goBack();
   await expect(page).toHaveURL(/\/plan\/new$/);
   await preserved(page, old);
@@ -111,15 +111,17 @@ test('30s timeout stays pending at 29s, differs from search and permits real ret
 });
 
 for (const [code, copy] of [
-  ['GENERATION_DATA_INCOMPLETE', 'Не подтверждены данные'],
+  ['GENERATION_DATA_INCOMPLETE', 'Неизвестные данные не заменены нулём или подтверждением пригодности продуктов'],
   ['NO_RECIPES', 'Мы не будем снимать их автоматически'],
   ['SEARCH_EXHAUSTED', 'Это не доказывает'],
   ['FAILED', 'Повторите подбор'],
 ] as const) test(`${code}: one truthful alert, focus, unchanged old bytes and real retry`, async ({ page }) => {
+  // The flow performs two real bounded generations plus wizard confirmation.
+  test.setTimeout(60_000);
   await generateRealPlan(page);
   const old = await page.evaluate(key => localStorage.getItem(key), activeKey);
   await mountGeneration(page, { error: { code, message: 'Controlled test error', diagnostics: [] } });
-  await finishWizard(page);
+  await finishWizard(page, true);
   await expect(page.getByRole('alert')).toHaveCount(1);
   await expect(page.getByRole('alert')).toContainText(copy);
   await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
@@ -146,7 +148,7 @@ test('deep generation reload cannot resurrect a pending request or mutate the ol
   await mountGeneration(page, { deferGeneration: true, route: '/' });
   // Valid old plan redirects welcome, use the real wizard to launch a new request.
   await page.getByRole('link', { name: 'Новое меню', exact: true }).click();
-  await finishWizard(page);
+  await finishWizard(page, true);
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Генерация прервана или не запущена' })).toBeVisible();
   await preserved(page, old);

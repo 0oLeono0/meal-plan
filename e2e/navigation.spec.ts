@@ -25,10 +25,10 @@ test('deep routes and neighboring paths have truthful distinct states on reload'
   for (const [path, title, exit] of [
     ['/menu', 'Меню пока нет', 'Составить меню'],
     ['/shopping', 'Сначала составьте меню', 'Составить меню'],
-    ['/recipe/unknown', 'Такого рецепта нет', 'Вернуться к меню'],
+    ['/recipe/unknown', 'Такого рецепта нет', 'К меню'],
     ['/plan/generating', 'Генерация прервана или не запущена', 'К настройкам'],
     ['/menus', 'Страница не найдена', 'На главную'],
-    ['/recipe', 'Страница не найдена', 'На главную'],
+    ['/recipe', 'Такого рецепта нет', 'К меню'],
   ]) {
     await page.goto(path);
     await page.reload();

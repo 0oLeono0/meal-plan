@@ -141,6 +141,9 @@ test('quick start prefers last applied settings while preserving the changed dra
   });
   await expect(page.getByText('Используем последние применённые настройки', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Меню за 1 клик', exact: true }).click();
+  const replacement = page.getByRole('dialog', { name: 'Составить меню с новыми настройками?', exact: true });
+  await expect(replacement).toBeVisible();
+  await replacement.getByRole('button', { name: 'Составить меню', exact: true }).click();
   await expect(page).toHaveURL(/\/menu$/);
   expect(await appliedRaw(page)).toEqual(originalApplied);
   expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:draft:v1'))).toBe(changedDraft);

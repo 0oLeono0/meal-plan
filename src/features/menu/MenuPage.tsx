@@ -139,7 +139,7 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
   const [replacementTrigger, setReplacementTrigger] = useState<HTMLElement | null>(null);
   const [params, setParams] = useSearchParams();
   useEffect(() => {
-    if (snapshot.status === 'succeeded' && snapshot.intent === 'replace' && document.activeElement === document.body) document.getElementById('menu-title')?.focus();
+    if (snapshot.status === 'succeeded' && snapshot.intent === 'replace') document.getElementById('menu-title')?.focus();
   }, [snapshot.status, snapshot.intent]);
   const bundle = snapshot.active;
   if (!bundle) {

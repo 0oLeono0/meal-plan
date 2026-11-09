@@ -219,7 +219,7 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
   const launch = useRef<{ settings: AppliedSettings; origin: { returnRoute: string; focusAnchor: string } } | null>(null);
   const catalogAttempt = useRef(0);
   useEffect(() => {
-    if ((previousRoute.current === '/plan/generating' && pathname !== '/plan/generating')
+    if ((previousRoute.current === '/plan/generating' && pathname !== '/plan/generating' && operation.status !== 'succeeded')
       || (previousRoute.current === '/menu' && pathname !== '/menu' && (operation.status === 'pending' || operation.status === 'saving'))) { catalogAttempt.current++; controller.cancel(); }
     previousRoute.current = pathname;
     // Store notifications can commit before React Router's transition. Keep the
@@ -240,7 +240,7 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
     setCatalogError(catalog.status !== 'loaded');
     const origin = { returnRoute: pathname, focusAnchor: quick ? 'quick-start' : focusAnchor };
     if (operation.active) {
-      setLaunchConfirmation({ settings: applied.settings, origin, trigger: document.activeElement instanceof HTMLElement ? document.activeElement : null }); return;
+      setLaunchConfirmation({ settings: applied.settings, origin, trigger: document.getElementById(origin.focusAnchor) }); return;
     }
     performStart(applied.settings, origin);
   }

@@ -76,7 +76,7 @@ test('repeated recipe instances show full partial and no stock from the same sho
 for (const navigateAway of [true, false]) test(`catalog adapter failure retries with real pending feedback ${navigateAway ? 'and a late read cannot replace a new route' : 'and focuses acknowledged recipe'}`, async ({ page }) => {
   await page.goto('/plan/new');
   await expect(page.getByLabel('Число людей', { exact: true })).toBeVisible();
-  await page.evaluate(async () => {
+  await page.evaluate(async repeatFailure => {
     const urls = performance.getEntriesByType('resource').map(row => row.name);
     const reactUrl = urls.find(url => /\/react\.js\?/.test(url))!, rootUrl = urls.find(url => /\/react-dom_client\.js\?/.test(url))!;
     const { default: { createElement } } = await import(reactUrl);
@@ -88,13 +88,14 @@ for (const navigateAway of [true, false]) test(`catalog adapter failure retries 
       reads++;
       if (reads === 1) return { status: 'invalid', diagnostics: [] };
       await new Promise<void>(resolve => window.addEventListener('release-recipe-catalog', () => resolve(), { once: true }));
+      if (reads === 2 && repeatFailure) return { status: 'invalid', diagnostics: [] };
       return bundledCatalogPort.load();
     } };
     document.getElementById('root')!.remove();
     const container = document.createElement('div'); container.id = 'root'; document.body.append(container);
     history.replaceState({}, '', '/recipe/rice-sweet-porridge');
     createRoot(container).render(createElement(App, { catalogPort }));
-  });
+  }, !navigateAway);
   await expect(page.getByRole('heading', { name: 'Не удалось загрузить рецепт', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
   const retry = page.getByRole('button', { name: 'Повторить загрузку', exact: true });
@@ -106,6 +107,11 @@ for (const navigateAway of [true, false]) test(`catalog adapter failure retries 
     await expect(loading.locator('[data-loading-skeleton]')).toHaveAttribute('aria-hidden', 'true');
     await expect(loading.getByRole('status')).toHaveCount(1);
   } else {
+    await page.evaluate(() => window.dispatchEvent(new Event('release-recipe-catalog')));
+    await expect(page.getByRole('heading', { name: 'Не удалось загрузить рецепт', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
+    await retry.click();
+    await expect(page.getByRole('status', { name: '', exact: true }).filter({ hasText: 'Загружаем рецепт…' })).toBeVisible();
     await page.evaluate(() => window.dispatchEvent(new Event('release-recipe-catalog')));
     await expect(page.getByText(/^Исходный рецепт ·/)).toBeVisible();
     await expect(page.getByRole('heading', { level: 1 })).toBeFocused();

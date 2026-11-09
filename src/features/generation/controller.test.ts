@@ -234,6 +234,32 @@ describe('guarded alternative selection', () => {
     failWrite(false); await c.retrySave();
     expect(c.getSnapshot().active?.plan.activeVariantId).toBe('v2'); expect(save).toHaveBeenCalledTimes(2); expect(generate).not.toHaveBeenCalled(); c.dispose();
   });
+  it.each(['generated', 'loaded'] as const)('retries a timed out selection against the same %s base without searching or replacing', async source => {
+    const real = setup(), plan = alternatives(), gate = deferred<void>();
+    const generate = vi.fn<GenerationPort['generate']>(async () => ({ status: 'success', plan }));
+    let delaySelection = false;
+    const save = vi.fn<ActivePlanPort['save']>(async (...args) => {
+      if (delaySelection) await gate.promise;
+      return real.port.save(...args);
+    });
+    if (source === 'loaded') { await real.port.load(); await real.port.save(plan, { isCurrent: () => true }); }
+    const c = createGenerationController({ generation: { generate }, activePlan: { load: () => real.port.load(), save } });
+    await c.load();
+    if (source === 'generated') await c.start(plan.inputs, origin);
+    const bytes = real.map.get(ACTIVE_PLAN_KEY), calls = generate.mock.calls.length;
+    delaySelection = true;
+    const selecting = c.selectVariant('v2', menuOrigin);
+    await vi.advanceTimersByTimeAsync(30_000); await selecting;
+    expect(c.getSnapshot()).toMatchObject({ status: 'error', intent: 'select', error: { code: 'TIMEOUT' } });
+    expect(real.map.get(ACTIVE_PLAN_KEY)).toBe(bytes);
+    gate.resolve(); await vi.advanceTimersByTimeAsync(0);
+    await c.retryGeneration();
+    expect(c.getSnapshot()).toMatchObject({ status: 'succeeded', intent: 'select' });
+    expect(c.getSnapshot().active?.plan).toEqual({ ...plan, activeVariantId: 'v2' });
+    expect(generate).toHaveBeenCalledTimes(calls);
+    expect(JSON.parse(real.map.get(ACTIVE_PLAN_KEY)!).plan).toEqual({ ...JSON.parse(bytes!).plan, activeVariantId: 'v2' });
+    expect(vi.getTimerCount()).toBe(0); c.dispose();
+  });
   it.each(['cancel', 'dispose'] as const)('%s rejects a late selection before the real final write', async action => {
     const gate = deferred<void>(), { c, map } = await selectionSetup(gate), bytes = map.get(ACTIVE_PLAN_KEY);
     const running = c.selectVariant('v1', menuOrigin); await vi.advanceTimersByTimeAsync(0);

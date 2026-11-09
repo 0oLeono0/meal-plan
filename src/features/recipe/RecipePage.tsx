@@ -26,7 +26,7 @@ export function RecipePage({ snapshot, catalog, onRetry }: { snapshot: Generatio
   const [retrying, setRetrying] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
   const view = useMemo(() => projectRecipeView({ pathname, search, active: snapshot.active, loadStatus: snapshot.loadStatus, catalog }), [pathname, search, snapshot.active, snapshot.loadStatus, catalog]);
-  useEffect(() => { heading.current?.focus(); }, [pathname, search, view.status]);
+  useEffect(() => { if (!retrying) heading.current?.focus(); }, [pathname, search, view.status, retrying]);
   if (view.status === 'pending' || retrying) return <PlanLoading kind="recipe" />;
   if (view.status !== 'direct' && view.status !== 'context') return <section className="[overflow-wrap:anywhere]">
     <h1 ref={heading} tabIndex={-1}>{notices[view.status][0]}</h1><p>{notices[view.status][1]}</p>

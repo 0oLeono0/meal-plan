@@ -38,7 +38,8 @@ export function createGenerationController({ generation, activePlan, trustedCata
     presence: { status: 'absent' }, error: null, saveError: null, requestId: null, pendingTextIndex: 0, startedAt: null, origin: null, initialSearchCount: null });
   interface Operation { readonly id: string; readonly abort: AbortController; readonly inputs: PlanInputs; readonly origin: GenerationOrigin; readonly deadline: number; readonly baseRevision?: number; readonly intent?: 'append' | 'replace' | 'select'; readonly base?: ActiveBundle; initialSearchCount?: number; timeout?: unknown; rotation?: unknown }
   let operation: Operation | null = null, sequence = 0, disposed = false, revision = 0, loadSequence = 0, writeAllowed = false;
-  let lastRequest: { inputs: PlanInputs; origin: GenerationOrigin; intent: 'append' | 'replace'; base?: ActiveBundle; baseRevision?: number } | null = null;
+  let lastRequest: { inputs: PlanInputs; origin: GenerationOrigin; intent: 'append' | 'replace'; base?: ActiveBundle; baseRevision?: number }
+    | { intent: 'select'; variantId: string; origin: GenerationOrigin; baseRevision: number } | null = null;
   let writes: Promise<unknown> = Promise.resolve();
   const listeners = new Set<() => void>();
   const cancelled = Symbol('cancelled');
@@ -226,7 +227,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
       publish({ status: 'error', error: failure('GENERATION_DATA_INCOMPLETE', 'Не удалось проверить выбранный вариант') }); return;
     }
     const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: active.plan.inputs, origin: immutableSnapshot(origin), deadline: clock.now() + 30_000, baseRevision: revision, intent: 'select' };
-    operation = op; armTimeout(op);
+    operation = op; lastRequest = { intent: 'select', variantId, origin: op.origin, baseRevision: revision }; armTimeout(op);
     publish({ requestId: op.id, startedAt: clock.now(), origin: op.origin, intent: 'select' });
     await save(op, candidate.bundle);
   }
@@ -234,8 +235,12 @@ export function createGenerationController({ generation, activePlan, trustedCata
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { if (!disposed) listeners.add(listener); return () => { listeners.delete(listener); }; },
     load, retryLoad: load, start, cancel, retrySave, selectVariant, appendVariant, recreateSet,
-    async retryGeneration() { if (lastRequest && (snapshot.status === 'error' || snapshot.status === 'no-new-result')
-      && (lastRequest.baseRevision === undefined || lastRequest.baseRevision === revision)) await run(lastRequest.inputs, lastRequest.origin, lastRequest.intent, lastRequest.base, lastRequest.baseRevision); },
+    async retryGeneration() {
+      if (!lastRequest || (snapshot.status !== 'error' && snapshot.status !== 'no-new-result')
+        || (lastRequest.baseRevision !== undefined && lastRequest.baseRevision !== revision)) return;
+      if (lastRequest.intent === 'select') await selectVariant(lastRequest.variantId, lastRequest.origin);
+      else await run(lastRequest.inputs, lastRequest.origin, lastRequest.intent, lastRequest.base, lastRequest.baseRevision);
+    },
     dispose() { if (disposed) return; cancel(); disposed = true; ++loadSequence; listeners.clear(); },
   };
 }

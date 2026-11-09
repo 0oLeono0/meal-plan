@@ -5,17 +5,17 @@ milestone_name: P0 MVP
 current_phase: 03
 current_phase_name: Сравнение вариантов и просмотр рецептов
 current_plan: 12
-status: executing
-stopped_at: Completed03-11;Phase3 11/12plans;WINDOWS23fixed;nativeWebKitTab24/25 and human26open;next03-12
-last_updated: "2026-11-08T06:51:24.950Z"
-last_activity: 2026-11-08
-last_activity_desc: Completed03-11;11/12plans;recovery24/24;seed15/15;recipes23/24;unit478;WINDOWS23fixed;nativeTab24/25andhuman26open;next03-12
-state_head: 22b9886b9800d1c1e7e7d99bd6003c6d8dae91d1
+status: verifying
+stopped_at: Completed03-12 execution;12/12 summaries;independent verifier/humanUAT pending;03.1 mandatory before04
+last_updated: "2026-11-09T08:06:56.066Z"
+last_activity: 2026-11-09
+last_activity_desc: Completed03-12 execution;12/12summaries;critical60/60;unit478;4nativeWebKit gates and human26 open;independent verification pending
+state_head: 1f55e91e77cc846782971b18f0fbe15edc613910
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 30
-  completed_plans: 29
+  completed_plans: 30
 ---
 
 # Project State
@@ -29,13 +29,13 @@ See: .planning/PROJECT.md (updated 2026-10-30)
 
 ## Current Position
 
-Phase: 03 (Сравнение вариантов и просмотр рецептов) — EXECUTING
+Phase: 03 (Сравнение вариантов и просмотр рецептов) — VERIFYING
 Current Plan: 12
 Total Plans in Phase: 12
-Status: Ready to execute
-Last activity: 2026-11-08 — Completed03-11;11/12plans;recovery24/24;seed15/15;recipes23/24;unit478;WINDOWS23fixed;nativeTab24/25andhuman26open;next03-12
+Status: Execution recorded — independent verification and human acceptance pending
+Last activity: 2026-11-09 — Completed03-12 execution;critical60/60;unit478;4nativeWebKit gates and human26 open
 
-Progress: Phase1–2 приняты. Phase3:11/12 планов завершены;52/52 текущих изображений сохранены;следующий03-12. WINDOWS23 cancellationfocus закрыт; nativeWebKitTab24/25 и human26 остаются open. Вся фаза не принята;03.1 обязательна перед4. SDK state.update-progress выполнен и отказался менять prose из-за unscoped phase; эта строка синхронизирована вручную с11SUMMARY и29/30 metadata.
+Progress: Phase1–2 приняты. Phase3 имеет12/12 execution summaries и52/52 текущих media. Latest critical60/60, unit478/478, type/lint/build/media exit0. Initial full960 дал889pass/71unsuccessful, адресные повторы описаны в03-12SUMMARY. WINDOWS15/16/24/25 nativeWebKit и human26 остаются open. Следует независимая проверка и human acceptance, Phase03/P0 не приняты. Phase03.1 обязательна перед04. SDK state.update-progress отказался менять prose из-за unscoped phase. Эта строка синхронизирована с12SUMMARY и30/30 metadata, roadmap status остаётся In Progress.
 
 ## Performance Metrics
 
@@ -86,6 +86,7 @@ Progress: Phase1–2 приняты. Phase3:11/12 планов завершен�
 | Phase 03 P10 | 28min observed wall; initial reads untimed; interruption included | 2 tasks | 10 files |
 | Phase 03 P09 | 18min observed; initial reads not separately timed | 3 tasks | 17 files |
 | Phase 03 P11 | 1194min wall; active unknown; resumed27min | 3 tasks | 10 files |
+| Phase 03 P12 | 1510min wall; active unknown; resumed25min | 2 tasks | 18 files |
 
 ## Accumulated Context
 
@@ -120,6 +121,8 @@ Progress: Phase1–2 приняты. Phase3:11/12 планов завершен�
 - [Phase 03]: Validated URL day/mode and exact instance projection drive semantic actual-date menu/cards;1280grid independent from1200nav;baseline cancellationfocus remains WINDOWS23 for03-11
 - [Phase 03]: Current52 actualPNG/provenance and noexternal52localhero decode verified; fullnetworkoffline no-cache unsupported; Phase03.1 requires separate catalog-aware gate
 - [Phase 03]: Route-bound cancellation focus and keyboard-only panel scroll preserve native pointer links; real quota recovery24/24, seed15/15, recipes23/24 with WindowsWebKitTab limitation; next03-12 and shared requirements Pending
+- [Phase 03]: Preserve acknowledged succeeded navigation and stable initiator focus; explicit keyboard scroll uses existing sticky margins with pointer guard.
+- [Phase 03]: Retain initial960 failure report separately from scoped60pass; nativeWebKit15/16/24/25 and human26 remain open; shared requirements and phase acceptance pending.
 
 ### Pending Todos
 
@@ -147,6 +150,6 @@ Progress: Phase1–2 приняты. Phase3:11/12 планов завершен�
 
 ## Session Continuity
 
-Last session: 2026-11-08T06:51:23.782Z
-Stopped at: Completed03-11;Phase3 11/12plans;WINDOWS23fixed;nativeWebKitTab24/25 and human26open;next03-12
-Resume file: .planning/phases/03-sravnenie-variantov-i-prosmotr-retseptov/03-12-PLAN.md
+Last session: 2026-11-09T08:06:54.826Z
+Stopped at: Completed03-12 execution;12/12 summaries;independent verifier/humanUAT pending;03.1 mandatory before04
+Resume file: None

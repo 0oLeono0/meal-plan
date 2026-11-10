@@ -6,11 +6,11 @@ current_phase: 03
 current_phase_name: Сравнение вариантов и просмотр рецептов
 current_plan: 12
 status: verifying
-stopped_at: Phase03 verification human_needed;12/12summaries;unit480;reviewfixesverified;UATtest1awaiting;native4open
-last_updated: "2026-11-10T12:38:52.914Z"
-last_activity: 2026-11-09
-last_activity_desc: Completed03-12 execution;12/12summaries;critical60/60;unit478;4nativeWebKit gates and human26 open;independent verification pending
-state_head: 3bc51c7705f9f683d1806e35ed889488769c9478
+stopped_at: Completed quick261110-m4g; Phase03 UAT2/10 pass, test3 pending; native WebKit automation limitations retained
+last_updated: "2026-11-10T13:06:25.268Z"
+last_activity: 2026-11-10
+last_activity_desc: Completed quick261110-m4g with approximate calculation notes; unit480 pass; new UX9/9 pass; Phase03 UAT2/10 pass and test3 pending
+state_head: 90dccec9dd502736b2a37d1366ceb008383c5e0d
 progress:
   total_phases: 8
   completed_phases: 2
@@ -33,7 +33,7 @@ Phase: 03 (Сравнение вариантов и просмотр рецеп�
 Current Plan: 12
 Total Plans in Phase: 12
 Status: Execution recorded — independent verification and human acceptance pending
-Last activity: 2026-11-09 — Completed03-12 execution;critical60/60;unit478;4nativeWebKit gates and human26 open
+Last activity: 2026-11-10 — Completed quick261110-m4g. Понятные пояснения примерных цен и КБЖУ. Phase03 UAT2/10 pass, продолжение с теста3.
 
 Progress: Phase1–2 приняты. Phase3 имеет12/12 execution summaries и52/52 текущих media. Latest critical60/60, unit478/478, type/lint/build/media exit0. Initial full960 дал889pass/71unsuccessful, адресные повторы описаны в03-12SUMMARY. WINDOWS15/16/24/25 nativeWebKit и human26 остаются open. Следует независимая проверка и human acceptance, Phase03/P0 не приняты. Phase03.1 обязательна перед04. SDK state.update-progress отказался менять prose из-за unscoped phase. Эта строка синхронизирована с12SUMMARY и30/30 metadata, roadmap status остаётся In Progress.
 
@@ -123,6 +123,7 @@ Progress: Phase1–2 приняты. Phase3 имеет12/12 execution summaries 
 - [Phase 03]: Route-bound cancellation focus and keyboard-only panel scroll preserve native pointer links; real quota recovery24/24, seed15/15, recipes23/24 with WindowsWebKitTab limitation; next03-12 and shared requirements Pending
 - [Phase 03]: Preserve acknowledged succeeded navigation and stable initiator focus; explicit keyboard scroll uses existing sticky margins with pointer guard.
 - [Phase 03]: Retain initial960 failure report separately from scoped60pass; nativeWebKit15/16/24/25 and human26 remain open; shared requirements and phase acceptance pending.
+- [Phase 03.1]: Решение пользователя10.11.2026 допускает явно размеченные ориентировочные цены и КБЖУ с обоснованным базисом. Если нужна география новых оценок, целевой город Санкт-Петербург. Источники сохраняются в данных, UI показывает краткую сноску и Как считаем.
 
 ### Pending Todos
 
@@ -137,6 +138,12 @@ Progress: Phase1–2 приняты. Phase3 имеет12/12 execution summaries 
 
 -52 авторских рецепта содержательно проверены, кухонная/медицинская оценка не заявлена. Цены имеют разные явные scopes, права ограничены фактическим цитированием; неизвестные gluten/lactose/halal исключают запросы. Safari15 принят поH2; это не подменяется автоматическим WebKit.
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 261110-m4g | Понятная сноска примерных цен и КБЖУ в меню, покупках и рецептах. Поправка CAT-02 для оценок с обоснованным базисом. | 2026-11-10 | 90dccec | [261110-m4g-ponyatnye-poyasneniya-primernyh-tsen-i-k](./quick/261110-m4g-ponyatnye-poyasneniya-primernyh-tsen-i-k/) |
+
 ### Roadmap Evolution
 
 - Phase 03.1 inserted after Phase 3: Обязательное расширение каталога привычных блюд до приёмки MVP; пользователь подтвердил07.11.2026 (URGENT)
@@ -150,6 +157,6 @@ Progress: Phase1–2 приняты. Phase3 имеет12/12 execution summaries 
 
 ## Session Continuity
 
-Last session: 2026-11-10T12:38:48.917Z
-Stopped at: Phase03 verification human_needed;12/12summaries;unit480;reviewfixesverified;UATtest1awaiting;native4open
+Last session: 2026-11-10T13:05:05.495Z
+Stopped at: Completed quick261110-m4g; Phase03 UAT2/10 pass, test3 pending; native WebKit automation limitations retained
 Resume file: .planning/phases/03-sravnenie-variantov-i-prosmotr-retseptov/03-UAT.md

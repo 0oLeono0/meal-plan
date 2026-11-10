@@ -1,18 +1,14 @@
 ---
-status: testing
+status: complete
 phase: 03-sravnenie-variantov-i-prosmotr-retseptov
 source: [03-01-SUMMARY.md, 03-02-SUMMARY.md, 03-03-SUMMARY.md, 03-04-SUMMARY.md, 03-05-SUMMARY.md, 03-06-SUMMARY.md, 03-07-SUMMARY.md, 03-08-SUMMARY.md, 03-09-SUMMARY.md, 03-10-SUMMARY.md, 03-11-SUMMARY.md, 03-12-SUMMARY.md]
 started: 2026-11-10T12:38:48.565632+00:00
-updated: 2026-11-10T13:34:12.606027+00:00
+updated: 2026-11-10T15:07:08.875Z
 ---
 
 ## Current Test
 
-number: 6
-name: Найдено меньше трёх вариантов
-expected: |
-  Если при подборе найдены только один или два варианта, рядом должно быть указано точное число, например «Найдено 2 из 3 вариантов». Пояснение должно сообщать, что поиск ограничен и другие допустимые меню могут существовать. Найденные варианты должны оставаться доступными для выбора. Если такого результата у вас не было, ответьте «всегда было 3 варианта».
-awaiting: user response
+[testing complete]
 
 ## Tests
 
@@ -38,30 +34,30 @@ result: pass
 
 ### 6. Prohibition GEN-06
 expected: GEN-06. Получить1–2 допустимых варианта и прочитать пояснение ограниченного поиска. Число найденных показано точно. Текст допускает существование иных меню и не выдаёт bounded search за доказательство невозможности.
-result: pending
+result: pass
 
 ### 7. Prohibition GEN-07
 expected: GEN-07. Выполнить append, «Составить заново» и запуск с изменёнными настройками, затем отменить confirmation. Append сохраняет предыдущие варианты. Потеря набора объяснена перед заменой, отмена сохраняет меню и draft.
-result: pending
+result: pass
 
 ### 8. Prohibition MENU-03
 expected: MENU-03. Прочитать подписи карточки и recipe hero, сопоставить происхождение картинки с источником КБЖУ. Изображение обозначено как созданная ИИ иллюстрация, без утверждения реального приготовления и без роли источника пищевых фактов.
-result: pending
+result: pass
 
 ### 9. Prohibition REC-01
 expected: REC-01. Просмотреть docs/data/recipe-media.json и sample/batch provenance, их terms и пользовательскую подпись. Указано фактическое generated происхождение, отсутствует приписывание чужой CC0-лицензии, исключительности или непроверенного авторства.
-result: pending
+result: pass
 
 ### 10. Prohibition REC-02
 expected: REC-02. Прочитать КБЖУ, источники, предупреждения ограниченного растительного каталога на /menu и известном /recipe/:id. Расчёт не преподносится медицинской рекомендацией или доказательством полноценного рациона.
-result: pending
+result: pass
 
 ## Summary
 
 total: 10
-passed: 5
+passed: 10
 issues: 0
-pending: 5
+pending: 0
 skipped: 0
 blocked: 0
 

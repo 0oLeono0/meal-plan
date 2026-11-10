@@ -70,12 +70,14 @@ test('retry-save promotes the existing real candidate, saved dates and sources s
   const saved = await page.evaluate(key => localStorage.getItem(key), activeKey);
   expect(saved).not.toBe(old);
   const dates = await page.locator('[data-date]').evaluateAll(rows => rows.map(row => row.getAttribute('data-date')));
-  const sourceSummary = page.locator('summary').filter({ hasText: /^Источники расчёта$/ });
+  const sourceSummary = page.locator('summary').filter({ hasText: /^Как считаем$/ });
   await sourceSummary.click();
   const sources = await sourceSummary.locator('..').innerText();
-  expect(sources).toContain('Версия каталога:');
-  expect(sources).toMatch(/КБЖУ: .+ \/ .+ · 100 г/);
-  expect(sources).toMatch(/Цена: .+ \/ .+ · 1 кг/);
+  expect(sources).toContain('Используем примерные справочные цены');
+  expect(sources).toContain('КБЖУ считаем по количеству продуктов и порциям');
+  expect(sources).not.toMatch(/Версия каталога|https?:|usda-fdc-sr-legacy/);
+  expect(saved).toContain('sourceSnapshots');
+  expect(saved).toContain('usda-fdc-sr-legacy');
   const text = await savedMenuText(page);
   await page.reload();
   await sourceSummary.click();

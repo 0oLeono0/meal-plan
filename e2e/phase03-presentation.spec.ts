@@ -139,7 +139,8 @@ test('EC-41 long recipe facts sources and equal hero columns reflow at every req
   await page.locator('[data-instance-id]').first().getByRole('link').click();
   await expect(page).toHaveURL(/\/recipe\//);
   await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
-  await page.getByText('Источники данных', { exact: true }).click();
+  await page.getByText('Как считаем', { exact: true }).click();
+  await expect(page.getByRole('region', { name: 'О расчётах' })).not.toContainText('https://example.org');
   for (const width of [360, 390, 430, 768, 1199, 1200, 1279, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);

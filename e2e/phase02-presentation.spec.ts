@@ -119,8 +119,9 @@ for (const width of widths) {
     await expect(page.locator('[data-instance-id]').last()).toContainText('<img src=x onerror=alert(1)>');
     await expect(page.locator('img')).toHaveCount(0);
     await expect(page.getByRole('heading', { name: /^Покупки:/ })).toContainText(/\d.*₽/);
-    await disclosure(page, page.getByText('Источники расчёта', { exact: true }));
-    await expect(page.getByText(/^https:\/\/example.org\/synthetic\?record=/).first()).toBeVisible();
+    await disclosure(page, page.getByText('Как считаем', { exact: true }));
+    await expect(page.getByRole('region', { name: 'О расчётах' })).toContainText('В магазине стоимость может отличаться');
+    await expect(page.getByRole('region', { name: 'О расчётах' })).not.toContainText('https://example.org');
     await fits(page);
     await page.getByRole('link', { name: /^Список покупок ·/ }).click();
     await expect(page.getByRole('heading', { name: 'Список покупок' })).toBeFocused();
@@ -250,7 +251,7 @@ test('phase02 sequential Tab ShiftTab Space and Enter traverse saved screens and
   for (const label of ['Меню', 'Покупки', 'Дома']) await tab(nav.getByRole('link', { name: label, exact: true }));
   await tab(nav.getByRole('button', { name: 'Профиль', exact: true }));
   for (const control of await page.getByRole('region', { name: 'Варианты меню' }).locator('button:enabled:visible, summary:visible').all()) await tab(control);
-  const sources = page.getByText('Источники расчёта', { exact: true });
+  const sources = page.getByText('Как считаем', { exact: true });
   await tab(sources);
   await page.keyboard.press('Space');
   await expect(sources.locator('..')).toHaveAttribute('open', '');

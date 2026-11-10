@@ -139,6 +139,14 @@ test('real Tab Enter and Space open composition and return focus to the exact da
   await expect(link).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
+  const calculation = page.getByText('Как считаем', { exact: true });
+  await page.keyboard.press('Tab');
+  await expect(calculation).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(calculation.locator('..')).toHaveAttribute('open', '');
+  await expect(calculation.locator('..')).toContainText('КБЖУ считаем по количеству продуктов и порциям');
+  await page.keyboard.press('Space');
+  await expect(calculation.locator('..')).not.toHaveAttribute('open');
   const summary = page.getByText('Состав — КБЖУ каждого ингредиента на одну порцию', { exact: true });
   await page.keyboard.press('Tab');
   await expect(summary).toBeFocused();
@@ -148,6 +156,8 @@ test('real Tab Enter and Space open composition and return focus to the exact da
   await page.keyboard.press('Space');
   await expect(summary.locator('..')).not.toHaveAttribute('open');
   await expect(summary).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(calculation).toBeFocused();
   await page.keyboard.press('Shift+Tab');
   await expect(page.getByRole('link', { name: 'К меню', exact: true })).toBeFocused();
   await page.keyboard.press('Enter');

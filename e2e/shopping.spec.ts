@@ -77,8 +77,13 @@ test('synthetic many rows keep duplicate names by ID and categories in approved 
   await expect(page.locator('[data-category] h2')).toHaveText(['Овощи и фрукты', 'Мясо и рыба', 'Молочное', 'Бакалея', 'Хлеб', 'Прочее']);
   expect(await page.locator('[data-product-id]').evaluateAll(rows => new Set(rows.map(row => row.getAttribute('data-product-id'))).size)).toBe(6);
   await expect(page.getByRole('region', { name: 'Бюджет меню' }).locator('dd')).toHaveText(['300,00 ₽', '120,00 ₽', '180,00 ₽']);
-  await page.getByText('Источники расчёта', { exact: true }).click();
-  await expect(page.getByText(/Цена: synthetic-browser-only \/ price-1/)).toContainText('2 октября 2026 г.');
+  const saved = await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'));
+  expect(saved).toContain('2026-10-02');
+  expect(saved).toContain('price-1');
+  await page.getByText('Как считаем', { exact: true }).click();
+  await expect(page.getByRole('region', { name: 'О расчётах' })).toContainText('В магазине стоимость может отличаться');
+  await expect(page.getByRole('region', { name: 'О расчётах' })).not.toContainText('synthetic-browser-only');
+  expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'))).toBe(saved);
 });
 
 for (const split of ['one', 'two'] as const) test(`synthetic ${split} instance sources have grammatical counts and literal contributions`, async ({ page }) => {

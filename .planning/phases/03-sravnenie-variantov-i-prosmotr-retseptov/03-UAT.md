@@ -3,7 +3,7 @@ status: complete
 phase: 03-sravnenie-variantov-i-prosmotr-retseptov
 source: [03-01-SUMMARY.md, 03-02-SUMMARY.md, 03-03-SUMMARY.md, 03-04-SUMMARY.md, 03-05-SUMMARY.md, 03-06-SUMMARY.md, 03-07-SUMMARY.md, 03-08-SUMMARY.md, 03-09-SUMMARY.md, 03-10-SUMMARY.md, 03-11-SUMMARY.md, 03-12-SUMMARY.md]
 started: 2026-11-10T12:38:48.565632+00:00
-updated: 2026-11-10T15:07:08.875Z
+updated: 2026-11-11T11:42:01.107Z
 ---
 
 ## Current Test

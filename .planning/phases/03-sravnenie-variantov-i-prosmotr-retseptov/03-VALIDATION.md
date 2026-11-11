@@ -1,13 +1,24 @@
 ---
 phase: "03"
 slug: "sravnenie-variantov-i-prosmotr-retseptov"
-status: evidence-recorded-with-limitations
+status: validated
 nyquist_compliant: false
 wave_0_complete: true
 created: "2026-11-04"
+last_delta_audit: "2026-11-11"
 ---
 
 # Phase 03 — Validation Strategy
+
+## Актуализация после пользовательской приёмки 11.11.2026
+
+Дельта аудита охватывает quick261110-m4g и завершённую `03-UAT.md`. Существующая карта 33 задач и восьми требований сохранена. Общий `CalculationNote` подключён в PlanSummary и RecipePage. Новая meaningful browser-проверка `e2e/calculation-note.spec.ts` проверяет меню, покупки, рецепт, раскрытие, неизменность сохранённых bytes и отсутствие горизонтального overflow. В quick SUMMARY зафиксированы 9/9 flow на Chromium/Firefox/WebKit при360/768/1280, unit480/480, typecheck/lint/build exit0. Старое keyboard-ожидание дополнено новым summary в tab order, адресные Chromium/Firefox проверки прошли. Новых пробелов покрытия в изменённой области не найдено.
+
+`03-UAT.md` завершена с10/10 явно подтверждёнными пользователем pass, issues/pending/skipped/blocked0. UAT2 покрывает native Safari keyboard и WINDOWS15/16/24/25, UAT3 реальные устройства/AT/zoom/safe-area, UAT4 крайние длинные состояния UIC12/18/51/52, UAT5…10 шесть descriptorless prohibitions. Человеческие gates закрыты этими отдельными пользовательскими результатами. Автоматические WindowsWebKit failures сохранены в исторических строках карты и QA. Полный post-fix960 не запускался. `nyquist_compliant:false` сохраняет ограничение полной автоматической проверки, status validated отражает завершённый аудит покрытия с manual-only evidence.
+
+Ранее приведённые pending/open утверждения относятся к датированным запускам09.11.2026. Для текущей пользовательской приёмки применяется завершённая UAT. Этот аудит не выполняет переход фазы и не меняет shared requirement statuses.
+
+Свежая последовательность stale regeneration11.11.2026 выполнена до независимого verifier. verify:post рассмотрен в порядке Nyquist → security → UI. Существующий UIreview повторно использован по документированному auto/View пути. Независимый gsd-code-reviewer проверил12файлов дельтыec24f1b..b49dc88, новых findings0. Official code-review-disposition script подтвердил0open из2исторических findings, CR-01/WR-01fixed. Gap-closure step исключён section_manifest для целойPhase03. Regression manifest-gate собрал36prior-phase test references и выполнил нормализованную configured command `npm run test:unit -- --run` через official run-with-timeout600s. Результат480/480,20files,11.59s,exit0, log `.tmp/03-post-uat-regression.log`. Это unit regression gate. Свежие typecheck/lint/build exit0 записаны в `.tmp/03-post-uat-{typecheck,lint,build}.log`. Build сохраняет существующий advisory512.32kB chunk. Новых browser/media прогонов в этой актуализации нет.
 
 Контракт обратной связи; фактические результаты заполняются при исполнении. Источник: 03-RESEARCH.md, Validation Architecture. Это не отчёт о пройденных тестах.
 
@@ -128,3 +139,11 @@ UIC12 — длинная ошибка на360px, UIC18 — произвольн�
 Post-review09Nov после RED913cd3b/GREENec24f1b проверены controller48/48, repeatedcatalogretry6/6all3engines, type/lint/build exit0. Manifest regression gate по configured one-shot unit command с600stimeout дал480/480,20files,10.36s,exit0. Новых full browser claims нет. CR-01/WR-01 outcome и команды находятся в03-REVIEW-FIX/REVIEW-DISPOSITION.
 
 Plan03-12 execution evidence consolidated09.11.2026 in `docs/qa/phase03-final-validation.md` and `phase03-security.md`. Latest critical60/60 all3engines passed. Focus/legacy24-case run19passed/5failed retains4nativeWebKit failures and one20s harness timeout, then incomplete-data rerun3/3 passed with test-local60s. Source audit mapped GOAL/8REQ/18decisions/46edges/52UIpairs to concrete named specs/domain cases. UIC12/18/24/26/40/51/52 retain explicit partial/native limits. Six descriptorless prohibitions retain flagged-unverified. Current coverage audit records these gaps, so nyquist_compliant remains false. Automated completion of this QA plan does not accept Phase03 or advance to Phase04. Phase03.1 remains mandatory before04.
+
+## Validation Audit 2026-11-11
+
+| Metric | Count |
+|---|---|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |

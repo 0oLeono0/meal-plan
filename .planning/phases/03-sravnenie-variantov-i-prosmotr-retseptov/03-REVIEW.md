@@ -2,6 +2,25 @@
 phase: 03-sravnenie-variantov-i-prosmotr-retseptov
 reviewed: 2026-11-09T08:30:00Z
 depth: standard
+delta_reviewed: 2026-11-11
+delta_base: ec24f1b
+delta_head: b49dc88
+delta_status: clean
+delta_files_reviewed: 12
+delta_files_reviewed_list:
+  - src/features/plan/PlanSummary.tsx
+  - src/features/recipe/RecipePage.tsx
+  - src/shared/CalculationNote.tsx
+  - e2e/calculation-note.spec.ts
+  - e2e/generation-storage.spec.ts
+  - e2e/menu.spec.ts
+  - e2e/phase02-presentation.spec.ts
+  - e2e/phase03-presentation.spec.ts
+  - e2e/phase03-recipes.spec.ts
+  - e2e/shopping.spec.ts
+  - reference/PRD.md
+  - reference/OPEN_QUESTIONS.md
+delta_findings: {critical: 0, warning: 0, info: 0, total: 0}
 files_reviewed: 122
 files_reviewed_list:
   - docs/data/recipe-media-batches/01.json
@@ -135,6 +154,27 @@ status: issues_found
 ---
 
 # Phase 03 Code Review Report
+
+## Независимый incremental review 11.11.2026
+
+Дельта `ec24f1b..b49dc88` проверена на standard depth в перечисленных12файлах. Рассмотрены текущие компоненты, изменённые assertions и их fixtures, нативные details/summary, shared focus/scroll CSS и поправка пользователя о приблизительных расчётах. Новых BLOCKER или WARNING в этой области не обнаружено. Исторические CR-01 и WR-01 ниже сохраняются с исходным описанием и классификацией, их исправления подтверждены в `03-REVIEW-FIX.md`, disposition fixed записан отдельно.
+
+### Обоснование текущего результата
+
+- `src/shared/CalculationNote.tsx` содержит статический текст, именованный region и нативное раскрытие. Enter/Space обеспечиваются HTML summary. Новый компонент использует существующие токены, минимальную высоту44px и общий `:focus-visible`/scroll-margin. Новых внешних данных, HTML injection или обработчиков записи нет.
+- `PlanSummary.tsx` и `RecipePage.tsx` подключают единое пояснение. Три стоимости, КБЖУ, порционные/семейные базисы, запасы, предупреждение о медицинской полноценности и растительном ассортименте сохраняются. Удаление техническихID/URL/географии из UI соответствует явной поправке пользователя10.11.2026. Расчётные функции, sourceSnapshots и сохранённые факты не изменены.
+- Новый `e2e/calculation-note.spec.ts` проходит обычный вход генерации настоящего меню, переходы menu→shopping→recipe, reload, проверяет текст disclosure, его Enter/Space и неизменность saved bytes на360/768/1280. Его `summary.focus()` проверяет активацию конкретного disclosure. Реальное последовательное достижение и обратный ShiftTab дополнительно сохранены в обновлённом `phase03-recipes.spec.ts` и existing phase02 keyboard flow.
+- Изменения шести существующих E2E заменяют удалённый UI provenance на новое пояснение и проверки сохранённых источников. Assertions независимых сумм, КБЖУ, pantry500−200=300, dated contributions, corrupt/trust/retry guards и точного возврата к карточке сохраняются. Keyboard-тест добавляет новый summary в реальную последовательность и проверяет его состояние без программного focus.
+- PRD/Q-14/Q-19 ссылаются на документированное решение. Санкт-Петербург относится к будущим региональным оценкам. Фактические исторические данные сохраняют своё происхождение. Жёсткие аллергии, единицы, бюджет и детерминированные расчёты продолжают действовать.
+- Применены локальные React/UX правила и актуальные Web Interface Guidelines. Правила семантики, видимого фокуса, long-content reflow и keyboard controls проверены в изменённой области. [Web Interface Guidelines](https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md)
+
+### Доказательства и границы
+
+В этом code review выполнены чтение исходников и diff, проверка imports/callers и `git diff --check` с exit0. Новый browser/unit прогон здесь не выполнялся. Quick SUMMARY фиксирует unit480/480, type/lint/build exit0, новые cross-browser flow9/9 и адресные keyboard passes Chromium/Firefox. WindowsWebKit failed gate сохранён как автоматический failure. Исходный полный960=889passed/71unsuccessful и отсутствие полного post-fix960 остаются фактическими границами автоматизации.
+
+Завершённая03-UAT фиксирует пользовательские10/10pass, включая native/device и descriptorless judgments. Это отдельное human evidence. Source/tests в этом review не изменены, коммит не создан. Следующий шаг принадлежит независимой goal verification и workflow владельцу фазы.
+
+Далее сохранён исторический отчёт09.11.2026.
 
 Reviewed 2026-11-09T08:30:00Z. Standard depth. Source HEAD `3209f0fb6f75793652aed5bd2f22167a399df330`.
 

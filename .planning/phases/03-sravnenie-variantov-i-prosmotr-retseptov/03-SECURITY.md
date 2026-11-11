@@ -9,9 +9,17 @@ block_on: high
 register_authored_at_plan_time: true
 created: "2026-11-09"
 audited_head: e989842
+delta_audited_head: b49dc88
+delta_audited: "2026-11-11"
 ---
 
 # Phase03 — Security
+
+## Дельта после quick и пользовательской приёмки 11.11.2026
+
+Повторно проверены изменения PlanSummary, RecipePage и новый статический CalculationNote относительно исправленияec24f1b. Дельта убирает технический provenance из пользовательского пояснения и добавляет нативное details. Сохранённые facts/sourceSnapshots, арифметика, URL validation, request ownership и storage trust boundaries не менялись. Новых network/auth/file/schema boundaries нет. JSX выводит статический текст и существующие вычисленные значения. T-03-02/03/06/15/16/17 сохраняют прежние controls, supply-chain дельта отсутствует. ASVS L1 short-circuit применим к существующему плановому регистру19/19closed, threats_open0. Новых accepted risks нет.
+
+Пользовательская приёмка подтверждена10/10pass в03-UAT.md. UAT2/3 подтверждают целевую native/device доступность, UAT5…10 человеческую оценку prohibitions. Исторические автоматические WebKit failures сохраняют свой фактический результат. Разделы ниже фиксируют прежнее состояние09.11.2026. Итог security остаётся verified, фазовый переход выполняется отдельно.
 
 Независимый gsd-security-auditor проверил19плановых mitigations,14high и5medium. Scoped ASVS level1 review. Threat register закрыт по наличию и placement мер в исходниках. Фазовая приёмка и native/human gates остаются открыты.
 

@@ -13,6 +13,9 @@ import foodEvidence from '../../data/sources/food.snapshot.json';
 import priceEvidence from '../../data/sources/prices.snapshot.json';
 import safetyEvidence from '../../data/sources/safety.snapshot.json';
 import { historicalCatalog, historicalCatalogPort } from './catalog';
+import release1Raw from '../test/fixtures/phase031-release1-active-plan.json?raw';
+import { sourceApprovedCatalogs, sourceApprovedCatalogPorts } from './catalog';
+import { createVersionedGeneration } from '../adapters/generation';
 
 const sourceEvidence = { food: foodEvidence, prices: priceEvidence, safety: safetyEvidence };
 
@@ -20,6 +23,25 @@ const modules = import.meta.glob('./catalog.ts', { eager: true });
 // An absent production catalog is an assertion failure, never an import/discovery error.
 const production = () => modules['./catalog.ts'] as { bundledCatalog: Catalog; bundledCatalogPort: Parameters<typeof createLocalGeneration>[0]; validateBundledCatalog: (input: Catalog, sources?: typeof sourceEvidence) => Promise<ReturnType<typeof validateCatalog>> } | undefined;
 describe('source-backed production corpus', () => {
+  it('ships the exact breakfast snack release and preserves the original 56 recipe snapshot', async () => {
+    const current = production()!.bundledCatalog;
+    expect(current.version).toBe('mealplan-2026-11-11-2');
+    expect(current.recipes).toHaveLength(68);
+    expect(current.foods).toHaveLength(26);
+    const first = validateActiveBundle(JSON.parse(release1Raw).plan);
+    expect(first.status).toBe('valid');
+    if (first.status !== 'valid') throw new Error('Original56 must remain trusted');
+    expect(sourceApprovedCatalogs.find(catalog => catalog.version === 'mealplan-2026-11-11-1')).toEqual(first.bundle.plan.inputs.catalog);
+    expect(current.recipes.slice(0, 56)).toEqual(first.bundle.plan.inputs.catalog.recipes);
+    expect(current.foods.slice(0, 20)).toEqual(first.bundle.plan.inputs.catalog.foods);
+    for (const version of ['mealplan-2026-10-28-1', 'mealplan-2026-11-11-1', 'mealplan-2026-11-11-2']) {
+      expect((await sourceApprovedCatalogPorts[version]?.load())?.status).toBe('loaded');
+    }
+    const generation = createVersionedGeneration(sourceApprovedCatalogPorts);
+    const result = await generation.generate({ requestId: 'release1-after68', inputs: first.bundle.plan.inputs }, new AbortController().signal);
+    expect(result.status).toBe('success');
+    if (result.status === 'success') expect(result.plan.inputs).toEqual(first.bundle.plan.inputs);
+  }, 30000);
   it('generates, validates, saves and reloads reviewed no-fish facts without inventing allergen guarantees', async () => {
     const module = production()!;
     const applied = buildAppliedSettings({ ...createDraft(), days: '1', restrictions: ['no-fish'] });

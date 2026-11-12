@@ -3,6 +3,41 @@ const originals = import.meta.glob('../../data/sources/*.snapshot.json', { query
 const read = (name: string) => JSON.parse(String(originals[`../../data/sources/${name}.snapshot.json`]));
 const hash = async (value: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))), byte => byte.toString(16).padStart(2, '0')).join('');
 describe('archived primary sources', () => {
+  it('retains six independently acquired breakfast snack profiles and the separate label attribution', async () => {
+    const data = read('phase031');
+    for (const [productId, profileId, state, expected, amount] of [
+      ['milk', 'usda-172217-ready', 'ready', ['61', '3.15', '3.27', '4.78'], '120'],
+      ['oats', 'usda-173904-dry', 'dry', ['379', '13.15', '6.52', '67.7'], '170'],
+      ['chickpea-canned', 'usda-173800-drained', 'drained', ['139', '7.05', '2.77', '22.53'], '710'],
+      ['bean-canned', 'usda-174285-drained', 'drained', ['124', '7.98', '1.05', '21.49'], '390'],
+      ['cucumber', 'usda-168409-raw', 'raw', ['15', '0.65', '0.11', '3.63'], '300'],
+      ['cottage-cheese', 'label-vkusvill-51256-ready', 'ready', ['117', '16.5', '5', '1.5'], '710'],
+    ] as const) {
+      const row = data.records.find((row: { productId: string }) => row.productId === productId);
+      expect(row, productId).toBeDefined();
+      expect(row.profileId).toBe(profileId);
+      expect(row.state).toBe(state);
+      expect(row.reference).toEqual({ amount: '100', unit: 'g', basis: 'edible' });
+      if (row.nutrition.kind === 'usda') {
+        expect(['1008', '1003', '1004', '1005'].map(id => row.nutrition.nutrients.find((n: { nutrient_id: string }) => n.nutrient_id === id).amount)).toEqual(expected);
+        expect(await hash(row.nutrition.originalCsv)).toBe(row.nutrition.sha256);
+      } else {
+        expect(row.nutrition.kind).toBe('label');
+        expect(Object.values(row.nutrition.values)).toEqual(expected);
+        expect(row.nutrition.license).not.toBe('CC0-1.0');
+        expect(row.nutrition.url).toBe('https://vkusvill.ru/goods/tvorog-5-200-g-51256/');
+        expect(await hash(row.nutrition.originalEvidence)).toBe(row.nutrition.sha256);
+      }
+      expect(row.price.amount).toBe(amount);
+      expect(row.price.targetScope).toBe('Санкт-Петербург');
+      expect(row.price.assessmentDate).toBe('2026-11-12');
+      expect(row.price.reference).toEqual({ amount: '1', unit: 'kg', basis: 'edible' });
+      expect(row.price.scope).toBeTruthy();
+      expect(row.price.derivation).toBeTruthy();
+      expect(await hash(row.price.originalEvidence)).toBe(row.price.sha256);
+      expect(await hash(row.safety.originalEvidence)).toBe(row.safety.sha256);
+    }
+  });
   it('archives actual primary observations before catalog acceptance', () => {
     expect(typeof originals['../../data/sources/prices.snapshot.json']).toBe('string');
     expect(typeof originals['../../data/sources/food.snapshot.json']).toBe('string');

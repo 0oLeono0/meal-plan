@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bundledCatalog, bundledCatalogPort } from './catalog';
+import { bundledCatalog, bundledCatalogPort, sourceApprovedCatalogs } from './catalog';
 import { trustedCatalogs } from '../adapters/trustedCatalogs';
 import legacy from '../test/fixtures/phase02-active-plan-v1.json';
 import { validateActiveBundle } from '../adapters/activePlan';
@@ -9,9 +9,9 @@ import { historicalCatalog, validateHistoricalCatalog } from './catalog';
 
 describe('immutable source-approved release expansion', () => {
   it('ships four original recipes and keeps all original historical facts', async () => {
-    expect(bundledCatalog.version).toBe('mealplan-2026-11-11-1');
-    expect(bundledCatalog.recipes).toHaveLength(56);
-    expect(bundledCatalog.foods).toHaveLength(20);
+    const firstRelease = sourceApprovedCatalogs.find(catalog => catalog.version === 'mealplan-2026-11-11-1')!;
+    expect(firstRelease.recipes).toHaveLength(56);
+    expect(firstRelease.foods).toHaveLength(20);
     const old = validateActiveBundle(legacy.plan);
     expect(old.status).toBe('valid');
     if (old.status !== 'valid') throw new Error('Invalid original fixture');

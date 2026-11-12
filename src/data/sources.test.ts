@@ -6,6 +6,34 @@ const originals = import.meta.glob('../../data/sources/*.snapshot.json', { query
 const read = (name: string) => JSON.parse(String(originals[`../../data/sources/${name}.snapshot.json`]));
 const hash = async (value: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))), byte => byte.toString(16).padStart(2, '0')).join('');
 describe('archived primary sources', () => {
+  it('pins five lunch raw dry profiles and complete issued75 membership', async () => {
+    const data = read('phase031');
+    for (const [productId, fdcId, state, values, price] of [
+      ['turkey', '174515', 'raw', ['114', '23.34', '2.33', '0'], '850'],
+      ['pollock', '173725', 'raw', ['76', '17.17', '0.82', '0'], '820'],
+      ['cod', '171955', 'raw', ['82', '17.81', '0.67', '0'], '1600'],
+      ['beef-mince', '174030', 'raw', ['176', '20', '10', '0'], '750'],
+      ['pasta', '168927', 'dry', ['371', '13.04', '1.51', '74.67'], '230'],
+    ] as const) {
+      const row = data.records.find((row: { productId: string }) => row.productId === productId);
+      expect(row, productId).toBeDefined();
+      expect(row.profileId).toBe(`usda-${fdcId}-${state}`);
+      expect(row.state).toBe(state);
+      expect(row.reference).toEqual({ amount: '100', unit: 'g', basis: 'edible' });
+      expect(['1008', '1003', '1004', '1005'].map(id => row.nutrition.nutrients.find((n: { nutrient_id: string }) => n.nutrient_id === id).amount)).toEqual(values);
+      expect(await hash(row.nutrition.originalCsv)).toBe(row.nutrition.sha256);
+      expect(row.price.amount).toBe(price);
+      expect(row.price.targetScope).toBe('Санкт-Петербург');
+      expect(row.price.reference).toEqual({ amount: '1', unit: 'kg', basis: 'edible' });
+      expect(await hash(row.price.originalEvidence)).toBe(row.price.sha256);
+      expect(await hash(row.safety.originalEvidence)).toBe(row.safety.sha256);
+      expect(row.safety.facts.map((fact: { suitable: boolean }) => fact.suitable)).toEqual([!['pollock', 'cod'].includes(productId), productId === 'pasta']);
+    }
+    expect(bundledCatalog.version).toBe('mealplan-2026-11-11-3');
+    expect(bundledCatalog.recipes).toHaveLength(75);
+    expect(bundledCatalog.foods).toHaveLength(31);
+    expect((await validateExpandedCatalog(bundledCatalog)).status).toBe('loaded');
+  });
   it.each<[string, (data: typeof manifest) => void]>([
     ['observed scope', data => { data.records[8].price.scope = 'Санкт-Петербург verified'; }],
     ['edible basis', data => { data.records[8].reference.basis = 'whole-package'; }],

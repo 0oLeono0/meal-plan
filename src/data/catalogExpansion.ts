@@ -16,13 +16,16 @@ type SourceRow = Manifest['records'][number];
 // Each includes exact profile/recipe membership and all original source fields.
 const releaseSourceHashes: Readonly<Record<string, string>> = Object.freeze({
   'mealplan-2026-11-11-1': '7e06f5d4ea1dd341571a54cc8fd62fff04988a32f843d0cd637413b4681ab1a3',
+  'mealplan-2026-11-11-2': 'fab951b0150ec725b273bb3e9fe4fe92b127b76e6377fbf1ad40b5f651f60af5',
 });
 
 function foodFromSource(row: SourceRow): FoodProfile {
-  const source: SourceReference = { sourceId: 'usda-fdc-sr-legacy', recordId: row.nutrition.food.fdc_id,
+  const source: SourceReference = row.nutrition.food ? { sourceId: 'usda-fdc-sr-legacy', recordId: row.nutrition.food.fdc_id,
     url: `https://fdc.nal.usda.gov/food-details/${row.nutrition.food.fdc_id}/nutrients`, release: 'SR Legacy April 2018', license: 'CC0-1.0',
-    archiveUrl: sourceSnapshot.archiveUrl, archiveSha256: sourceSnapshot.archiveSha256 };
-  const values = Object.fromEntries(Object.entries(nutrientIds).map(([key, id]) => [key, row.nutrition.nutrients.find(value => value.nutrient_id === id)?.amount]));
+    archiveUrl: sourceSnapshot.archiveUrl, archiveSha256: sourceSnapshot.archiveSha256 }
+    : { sourceId: 'vkusvill-product-label', recordId: row.nutrition.recordId!, url: row.nutrition.url!,
+      release: row.nutrition.accessedAt!, license: row.nutrition.license!, archiveSha256: row.nutrition.sha256 };
+  const values = row.nutrition.values ?? Object.fromEntries(Object.entries(nutrientIds).map(([key, id]) => [key, row.nutrition.nutrients?.find(value => value.nutrient_id === id)?.amount]));
   if (Object.values(values).some(value => value === undefined)) throw new Error(`Missing acquired nutrient: ${row.profileId}`);
   return { productId: row.productId, profileId: row.profileId, name: row.name, identity: row.identity, state: row.state, category: row.category, conversions: [],
     nutrition: { status: 'known', reference: edible100, values: values as Record<keyof typeof nutrientIds, string>, source },
@@ -69,13 +72,25 @@ export async function validateExpandedCatalog(input: Catalog, manifest: Manifest
       const row = manifest.records.find(row => row.profileId === id);
       const food = checked.catalog.foods.find(food => food.profileId === id);
       if (!row || !food || !sameSnapshot(food, foodFromSource(row))) return catalogError('SOURCE_PROFILE_MISMATCH', id);
-      if (row.nutrition.kind !== 'usda' || manifest.archiveSha256 !== 'b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0'
+      if (manifest.archiveSha256 !== 'b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0'
         || manifest.archiveUrl !== 'https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip'
-        || manifest.license !== 'CC0-1.0' || !sameSnapshot(row.reference, edible100) || row.identity !== row.nutrition.food.description
-        || !row.mapping || !row.state || !row.nutrition.originalCsv.includes(row.identity)) return catalogError('SOURCE_BASIS_MISMATCH', id);
-      if (row.nutrition.nutrients.length !== 4 || new Set(row.nutrition.nutrients.map(value => value.nutrient_id)).size !== 4
-        || !Object.values(nutrientIds).every(nid => row.nutrition.nutrients.some(value => value.nutrient_id === nid && value.fdc_id === row.nutrition.food.fdc_id
-          && /^\d+(\.\d+)?$/.test(value.amount) && row.nutrition.originalCsv.includes(`"${value.id}","${value.fdc_id}","${value.nutrient_id}","${value.amount}"`)))) return catalogError('SOURCE_NUTRIENT_MISMATCH', id);
+        || manifest.license !== 'CC0-1.0' || !sameSnapshot(row.reference, edible100) || !row.mapping || !row.state) return catalogError('SOURCE_BASIS_MISMATCH', id);
+      const nutrition = row.nutrition;
+      let nutritionEvidence: string;
+      if (nutrition.kind === 'usda' && nutrition.food && nutrition.nutrients && nutrition.originalCsv) {
+        nutritionEvidence = nutrition.originalCsv;
+        if (row.identity !== nutrition.food.description || !nutritionEvidence.includes(row.identity)
+          || nutrition.nutrients.length !== 4 || new Set(nutrition.nutrients.map(value => value.nutrient_id)).size !== 4
+          || !Object.values(nutrientIds).every(nid => nutrition.nutrients!.some(value => value.nutrient_id === nid && value.fdc_id === nutrition.food!.fdc_id
+            && /^\d+(\.\d+)?$/.test(value.amount) && nutritionEvidence.includes(`"${value.id}","${value.fdc_id}","${value.nutrient_id}","${value.amount}"`)))) return catalogError('SOURCE_NUTRIENT_MISMATCH', id);
+      } else if (nutrition.kind === 'label' && nutrition.originalEvidence) {
+        const { originalEvidence, sha256: labelHash, ...label } = nutrition;
+        nutritionEvidence = originalEvidence;
+        if (!sameSnapshot(JSON.parse(originalEvidence), label) || label.identity !== row.identity || !sameSnapshot(label.reference, edible100)
+          || !sameSnapshot(label.values, { calories: '117', protein: '16.5', fat: '5', carbohydrates: '1.5' })
+          || label.recordId !== '51256' || label.url !== 'https://vkusvill.ru/goods/tvorog-5-200-g-51256/'
+          || !label.attribution || !label.excerpt || !label.accessedAt || !label.license || label.license === 'CC0-1.0' || !labelHash) return catalogError('SOURCE_LABEL_MISMATCH', id);
+      } else return catalogError('SOURCE_NUTRIENT_MISMATCH', id);
       const { originalEvidence: priceEvidence, sha256: priceHash, ...price } = row.price;
       if (!sameSnapshot(JSON.parse(priceEvidence), price) || !sameSnapshot(price.reference, edibleKg) || price.currency !== 'RUB' || price.estimate !== true
         || !price.assessmentDate || !price.scope || !price.targetScope || !price.derivation || !price.assumptions || !price.excerpt || !price.reuseDisposition
@@ -84,7 +99,7 @@ export async function validateExpandedCatalog(input: Catalog, manifest: Manifest
       const expectedFacts = [{ kind: 'restriction', key: 'no-fish', suitable: true }, { kind: 'restriction', key: 'vegetarian', suitable: row.productId !== 'chicken' }];
       if (!sameSnapshot(JSON.parse(safetyEvidence), safety) || safety.identity !== row.identity || !sameSnapshot(safety.facts, expectedFacts)
         || !sameSnapshot(safety.unknown, ['halal', 'gluten-free', 'lactose-free', 'allergen-guarantees']) || !safety.rationale) return catalogError('SOURCE_SAFETY_MISMATCH', id);
-      if (await sha256(row.nutrition.originalCsv) !== row.nutrition.sha256 || await sha256(priceEvidence) !== priceHash
+      if (await sha256(nutritionEvidence) !== row.nutrition.sha256 || await sha256(priceEvidence) !== priceHash
         || await sha256(safetyEvidence) !== safetyHash) return catalogError('SOURCE_HASH_MISMATCH', id);
     }
     return checked;

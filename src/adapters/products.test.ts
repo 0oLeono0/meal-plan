@@ -20,9 +20,11 @@ describe('familiar food search and legacy input units', () => {
     const draft = { ...createDraft(), home: [{ productId: 'egg', quantity: '3', unit: 'pcs' as const, expiresSoon: true },
       { productId: 'milk', quantity: '200', unit: 'ml' as const, expiresSoon: false }] };
     expect(isSettingsDraft(draft)).toBe(true);
-    const applied = buildAppliedSettings(draft);
+    expect(buildAppliedSettings(draft).status).toBe('invalid');
+    expect(draft.home[1]).toEqual({ productId: 'milk', quantity: '200', unit: 'ml', expiresSoon: false });
+    const applied = buildAppliedSettings({ ...draft, home: [draft.home[0]] });
     expect(applied.status).toBe('applied');
     if (applied.status !== 'applied') throw new Error('Valid old draft');
-    expect(applied.settings.raw.home).toEqual(draft.home);
+    expect(applied.settings.raw.home).toEqual([draft.home[0]]);
   });
 });

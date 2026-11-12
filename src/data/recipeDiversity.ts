@@ -12,6 +12,21 @@ const firstRelease: RecipeDiversityMap = Object.freeze({
 });
 const releases: Readonly<Record<string, RecipeDiversityMap>> = Object.freeze({
   'mealplan-2026-11-11-1': firstRelease,
+  'mealplan-2026-11-11-2': Object.freeze({
+    ...firstRelease,
+    'familiar-milk-oats-apple': { groups: ['dairy'], family: 'milk-oat-porridge' },
+    'familiar-syrniki': { groups: ['dairy', 'egg'], family: 'pan-fried-cottage-cakes' },
+    'familiar-cottage-apple-bake': { groups: ['dairy', 'egg'], family: 'cottage-fruit-bake' },
+    'familiar-buckwheat-egg-carrot': { groups: ['egg'], family: 'egg-grain-vegetables' },
+    'familiar-oat-pancake-yogurt': { groups: ['egg', 'dairy'], family: 'oat-egg-pancake' },
+    'familiar-chickpea-pancakes': { groups: ['legume', 'plant'], family: 'chickpea-pan-cakes' },
+    'familiar-water-oats-apple': { groups: ['plant'], family: 'water-oat-porridge' },
+    'familiar-cottage-cucumber-bread': { groups: ['dairy'], family: 'fresh-dairy-vegetables' },
+    'familiar-chickpea-cucumber-toast': { groups: ['legume', 'plant'], family: 'chickpea-spread-toast' },
+    'familiar-steamed-egg-pudding': { groups: ['egg', 'dairy'], family: 'steamed-egg-custard' },
+    'familiar-baked-apple-oats': { groups: ['plant'], family: 'baked-fruit-crumble' },
+    'familiar-bean-tomato-cabbage-salad': { groups: ['legume', 'plant'], family: 'bean-vegetable-salad' },
+  } satisfies RecipeDiversityMap),
 });
 export function recipeDiversityFor(version: string): RecipeDiversityMap | undefined {
   return Object.prototype.hasOwnProperty.call(releases, version) ? releases[version] : undefined;

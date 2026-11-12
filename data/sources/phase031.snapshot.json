@@ -1115,6 +1115,790 @@
         "originalEvidence": "{\"identity\":\"Bread, whole-wheat, commercially prepared\",\"facts\":[{\"kind\":\"restriction\",\"key\":\"no-fish\",\"suitable\":true},{\"kind\":\"restriction\",\"key\":\"vegetarian\",\"suitable\":true}],\"unknown\":[\"halal\",\"gluten-free\",\"lactose-free\",\"allergen-guarantees\"],\"rationale\":\"Ingredient identity supports fish absence and vegetarian classification only. Dairy and eggs are vegetarian; chicken is not. Package cross-contact and certification are unverified.\"}",
         "sha256": "d0aba82fa2e6ecb9dade70a01c33cf5191315054f23b6342e5009a407d51ed93"
       }
+    },
+    {
+      "productId": "milk",
+      "profileId": "usda-172217-ready",
+      "sourceVersion": "phase031-source-2026-11-12-2",
+      "name": "Молоко цельное 3,25%, масса",
+      "identity": "Milk, whole, 3.25% milkfat, without added vitamin A and vitamin D",
+      "state": "ready",
+      "category": "Молочное",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Retail 3.2% milk price represents USDA 3.25% milk. Package title supplies mass. Milk is weighed, no generic ml-to-g conversion. Source edible inputs are used. Cooked yield and nutrient retention are not modelled.",
+      "nutrition": {
+        "kind": "usda",
+        "food": {
+          "fdc_id": "172217",
+          "data_type": "sr_legacy_food",
+          "description": "Milk, whole, 3.25% milkfat, without added vitamin A and vitamin D",
+          "food_category_id": "1",
+          "publication_date": "2019-04-01"
+        },
+        "foodLine": 4707,
+        "nutrients": [
+          {
+            "id": "1677542",
+            "fdc_id": "172217",
+            "nutrient_id": "1008",
+            "amount": "61",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1677625",
+            "fdc_id": "172217",
+            "nutrient_id": "1003",
+            "amount": "3.15",
+            "data_points": "27",
+            "derivation_id": "1",
+            "min": "3.07",
+            "max": "3.31",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1677587",
+            "fdc_id": "172217",
+            "nutrient_id": "1004",
+            "amount": "3.27",
+            "data_points": "27",
+            "derivation_id": "1",
+            "min": "3.07",
+            "max": "3.36",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1677518",
+            "fdc_id": "172217",
+            "nutrient_id": "1005",
+            "amount": "4.78",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          }
+        ],
+        "nutrientLines": [
+          393870,
+          393953,
+          393915,
+          393846
+        ],
+        "originalCsv": "\"172217\",\"sr_legacy_food\",\"Milk, whole, 3.25% milkfat, without added vitamin A and vitamin D\",\"1\",\"2019-04-01\"\n\"1677542\",\"172217\",\"1008\",\"61\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1677625\",\"172217\",\"1003\",\"3.15\",\"27\",\"1\",\"3.07\",\"3.31\",\"\",\"\",\"\"\n\"1677587\",\"172217\",\"1004\",\"3.27\",\"27\",\"1\",\"3.07\",\"3.36\",\"\",\"\",\"\"\n\"1677518\",\"172217\",\"1005\",\"4.78\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"",
+        "sha256": "b1b4496cebb5dc4ae613aec07d3022c44e252ff8430123eb573902a105d95485"
+      },
+      "price": {
+        "amount": "120",
+        "currency": "RUB",
+        "reference": {
+          "amount": "1",
+          "unit": "kg",
+          "basis": "edible"
+        },
+        "estimate": true,
+        "observedAmount": "167",
+        "observedQuantity": {
+          "amount": "1400",
+          "unit": "g"
+        },
+        "observedAt": "2026-11-12",
+        "scope": "Интернет-витрина продавца; адрес и регион доставки не выбраны",
+        "targetScope": "Санкт-Петербург",
+        "assessmentDate": "2026-11-12",
+        "url": "https://vkusvill.ru/goods/moloko-3-72194/",
+        "excerpt": "Milk 3.2%, 1400 g; 167 RUB",
+        "derivation": "167 / 1.4 = 119.285714 RUB/kg; rounded to 120.",
+        "assumptions": "Retail 3.2% milk price represents USDA 3.25% milk. Package title supplies mass. Milk is weighed, no generic ml-to-g conversion.",
+        "accessMethod": "Official retailer page or official search-index excerpt",
+        "reuseDisposition": "Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.",
+        "originalEvidence": "{\"amount\":\"120\",\"currency\":\"RUB\",\"reference\":{\"amount\":\"1\",\"unit\":\"kg\",\"basis\":\"edible\"},\"estimate\":true,\"observedAmount\":\"167\",\"observedQuantity\":{\"amount\":\"1400\",\"unit\":\"g\"},\"observedAt\":\"2026-11-12\",\"scope\":\"Интернет-витрина продавца; адрес и регион доставки не выбраны\",\"targetScope\":\"Санкт-Петербург\",\"assessmentDate\":\"2026-11-12\",\"url\":\"https://vkusvill.ru/goods/moloko-3-72194/\",\"excerpt\":\"Milk 3.2%, 1400 g; 167 RUB\",\"derivation\":\"167 / 1.4 = 119.285714 RUB/kg; rounded to 120.\",\"assumptions\":\"Retail 3.2% milk price represents USDA 3.25% milk. Package title supplies mass. Milk is weighed, no generic ml-to-g conversion.\",\"accessMethod\":\"Official retailer page or official search-index excerpt\",\"reuseDisposition\":\"Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.\"}",
+        "sha256": "032ff1e6b7de06709db3d181e45f7a839d765fab1b7c688a95feb9a95802fa40"
+      },
+      "safety": {
+        "identity": "Milk, whole, 3.25% milkfat, without added vitamin A and vitamin D",
+        "facts": [
+          {
+            "kind": "restriction",
+            "key": "no-fish",
+            "suitable": true
+          },
+          {
+            "kind": "restriction",
+            "key": "vegetarian",
+            "suitable": true
+          }
+        ],
+        "unknown": [
+          "halal",
+          "gluten-free",
+          "lactose-free",
+          "allergen-guarantees"
+        ],
+        "rationale": "Reviewed single ingredient identity supports fish absence and vegetarian classification. Package cross-contact, certification and supplier-specific allergens are unverified.",
+        "originalEvidence": "{\"identity\":\"Milk, whole, 3.25% milkfat, without added vitamin A and vitamin D\",\"facts\":[{\"kind\":\"restriction\",\"key\":\"no-fish\",\"suitable\":true},{\"kind\":\"restriction\",\"key\":\"vegetarian\",\"suitable\":true}],\"unknown\":[\"halal\",\"gluten-free\",\"lactose-free\",\"allergen-guarantees\"],\"rationale\":\"Reviewed single ingredient identity supports fish absence and vegetarian classification. Package cross-contact, certification and supplier-specific allergens are unverified.\"}",
+        "sha256": "c7d8a0a96909a1c3eae95a8e39f823fd8f7fea0418fbb3505eba0818f9365994"
+      }
+    },
+    {
+      "productId": "oats",
+      "profileId": "usda-173904-dry",
+      "sourceVersion": "phase031-source-2026-11-12-2",
+      "name": "Овсяные хлопья сухие",
+      "identity": "Cereals, oats, regular and quick, not fortified, dry",
+      "state": "dry",
+      "category": "Крупы и макароны",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Plain dry flakes represented by USDA regular/quick oats. Cooking time depends on package, recipes use flakes cooking within 5-7 minutes. Source edible inputs are used. Cooked yield and nutrient retention are not modelled.",
+      "nutrition": {
+        "kind": "usda",
+        "food": {
+          "fdc_id": "173904",
+          "data_type": "sr_legacy_food",
+          "description": "Cereals, oats, regular and quick, not fortified, dry",
+          "food_category_id": "8",
+          "publication_date": "2019-04-01"
+        },
+        "foodLine": 6394,
+        "nutrients": [
+          {
+            "id": "1815029",
+            "fdc_id": "173904",
+            "nutrient_id": "1008",
+            "amount": "379",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1815039",
+            "fdc_id": "173904",
+            "nutrient_id": "1003",
+            "amount": "13.15",
+            "data_points": "4",
+            "derivation_id": "1",
+            "min": "13",
+            "max": "13.24",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1815027",
+            "fdc_id": "173904",
+            "nutrient_id": "1004",
+            "amount": "6.52",
+            "data_points": "4",
+            "derivation_id": "1",
+            "min": "6.2",
+            "max": "6.92",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1815028",
+            "fdc_id": "173904",
+            "nutrient_id": "1005",
+            "amount": "67.7",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          }
+        ],
+        "nutrientLines": [
+          531357,
+          531367,
+          531355,
+          531356
+        ],
+        "originalCsv": "\"173904\",\"sr_legacy_food\",\"Cereals, oats, regular and quick, not fortified, dry\",\"8\",\"2019-04-01\"\n\"1815029\",\"173904\",\"1008\",\"379\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1815039\",\"173904\",\"1003\",\"13.15\",\"4\",\"1\",\"13\",\"13.24\",\"\",\"\",\"\"\n\"1815027\",\"173904\",\"1004\",\"6.52\",\"4\",\"1\",\"6.2\",\"6.92\",\"\",\"\",\"\"\n\"1815028\",\"173904\",\"1005\",\"67.7\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"",
+        "sha256": "debb1242572c43c0e59a23dd007babd6dd14560df1aef0bbf3b0ab23e71361fb"
+      },
+      "price": {
+        "amount": "170",
+        "currency": "RUB",
+        "reference": {
+          "amount": "1",
+          "unit": "kg",
+          "basis": "edible"
+        },
+        "estimate": true,
+        "observedAmount": "65",
+        "observedQuantity": {
+          "amount": "400",
+          "unit": "g"
+        },
+        "observedAt": "2026-11-12",
+        "scope": "Поисковый индекс витрины продавца; адрес доставки не выбран",
+        "targetScope": "Санкт-Петербург",
+        "assessmentDate": "2026-11-12",
+        "url": "https://vkusvill.ru/goods/khlopya-ovsyanye-64315/",
+        "excerpt": "Oat flakes, 400 g; 65 RUB",
+        "derivation": "65 / 0.4 = 162.5 RUB/kg; rounded upward to 170.",
+        "assumptions": "Plain dry flakes represented by USDA regular/quick oats. Cooking time depends on package, recipes use flakes cooking within 5-7 minutes.",
+        "accessMethod": "Official retailer page or official search-index excerpt",
+        "reuseDisposition": "Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.",
+        "originalEvidence": "{\"amount\":\"170\",\"currency\":\"RUB\",\"reference\":{\"amount\":\"1\",\"unit\":\"kg\",\"basis\":\"edible\"},\"estimate\":true,\"observedAmount\":\"65\",\"observedQuantity\":{\"amount\":\"400\",\"unit\":\"g\"},\"observedAt\":\"2026-11-12\",\"scope\":\"Поисковый индекс витрины продавца; адрес доставки не выбран\",\"targetScope\":\"Санкт-Петербург\",\"assessmentDate\":\"2026-11-12\",\"url\":\"https://vkusvill.ru/goods/khlopya-ovsyanye-64315/\",\"excerpt\":\"Oat flakes, 400 g; 65 RUB\",\"derivation\":\"65 / 0.4 = 162.5 RUB/kg; rounded upward to 170.\",\"assumptions\":\"Plain dry flakes represented by USDA regular/quick oats. Cooking time depends on package, recipes use flakes cooking within 5-7 minutes.\",\"accessMethod\":\"Official retailer page or official search-index excerpt\",\"reuseDisposition\":\"Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.\"}",
+        "sha256": "b4a06530c91540e5fdddbce1ced49d680e5523460cfc2743c6b32a231ef62f20"
+      },
+      "safety": {
+        "identity": "Cereals, oats, regular and quick, not fortified, dry",
+        "facts": [
+          {
+            "kind": "restriction",
+            "key": "no-fish",
+            "suitable": true
+          },
+          {
+            "kind": "restriction",
+            "key": "vegetarian",
+            "suitable": true
+          }
+        ],
+        "unknown": [
+          "halal",
+          "gluten-free",
+          "lactose-free",
+          "allergen-guarantees"
+        ],
+        "rationale": "Reviewed single ingredient identity supports fish absence and vegetarian classification. Package cross-contact, certification and supplier-specific allergens are unverified.",
+        "originalEvidence": "{\"identity\":\"Cereals, oats, regular and quick, not fortified, dry\",\"facts\":[{\"kind\":\"restriction\",\"key\":\"no-fish\",\"suitable\":true},{\"kind\":\"restriction\",\"key\":\"vegetarian\",\"suitable\":true}],\"unknown\":[\"halal\",\"gluten-free\",\"lactose-free\",\"allergen-guarantees\"],\"rationale\":\"Reviewed single ingredient identity supports fish absence and vegetarian classification. Package cross-contact, certification and supplier-specific allergens are unverified.\"}",
+        "sha256": "687888e81022b1586c1650fce276b28dadd3556d80147362273f9db02a208782"
+      }
+    },
+    {
+      "productId": "chickpea-canned",
+      "profileId": "usda-173800-drained",
+      "sourceVersion": "phase031-source-2026-11-12-2",
+      "name": "Нут консервированный без заливки",
+      "identity": "Chickpeas (garbanzo beans, bengal gram), mature seeds, canned, drained solids",
+      "state": "drained",
+      "category": "Бобовые",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Drained fraction 60% is an explicit price-only assumption, not label-verified yield. Price excludes discarded liquid. Product unavailable in source index. No dry-to-canned conversion. Source edible inputs are used. Cooked yield and nutrient retention are not modelled.",
+      "nutrition": {
+        "kind": "usda",
+        "food": {
+          "fdc_id": "173800",
+          "data_type": "sr_legacy_food",
+          "description": "Chickpeas (garbanzo beans, bengal gram), mature seeds, canned, drained solids",
+          "food_category_id": "16",
+          "publication_date": "2019-04-01"
+        },
+        "foodLine": 6290,
+        "nutrients": [
+          {
+            "id": "1806133",
+            "fdc_id": "173800",
+            "nutrient_id": "1008",
+            "amount": "139",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1806055",
+            "fdc_id": "173800",
+            "nutrient_id": "1003",
+            "amount": "7.05",
+            "data_points": "4",
+            "derivation_id": "1",
+            "min": "6.48",
+            "max": "7.85",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1806131",
+            "fdc_id": "173800",
+            "nutrient_id": "1004",
+            "amount": "2.77",
+            "data_points": "4",
+            "derivation_id": "1",
+            "min": "2.6",
+            "max": "3.2",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1806132",
+            "fdc_id": "173800",
+            "nutrient_id": "1005",
+            "amount": "22.53",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          }
+        ],
+        "nutrientLines": [
+          522461,
+          522383,
+          522459,
+          522460
+        ],
+        "originalCsv": "\"173800\",\"sr_legacy_food\",\"Chickpeas (garbanzo beans, bengal gram), mature seeds, canned, drained solids\",\"16\",\"2019-04-01\"\n\"1806133\",\"173800\",\"1008\",\"139\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1806055\",\"173800\",\"1003\",\"7.05\",\"4\",\"1\",\"6.48\",\"7.85\",\"\",\"\",\"\"\n\"1806131\",\"173800\",\"1004\",\"2.77\",\"4\",\"1\",\"2.6\",\"3.2\",\"\",\"\",\"\"\n\"1806132\",\"173800\",\"1005\",\"22.53\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"",
+        "sha256": "052607a52887e5f585b6c5c6a80356c4b1d3adec04220894fce24393cafabaa8"
+      },
+      "price": {
+        "amount": "710",
+        "currency": "RUB",
+        "reference": {
+          "amount": "1",
+          "unit": "kg",
+          "basis": "edible"
+        },
+        "estimate": true,
+        "observedAmount": "169",
+        "observedQuantity": {
+          "amount": "400",
+          "unit": "g"
+        },
+        "observedAt": "2026-11-12",
+        "scope": "Поисковый индекс витрины продавца; адрес доставки не выбран",
+        "targetScope": "Санкт-Петербург",
+        "assessmentDate": "2026-11-12",
+        "url": "https://openbazar.ru/product/nut-konservirovannyy-alrabih-400-g",
+        "excerpt": "AlRabih canned chickpeas, 400 g; 169 RUB",
+        "derivation": "169 / (0.400 * 0.60) = 704.166667 RUB/kg drained; rounded upward to 710.",
+        "assumptions": "Drained fraction 60% is an explicit price-only assumption, not label-verified yield. Price excludes discarded liquid. Product unavailable in source index. No dry-to-canned conversion.",
+        "accessMethod": "Official retailer search index numeric excerpt; direct open returned timeout/502",
+        "reuseDisposition": "Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.",
+        "originalEvidence": "{\"amount\":\"710\",\"currency\":\"RUB\",\"reference\":{\"amount\":\"1\",\"unit\":\"kg\",\"basis\":\"edible\"},\"estimate\":true,\"observedAmount\":\"169\",\"observedQuantity\":{\"amount\":\"400\",\"unit\":\"g\"},\"observedAt\":\"2026-11-12\",\"scope\":\"Поисковый индекс витрины продавца; адрес доставки не выбран\",\"targetScope\":\"Санкт-Петербург\",\"assessmentDate\":\"2026-11-12\",\"url\":\"https://openbazar.ru/product/nut-konservirovannyy-alrabih-400-g\",\"excerpt\":\"AlRabih canned chickpeas, 400 g; 169 RUB\",\"derivation\":\"169 / (0.400 * 0.60) = 704.166667 RUB/kg drained; rounded upward to 710.\",\"assumptions\":\"Drained fraction 60% is an explicit price-only assumption, not label-verified yield. Price excludes discarded liquid. Product unavailable in source index. No dry-to-canned conversion.\",\"accessMethod\":\"Official retailer search index numeric excerpt; direct open returned timeout/502\",\"reuseDisposition\":\"Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.\"}",
+        "sha256": "c1cb989e40cfb1891910f72a8bf913d57d724bcce58821951d281bdf5ef2ca4c"
+      },
+      "safety": {
+        "identity": "Chickpeas (garbanzo beans, bengal gram), mature seeds, canned, drained solids",
+        "facts": [
+          {
+            "kind": "restriction",
+            "key": "no-fish",
+            "suitable": true
+          },
+          {
+            "kind": "restriction",
+            "key": "vegetarian",
+            "suitable": true
+          }
+        ],
+        "unknown": [
+          "halal",
+          "gluten-free",
+          "lactose-free",
+          "allergen-guarantees"
+        ],
+        "rationale": "Reviewed single ingredient identity supports fish absence and vegetarian classification. Package cross-contact, certification and supplier-specific allergens are unverified.",
+        "originalEvidence": "{\"identity\":\"Chickpeas (garbanzo beans, bengal gram), mature seeds, canned, drained solids\",\"facts\":[{\"kind\":\"restriction\",\"key\":\"no-fish\",\"suitable\":true},{\"kind\":\"restriction\",\"key\":\"vegetarian\",\"suitable\":true}],\"unknown\":[\"halal\",\"gluten-free\",\"lactose-free\",\"allergen-guarantees\"],\"rationale\":\"Reviewed single ingredient identity supports fish absence and vegetarian classification. Package cross-contact, certification and supplier-specific allergens are unverified.\"}",
+        "sha256": "e0219b308b58dafd4229372fc7551325e799376a722d4af06db93d73f0767386"
+      }
+    },
+    {
+      "productId": "bean-canned",
+      "profileId": "usda-174285-drained",
+      "sourceVersion": "phase031-source-2026-11-12-2",
+      "name": "Фасоль консервированная красная без заливки",
+      "identity": "Beans, kidney, red, mature seeds, canned, drained solids",
+      "state": "drained",
+      "category": "Бобовые",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Supplier price index without delivery costs. Natural canned red beans modelled as drained solids. Drained fraction 60% is an explicit price-only assumption. Choose beans without added sauce. No dry-to-canned conversion. Source edible inputs are used. Cooked yield and nutrient retention are not modelled.",
+      "nutrition": {
+        "kind": "usda",
+        "food": {
+          "fdc_id": "174285",
+          "data_type": "sr_legacy_food",
+          "description": "Beans, kidney, red, mature seeds, canned, drained solids",
+          "food_category_id": "16",
+          "publication_date": "2019-04-01"
+        },
+        "foodLine": 6775,
+        "nutrients": [
+          {
+            "id": "1846343",
+            "fdc_id": "174285",
+            "nutrient_id": "1008",
+            "amount": "124",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1846415",
+            "fdc_id": "174285",
+            "nutrient_id": "1003",
+            "amount": "7.98",
+            "data_points": "4",
+            "derivation_id": "1",
+            "min": "7.87",
+            "max": "8.1",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1846341",
+            "fdc_id": "174285",
+            "nutrient_id": "1004",
+            "amount": "1.05",
+            "data_points": "4",
+            "derivation_id": "1",
+            "min": "0.7",
+            "max": "1.23",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1846342",
+            "fdc_id": "174285",
+            "nutrient_id": "1005",
+            "amount": "21.49",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          }
+        ],
+        "nutrientLines": [
+          562671,
+          562743,
+          562669,
+          562670
+        ],
+        "originalCsv": "\"174285\",\"sr_legacy_food\",\"Beans, kidney, red, mature seeds, canned, drained solids\",\"16\",\"2019-04-01\"\n\"1846343\",\"174285\",\"1008\",\"124\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1846415\",\"174285\",\"1003\",\"7.98\",\"4\",\"1\",\"7.87\",\"8.1\",\"\",\"\",\"\"\n\"1846341\",\"174285\",\"1004\",\"1.05\",\"4\",\"1\",\"0.7\",\"1.23\",\"\",\"\",\"\"\n\"1846342\",\"174285\",\"1005\",\"21.49\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"",
+        "sha256": "0ad9a92671a85f10393b45fdaa81606b77e25d3fd91840ce5208f41cad2b1890"
+      },
+      "price": {
+        "amount": "390",
+        "currency": "RUB",
+        "reference": {
+          "amount": "1",
+          "unit": "kg",
+          "basis": "edible"
+        },
+        "estimate": true,
+        "observedAmount": "93",
+        "observedQuantity": {
+          "amount": "400",
+          "unit": "g"
+        },
+        "observedAt": "2026-11-12",
+        "scope": "Поисковый индекс витрины продавца; адрес доставки не выбран",
+        "targetScope": "Санкт-Петербург",
+        "assessmentDate": "2026-11-12",
+        "url": "https://www.lenproduct.ru/price/index.php",
+        "excerpt": "Rosanna red beans, 400 g; 93 RUB",
+        "derivation": "93 / (0.400 * 0.60) = 387.5 RUB/kg drained; rounded upward to 390.",
+        "assumptions": "Supplier price index without delivery costs. Natural canned red beans modelled as drained solids. Drained fraction 60% is an explicit price-only assumption. Choose beans without added sauce. No dry-to-canned conversion.",
+        "accessMethod": "Official retailer search index numeric excerpt; direct open returned timeout/502",
+        "reuseDisposition": "Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.",
+        "originalEvidence": "{\"amount\":\"390\",\"currency\":\"RUB\",\"reference\":{\"amount\":\"1\",\"unit\":\"kg\",\"basis\":\"edible\"},\"estimate\":true,\"observedAmount\":\"93\",\"observedQuantity\":{\"amount\":\"400\",\"unit\":\"g\"},\"observedAt\":\"2026-11-12\",\"scope\":\"Поисковый индекс витрины продавца; адрес доставки не выбран\",\"targetScope\":\"Санкт-Петербург\",\"assessmentDate\":\"2026-11-12\",\"url\":\"https://www.lenproduct.ru/price/index.php\",\"excerpt\":\"Rosanna red beans, 400 g; 93 RUB\",\"derivation\":\"93 / (0.400 * 0.60) = 387.5 RUB/kg drained; rounded upward to 390.\",\"assumptions\":\"Supplier price index without delivery costs. Natural canned red beans modelled as drained solids. Drained fraction 60% is an explicit price-only assumption. Choose beans without added sauce. No dry-to-canned conversion.\",\"accessMethod\":\"Official retailer search index numeric excerpt; direct open returned timeout/502\",\"reuseDisposition\":\"Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.\"}",
+        "sha256": "c7ec6684aac823f2f56f870d79f4852fda4d6bbf3a997cfc33aeeaa9c973d5af"
+      },
+      "safety": {
+        "identity": "Beans, kidney, red, mature seeds, canned, drained solids",
+        "facts": [
+          {
+            "kind": "restriction",
+            "key": "no-fish",
+            "suitable": true
+          },
+          {
+            "kind": "restriction",
+            "key": "vegetarian",
+            "suitable": true
+          }
+        ],
+        "unknown": [
+          "halal",
+          "gluten-free",
+          "lactose-free",
+          "allergen-guarantees"
+        ],
+        "rationale": "Reviewed single ingredient identity supports fish absence and vegetarian classification. Package cross-contact, certification and supplier-specific allergens are unverified.",
+        "originalEvidence": "{\"identity\":\"Beans, kidney, red, mature seeds, canned, drained solids\",\"facts\":[{\"kind\":\"restriction\",\"key\":\"no-fish\",\"suitable\":true},{\"kind\":\"restriction\",\"key\":\"vegetarian\",\"suitable\":true}],\"unknown\":[\"halal\",\"gluten-free\",\"lactose-free\",\"allergen-guarantees\"],\"rationale\":\"Reviewed single ingredient identity supports fish absence and vegetarian classification. Package cross-contact, certification and supplier-specific allergens are unverified.\"}",
+        "sha256": "f3a6990bc62883df0aaa8f5392c9a0ea4b5cd59b60c87ef87907691360fe6462"
+      }
+    },
+    {
+      "productId": "cucumber",
+      "profileId": "usda-168409-raw",
+      "sourceVersion": "phase031-source-2026-11-12-2",
+      "name": "Огурец с кожицей",
+      "identity": "Cucumber, with peel, raw",
+      "state": "raw",
+      "category": "Овощи",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Unpeeled edible cucumber, trim losses not modelled. Variety and retail region can change the price. Source edible inputs are used. Cooked yield and nutrient retention are not modelled.",
+      "nutrition": {
+        "kind": "usda",
+        "food": {
+          "fdc_id": "168409",
+          "data_type": "sr_legacy_food",
+          "description": "Cucumber, with peel, raw",
+          "food_category_id": "11",
+          "publication_date": "2019-04-01"
+        },
+        "foodLine": 899,
+        "nutrients": [
+          {
+            "id": "1358224",
+            "fdc_id": "168409",
+            "nutrient_id": "1008",
+            "amount": "15",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1358332",
+            "fdc_id": "168409",
+            "nutrient_id": "1003",
+            "amount": "0.65",
+            "data_points": "4",
+            "derivation_id": "1",
+            "min": "0.65",
+            "max": "0.65",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1358295",
+            "fdc_id": "168409",
+            "nutrient_id": "1004",
+            "amount": "0.11",
+            "data_points": "9",
+            "derivation_id": "43",
+            "min": "0.1",
+            "max": "0.11",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1358223",
+            "fdc_id": "168409",
+            "nutrient_id": "1005",
+            "amount": "3.63",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          }
+        ],
+        "nutrientLines": [
+          74552,
+          74660,
+          74623,
+          74551
+        ],
+        "originalCsv": "\"168409\",\"sr_legacy_food\",\"Cucumber, with peel, raw\",\"11\",\"2019-04-01\"\n\"1358224\",\"168409\",\"1008\",\"15\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1358332\",\"168409\",\"1003\",\"0.65\",\"4\",\"1\",\"0.65\",\"0.65\",\"\",\"\",\"\"\n\"1358295\",\"168409\",\"1004\",\"0.11\",\"9\",\"43\",\"0.1\",\"0.11\",\"\",\"\",\"\"\n\"1358223\",\"168409\",\"1005\",\"3.63\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"",
+        "sha256": "0a05eeb563a143bf58b2d90daf5daa59052a205f2456c0db814aa4569be77026"
+      },
+      "price": {
+        "amount": "300",
+        "currency": "RUB",
+        "reference": {
+          "amount": "1",
+          "unit": "kg",
+          "basis": "edible"
+        },
+        "estimate": true,
+        "observedAmount": "298",
+        "observedQuantity": {
+          "amount": "1000",
+          "unit": "g"
+        },
+        "observedAt": "2026-11-12",
+        "scope": "Интернет-витрина продавца; адрес и регион доставки не выбраны",
+        "targetScope": "Санкт-Петербург",
+        "assessmentDate": "2026-11-12",
+        "url": "https://vkusvill.ru/goods/ogurtsy-korotkoplodnye-609/",
+        "excerpt": "Short cucumber, 298 RUB/kg",
+        "derivation": "298 / 1 = 298 RUB/kg; rounded upward to 300.",
+        "assumptions": "Unpeeled edible cucumber, trim losses not modelled. Variety and retail region can change the price.",
+        "accessMethod": "Official retailer page or official search-index excerpt",
+        "reuseDisposition": "Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.",
+        "originalEvidence": "{\"amount\":\"300\",\"currency\":\"RUB\",\"reference\":{\"amount\":\"1\",\"unit\":\"kg\",\"basis\":\"edible\"},\"estimate\":true,\"observedAmount\":\"298\",\"observedQuantity\":{\"amount\":\"1000\",\"unit\":\"g\"},\"observedAt\":\"2026-11-12\",\"scope\":\"Интернет-витрина продавца; адрес и регион доставки не выбраны\",\"targetScope\":\"Санкт-Петербург\",\"assessmentDate\":\"2026-11-12\",\"url\":\"https://vkusvill.ru/goods/ogurtsy-korotkoplodnye-609/\",\"excerpt\":\"Short cucumber, 298 RUB/kg\",\"derivation\":\"298 / 1 = 298 RUB/kg; rounded upward to 300.\",\"assumptions\":\"Unpeeled edible cucumber, trim losses not modelled. Variety and retail region can change the price.\",\"accessMethod\":\"Official retailer page or official search-index excerpt\",\"reuseDisposition\":\"Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.\"}",
+        "sha256": "0565fcb860f8d85d2cdf6e1c546a10adf146e0f6ae9c632018c7a064f2e1d50f"
+      },
+      "safety": {
+        "identity": "Cucumber, with peel, raw",
+        "facts": [
+          {
+            "kind": "restriction",
+            "key": "no-fish",
+            "suitable": true
+          },
+          {
+            "kind": "restriction",
+            "key": "vegetarian",
+            "suitable": true
+          }
+        ],
+        "unknown": [
+          "halal",
+          "gluten-free",
+          "lactose-free",
+          "allergen-guarantees"
+        ],
+        "rationale": "Reviewed single ingredient identity supports fish absence and vegetarian classification. Package cross-contact, certification and supplier-specific allergens are unverified.",
+        "originalEvidence": "{\"identity\":\"Cucumber, with peel, raw\",\"facts\":[{\"kind\":\"restriction\",\"key\":\"no-fish\",\"suitable\":true},{\"kind\":\"restriction\",\"key\":\"vegetarian\",\"suitable\":true}],\"unknown\":[\"halal\",\"gluten-free\",\"lactose-free\",\"allergen-guarantees\"],\"rationale\":\"Reviewed single ingredient identity supports fish absence and vegetarian classification. Package cross-contact, certification and supplier-specific allergens are unverified.\"}",
+        "sha256": "ed358aad6211c23c401cda4118081a67e2cb87b83793362f2fe0c8e29b5802eb"
+      }
+    },
+    {
+      "productId": "cottage-cheese",
+      "profileId": "label-vkusvill-51256-ready",
+      "sourceVersion": "phase031-source-2026-11-12-2",
+      "name": "Творог 5%",
+      "identity": "Творог 5%, нормализованное пастеризованное молоко и закваска",
+      "state": "ready",
+      "category": "Молочное",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Russian tvorog 5% uses the attributed product label, not a USDA cottage-cheese analogue. Brand variation remains uncertain. Source edible inputs are used. Cooked yield and nutrient retention are not modelled.",
+      "nutrition": {
+        "kind": "label",
+        "recordId": "51256",
+        "url": "https://vkusvill.ru/goods/tvorog-5-200-g-51256/",
+        "accessedAt": "2026-11-12",
+        "identity": "Творог 5%, нормализованное пастеризованное молоко и закваска",
+        "reference": {
+          "amount": "100",
+          "unit": "g",
+          "basis": "edible"
+        },
+        "values": {
+          "calories": "117",
+          "protein": "16.5",
+          "fat": "5",
+          "carbohydrates": "1.5"
+        },
+        "excerpt": "100 g: 117 kcal; protein 16.5 g; fat 5 g; carbohydrates 1.5 g",
+        "attribution": "VkusVill product51256, label as published by retailer, numeric excerpt only",
+        "license": "Attributed numeric label excerpt; retailer text and imagery not licensed for redistribution",
+        "originalEvidence": "{\"kind\":\"label\",\"recordId\":\"51256\",\"url\":\"https://vkusvill.ru/goods/tvorog-5-200-g-51256/\",\"accessedAt\":\"2026-11-12\",\"identity\":\"Творог 5%, нормализованное пастеризованное молоко и закваска\",\"reference\":{\"amount\":\"100\",\"unit\":\"g\",\"basis\":\"edible\"},\"values\":{\"calories\":\"117\",\"protein\":\"16.5\",\"fat\":\"5\",\"carbohydrates\":\"1.5\"},\"excerpt\":\"100 g: 117 kcal; protein 16.5 g; fat 5 g; carbohydrates 1.5 g\",\"attribution\":\"VkusVill product51256, label as published by retailer, numeric excerpt only\",\"license\":\"Attributed numeric label excerpt; retailer text and imagery not licensed for redistribution\"}",
+        "sha256": "a44241cc81220890c342163e0387eb977890c1166cdb8fc108dd70e65d883ad3"
+      },
+      "price": {
+        "amount": "710",
+        "currency": "RUB",
+        "reference": {
+          "amount": "1",
+          "unit": "kg",
+          "basis": "edible"
+        },
+        "estimate": true,
+        "observedAmount": "142",
+        "observedQuantity": {
+          "amount": "200",
+          "unit": "g"
+        },
+        "observedAt": "2026-11-12",
+        "scope": "Интернет-витрина продавца; адрес и регион доставки не выбраны",
+        "targetScope": "Санкт-Петербург",
+        "assessmentDate": "2026-11-12",
+        "url": "https://vkusvill.ru/goods/tvorog-5-200-g-51256/",
+        "excerpt": "Cottage cheese 5%, 200 g; 142 RUB",
+        "derivation": "142 / 0.200 = 710 RUB/kg, retained as representative estimate.",
+        "assumptions": "Russian tvorog 5% uses the attributed product label, not a USDA cottage-cheese analogue. Brand variation remains uncertain.",
+        "accessMethod": "Official retailer page or official search-index excerpt",
+        "reuseDisposition": "Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.",
+        "originalEvidence": "{\"amount\":\"710\",\"currency\":\"RUB\",\"reference\":{\"amount\":\"1\",\"unit\":\"kg\",\"basis\":\"edible\"},\"estimate\":true,\"observedAmount\":\"142\",\"observedQuantity\":{\"amount\":\"200\",\"unit\":\"g\"},\"observedAt\":\"2026-11-12\",\"scope\":\"Интернет-витрина продавца; адрес и регион доставки не выбраны\",\"targetScope\":\"Санкт-Петербург\",\"assessmentDate\":\"2026-11-12\",\"url\":\"https://vkusvill.ru/goods/tvorog-5-200-g-51256/\",\"excerpt\":\"Cottage cheese 5%, 200 g; 142 RUB\",\"derivation\":\"142 / 0.200 = 710 RUB/kg, retained as representative estimate.\",\"assumptions\":\"Russian tvorog 5% uses the attributed product label, not a USDA cottage-cheese analogue. Brand variation remains uncertain.\",\"accessMethod\":\"Official retailer page or official search-index excerpt\",\"reuseDisposition\":\"Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.\"}",
+        "sha256": "b437653b379ab252f35bc5aa6287b1cba1fbd76deeda949b48401ad15426041c"
+      },
+      "safety": {
+        "identity": "Творог 5%, нормализованное пастеризованное молоко и закваска",
+        "facts": [
+          {
+            "kind": "restriction",
+            "key": "no-fish",
+            "suitable": true
+          },
+          {
+            "kind": "restriction",
+            "key": "vegetarian",
+            "suitable": true
+          }
+        ],
+        "unknown": [
+          "halal",
+          "gluten-free",
+          "lactose-free",
+          "allergen-guarantees"
+        ],
+        "rationale": "Reviewed single ingredient identity supports fish absence and vegetarian classification. Package cross-contact, certification and supplier-specific allergens are unverified.",
+        "originalEvidence": "{\"identity\":\"Творог 5%, нормализованное пастеризованное молоко и закваска\",\"facts\":[{\"kind\":\"restriction\",\"key\":\"no-fish\",\"suitable\":true},{\"kind\":\"restriction\",\"key\":\"vegetarian\",\"suitable\":true}],\"unknown\":[\"halal\",\"gluten-free\",\"lactose-free\",\"allergen-guarantees\"],\"rationale\":\"Reviewed single ingredient identity supports fish absence and vegetarian classification. Package cross-contact, certification and supplier-specific allergens are unverified.\"}",
+        "sha256": "9ac245d4ed65bfe247a1cef550eeeb52c3c6fa42412ef737a4b65c0553b0061c"
+      }
     }
   ],
   "releases": [
@@ -1135,6 +1919,43 @@
         "familiar-chicken-rice-carrot",
         "familiar-lentil-cabbage-tomato",
         "familiar-yogurt-apple"
+      ]
+    },
+    {
+      "version": "mealplan-2026-11-11-2",
+      "profileIds": [
+        "usda-171287-raw",
+        "usda-171077-raw",
+        "usda-172420-dry",
+        "usda-171025-ready",
+        "usda-170000-raw",
+        "usda-171284-ready",
+        "usda-171688-raw",
+        "usda-172688-ready",
+        "usda-172217-ready",
+        "usda-173904-dry",
+        "usda-173800-drained",
+        "usda-174285-drained",
+        "usda-168409-raw",
+        "label-vkusvill-51256-ready"
+      ],
+      "recipeIds": [
+        "familiar-omelet-tomato-bread",
+        "familiar-chicken-rice-carrot",
+        "familiar-lentil-cabbage-tomato",
+        "familiar-yogurt-apple",
+        "familiar-milk-oats-apple",
+        "familiar-syrniki",
+        "familiar-cottage-apple-bake",
+        "familiar-buckwheat-egg-carrot",
+        "familiar-oat-pancake-yogurt",
+        "familiar-chickpea-pancakes",
+        "familiar-water-oats-apple",
+        "familiar-cottage-cucumber-bread",
+        "familiar-chickpea-cucumber-toast",
+        "familiar-steamed-egg-pudding",
+        "familiar-baked-apple-oats",
+        "familiar-bean-tomato-cabbage-salad"
       ]
     }
   ]

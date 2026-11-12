@@ -26,7 +26,7 @@ describe('immutable source-approved release expansion', () => {
   it('rejects independently changed evidence, units, safety and current runtime facts', async () => {
     expect((await validateHistoricalCatalog(historicalCatalog)).status).toBe('loaded');
     for (const mutate of [
-      (data: typeof manifest) => { data.records[0].nutrition.nutrients[0].amount = '999'; },
+      (data: typeof manifest) => { data.records[0].nutrition.nutrients![0].amount = '999'; },
       (data: typeof manifest) => { data.records[0].nutrition.originalCsv += ' '; },
       (data: typeof manifest) => { data.records[0].price.reference.unit = 'ml'; },
       (data: typeof manifest) => { data.records[0].price.originalEvidence += ' '; },

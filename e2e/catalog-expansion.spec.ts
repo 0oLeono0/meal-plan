@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import oracle from './fixtures/catalog031-oracle.json' with { type: 'json' };
 import legacy from '../src/test/fixtures/phase02-active-plan-v1.json' with { type: 'json' };
+import release1 from '../src/test/fixtures/phase031-release1-active-plan.json' with { type: 'json' };
 
 const activeKey = 'mealplan:guest:active-plan:v1';
 interface TracerRow { id: string; required: string; covered: string; purchase: string }
@@ -11,7 +12,9 @@ async function saveTracer(page: Page, servings = '2') {
     const catalogPath = '/src/data/catalog.ts', planPath = '/src/domain/plan.ts';
     const settingsPath = '/src/domain/settings.ts', appliedPath = '/src/domain/appliedSettings.ts';
     const activePath = '/src/adapters/activePlan.ts', quantitiesPath = '/src/domain/quantities.ts';
-    const { bundledCatalog, bundledCatalogPort } = await import(catalogPath);
+    const { sourceApprovedCatalogs, sourceApprovedCatalogPorts } = await import(catalogPath);
+    const bundledCatalog = sourceApprovedCatalogs.find((catalog: { version: string }) => catalog.version === 'mealplan-2026-11-11-1');
+    const bundledCatalogPort = sourceApprovedCatalogPorts[bundledCatalog.version];
     const loaded = await bundledCatalogPort.load();
     if (loaded.status !== 'loaded') throw new Error(JSON.stringify(loaded));
     const { createDraft } = await import(settingsPath);
@@ -113,9 +116,9 @@ test('ordinary-mixed wizard uses current compiled foods and persists append relo
   await page.getByRole('button', { name: 'Составить меню', exact: true }).click();
   await expect(page).toHaveURL(/\/menu$/, { timeout: 32_000 });
   const first = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).plan, activeKey);
-  expect(first.inputs.catalogVersion).toBe('mealplan-2026-11-11-1');
-  expect(first.variants[0].instances.map((row: { recipeId: string }) => row.recipeId)).toEqual(oracle.recipeIds);
-  expect(first.inputs.catalog.recipes).toHaveLength(56);
+  expect(first.inputs.catalogVersion).toBe('mealplan-2026-11-11-2');
+  expect(first.variants[0].instances.some((row: { recipeId: string }) => futureGroups['breakfast-snack'].includes(row.recipeId))).toBe(true);
+  expect(first.inputs.catalog.recipes).toHaveLength(68);
   await page.getByRole('button', { name: 'Пересобрать', exact: true }).click();
   await expect(page.getByText('Вариант 4 из 4', { exact: true })).toBeVisible({ timeout: 32_000 });
   const next = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).plan, activeKey);
@@ -126,18 +129,24 @@ test('ordinary-mixed wizard uses current compiled foods and persists append relo
   await expect(page.getByText('Вариант 4 из 4', { exact: true })).toBeVisible();
 });
 
-test('legacy original saved bytes reload and append using their compiled version', async ({ page }) => {
+for (const fixture of [legacy, release1]) test(`legacy ${fixture.plan.inputs.catalogVersion} saved bytes reload and append using their compiled version`, async ({ page }) => {
   test.setTimeout(65_000);
   await page.goto('/');
-  await page.evaluate(({ key, raw }) => localStorage.setItem(key, raw), { key: activeKey, raw: JSON.stringify(legacy) });
+  const raw = JSON.stringify(fixture);
+  await page.evaluate(({ key, raw }) => localStorage.setItem(key, raw), { key: activeKey, raw });
   await page.goto('/menu');
-  await expect(page.getByText('Вариант 1 из 1', { exact: true })).toBeVisible();
+  const count = fixture.plan.variants.length;
+  await expect(page.getByText(`Вариант 1 из ${count}`, { exact: true })).toBeVisible();
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(raw);
+  await page.reload();
+  await expect(page.getByText(`Вариант 1 из ${count}`, { exact: true })).toBeVisible();
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(raw);
   await page.getByRole('button', { name: 'Пересобрать', exact: true }).click();
-  await expect(page.getByText('Вариант 2 из 2', { exact: true })).toBeVisible({ timeout: 32_000 });
+  await expect(page.getByText(`Вариант ${count + 1} из ${count + 1}`, { exact: true })).toBeVisible({ timeout: 32_000 });
   const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).plan, activeKey);
-  expect(saved.inputs).toEqual(legacy.plan.inputs);
-  expect(saved.variants[0]).toEqual(legacy.plan.variants[0]);
-  expect(saved.variants[1].instances.every((row: { catalogVersion: string }) => row.catalogVersion === 'mealplan-2026-10-28-1')).toBe(true);
+  expect(saved.inputs).toEqual(fixture.plan.inputs);
+  expect(saved.variants.slice(0, count)).toEqual(fixture.plan.variants);
+  expect(saved.variants[count].instances.every((row: { catalogVersion: string }) => row.catalogVersion === fixture.plan.inputs.catalogVersion)).toBe(true);
 });
 
 // Future release acceptance is authored now and executed by its owning plan.

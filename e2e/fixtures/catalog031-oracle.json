@@ -1,0 +1,112 @@
+{
+  "derivation": "Python Decimal arithmetic from original USDA rows, historical price strings and explicit phase031 representative estimates. No production imports. Edible inputs, base 2 servings.",
+  "recipeIds": [
+    "familiar-omelet-tomato-bread",
+    "familiar-chicken-rice-carrot",
+    "familiar-lentil-cabbage-tomato",
+    "familiar-yogurt-apple"
+  ],
+  "meals": [
+    {
+      "id": "familiar-omelet-tomato-bread",
+      "perPortionNutrition": [
+        "356.4",
+        "20.91",
+        "16.81",
+        "30.236"
+      ],
+      "familyNutrition": [
+        "712.8",
+        "41.82",
+        "33.62",
+        "60.472"
+      ],
+      "ingredientCost": "134.6516355555555556"
+    },
+    {
+      "id": "familiar-chicken-rice-carrot",
+      "perPortionNutrition": [
+        "554.38",
+        "40.111",
+        "11.672",
+        "69.281"
+      ],
+      "familyNutrition": [
+        "1108.76",
+        "80.222",
+        "23.344",
+        "138.562"
+      ],
+      "ingredientCost": "211.0730335802469094"
+    },
+    {
+      "id": "familiar-lentil-cabbage-tomato",
+      "perPortionNutrition": [
+        "367.44",
+        "20.281",
+        "7.182",
+        "59.716"
+      ],
+      "familyNutrition": [
+        "734.88",
+        "40.562",
+        "14.364",
+        "119.432"
+      ],
+      "ingredientCost": "139.5617033333333334"
+    },
+    {
+      "id": "familiar-yogurt-apple",
+      "perPortionNutrition": [
+        "143.5",
+        "5.465",
+        "5.045",
+        "20.80"
+      ],
+      "familyNutrition": [
+        "287",
+        "10.93",
+        "10.09",
+        "41.60"
+      ],
+      "ingredientCost": "216"
+    }
+  ],
+  "personDayNutrition": [
+    "1421.72",
+    "86.767",
+    "40.709",
+    "180.033"
+  ],
+  "familyNutrition": [
+    "2843.44",
+    "173.534",
+    "81.418",
+    "360.066"
+  ],
+  "requiredGrams": {
+    "egg": 200,
+    "tomato": 500,
+    "bread": 120,
+    "oil": 36,
+    "salt": 8,
+    "chicken": 300,
+    "rice": 140,
+    "carrot": 200,
+    "onion": 160,
+    "lentil": 140,
+    "cabbage": 200,
+    "yogurt": 300,
+    "apple": 200
+  },
+  "costs": {
+    "ingredient": "701.2863724691357984",
+    "covered": "122.0",
+    "purchase": "579.2863724691357984"
+  },
+  "kopecks": {
+    "ingredient": 70129,
+    "covered": 12200,
+    "purchase": 57929
+  }
+}

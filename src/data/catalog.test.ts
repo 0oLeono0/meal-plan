@@ -6,7 +6,7 @@ import { createLocalGeneration } from '../adapters/generation';
 import { createActivePlanAdapter, validateActiveBundle } from '../adapters/activePlan';
 import { createPlanSearch } from '../domain/generatePlan';
 import { validateCatalog } from '../adapters/catalog';
-import { compare, decimal, divide, formatExact } from '../domain/quantities';
+import { compare, decimal, divide, formatExact, multiply } from '../domain/quantities';
 import { projectPlan } from '../domain/planProjection';
 import type { Catalog } from '../domain/catalog';
 import foodEvidence from '../../data/sources/food.snapshot.json';
@@ -16,6 +16,22 @@ import { historicalCatalog, historicalCatalogPort } from './catalog';
 import release1Raw from '../test/fixtures/phase031-release1-active-plan.json?raw';
 import { sourceApprovedCatalogs, sourceApprovedCatalogPorts } from './catalog';
 import { createVersionedGeneration } from '../adapters/generation';
+import type { PantrySnapshotRow } from '../domain/appliedSettings';
+import { createGenerationController } from '../features/generation/controller';
+
+function projectBreakfastSnack(ids: readonly string[], servings: string, pantrySnapshot: readonly PantrySnapshotRow[] = []) {
+  const catalog = production()!.bundledCatalog;
+  const applied = buildAppliedSettings({ ...createDraft(), days: String(ids.length), budget: '3000', cookingTime: 'any' });
+  if (applied.status !== 'applied') throw new Error('Test settings must be valid');
+  const inputs = createPlanInputs(applied.settings, catalog, { seed: 'breakfast-snack-oracle', pantrySnapshot });
+  const result = projectPlan(inputs, { id: 'oracle', instances: ids.map((id, index) => {
+    const recipe = catalog.recipes.find(recipe => recipe.id === id)!;
+    return { id: `oracle-${index}`, date: inputs.dates[index], slot: recipe.slots[0], recipeId: id,
+      catalogVersion: catalog.version, recipeSnapshot: recipe, selectedServings: decimal(servings) };
+  }) });
+  if (result.status !== 'projected') throw new Error(JSON.stringify(result));
+  return result.projection;
+}
 
 const sourceEvidence = { food: foodEvidence, prices: priceEvidence, safety: safetyEvidence };
 
@@ -23,6 +39,69 @@ const modules = import.meta.glob('./catalog.ts', { eager: true });
 // An absent production catalog is an assertion failure, never an import/discovery error.
 const production = () => modules['./catalog.ts'] as { bundledCatalog: Catalog; bundledCatalogPort: Parameters<typeof createLocalGeneration>[0]; validateBundledCatalog: (input: Catalog, sources?: typeof sourceEvidence) => Promise<ReturnType<typeof validateCatalog>> } | undefined;
 describe('source-backed production corpus', () => {
+  it.each<[string, string[], string]>([
+    ['familiar-syrniki', ['923.7', '78.478', '35.343', '72.142'], '301.52290049382716'],
+    ['familiar-cottage-apple-bake', ['973.96', '84.152', '36.27', '79.4688'], '345.530420148148148'],
+    ['familiar-cottage-cucumber-bread', ['512.4', '50.86', '15.02', '45.028'], '256.0258177777777778'],
+  ])('independent source arithmetic scales %s once at half and double portions', (id, nutrition, price) => {
+    const base = projectBreakfastSnack([id], '2');
+    expect(Object.values(base.familyNutrition).map(formatExact)).toEqual(nutrition);
+    expect(formatExact(base.costs.exact.ingredient)).toBe(price);
+    for (const [servings, factor] of [['1', '0.5'], ['4', '2']]) {
+      const scaled = projectBreakfastSnack([id], servings);
+      expect(Object.values(scaled.familyNutrition).map(formatExact)).toEqual(nutrition.map(value => formatExact(multiply(decimal(value), decimal(factor)))));
+      expect(formatExact(scaled.costs.exact.ingredient)).toBe(formatExact(multiply(decimal(price), decimal(factor))));
+      expect(scaled.rows.map(row => formatExact(row.required.amount))).toEqual(base.rows.map(row => formatExact(multiply(row.required.amount, decimal(factor)))));
+    }
+  });
+  it('loads selects appends and recreates issued56 through the real controller after release68', async () => {
+    let raw = release1Raw;
+    const storage = { getItem: () => raw, setItem: (_key: string, value: string) => { raw = value; } };
+    const controller = createGenerationController({ activePlan: createActivePlanAdapter(() => storage), generation: createVersionedGeneration(sourceApprovedCatalogPorts) });
+    try {
+      await controller.load();
+      expect(raw).toBe(release1Raw);
+      const original = controller.getSnapshot().active!.plan;
+      const origin = { returnRoute: '/menu', focusAnchor: 'rebuild' };
+      await controller.appendVariant(origin);
+      expect(controller.getSnapshot().error).toBeNull();
+      expect(controller.getSnapshot().active!.plan.variants).toHaveLength(original.variants.length + 1);
+      expect(controller.getSnapshot().active!.plan.variants.slice(0, original.variants.length)).toEqual(original.variants);
+      await controller.selectVariant(original.variants[1].id, origin);
+      const loaded = await createActivePlanAdapter(() => storage).load();
+      expect(loaded.status).toBe('loaded');
+      if (loaded.status === 'loaded') expect(loaded.bundle.plan.activeVariantId).toBe(original.variants[1].id);
+      await controller.recreateSet(origin);
+      expect(controller.getSnapshot().error).toBeNull();
+      expect(controller.getSnapshot().active!.plan.variants).toHaveLength(3);
+      expect(controller.getSnapshot().active!.plan.inputs).toEqual(original.inputs);
+      expect(controller.getSnapshot().active!.plan.variants.every(variant => variant.instances.every(row => row.catalogVersion === 'mealplan-2026-11-11-1'))).toBe(true);
+    } finally { controller.dispose(); }
+  }, 60000);
+  it('keeps pcs and ml incompatible while spending known gram stocks once across repeated recipes', () => {
+    const ids = ['familiar-oat-pancake-yogurt', 'familiar-steamed-egg-pudding', 'familiar-oat-pancake-yogurt', 'familiar-steamed-egg-pudding'];
+    const pantry = (eggUnit: 'pcs' | 'g', milkUnit: 'ml' | 'g', eggAmount: string, milkAmount: string): PantrySnapshotRow[] => [
+      { productId: 'egg', quantity: { status: 'known', value: { amount: decimal(eggAmount), unit: eggUnit } }, expiresSoon: false },
+      { productId: 'milk', quantity: { status: 'known', value: { amount: decimal(milkAmount), unit: milkUnit } }, expiresSoon: false },
+    ];
+    const old = projectBreakfastSnack(ids, '2', pantry('pcs', 'ml', '3', '200'));
+    expect(old.pantryIssues).toEqual(expect.arrayContaining([
+      { productId: 'egg', profileId: 'usda-171287-raw', code: 'INCOMPATIBLE_PANTRY_UNIT' },
+      { productId: 'milk', profileId: 'usda-172217-ready', code: 'INCOMPATIBLE_PANTRY_UNIT' },
+    ]));
+    expect(old.rows.filter(row => ['egg', 'milk'].includes(row.productId)).map(row => formatExact(row.covered.amount))).toEqual(['0', '0']);
+    const grams = projectBreakfastSnack(ids, '2', pantry('g', 'g', '150', '200'));
+    expect(grams.pantryIssues).toEqual([]);
+    for (const [id, required, covered, purchase] of [['egg', '440', '150', '290'], ['milk', '560', '200', '360']]) {
+      const row = grams.rows.find(row => row.productId === id)!;
+      expect([row.required.amount, row.covered.amount, row.purchase.amount].map(formatExact)).toEqual([required, covered, purchase]);
+    }
+    const canned = projectBreakfastSnack(['familiar-chickpea-pancakes', 'familiar-bean-tomato-cabbage-salad'], '2', [
+      { productId: 'chickpea', quantity: { status: 'known', value: { amount: decimal('500'), unit: 'g' } }, expiresSoon: false },
+      { productId: 'bean', quantity: { status: 'known', value: { amount: decimal('500'), unit: 'g' } }, expiresSoon: false },
+    ]);
+    expect(canned.rows.filter(row => row.productId.endsWith('-canned')).map(row => formatExact(row.covered.amount))).toEqual(['0', '0']);
+  });
   it('ships the exact breakfast snack release and preserves the original 56 recipe snapshot', async () => {
     const current = production()!.bundledCatalog;
     expect(current.version).toBe('mealplan-2026-11-11-2');

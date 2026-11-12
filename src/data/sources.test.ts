@@ -1,8 +1,36 @@
 import { describe, expect, it } from 'vitest';
+import manifest from '../../data/sources/phase031.snapshot.json';
+import { bundledCatalog } from './catalog';
+import { validateExpandedCatalog } from './catalogExpansion';
 const originals = import.meta.glob('../../data/sources/*.snapshot.json', { query: '?raw', import: 'default', eager: true });
 const read = (name: string) => JSON.parse(String(originals[`../../data/sources/${name}.snapshot.json`]));
 const hash = async (value: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))), byte => byte.toString(16).padStart(2, '0')).join('');
 describe('archived primary sources', () => {
+  it.each<[string, (data: typeof manifest) => void]>([
+    ['observed scope', data => { data.records[8].price.scope = 'Санкт-Петербург verified'; }],
+    ['edible basis', data => { data.records[8].reference.basis = 'whole-package'; }],
+    ['assessment date', data => { data.records[8].price.assessmentDate = '2026-11-13'; }],
+    ['source hash', data => { data.records[8].nutrition.sha256 = '0'.repeat(64); }],
+    ['label value', data => { data.records[13].nutrition.values!.protein = '99'; }],
+    ['label license', data => { data.records[13].nutrition.license = 'CC0-1.0'; }],
+    ['drained identity', data => { data.records[10].productId = 'chickpea'; }],
+    ['observed quantity', data => { data.records[10].price.observedQuantity.amount = '240'; }],
+    ['derived edible price', data => { data.records[10].price.amount = '422.5'; }],
+  ])('rejects changed breakfast snack %s before trusting the catalog', async (_, mutate) => {
+    const changed = structuredClone(manifest);
+    mutate(changed);
+    expect((await validateExpandedCatalog(bundledCatalog, changed)).status).toBe('invalid');
+  });
+  it('pins independently recorded release evidence digests for 56 and 68 recipes', async () => {
+    for (const [version, digest] of [
+      ['mealplan-2026-11-11-1', '7e06f5d4ea1dd341571a54cc8fd62fff04988a32f843d0cd637413b4681ab1a3'],
+      ['mealplan-2026-11-11-2', 'fab951b0150ec725b273bb3e9fe4fe92b127b76e6377fbf1ad40b5f651f60af5'],
+    ]) {
+      const release = manifest.releases.find(release => release.version === version)!;
+      const records = release.profileIds.map(id => manifest.records.find(row => row.profileId === id));
+      expect(await hash(JSON.stringify({ release, records }))).toBe(digest);
+    }
+  });
   it('retains six independently acquired breakfast snack profiles and the separate label attribution', async () => {
     const data = read('phase031');
     for (const [productId, profileId, state, expected, amount] of [

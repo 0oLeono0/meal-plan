@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: P0 MVP
 current_phase: "03.1"
 current_phase_name: Разнообразный каталог привычных блюд
-current_plan: 2
+current_plan: 3
 status: executing
-stopped_at: Completed 03.1-01-PLAN.md; next 03.1-02, phase 1/8 complete
-last_updated: "2026-11-12T12:26:34.210Z"
+stopped_at: Completed 03.1-02-PLAN.md; next 03.1-03, phase 2/8 complete
+last_updated: "2026-11-12T12:50:03.423Z"
 last_activity: 2026-11-12
-last_activity_desc: 03.1-01 complete, next 03.1-02, 1/8 plans
-state_head: 0c53bbb383618774f96161adabac35ccded823c2
+last_activity_desc: 03.1-02 complete, next 03.1-03, 2/8 plans
+state_head: 5b23aaaa74ce55fd3d092136baa5e29a09a27d8a
 progress:
   total_phases: 8
   completed_phases: 3
   total_plans: 38
-  completed_plans: 31
+  completed_plans: 32
 ---
 
 # Project State
@@ -25,15 +25,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-30)
 
 **Core value:** Допустимое меню с прозрачным бюджетом и согласованные покупки с количественным учётом домашних запасов.
-**Current focus:** Phase 03.1 — Разнообразный каталог привычных блюд, выполнен 01/08, следующий 02
+**Current focus:** Phase 03.1 — Разнообразный каталог привычных блюд, выполнен 02/08, следующий 03
 
 ## Current Position
 
 Phase: 03.1 — Разнообразный каталог привычных блюд
-Current Plan: 2
+Current Plan: 3
 Total Plans in Phase: 8
 Status: Executing
-Last activity: 2026-11-12 — 03.1-01 complete, next 03.1-02, 1/8 plans
+Last activity: 2026-11-12 — 03.1-02 complete, next 03.1-03, 2/8 plans
 
 Progress: [████░░░░░░] 38%
 
@@ -89,6 +89,7 @@ Progress: [████░░░░░░] 38%
 | Phase 03 P11 | 1194min wall; active unknown; resumed27min | 3 tasks | 10 files |
 | Phase 03 P12 | 1510min wall; active unknown; resumed25min | 2 tasks | 18 files |
 | Phase 03.1 P01 | 30min | 3 tasks | 23 files |
+| Phase 03.1 P02 | 19min | 2 tasks | 19 files |
 
 ## Accumulated Context
 
@@ -127,6 +128,7 @@ Progress: [████░░░░░░] 38%
 - [Phase 03]: Retain initial960 failure report separately from scoped60pass; nativeWebKit15/16/24/25 and human26 remain open; shared requirements and phase acceptance pending.
 - [Phase 03.1]: Решение пользователя10.11.2026 допускает явно размеченные ориентировочные цены и КБЖУ с обоснованным базисом. Если нужна география новых оценок, целевой город Санкт-Петербург. Источники сохраняются в данных, UI показывает краткую сноску и Как считаем.
 - [Phase 03.1]: 03.1-01 shipped current56/20 alongside immutable historical52/12; generation dispatch uses compiled release ports and bounded mixed starts, CAT acceptance remains pending.
+- [Phase 03.1]: 03.1-02 ships current68/26 alongside immutable issued56 and historical52; label-derived tvorog and separate drained legume IDs preserve sourced basis and pantry units.
 
 ### Pending Todos
 
@@ -160,6 +162,6 @@ Progress: [████░░░░░░] 38%
 
 ## Session Continuity
 
-Last session: 2026-11-12T12:24:53.635Z
-Stopped at: Completed 03.1-01-PLAN.md; next 03.1-02, phase 1/8 complete
-Resume file: .planning/phases/03.1-raznoobraznyy-katalog-privychnyh-blyud/03.1-02-PLAN.md
+Last session: 2026-11-12T12:49:27.734Z
+Stopped at: Completed 03.1-02-PLAN.md; next 03.1-03, phase 2/8 complete
+Resume file: .planning/phases/03.1-raznoobraznyy-katalog-privychnyh-blyud/03.1-03-PLAN.md

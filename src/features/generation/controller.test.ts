@@ -11,6 +11,11 @@ import { createGenerationController as productionController } from './controller
 import type { GenerationControllerOptions } from './controller';
 import { createTrustedCatalogRegistry } from '../../adapters/trustedCatalogs';
 import legacyRaw from '../../test/fixtures/phase02-active-plan-v1.json?raw';
+import * as generationAdapters from '../../adapters/generation';
+import { bundledCatalogPort, sourceApprovedCatalogPorts } from '../../data/catalog';
+import type { GenerationOptions } from '../../adapters/generation';
+import type { CatalogPort } from '../../domain/catalog';
+import { variantFingerprint } from '../../domain/generatePlan';
 
 const origin = { returnRoute: '/plan/new', focusAnchor: 'generate' };
 // Synthetic test catalog only. No production data or adapter depends on these values.
@@ -29,6 +34,38 @@ function fixture(seed = 'one') {
 function deferred<T>() { let resolve!: (value: T) => void; let reject!: (reason: unknown) => void; const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; }
 const trustedCatalogs = createTrustedCatalogRegistry([fixture().inputs.catalog]);
 const createGenerationController = (options: GenerationControllerOptions) => productionController({ trustedCatalogs, ...options });
+
+it('real legacy load select append recreate preserves original identities settings pantry dates and source facts', async () => {
+  const values = new Map([[ACTIVE_PLAN_KEY, legacyRaw]]);
+  const store = { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); } };
+  const adapter = createActivePlanAdapter(() => store);
+  const factory = (generationAdapters as { createVersionedGeneration?: (ports: Readonly<Record<string, CatalogPort>>, options?: GenerationOptions) => GenerationPort }).createVersionedGeneration;
+  const generation = factory ? factory(sourceApprovedCatalogPorts) : generationAdapters.createLocalGeneration(bundledCatalogPort);
+  const controller = productionController({ generation, activePlan: adapter });
+  await controller.load();
+  const original = controller.getSnapshot().active!.plan;
+  expect(original.inputs.catalogVersion).toBe('mealplan-2026-10-28-1');
+  await controller.selectVariant(original.activeVariantId, origin);
+  await controller.appendVariant(origin);
+  const afterAppend = controller.getSnapshot();
+  expect(afterAppend.error).toBeNull();
+  expect(afterAppend.active!.plan.variants).toHaveLength(2);
+  expect(afterAppend.active!.plan.inputs).toEqual(original.inputs);
+  expect(afterAppend.active!.plan.variants[0]).toEqual(original.variants[0]);
+  expect(variantFingerprint(afterAppend.active!.plan.variants[1])).not.toBe(variantFingerprint(original.variants[0]));
+  await controller.selectVariant(original.activeVariantId, origin);
+  expect(controller.getSnapshot().active!.plan.activeVariantId).toBe(original.activeVariantId);
+  const reloaded = await createActivePlanAdapter(() => store).load();
+  expect(reloaded.status).toBe('loaded');
+  if (reloaded.status === 'loaded') expect(reloaded.bundle.plan).toEqual(controller.getSnapshot().active!.plan);
+  await controller.recreateSet(origin);
+  const recreated = controller.getSnapshot();
+  expect(recreated.error).toBeNull();
+  expect(recreated.active!.plan.inputs).toEqual(original.inputs);
+  expect(recreated.active!.plan.variants).toHaveLength(3);
+  expect(recreated.active!.plan.variants.every(variant => variant.instances.every(row => row.catalogVersion === original.inputs.catalogVersion))).toBe(true);
+  controller.dispose();
+}, 30_000);
 
 it('retains a real twelve-variant bundle and three-result candidate through quota and cancellation', async () => {
   const map = new Map([[ACTIVE_PLAN_KEY, legacyRaw]]); let quota = false;

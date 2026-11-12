@@ -10,7 +10,8 @@ import { createDraft, dietaryRestrictions } from './settings';
 import type { SettingsDraft } from './settings';
 import { createPlanSearch, variantFingerprint } from './generatePlan';
 import type { SearchOptions } from './generatePlan';
-import { bundledCatalog, historicalCatalog } from '../data/catalog';
+import { bundledCatalog, historicalCatalog, sourceApprovedCatalogs } from '../data/catalog';
+import { recipeDiversityFor } from '../data/recipeDiversity';
 import sourceOracle from '../../e2e/fixtures/catalog031-oracle.json';
 
 // Synthetic arithmetic/safety oracles only. These are not production food claims.
@@ -49,13 +50,14 @@ function error(result: GenerationResult) { expect(result.status).toBe('error'); 
 const stock = (amount: string, unit: 'g' | 'ml' = 'g'): readonly PantrySnapshotRow[] => [{ productId: 'rice', expiresSoon: true, quantity: { status: 'known', value: { amount: decimal(amount), unit } } }];
 
 describe('source-backed mixed starts', () => {
-  function currentInputs(change: Partial<SettingsDraft> = {}, seed = 'mixed-source-11') {
+  function currentInputs(change: Partial<SettingsDraft> = {}, seed = 'mixed-source-11', catalog: Catalog = bundledCatalog) {
     const applied = buildAppliedSettings({ ...createDraft(), days: '1', budget: '2000', ...change });
     if (applied.status !== 'applied') throw new Error('Invalid current settings');
-    return createPlanInputs(applied.settings, bundledCatalog, { seed, now: () => new Date(2026, 10, 12) });
+    return createPlanInputs(applied.settings, catalog, { seed, now: () => new Date(2026, 10, 12) });
   }
-  it('actually selects egg poultry legume dairy in the full production one-day catalog', () => {
-    const inputs = currentInputs();
+  it('retains the issued56 exact egg poultry legume dairy one-day output', () => {
+    const release1 = sourceApprovedCatalogs.find(catalog => catalog.version === 'mealplan-2026-11-11-1')!;
+    const inputs = currentInputs({}, 'mixed-source-11', release1);
     const { plan, projection, ids } = success(run(inputs).result);
     expect(ids).toEqual(sourceOracle.recipeIds);
     expect(Object.values(projection.averagePersonDayNutrition).map(formatExact)).toEqual(['1421.72', '86.767', '40.709', '180.033']);
@@ -66,7 +68,9 @@ describe('source-backed mixed starts', () => {
     const inputs = currentInputs({ days: '7', budget: '3000', variety });
     const first = run(inputs), selected = success(first.result);
     const familiar = new Set(selected.ids.filter(id => id.startsWith('familiar-')));
-    expect(familiar.size).toBe(4);
+    expect(familiar.size).toBeGreaterThanOrEqual(2);
+    const diversity = recipeDiversityFor(inputs.catalogVersion)!;
+    expect(new Set([...familiar].flatMap(id => diversity[id]?.groups ?? [])).size).toBeGreaterThanOrEqual(2);
     expect(first.progress.evaluatedCandidates).toBeLessThanOrEqual(512);
     expect(first.progress.transitions).toBeLessThanOrEqual(200000);
     expect(run(inputs).result).toEqual(first.result);

@@ -34,8 +34,8 @@ export async function mountGeneration(page: Page, options: Options = {}) {
     const generationPath = '/src/adapters/generation.ts', catalogPath = '/src/data/catalog.ts';
     const { App } = await import(appPath);
     const { createActivePlanAdapter } = await import(activePath);
-    const { createLocalGeneration } = await import(generationPath);
-    const { bundledCatalogPort } = await import(catalogPath);
+    const { createVersionedGeneration } = await import(generationPath);
+    const { sourceApprovedCatalogPorts } = await import(catalogPath);
     if (options.draft) {
       const settingsPath = '/src/domain/settings.ts';
       const { createDraft } = await import(settingsPath);
@@ -72,7 +72,7 @@ export async function mountGeneration(page: Page, options: Options = {}) {
         return result;
       },
     };
-    const actual = createLocalGeneration(bundledCatalogPort);
+    const actual = createVersionedGeneration(sourceApprovedCatalogPorts);
     const generationPort: GenerationPort = { async generate(request) {
       const n = count('generation-calls');
       if (options.deferGeneration) await release(`release-generation-${n}`);

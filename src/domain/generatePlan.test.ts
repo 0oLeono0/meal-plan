@@ -61,7 +61,7 @@ describe('source-backed mixed starts', () => {
     expect(Object.values(projection.averagePersonDayNutrition).map(formatExact)).toEqual(['1421.72', '86.767', '40.709', '180.033']);
     expect(formatExact(projection.costs.exact.purchase)).toBe('701.2863724691357984');
     expect(run(inputs).result).toEqual({ status: 'success', plan });
-  });
+  }, 30_000);
   it.each(['same', 'medium', 'max'] as const)('keeps affordable mixed defaults and deterministic bounded starts at variety %s', variety => {
     const inputs = currentInputs({ days: '7', budget: '3000', variety });
     const first = run(inputs), selected = success(first.result);

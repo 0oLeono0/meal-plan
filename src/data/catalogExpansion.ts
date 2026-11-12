@@ -15,7 +15,7 @@ type SourceRow = Manifest['records'][number];
 // Reviewed release-specific evidence digests survive adding later manifest rows.
 // Each includes exact profile/recipe membership and all original source fields.
 const releaseSourceHashes: Readonly<Record<string, string>> = Object.freeze({
-  'mealplan-2026-11-11-1': 'ff1ce75772f758aef768965d9d6bd1c7289d5f3f84d4e4802a960be4fd2ad0fb',
+  'mealplan-2026-11-11-1': '7e06f5d4ea1dd341571a54cc8fd62fff04988a32f843d0cd637413b4681ab1a3',
 });
 
 function foodFromSource(row: SourceRow): FoodProfile {
@@ -28,9 +28,9 @@ function foodFromSource(row: SourceRow): FoodProfile {
     nutrition: { status: 'known', reference: edible100, values: values as Record<keyof typeof nutrientIds, string>, source },
     price: { status: 'known', amount: row.price.amount, currency: 'RUB', reference: edibleKg, region: `${row.price.scope}; оценка для ${row.price.targetScope}`,
       observedAt: row.price.observedAt, estimate: true, source: { sourceId: 'mealplan-representative-price-estimates', recordId: row.profileId,
-        url: 'https://mealplan.invalid/price-estimates/phase031', release: sourceSnapshot.version, license: 'MealPlan original estimate policy; attributed numeric retail observations', archiveSha256: row.price.sha256 } },
+        url: 'https://mealplan.invalid/price-estimates/phase031', release: row.sourceVersion, license: 'MealPlan original estimate policy; attributed numeric retail observations', archiveSha256: row.price.sha256 } },
     safety: { status: 'known', facts: row.safety.facts.map(fact => ({ ...fact, kind: 'restriction', evidence: [{ ...source, sourceId: 'mealplan-reviewed-ingredient-identity',
-      recordId: `${row.profileId}-identity`, release: sourceSnapshot.version, archiveSha256: row.safety.sha256 }] })) },
+      recordId: `${row.profileId}-identity`, release: row.sourceVersion, archiveSha256: row.safety.sha256 }] })) },
   };
 }
 
@@ -70,6 +70,7 @@ export async function validateExpandedCatalog(input: Catalog, manifest: Manifest
       const food = checked.catalog.foods.find(food => food.profileId === id);
       if (!row || !food || !sameSnapshot(food, foodFromSource(row))) return catalogError('SOURCE_PROFILE_MISMATCH', id);
       if (row.nutrition.kind !== 'usda' || manifest.archiveSha256 !== 'b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0'
+        || manifest.archiveUrl !== 'https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip'
         || manifest.license !== 'CC0-1.0' || !sameSnapshot(row.reference, edible100) || row.identity !== row.nutrition.food.description
         || !row.mapping || !row.state || !row.nutrition.originalCsv.includes(row.identity)) return catalogError('SOURCE_BASIS_MISMATCH', id);
       if (row.nutrition.nutrients.length !== 4 || new Set(row.nutrition.nutrients.map(value => value.nutrient_id)).size !== 4

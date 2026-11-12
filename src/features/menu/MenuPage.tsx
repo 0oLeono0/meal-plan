@@ -193,7 +193,7 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
     <section className="card"><h2>Среднее на человека в день</h2><NutritionSummary values={view.averagePersonDayNutrition} target={view.targetComparison} />
       <p>{settings.target.status === 'absent' ? 'Ручная цель КБЖУ не задана' : settings.target.source.kind === 'manual' ? 'Цель введена вручную · на человека в день' : 'Цель из сохранённого расчёта · на человека в день'}</p>
       <p className="hint">КБЖУ рассчитаны по составу продуктов и не являются медицинской рекомендацией</p>
-      <p className="hint">Текущий каталог ограничен растительными рецептами. Расчёт не подтверждает полноценность рациона.</p>
+      <p className="hint">Расчёт не подтверждает полноценность рациона.</p>
     </section>
     <MenuDays projection={projection} catalogVersion={plan.inputs.catalogVersion} selected={selected} onChange={next => setParams(menuSearch(next))} days={view.days} today={today} />
     <ShoppingAction label={view.itemCount} />

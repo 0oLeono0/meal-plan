@@ -44,7 +44,8 @@ async function saveTracer(page: Page, servings = '2') {
   }, { recipeIds: oracle.recipeIds, servings });
 }
 
-test('tracer source-backed B1 L1 D7 S1 save menu recipe shopping reload', async ({ page }) => {
+for (const width of [360, 768, 1280]) test(`tracer source-backed B1 L1 D7 S1 save menu recipe shopping reload at ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 900 });
   const saved = await saveTracer(page);
   expect(saved.version).toBe('mealplan-2026-11-11-1');
   expect(saved.presentIds).toEqual(oracle.recipeIds);
@@ -56,17 +57,23 @@ test('tracer source-backed B1 L1 D7 S1 save menu recipe shopping reload', async 
   for (const [id, grams] of Object.entries(oracle.requiredGrams)) expect(saved.rows?.find((row: TracerRow) => row.id === id)?.required).toBe(String(grams));
   await page.goto('/menu');
   await expect(page.getByRole('heading', { level: 1, name: 'Меню на 1 день' })).toBeVisible();
+  await expect(page.getByRole('main')).not.toContainText('Текущий каталог ограничен растительными рецептами');
   const budget = page.getByRole('region', { name: 'Бюджет меню' });
   await expect(budget).toContainText('701,28');
   await expect(budget).toContainText('122,00');
   await expect(budget).toContainText('579,28');
   await expect(page.locator('.menu-day-totals').getByText('1 422 ккал', { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+  await page.screenshot({ path: `.tmp/phase031-01-menu-${width}.png`, fullPage: true });
   const chicken = page.locator('[data-instance-id="tracer-1"]');
   await chicken.getByRole('link').click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Куриное филе с рисом и морковью');
+  await expect(page.getByRole('main')).not.toContainText('Текущий каталог ограничен растительными рецептами');
   await expect(page.getByRole('region', { name: 'На одну порцию' })).toContainText('554');
   await expect(page.getByText('Нужно 300 г · Из запасов 200 г · Докупить 100 г', { exact: true })).toBeVisible();
   await expect(page.getByRole('list', { name: 'Шаги приготовления' }).locator('li')).toHaveCount(4);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+  await page.screenshot({ path: `.tmp/phase031-01-recipe-${width}.png`, fullPage: true });
   await page.getByRole('link', { name: 'К меню', exact: true }).click();
   await page.getByRole('link', { name: /^Список покупок ·/ }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Список покупок');
@@ -75,6 +82,8 @@ test('tracer source-backed B1 L1 D7 S1 save menu recipe shopping reload', async 
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Список покупок');
   expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(saved.raw);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+  await page.screenshot({ path: `.tmp/phase031-01-shopping-${width}.png`, fullPage: true });
 });
 
 test('tracer scales edible inputs once for half and double family servings', async ({ page }) => {
@@ -93,7 +102,14 @@ test('ordinary-mixed wizard uses current compiled foods and persists append relo
   await page.getByLabel('Число дней', { exact: true }).fill('1');
   await page.getByRole('button', { name: 'Далее', exact: true }).click();
   await page.getByLabel('Бюджет на 1 день', { exact: true }).fill('2000');
-  for (let step = 0; step < 2; step++) await page.getByRole('button', { name: 'Далее', exact: true }).click();
+  await expect(page.getByRole('status')).toHaveText('Сохранено на этом устройстве');
+  await page.waitForTimeout(270);
+  for (let step = 3; step <= 4; step++) {
+    await page.getByRole('button', { name: 'Далее', exact: true }).click();
+    await expect(page.getByText(`Шаг ${step} из 4`)).toBeVisible();
+    // Wizard intentionally debounces repeated navigation for 250ms.
+    if (step === 3) await page.waitForTimeout(270);
+  }
   await page.getByRole('button', { name: 'Составить меню', exact: true }).click();
   await expect(page).toHaveURL(/\/menu$/, { timeout: 32_000 });
   const first = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).plan, activeKey);

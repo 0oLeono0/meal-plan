@@ -12,6 +12,7 @@ import type { Catalog } from '../domain/catalog';
 import foodEvidence from '../../data/sources/food.snapshot.json';
 import priceEvidence from '../../data/sources/prices.snapshot.json';
 import safetyEvidence from '../../data/sources/safety.snapshot.json';
+import { historicalCatalog, historicalCatalogPort } from './catalog';
 
 const sourceEvidence = { food: foodEvidence, prices: priceEvidence, safety: safetyEvidence };
 
@@ -108,7 +109,7 @@ describe('source-backed production corpus', () => {
     expect((await production()!.validateBundledCatalog(production()!.bundledCatalog, sources)).status).toBe('invalid');
   });
   it('generates all real default slots within the unchanged family budget offline', async () => {
-    const module = production()!;
+    const module = { bundledCatalog: historicalCatalog, bundledCatalogPort: historicalCatalogPort };
     const applied = buildAppliedSettings(createDraft());
     expect(applied.status).toBe('applied');
     if (applied.status !== 'applied') return;

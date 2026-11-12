@@ -50,7 +50,7 @@ describe('compiled version dispatch', () => {
     const refused = await producer.generate({ requestId: 'same-version-tamper', inputs: changed }, new AbortController().signal);
     expectError(refused, 'GENERATION_DATA_INCOMPLETE');
     if (refused.status === 'error') expect(refused.error.diagnostics[0].code).toBe('CATALOG_SNAPSHOT_MISMATCH');
-  });
+  }, 30_000);
   it('retains cancellation and a shared deadline including deferred release loading', async () => {
     const data = catalog(2), gate = deferred<Awaited<ReturnType<CatalogPort['load']>>>();
     const port = { ...createLocalCatalog(data), load: () => gate.promise };

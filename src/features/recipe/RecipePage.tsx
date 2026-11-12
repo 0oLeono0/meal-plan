@@ -56,6 +56,6 @@ export function RecipePage({ snapshot, catalog, onRetry }: { snapshot: Generatio
       </li>)}
     </ul></section>
     <section className="card"><h2>Приготовление</h2><ol aria-label="Шаги приготовления" className="list-decimal pl-6 space-y-4 leading-relaxed">{view.recipe.steps.map((step, index) => <li key={index}>{step}</li>)}</ol></section>
-    <p>Текущий каталог ограничен растительными рецептами. Расчёт не подтверждает полноценность рациона</p><p>КБЖУ рассчитаны по составу продуктов и не являются медицинской рекомендацией</p>
+    <p>Расчёт не подтверждает полноценность рациона</p><p>КБЖУ рассчитаны по составу продуктов и не являются медицинской рекомендацией</p>
   </section>;
 }

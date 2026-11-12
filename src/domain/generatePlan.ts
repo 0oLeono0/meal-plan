@@ -6,6 +6,8 @@ import { projectPlan } from './planProjection';
 import type { PlanProjection } from './planProjection';
 import { add, compare, convertQuantity, decimal, divide, multiply, rational, subtract } from './quantities';
 import type { Rational } from './quantities';
+import { recipeDiversityFor } from '../data/recipeDiversity';
+import type { RecipeDiversityMap } from '../data/recipeDiversity';
 
 export interface SearchOptions extends GenerationSelectionOptions {
   readonly allergenKeys?: readonly string[];
@@ -40,12 +42,13 @@ function makeVariant(inputs: PlanInputs, ids: readonly string[]): PlanVariant {
     recipeSnapshot: recipes.get(id)!, selectedServings: decimal(String(inputs.appliedSettings.people)) })) };
 }
 /** Ascending lexicographic order: negative early stock usage; optional normalized target
- * deviation; variety; exact purchases; seeded hash then recipe-ID sequence.
+ * deviation; optional compiled food-group/family coverage; variety; exact purchases;
+ * seeded hash then recipe-ID sequence.
  * Each expiring product contributes at most1: min(early use/known stock,1).
  * Unknown quantity contributes presence once (no monetary coverage); incompatible stock0.
  * Targets use sum |average person-day - target| / max(target,1), including literal zero.
  */
-function score(inputs: PlanInputs, projection: PlanProjection, ids: readonly string[]): readonly Rational[] {
+function score(inputs: PlanInputs, projection: PlanProjection, ids: readonly string[], diversity?: RecipeDiversityMap): readonly Rational[] {
   let early = zero();
   for (const stock of inputs.pantrySnapshot.filter(row => row.expiresSoon)) {
     const rows = projection.rows.filter(row => row.productId === stock.productId);
@@ -69,9 +72,47 @@ function score(inputs: PlanInputs, projection: PlanProjection, ids: readonly str
   if (target.status === 'known') values.push(nutrientKeys.reduce((sum, key) => add(sum,
     divide(absolute(subtract(projection.averagePersonDayNutrition[key], target.values[key])), compare(target.values[key], decimal('1')) < 0 ? decimal('1') : target.values[key])), zero()));
   const variety = inputs.appliedSettings.variety;
+  if (diversity) {
+    const selected = ids.map(id => diversity[id]).filter(row => row !== undefined);
+    values.push(decimal(String(-new Set(selected.flatMap(row => row.groups)).size)));
+    if (variety !== 'same') values.push(decimal(String(-new Set(selected.map(row => row.family)).size)));
+  }
   const repeats = ids.reduce((count, id, index) => count + (index >= 4 && id === ids[index - 4] ? 1 : 0), 0);
   values.push(decimal(String(variety === 'medium' ? repeats : new Set(ids).size * (variety === 'max' ? -1 : 1))), projection.costs.exact.purchase);
   return values;
+}
+
+/** Full assignments offer affordable mixed starts at four densities. Every start
+ * uses admitted candidates and the same evaluation/transition budget as the beam.
+ * Sparse starts retain cheapest slots between mixed days for constrained budgets.
+ */
+function* balancedStarts(inputs: PlanInputs, slots: readonly (readonly Candidate[])[], diversity: RecipeDiversityMap): Generator<readonly string[]> {
+  const periods = [1, 2, 3, 7];
+  for (let start = 0; start < 12; start++) {
+    const period = periods[start % periods.length];
+    const offset = hash(`${inputs.seed}:day:${start}`) % period;
+    const groups = new Set<string>(), families = new Map<string, number>(), uses = new Map<string, number>();
+    const ids = slots.map((candidates, index) => {
+      const mixedDay = Math.floor(index / 4) % period === offset % Math.min(period, inputs.dates.length);
+      const choices = mixedDay ? candidates.filter(candidate => diversity[candidate.recipe.id] !== undefined) : [];
+      choices.sort((left, right) => {
+        const a = diversity[left.recipe.id], b = diversity[right.recipe.id];
+        const newGroups = b.groups.filter(group => !groups.has(group)).length - a.groups.filter(group => !groups.has(group)).length;
+        return newGroups || (families.get(a.family) ?? 0) - (families.get(b.family) ?? 0)
+          || (uses.get(left.recipe.id) ?? 0) - (uses.get(right.recipe.id) ?? 0)
+          || hash(`${inputs.seed}:${start}:${index}:${left.recipe.id}`) - hash(`${inputs.seed}:${start}:${index}:${right.recipe.id}`);
+      });
+      const selected = choices[0] ?? candidates[0];
+      const metadata = diversity[selected.recipe.id];
+      if (metadata) {
+        metadata.groups.forEach(group => groups.add(group));
+        families.set(metadata.family, (families.get(metadata.family) ?? 0) + 1);
+      }
+      uses.set(selected.recipe.id, (uses.get(selected.recipe.id) ?? 0) + 1);
+      return selected.recipe.id;
+    });
+    yield ids;
+  }
 }
 
 /** Resumable pure search. One next() advances at most one recipe admission, complete
@@ -94,6 +135,8 @@ export function* createPlanSearch(rawInputs: PlanInputs, options: SearchOptions 
     const validated = validatePlanInputs(rawInputs);
     if (validated.status === 'invalid') { diagnostics.push(...validated.diagnostics); return refuse('GENERATION_DATA_INCOMPLETE'); }
     const inputs = validated.inputs;
+    const metadata = recipeDiversityFor(inputs.catalogVersion);
+    const diversity = metadata && inputs.catalog.recipes.some(recipe => Object.prototype.hasOwnProperty.call(metadata, recipe.id)) ? metadata : undefined;
     const maxEvaluations = options.maxEvaluations ?? SEARCH_LIMITS.maxEvaluations, maxTransitions = options.maxTransitions ?? SEARCH_LIMITS.maxTransitions;
     const targetCount = options.targetCount ?? 3, excludedFingerprints = options.excludedFingerprints ?? [];
     const allergens = [...new Set(options.allergenKeys ?? [])];
@@ -176,7 +219,7 @@ export function* createPlanSearch(rawInputs: PlanInputs, options: SearchOptions 
       if (result.status !== 'projected') { diagnostics.push(...result.diagnostics); projectionFailure = true; return undefined; }
       const projection = result.projection;
       if (!cheapest || compare(projection.costs.exact.purchase, cheapest) < 0) cheapest = projection.costs.exact.purchase;
-      const ranked = { ids: [...ids], variant, projection, score: score(inputs, projection, ids), tie: hash(`${inputs.seed}:${key}`), key };
+      const ranked = { ids: [...ids], variant, projection, score: score(inputs, projection, ids, diversity), tie: hash(`${inputs.seed}:${key}`), key };
       if (projection.budget.check.accepted) foundFeasible = true;
       const fingerprint = variantFingerprint(variant);
       if (projection.budget.check.accepted && !excluded.has(fingerprint) && !retained.some(row => variantFingerprint(row.variant) === fingerprint)) {
@@ -204,6 +247,15 @@ export function* createPlanSearch(rawInputs: PlanInputs, options: SearchOptions 
       const baseline = evaluate(slots.map(rows => rows[0].recipe.id));
       transitions++; yield progress();
       let beam = baseline ? [baseline] : [];
+      if (diversity) {
+        for (const ids of balancedStarts(inputs, slots, diversity)) {
+          if (transitions >= maxTransitions || evaluatedCandidates >= maxEvaluations) break;
+          const ranked = evaluate(ids);
+          if (ranked) beam.push(ranked);
+          transitions++; yield progress();
+        }
+        beam.sort(compareRank);
+      }
       outer: for (let round = 0; round < 2; round++) {
         const next = [...beam];
         for (const current of beam) for (let index = 0; index < slots.length; index++) for (const candidate of slots[index]) {

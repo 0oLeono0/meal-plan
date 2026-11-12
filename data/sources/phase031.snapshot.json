@@ -7,6 +7,7 @@
     {
       "productId": "egg",
       "profileId": "usda-171287-raw",
+      "sourceVersion": "phase031-source-2026-11-12-1",
       "name": "Яичная масса без скорлупы",
       "identity": "Egg, whole, raw, fresh",
       "state": "raw",
@@ -145,6 +146,7 @@
     {
       "productId": "chicken",
       "profileId": "usda-171077-raw",
+      "sourceVersion": "phase031-source-2026-11-12-1",
       "name": "Куриное филе без кожи и костей",
       "identity": "Chicken, broiler or fryers, breast, skinless, boneless, meat only, raw",
       "state": "raw",
@@ -283,6 +285,7 @@
     {
       "productId": "lentil",
       "profileId": "usda-172420-dry",
+      "sourceVersion": "phase031-source-2026-11-12-1",
       "name": "Чечевица красная сухая",
       "identity": "Lentils, raw",
       "state": "dry",
@@ -421,6 +424,7 @@
     {
       "productId": "oil",
       "profileId": "usda-171025-ready",
+      "sourceVersion": "phase031-source-2026-11-12-1",
       "name": "Масло подсолнечное",
       "identity": "Oil, sunflower, linoleic, (approx. 65%)",
       "state": "ready",
@@ -559,6 +563,7 @@
     {
       "productId": "onion",
       "profileId": "usda-170000-raw",
+      "sourceVersion": "phase031-source-2026-11-12-1",
       "name": "Лук репчатый очищенный",
       "identity": "Onions, raw",
       "state": "raw",
@@ -697,6 +702,7 @@
     {
       "productId": "yogurt",
       "profileId": "usda-171284-ready",
+      "sourceVersion": "phase031-source-2026-11-12-1",
       "name": "Йогурт натуральный без добавок",
       "identity": "Yogurt, plain, whole milk",
       "state": "ready",
@@ -835,6 +841,7 @@
     {
       "productId": "apple",
       "profileId": "usda-171688-raw",
+      "sourceVersion": "phase031-source-2026-11-12-1",
       "name": "Яблоко с кожицей без сердцевины",
       "identity": "Apples, raw, with skin (Includes foods for USDA's Food Distribution Program)",
       "state": "raw",
@@ -973,6 +980,7 @@
     {
       "productId": "bread",
       "profileId": "usda-172688-ready",
+      "sourceVersion": "phase031-source-2026-11-12-1",
       "name": "Хлеб цельнозерновой пшеничный",
       "identity": "Bread, whole-wheat, commercially prepared",
       "state": "ready",

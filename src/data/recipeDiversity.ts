@@ -10,9 +10,7 @@ const firstRelease: RecipeDiversityMap = Object.freeze({
   'familiar-lentil-cabbage-tomato': Object.freeze({ groups: Object.freeze(['legume'] as const), family: 'lentil-vegetable-stew' }),
   'familiar-yogurt-apple': Object.freeze({ groups: Object.freeze(['dairy'] as const), family: 'fresh-dairy-fruit' }),
 });
-const releases: Readonly<Record<string, RecipeDiversityMap>> = Object.freeze({
-  'mealplan-2026-11-11-1': firstRelease,
-  'mealplan-2026-11-11-2': Object.freeze({
+const secondRelease: RecipeDiversityMap = Object.freeze({
     ...firstRelease,
     'familiar-milk-oats-apple': { groups: ['dairy'], family: 'milk-oat-porridge' },
     'familiar-syrniki': { groups: ['dairy', 'egg'], family: 'pan-fried-cottage-cakes' },
@@ -26,6 +24,19 @@ const releases: Readonly<Record<string, RecipeDiversityMap>> = Object.freeze({
     'familiar-steamed-egg-pudding': { groups: ['egg', 'dairy'], family: 'steamed-egg-custard' },
     'familiar-baked-apple-oats': { groups: ['plant'], family: 'baked-fruit-crumble' },
     'familiar-bean-tomato-cabbage-salad': { groups: ['legume', 'plant'], family: 'bean-vegetable-salad' },
+  } satisfies RecipeDiversityMap);
+const releases: Readonly<Record<string, RecipeDiversityMap>> = Object.freeze({
+  'mealplan-2026-11-11-1': firstRelease,
+  'mealplan-2026-11-11-2': secondRelease,
+  'mealplan-2026-11-11-3': Object.freeze({
+    ...secondRelease,
+    'familiar-chicken-pasta-soup': { groups: ['poultry'], family: 'chicken-pasta-soup' },
+    'familiar-turkey-balls-buckwheat': { groups: ['poultry'], family: 'turkey-meatballs-grain' },
+    'familiar-turkey-potato-cabbage': { groups: ['poultry'], family: 'poultry-vegetable-braise' },
+    'familiar-pollock-potato-carrot': { groups: ['fish'], family: 'fish-vegetable-braise' },
+    'familiar-cod-rice-soup': { groups: ['fish'], family: 'fish-rice-soup' },
+    'familiar-beef-pasta-tomato': { groups: ['meat'], family: 'beef-pasta-tomato' },
+    'familiar-lentil-vegetable-soup': { groups: ['legume', 'plant'], family: 'lentil-vegetable-soup' },
   } satisfies RecipeDiversityMap),
 });
 export function recipeDiversityFor(version: string): RecipeDiversityMap | undefined {

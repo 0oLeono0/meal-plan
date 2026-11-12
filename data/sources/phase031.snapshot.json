@@ -1899,6 +1899,701 @@
         "originalEvidence": "{\"identity\":\"Творог 5%, нормализованное пастеризованное молоко и закваска\",\"facts\":[{\"kind\":\"restriction\",\"key\":\"no-fish\",\"suitable\":true},{\"kind\":\"restriction\",\"key\":\"vegetarian\",\"suitable\":true}],\"unknown\":[\"halal\",\"gluten-free\",\"lactose-free\",\"allergen-guarantees\"],\"rationale\":\"Reviewed single ingredient identity supports fish absence and vegetarian classification. Package cross-contact, certification and supplier-specific allergens are unverified.\"}",
         "sha256": "9ac245d4ed65bfe247a1cef550eeeb52c3c6fa42412ef737a4b65c0553b0061c"
       }
+    },
+    {
+      "productId": "turkey",
+      "profileId": "usda-174515-raw",
+      "sourceVersion": "phase031-source-2026-11-12-3",
+      "name": "Филе грудки индейки сырое без кожи и костей",
+      "identity": "Turkey, retail parts, breast, meat only, raw",
+      "state": "raw",
+      "category": "Мясо и птица",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Retail breast meat is represented by USDA raw turkey breast meat only. Trim losses and brand differences are uncertain. All served oil and sauce are counted. Cooked yield and nutrient retention are not modelled.",
+      "nutrition": {
+        "kind": "usda",
+        "food": {
+          "fdc_id": "174515",
+          "data_type": "sr_legacy_food",
+          "description": "Turkey, retail parts, breast, meat only, raw",
+          "food_category_id": "5",
+          "publication_date": "2019-04-01"
+        },
+        "foodLine": 7005,
+        "nutrients": [
+          {
+            "id": "1865219",
+            "fdc_id": "174515",
+            "nutrient_id": "1008",
+            "amount": "114",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1865270",
+            "fdc_id": "174515",
+            "nutrient_id": "1003",
+            "amount": "23.34",
+            "data_points": "3",
+            "derivation_id": "1",
+            "min": "22.99",
+            "max": "23.79",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1865217",
+            "fdc_id": "174515",
+            "nutrient_id": "1004",
+            "amount": "2.33",
+            "data_points": "3",
+            "derivation_id": "1",
+            "min": "2.11",
+            "max": "2.46",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1865218",
+            "fdc_id": "174515",
+            "nutrient_id": "1005",
+            "amount": "0",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          }
+        ],
+        "nutrientLines": [
+          581547,
+          581598,
+          581545,
+          581546
+        ],
+        "originalCsv": "\"174515\",\"sr_legacy_food\",\"Turkey, retail parts, breast, meat only, raw\",\"5\",\"2019-04-01\"\n\"1865219\",\"174515\",\"1008\",\"114\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1865270\",\"174515\",\"1003\",\"23.34\",\"3\",\"1\",\"22.99\",\"23.79\",\"\",\"\",\"\"\n\"1865217\",\"174515\",\"1004\",\"2.33\",\"3\",\"1\",\"2.11\",\"2.46\",\"\",\"\",\"\"\n\"1865218\",\"174515\",\"1005\",\"0\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"",
+        "sha256": "13a9eac7dd2f8e7f20cf8df7305e25935b2ae6f8d8acb0235d79e235cc904bf6"
+      },
+      "price": {
+        "amount": "850",
+        "currency": "RUB",
+        "reference": {
+          "amount": "1",
+          "unit": "kg",
+          "basis": "edible"
+        },
+        "estimate": true,
+        "observedAmount": "850",
+        "observedQuantity": {
+          "amount": "1000",
+          "unit": "g"
+        },
+        "observedAt": "2026-11-12",
+        "scope": "Санкт-Петербург, интернет-витрина МясоСторе",
+        "targetScope": "Санкт-Петербург",
+        "assessmentDate": "2026-11-12",
+        "url": "https://myasostore.ru/catalog/indeyka/indeyka-grudka/",
+        "excerpt": "Turkey breast boneless, 850 RUB/kg",
+        "derivation": "850 / 1 = 850 RUB/kg. Representative boneless edible breast estimate.",
+        "assumptions": "Retail breast meat is represented by USDA raw turkey breast meat only. Trim losses and brand differences are uncertain.",
+        "accessMethod": "Official retailer page read with web tool; numeric excerpt only",
+        "reuseDisposition": "Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.",
+        "originalEvidence": "{\"amount\":\"850\",\"currency\":\"RUB\",\"reference\":{\"amount\":\"1\",\"unit\":\"kg\",\"basis\":\"edible\"},\"estimate\":true,\"observedAmount\":\"850\",\"observedQuantity\":{\"amount\":\"1000\",\"unit\":\"g\"},\"observedAt\":\"2026-11-12\",\"scope\":\"Санкт-Петербург, интернет-витрина МясоСторе\",\"targetScope\":\"Санкт-Петербург\",\"assessmentDate\":\"2026-11-12\",\"url\":\"https://myasostore.ru/catalog/indeyka/indeyka-grudka/\",\"excerpt\":\"Turkey breast boneless, 850 RUB/kg\",\"derivation\":\"850 / 1 = 850 RUB/kg. Representative boneless edible breast estimate.\",\"assumptions\":\"Retail breast meat is represented by USDA raw turkey breast meat only. Trim losses and brand differences are uncertain.\",\"accessMethod\":\"Official retailer page read with web tool; numeric excerpt only\",\"reuseDisposition\":\"Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.\"}",
+        "sha256": "6797d866753dd8dc85d638ccc709a253d6f2bd77fed7ae032fb763dc69e5dc5e"
+      },
+      "safety": {
+        "identity": "Turkey, retail parts, breast, meat only, raw",
+        "facts": [
+          {
+            "kind": "restriction",
+            "key": "no-fish",
+            "suitable": true
+          },
+          {
+            "kind": "restriction",
+            "key": "vegetarian",
+            "suitable": false
+          }
+        ],
+        "unknown": [
+          "halal",
+          "gluten-free",
+          "lactose-free",
+          "allergen-guarantees"
+        ],
+        "rationale": "Single plain ingredient identity supports fish and vegetarian classification only. Meat and fish are not vegetarian. Package cross-contact, certification and supplier-specific allergens remain unverified.",
+        "originalEvidence": "{\"identity\":\"Turkey, retail parts, breast, meat only, raw\",\"facts\":[{\"kind\":\"restriction\",\"key\":\"no-fish\",\"suitable\":true},{\"kind\":\"restriction\",\"key\":\"vegetarian\",\"suitable\":false}],\"unknown\":[\"halal\",\"gluten-free\",\"lactose-free\",\"allergen-guarantees\"],\"rationale\":\"Single plain ingredient identity supports fish and vegetarian classification only. Meat and fish are not vegetarian. Package cross-contact, certification and supplier-specific allergens remain unverified.\"}",
+        "sha256": "c89cc7a5e259c8f7eb6a2f07738111da4ee299e106b576f12c4877675a2bfa78"
+      }
+    },
+    {
+      "productId": "pollock",
+      "profileId": "usda-173725-raw",
+      "sourceVersion": "phase031-source-2026-11-12-3",
+      "name": "Минтай, сырое филе без кожи, костей и глазури",
+      "identity": "Fish, pollock, Alaska, raw",
+      "state": "raw",
+      "category": "Рыба",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "95% edible fraction is a price-only representative assumption. At-most5% glaze is an upper bound, not measured thawed yield. Drip and pin-bone losses are uncertain. Weigh thawed deboned flesh for recipes. All served oil and sauce are counted. Cooked yield and nutrient retention are not modelled.",
+      "nutrition": {
+        "kind": "usda",
+        "food": {
+          "fdc_id": "173725",
+          "data_type": "sr_legacy_food",
+          "description": "Fish, pollock, Alaska, raw",
+          "food_category_id": "15",
+          "publication_date": "2019-04-01"
+        },
+        "foodLine": 6215,
+        "nutrients": [
+          {
+            "id": "1801596",
+            "fdc_id": "173725",
+            "nutrient_id": "1008",
+            "amount": "76",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1801613",
+            "fdc_id": "173725",
+            "nutrient_id": "1003",
+            "amount": "17.17",
+            "data_points": "3",
+            "derivation_id": "1",
+            "min": "16.88",
+            "max": "17.56",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1801612",
+            "fdc_id": "173725",
+            "nutrient_id": "1004",
+            "amount": "0.82",
+            "data_points": "0",
+            "derivation_id": "52",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1801627",
+            "fdc_id": "173725",
+            "nutrient_id": "1005",
+            "amount": "0",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          }
+        ],
+        "nutrientLines": [
+          517924,
+          517941,
+          517940,
+          517955
+        ],
+        "originalCsv": "\"173725\",\"sr_legacy_food\",\"Fish, pollock, Alaska, raw\",\"15\",\"2019-04-01\"\n\"1801596\",\"173725\",\"1008\",\"76\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1801613\",\"173725\",\"1003\",\"17.17\",\"3\",\"1\",\"16.88\",\"17.56\",\"\",\"\",\"\"\n\"1801612\",\"173725\",\"1004\",\"0.82\",\"0\",\"52\",\"\",\"\",\"\",\"\",\"\"\n\"1801627\",\"173725\",\"1005\",\"0\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"",
+        "sha256": "401eef77ebb7bfcd7317d5089ca6319e69e2bdd0939bc9aa4424d7b63badb9ae"
+      },
+      "price": {
+        "amount": "820",
+        "currency": "RUB",
+        "reference": {
+          "amount": "1",
+          "unit": "kg",
+          "basis": "edible"
+        },
+        "estimate": true,
+        "observedAmount": "772",
+        "observedQuantity": {
+          "amount": "1000",
+          "unit": "g"
+        },
+        "observedAt": "2026-11-12",
+        "scope": "Интернет-витрина ВкусВилл; адрес и регион доставки не выбраны",
+        "targetScope": "Санкт-Петербург",
+        "assessmentDate": "2026-11-12",
+        "url": "https://vkusvill.ru/goods/mintay-file-bez-kozhi-109313/",
+        "excerpt": "Pollock skinless frozen fillet, regular 772 RUB/kg; glaze at most 5%",
+        "derivation": "772 / 0.95 = 812.631579 RUB/kg; rounded upward to 820. Uses regular listed price instead of promotional463.",
+        "assumptions": "95% edible fraction is a price-only representative assumption. At-most5% glaze is an upper bound, not measured thawed yield. Drip and pin-bone losses are uncertain. Weigh thawed deboned flesh for recipes.",
+        "accessMethod": "Official retailer page read with web tool; numeric excerpt only",
+        "reuseDisposition": "Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.",
+        "originalEvidence": "{\"amount\":\"820\",\"currency\":\"RUB\",\"reference\":{\"amount\":\"1\",\"unit\":\"kg\",\"basis\":\"edible\"},\"estimate\":true,\"observedAmount\":\"772\",\"observedQuantity\":{\"amount\":\"1000\",\"unit\":\"g\"},\"observedAt\":\"2026-11-12\",\"scope\":\"Интернет-витрина ВкусВилл; адрес и регион доставки не выбраны\",\"targetScope\":\"Санкт-Петербург\",\"assessmentDate\":\"2026-11-12\",\"url\":\"https://vkusvill.ru/goods/mintay-file-bez-kozhi-109313/\",\"excerpt\":\"Pollock skinless frozen fillet, regular 772 RUB/kg; glaze at most 5%\",\"derivation\":\"772 / 0.95 = 812.631579 RUB/kg; rounded upward to 820. Uses regular listed price instead of promotional463.\",\"assumptions\":\"95% edible fraction is a price-only representative assumption. At-most5% glaze is an upper bound, not measured thawed yield. Drip and pin-bone losses are uncertain. Weigh thawed deboned flesh for recipes.\",\"accessMethod\":\"Official retailer page read with web tool; numeric excerpt only\",\"reuseDisposition\":\"Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.\"}",
+        "sha256": "520e7d5acc03c11679feb5c747fca5654c65cf6288cd080d60d69e9a5e84fe3f"
+      },
+      "safety": {
+        "identity": "Fish, pollock, Alaska, raw",
+        "facts": [
+          {
+            "kind": "restriction",
+            "key": "no-fish",
+            "suitable": false
+          },
+          {
+            "kind": "restriction",
+            "key": "vegetarian",
+            "suitable": false
+          }
+        ],
+        "unknown": [
+          "halal",
+          "gluten-free",
+          "lactose-free",
+          "allergen-guarantees"
+        ],
+        "rationale": "Single plain ingredient identity supports fish and vegetarian classification only. Meat and fish are not vegetarian. Package cross-contact, certification and supplier-specific allergens remain unverified.",
+        "originalEvidence": "{\"identity\":\"Fish, pollock, Alaska, raw\",\"facts\":[{\"kind\":\"restriction\",\"key\":\"no-fish\",\"suitable\":false},{\"kind\":\"restriction\",\"key\":\"vegetarian\",\"suitable\":false}],\"unknown\":[\"halal\",\"gluten-free\",\"lactose-free\",\"allergen-guarantees\"],\"rationale\":\"Single plain ingredient identity supports fish and vegetarian classification only. Meat and fish are not vegetarian. Package cross-contact, certification and supplier-specific allergens remain unverified.\"}",
+        "sha256": "3fd72e6df52bddd5b1480d0360bd4e38006ec6abe79eff2140debd156d90bb03"
+      }
+    },
+    {
+      "productId": "cod",
+      "profileId": "usda-171955-raw",
+      "sourceVersion": "phase031-source-2026-11-12-3",
+      "name": "Треска атлантическая, сырое филе без костей и глазури",
+      "identity": "Fish, cod, Atlantic, raw",
+      "state": "raw",
+      "category": "Рыба",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "95% edible fraction is an explicit price-only assumption, no measured yield or glaze percentage claimed for this SKU. Generic cod price represents Atlantic raw flesh. Thaw in refrigerator, remove bones and weigh edible input. All served oil and sauce are counted. Cooked yield and nutrient retention are not modelled.",
+      "nutrition": {
+        "kind": "usda",
+        "food": {
+          "fdc_id": "171955",
+          "data_type": "sr_legacy_food",
+          "description": "Fish, cod, Atlantic, raw",
+          "food_category_id": "15",
+          "publication_date": "2019-04-01"
+        },
+        "foodLine": 4445,
+        "nutrients": [
+          {
+            "id": "1653393",
+            "fdc_id": "171955",
+            "nutrient_id": "1008",
+            "amount": "82",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1653429",
+            "fdc_id": "171955",
+            "nutrient_id": "1003",
+            "amount": "17.81",
+            "data_points": "605",
+            "derivation_id": "",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1653438",
+            "fdc_id": "171955",
+            "nutrient_id": "1004",
+            "amount": "0.67",
+            "data_points": "293",
+            "derivation_id": "",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1653439",
+            "fdc_id": "171955",
+            "nutrient_id": "1005",
+            "amount": "0",
+            "data_points": "0",
+            "derivation_id": "68",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          }
+        ],
+        "nutrientLines": [
+          369721,
+          369757,
+          369766,
+          369767
+        ],
+        "originalCsv": "\"171955\",\"sr_legacy_food\",\"Fish, cod, Atlantic, raw\",\"15\",\"2019-04-01\"\n\"1653393\",\"171955\",\"1008\",\"82\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1653429\",\"171955\",\"1003\",\"17.81\",\"605\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"1653438\",\"171955\",\"1004\",\"0.67\",\"293\",\"\",\"\",\"\",\"\",\"\",\"\"\n\"1653439\",\"171955\",\"1005\",\"0\",\"0\",\"68\",\"\",\"\",\"\",\"\",\"\"",
+        "sha256": "db78bcfb524139226f057a4f9639a14207ab65e39c0d1d7f4c0999ab775bcd4b"
+      },
+      "price": {
+        "amount": "1700",
+        "currency": "RUB",
+        "reference": {
+          "amount": "1",
+          "unit": "kg",
+          "basis": "edible"
+        },
+        "estimate": true,
+        "observedAmount": "625",
+        "observedQuantity": {
+          "amount": "400",
+          "unit": "g"
+        },
+        "observedAt": "2026-11-12",
+        "scope": "Интернет-витрина ВкусВилл; адрес и регион доставки не выбраны",
+        "targetScope": "Санкт-Петербург",
+        "assessmentDate": "2026-11-12",
+        "url": "https://vkusvill.ru/goods/ryba-ikra-i-moreprodukty/treska/",
+        "excerpt": "Portioned frozen cod fillet, 400 g; 625 RUB",
+        "derivation": "625 / (0.400 * 0.95) = 1644.736842 RUB/kg; rounded upward to 1700.",
+        "assumptions": "95% edible fraction is an explicit price-only assumption, no measured yield or glaze percentage claimed for this SKU. Generic cod price represents Atlantic raw flesh. Thaw in refrigerator, remove bones and weigh edible input.",
+        "accessMethod": "Official retailer page read with web tool; numeric excerpt only",
+        "reuseDisposition": "Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.",
+        "originalEvidence": "{\"amount\":\"1700\",\"currency\":\"RUB\",\"reference\":{\"amount\":\"1\",\"unit\":\"kg\",\"basis\":\"edible\"},\"estimate\":true,\"observedAmount\":\"625\",\"observedQuantity\":{\"amount\":\"400\",\"unit\":\"g\"},\"observedAt\":\"2026-11-12\",\"scope\":\"Интернет-витрина ВкусВилл; адрес и регион доставки не выбраны\",\"targetScope\":\"Санкт-Петербург\",\"assessmentDate\":\"2026-11-12\",\"url\":\"https://vkusvill.ru/goods/ryba-ikra-i-moreprodukty/treska/\",\"excerpt\":\"Portioned frozen cod fillet, 400 g; 625 RUB\",\"derivation\":\"625 / (0.400 * 0.95) = 1644.736842 RUB/kg; rounded upward to 1700.\",\"assumptions\":\"95% edible fraction is an explicit price-only assumption, no measured yield or glaze percentage claimed for this SKU. Generic cod price represents Atlantic raw flesh. Thaw in refrigerator, remove bones and weigh edible input.\",\"accessMethod\":\"Official retailer page read with web tool; numeric excerpt only\",\"reuseDisposition\":\"Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.\"}",
+        "sha256": "683f82fff2ee258d4a3859d11a99758314d1ca75b4d8b1f3e0097c08dc0c4cbe"
+      },
+      "safety": {
+        "identity": "Fish, cod, Atlantic, raw",
+        "facts": [
+          {
+            "kind": "restriction",
+            "key": "no-fish",
+            "suitable": false
+          },
+          {
+            "kind": "restriction",
+            "key": "vegetarian",
+            "suitable": false
+          }
+        ],
+        "unknown": [
+          "halal",
+          "gluten-free",
+          "lactose-free",
+          "allergen-guarantees"
+        ],
+        "rationale": "Single plain ingredient identity supports fish and vegetarian classification only. Meat and fish are not vegetarian. Package cross-contact, certification and supplier-specific allergens remain unverified.",
+        "originalEvidence": "{\"identity\":\"Fish, cod, Atlantic, raw\",\"facts\":[{\"kind\":\"restriction\",\"key\":\"no-fish\",\"suitable\":false},{\"kind\":\"restriction\",\"key\":\"vegetarian\",\"suitable\":false}],\"unknown\":[\"halal\",\"gluten-free\",\"lactose-free\",\"allergen-guarantees\"],\"rationale\":\"Single plain ingredient identity supports fish and vegetarian classification only. Meat and fish are not vegetarian. Package cross-contact, certification and supplier-specific allergens remain unverified.\"}",
+        "sha256": "272ed5517d7ed35919bf7f0e0a26792718181f371364d37128b9abd2f20e8838"
+      }
+    },
+    {
+      "productId": "beef-mince",
+      "profileId": "usda-174030-raw",
+      "sourceVersion": "phase031-source-2026-11-12-3",
+      "name": "Фарш говяжий сырой, расчётная жирность 10%",
+      "identity": "Beef, ground, 90% lean meat / 10% fat, raw",
+      "state": "raw",
+      "category": "Мясо и птица",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "USDA raw90% lean10% fat is a representative nutrient profile. Retail listing does not verify fat10%. Choose plain beef mince labelled about10% fat, price remains estimated. No claim that observed SKU has that fat fraction. All served oil and sauce are counted. Cooked yield and nutrient retention are not modelled.",
+      "nutrition": {
+        "kind": "usda",
+        "food": {
+          "fdc_id": "174030",
+          "data_type": "sr_legacy_food",
+          "description": "Beef, ground, 90% lean meat / 10% fat, raw",
+          "food_category_id": "13",
+          "publication_date": "2019-04-01"
+        },
+        "foodLine": 6520,
+        "nutrients": [
+          {
+            "id": "1825870",
+            "fdc_id": "174030",
+            "nutrient_id": "1008",
+            "amount": "176",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1825838",
+            "fdc_id": "174030",
+            "nutrient_id": "1003",
+            "amount": "20",
+            "data_points": "72",
+            "derivation_id": "3",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1825826",
+            "fdc_id": "174030",
+            "nutrient_id": "1004",
+            "amount": "10",
+            "data_points": "72",
+            "derivation_id": "3",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1825827",
+            "fdc_id": "174030",
+            "nutrient_id": "1005",
+            "amount": "0",
+            "data_points": "0",
+            "derivation_id": "68",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          }
+        ],
+        "nutrientLines": [
+          542198,
+          542166,
+          542154,
+          542155
+        ],
+        "originalCsv": "\"174030\",\"sr_legacy_food\",\"Beef, ground, 90% lean meat / 10% fat, raw\",\"13\",\"2019-04-01\"\n\"1825870\",\"174030\",\"1008\",\"176\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1825838\",\"174030\",\"1003\",\"20\",\"72\",\"3\",\"\",\"\",\"\",\"\",\"\"\n\"1825826\",\"174030\",\"1004\",\"10\",\"72\",\"3\",\"\",\"\",\"\",\"\",\"\"\n\"1825827\",\"174030\",\"1005\",\"0\",\"0\",\"68\",\"\",\"\",\"\",\"\",\"\"",
+        "sha256": "54a1ec80e8b1a57e6c66c2b46ddb9bf5556edaa8d22bf4f754224bd2700f8196"
+      },
+      "price": {
+        "amount": "750",
+        "currency": "RUB",
+        "reference": {
+          "amount": "1",
+          "unit": "kg",
+          "basis": "edible"
+        },
+        "estimate": true,
+        "observedAmount": "699",
+        "observedQuantity": {
+          "amount": "1000",
+          "unit": "g"
+        },
+        "observedAt": "2026-11-12",
+        "scope": "Санкт-Петербург, интернет-витрина МясоСторе",
+        "targetScope": "Санкт-Петербург",
+        "assessmentDate": "2026-11-12",
+        "url": "https://myasostore.ru/catalog/farshi/govyazhiy/",
+        "excerpt": "Beef mince, 0.4 kg for279.60 RUB; 699 RUB/kg",
+        "derivation": "699 / 1 = 699 RUB/kg; rounded upward to representative750 for selected lean mince.",
+        "assumptions": "USDA raw90% lean10% fat is a representative nutrient profile. Retail listing does not verify fat10%. Choose plain beef mince labelled about10% fat, price remains estimated. No claim that observed SKU has that fat fraction.",
+        "accessMethod": "Official retailer page read with web tool; numeric excerpt only",
+        "reuseDisposition": "Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.",
+        "originalEvidence": "{\"amount\":\"750\",\"currency\":\"RUB\",\"reference\":{\"amount\":\"1\",\"unit\":\"kg\",\"basis\":\"edible\"},\"estimate\":true,\"observedAmount\":\"699\",\"observedQuantity\":{\"amount\":\"1000\",\"unit\":\"g\"},\"observedAt\":\"2026-11-12\",\"scope\":\"Санкт-Петербург, интернет-витрина МясоСторе\",\"targetScope\":\"Санкт-Петербург\",\"assessmentDate\":\"2026-11-12\",\"url\":\"https://myasostore.ru/catalog/farshi/govyazhiy/\",\"excerpt\":\"Beef mince, 0.4 kg for279.60 RUB; 699 RUB/kg\",\"derivation\":\"699 / 1 = 699 RUB/kg; rounded upward to representative750 for selected lean mince.\",\"assumptions\":\"USDA raw90% lean10% fat is a representative nutrient profile. Retail listing does not verify fat10%. Choose plain beef mince labelled about10% fat, price remains estimated. No claim that observed SKU has that fat fraction.\",\"accessMethod\":\"Official retailer page read with web tool; numeric excerpt only\",\"reuseDisposition\":\"Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.\"}",
+        "sha256": "93d20a919cf8f66ca863e323ce27720071ebf5d48a66831d3e6f06977fed5e51"
+      },
+      "safety": {
+        "identity": "Beef, ground, 90% lean meat / 10% fat, raw",
+        "facts": [
+          {
+            "kind": "restriction",
+            "key": "no-fish",
+            "suitable": true
+          },
+          {
+            "kind": "restriction",
+            "key": "vegetarian",
+            "suitable": false
+          }
+        ],
+        "unknown": [
+          "halal",
+          "gluten-free",
+          "lactose-free",
+          "allergen-guarantees"
+        ],
+        "rationale": "Single plain ingredient identity supports fish and vegetarian classification only. Meat and fish are not vegetarian. Package cross-contact, certification and supplier-specific allergens remain unverified.",
+        "originalEvidence": "{\"identity\":\"Beef, ground, 90% lean meat / 10% fat, raw\",\"facts\":[{\"kind\":\"restriction\",\"key\":\"no-fish\",\"suitable\":true},{\"kind\":\"restriction\",\"key\":\"vegetarian\",\"suitable\":false}],\"unknown\":[\"halal\",\"gluten-free\",\"lactose-free\",\"allergen-guarantees\"],\"rationale\":\"Single plain ingredient identity supports fish and vegetarian classification only. Meat and fish are not vegetarian. Package cross-contact, certification and supplier-specific allergens remain unverified.\"}",
+        "sha256": "7be533defdf5440ec31f707afae302a766ae90b0c42c9c62976fe182029c52b0"
+      }
+    },
+    {
+      "productId": "pasta",
+      "profileId": "usda-168927-dry",
+      "sourceVersion": "phase031-source-2026-11-12-3",
+      "name": "Макароны пшеничные сухие",
+      "identity": "Pasta, dry, unenriched",
+      "state": "dry",
+      "category": "Крупы и макароны",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Plain dry wheat pasta represented by USDA unenriched dry pasta. Shape and brand nutrient variation are uncertain. Choose small pasta cooking8-10minutes for soup or break spaghetti. Dry input only, no cooked mass substitution. All served oil and sauce are counted. Cooked yield and nutrient retention are not modelled.",
+      "nutrition": {
+        "kind": "usda",
+        "food": {
+          "fdc_id": "168927",
+          "data_type": "sr_legacy_food",
+          "description": "Pasta, dry, unenriched",
+          "food_category_id": "20",
+          "publication_date": "2019-04-01"
+        },
+        "foodLine": 1417,
+        "nutrients": [
+          {
+            "id": "1399677",
+            "fdc_id": "168927",
+            "nutrient_id": "1008",
+            "amount": "371",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1399608",
+            "fdc_id": "168927",
+            "nutrient_id": "1003",
+            "amount": "13.04",
+            "data_points": "6",
+            "derivation_id": "1",
+            "min": "12.4",
+            "max": "13.4",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1399625",
+            "fdc_id": "168927",
+            "nutrient_id": "1004",
+            "amount": "1.51",
+            "data_points": "8",
+            "derivation_id": "1",
+            "min": "1",
+            "max": "2.09",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1399676",
+            "fdc_id": "168927",
+            "nutrient_id": "1005",
+            "amount": "74.67",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          }
+        ],
+        "nutrientLines": [
+          116005,
+          115936,
+          115953,
+          116004
+        ],
+        "originalCsv": "\"168927\",\"sr_legacy_food\",\"Pasta, dry, unenriched\",\"20\",\"2019-04-01\"\n\"1399677\",\"168927\",\"1008\",\"371\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1399608\",\"168927\",\"1003\",\"13.04\",\"6\",\"1\",\"12.4\",\"13.4\",\"\",\"\",\"\"\n\"1399625\",\"168927\",\"1004\",\"1.51\",\"8\",\"1\",\"1\",\"2.09\",\"\",\"\",\"\"\n\"1399676\",\"168927\",\"1005\",\"74.67\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"",
+        "sha256": "cb6f1a128d39c14ade9b0cce5a82f1fe48ad4b51cac6050cf6da2080ca4d2807"
+      },
+      "price": {
+        "amount": "230",
+        "currency": "RUB",
+        "reference": {
+          "amount": "1",
+          "unit": "kg",
+          "basis": "edible"
+        },
+        "estimate": true,
+        "observedAmount": "90",
+        "observedQuantity": {
+          "amount": "400",
+          "unit": "g"
+        },
+        "observedAt": "2026-11-12",
+        "scope": "Интернет-витрина ВкусВилл; адрес и регион доставки не выбраны",
+        "targetScope": "Санкт-Петербург",
+        "assessmentDate": "2026-11-12",
+        "url": "https://vkusvill.ru/goods/makarony-spagetti-781/",
+        "excerpt": "Dry spaghetti, 400 g; 90 RUB",
+        "derivation": "90 / 0.400 = 225 RUB/kg; rounded upward to230.",
+        "assumptions": "Plain dry wheat pasta represented by USDA unenriched dry pasta. Shape and brand nutrient variation are uncertain. Choose small pasta cooking8-10minutes for soup or break spaghetti. Dry input only, no cooked mass substitution.",
+        "accessMethod": "Official retailer page read with web tool; numeric excerpt only",
+        "reuseDisposition": "Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.",
+        "originalEvidence": "{\"amount\":\"230\",\"currency\":\"RUB\",\"reference\":{\"amount\":\"1\",\"unit\":\"kg\",\"basis\":\"edible\"},\"estimate\":true,\"observedAmount\":\"90\",\"observedQuantity\":{\"amount\":\"400\",\"unit\":\"g\"},\"observedAt\":\"2026-11-12\",\"scope\":\"Интернет-витрина ВкусВилл; адрес и регион доставки не выбраны\",\"targetScope\":\"Санкт-Петербург\",\"assessmentDate\":\"2026-11-12\",\"url\":\"https://vkusvill.ru/goods/makarony-spagetti-781/\",\"excerpt\":\"Dry spaghetti, 400 g; 90 RUB\",\"derivation\":\"90 / 0.400 = 225 RUB/kg; rounded upward to230.\",\"assumptions\":\"Plain dry wheat pasta represented by USDA unenriched dry pasta. Shape and brand nutrient variation are uncertain. Choose small pasta cooking8-10minutes for soup or break spaghetti. Dry input only, no cooked mass substitution.\",\"accessMethod\":\"Official retailer page read with web tool; numeric excerpt only\",\"reuseDisposition\":\"Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.\"}",
+        "sha256": "ce703de775bcae23130b0e99503596131a2576acea985f3cd8f95dc335e043b0"
+      },
+      "safety": {
+        "identity": "Pasta, dry, unenriched",
+        "facts": [
+          {
+            "kind": "restriction",
+            "key": "no-fish",
+            "suitable": true
+          },
+          {
+            "kind": "restriction",
+            "key": "vegetarian",
+            "suitable": true
+          }
+        ],
+        "unknown": [
+          "halal",
+          "gluten-free",
+          "lactose-free",
+          "allergen-guarantees"
+        ],
+        "rationale": "Single plain ingredient identity supports fish and vegetarian classification only. Meat and fish are not vegetarian. Package cross-contact, certification and supplier-specific allergens remain unverified.",
+        "originalEvidence": "{\"identity\":\"Pasta, dry, unenriched\",\"facts\":[{\"kind\":\"restriction\",\"key\":\"no-fish\",\"suitable\":true},{\"kind\":\"restriction\",\"key\":\"vegetarian\",\"suitable\":true}],\"unknown\":[\"halal\",\"gluten-free\",\"lactose-free\",\"allergen-guarantees\"],\"rationale\":\"Single plain ingredient identity supports fish and vegetarian classification only. Meat and fish are not vegetarian. Package cross-contact, certification and supplier-specific allergens remain unverified.\"}",
+        "sha256": "38489634f861b008c8a97b891e7d1a5b4110adba4246092ca591999c4a6b72cc"
+      }
     }
   ],
   "releases": [
@@ -1957,6 +2652,73 @@
         "familiar-baked-apple-oats",
         "familiar-bean-tomato-cabbage-salad"
       ]
+    },
+    {
+      "version": "mealplan-2026-11-11-3",
+      "profileIds": [
+        "usda-171287-raw",
+        "usda-171077-raw",
+        "usda-172420-dry",
+        "usda-171025-ready",
+        "usda-170000-raw",
+        "usda-171284-ready",
+        "usda-171688-raw",
+        "usda-172688-ready",
+        "usda-172217-ready",
+        "usda-173904-dry",
+        "usda-173800-drained",
+        "usda-174285-drained",
+        "usda-168409-raw",
+        "label-vkusvill-51256-ready",
+        "usda-174515-raw",
+        "usda-173725-raw",
+        "usda-171955-raw",
+        "usda-174030-raw",
+        "usda-168927-dry"
+      ],
+      "recipeIds": [
+        "familiar-omelet-tomato-bread",
+        "familiar-chicken-rice-carrot",
+        "familiar-lentil-cabbage-tomato",
+        "familiar-yogurt-apple",
+        "familiar-milk-oats-apple",
+        "familiar-syrniki",
+        "familiar-cottage-apple-bake",
+        "familiar-buckwheat-egg-carrot",
+        "familiar-oat-pancake-yogurt",
+        "familiar-chickpea-pancakes",
+        "familiar-water-oats-apple",
+        "familiar-cottage-cucumber-bread",
+        "familiar-chickpea-cucumber-toast",
+        "familiar-steamed-egg-pudding",
+        "familiar-baked-apple-oats",
+        "familiar-bean-tomato-cabbage-salad",
+        "familiar-chicken-pasta-soup",
+        "familiar-turkey-balls-buckwheat",
+        "familiar-turkey-potato-cabbage",
+        "familiar-pollock-potato-carrot",
+        "familiar-cod-rice-soup",
+        "familiar-beef-pasta-tomato",
+        "familiar-lentil-vegetable-soup"
+      ]
     }
-  ]
+  ],
+  "cookingGuidance": {
+    "sourceId": "foodsafety-gov-safe-minimum-temperatures",
+    "url": "https://www.foodsafety.gov/food-safety-charts/safe-minimum-internal-temperatures",
+    "accessedAt": "2026-11-12",
+    "reviewedAt": "2024-11-21",
+    "attribution": "FoodSafety.gov, Safe Minimum Internal Temperature Chart",
+    "license": "Attributed minimal factual numeric excerpt",
+    "excerpt": "Poultry74C; ground beef71C; fish63C; egg dishes71C",
+    "temperaturesC": {
+      "poultry": "74",
+      "beefGround": "71",
+      "fish": "63",
+      "eggDishes": "71"
+    },
+    "method": "Measure internal temperature with a food thermometer. Continue cooking if threshold not reached.",
+    "originalEvidence": "{\"sourceId\":\"foodsafety-gov-safe-minimum-temperatures\",\"url\":\"https://www.foodsafety.gov/food-safety-charts/safe-minimum-internal-temperatures\",\"accessedAt\":\"2026-11-12\",\"reviewedAt\":\"2024-11-21\",\"attribution\":\"FoodSafety.gov, Safe Minimum Internal Temperature Chart\",\"license\":\"Attributed minimal factual numeric excerpt\",\"excerpt\":\"Poultry74C; ground beef71C; fish63C; egg dishes71C\",\"temperaturesC\":{\"poultry\":\"74\",\"beefGround\":\"71\",\"fish\":\"63\",\"eggDishes\":\"71\"},\"method\":\"Measure internal temperature with a food thermometer. Continue cooking if threshold not reached.\"}",
+    "sha256": "4e5a4c097e77bb32d4612847860ed0c8cbf1f83cd3b2b90f0d6bdc6c9fc13620"
+  }
 }

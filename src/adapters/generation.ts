@@ -14,6 +14,21 @@ const failure = (code: GenerationErrorCode): GenerationResult => ({ status: 'err
   message: code === 'TIMEOUT' ? 'Не удалось подобрать меню за 30 секунд. Попробуйте ещё раз' : code === 'GENERATION_DATA_INCOMPLETE' ? 'Каталог или настройки не прошли проверку' : 'Не удалось выполнить подбор. Попробуйте ещё раз', diagnostics: [] } });
 const macrotask = () => new Promise<void>(resolve => setTimeout(resolve, 0));
 
+/** Only the caller's compiled release map can supply producers. Persisted catalogs
+ * select a version, then pass through the local producer's full snapshot check.
+ * Dispatch is synchronous, so loading and search share the original 30s deadline.
+ */
+export function createVersionedGeneration(ports: Readonly<Record<string, CatalogPort>>, options: GenerationOptions = {}): GenerationPort {
+  const producers = new Map(Object.entries(ports).map(([version, port]) => [version, createLocalGeneration(port, options)]));
+  return { generate(request, signal) {
+    if (signal.aborted) return Promise.resolve({ status: 'cancelled' });
+    const producer = producers.get(request?.inputs?.catalogVersion);
+    if (producer) return producer.generate(request, signal);
+    return Promise.resolve({ status: 'error', error: { code: 'GENERATION_DATA_INCOMPLETE', message: 'Версия каталога не поддерживается',
+      diagnostics: [{ code: 'UNSUPPORTED_CATALOG_VERSION', path: 'inputs.catalogVersion', message: 'UNSUPPORTED_CATALOG_VERSION' }] } });
+  } };
+}
+
 /** No default production catalog: a source-approved offline CatalogPort must be injected.
  * Each request owns its timer/listener/state; the adapter never writes a plan or applies
  * late responses. Fast results have no minimum delay. Pending work yields every128 steps.

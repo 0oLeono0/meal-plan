@@ -7,8 +7,8 @@ import { Wizard } from '../features/wizard/Wizard';
 import { Button, ConfirmDialog, Status } from '../shared/ui';
 import { createGenerationController } from '../features/generation/controller';
 import { createActivePlanAdapter, type ActivePlanPort } from '../adapters/activePlan';
-import { createLocalGeneration } from '../adapters/generation';
-import { bundledCatalogPort } from '../data/catalog';
+import { createVersionedGeneration } from '../adapters/generation';
+import { bundledCatalogPort, sourceApprovedCatalogPorts } from '../data/catalog';
 import { trustedCatalogs as defaultTrustedCatalogs, type TrustedCatalogRegistry } from '../adapters/trustedCatalogs';
 import type { CatalogLoadResult, CatalogPort } from '../domain/catalog';
 import { buildAppliedSettings, sameSnapshot, selectQuickStartInput, type AppliedSettings } from '../domain/appliedSettings';
@@ -27,7 +27,7 @@ export type PlanPresence = { status: 'absent' } | { status: 'valid'; planId: str
 export interface PlanPresencePort { load(): Promise<unknown> }
 const guestDraft = createGuestDraftAdapter();
 const activePlan = createActivePlanAdapter();
-const localGeneration = createLocalGeneration(bundledCatalogPort);
+const localGeneration = createVersionedGeneration(sourceApprovedCatalogPorts);
 
 function parsePresence(value: unknown): PlanPresence {
   if (typeof value !== 'object' || value === null || !('status' in value)) return { status: 'absent' };

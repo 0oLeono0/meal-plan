@@ -8,7 +8,8 @@ import { projectPlan } from '../domain/planProjection';
 import { decimal } from '../domain/quantities';
 import { createDraft } from '../domain/settings';
 import { createLocalCatalog } from './catalog';
-import { createLocalGeneration } from './generation';
+import { createLocalGeneration, createVersionedGeneration } from './generation';
+import { bundledCatalog, sourceApprovedCatalogPorts } from '../data/catalog';
 
 // Test-only synthetic 60-recipe catalog: no source/data acceptance claim.
 const source = { sourceId: 'synthetic', recordId: 'benchmark', release: 'v1', license: 'CC0-1.0', url: 'https://example.org/test' };
@@ -31,6 +32,39 @@ const tick = () => new Promise<void>(resolve => setTimeout(resolve, 0));
 function expectError(result: GenerationResult, code: string) {
   expect(result.status).toBe('error'); if (result.status === 'error') expect(result.error.code).toBe(code);
 }
+
+describe('compiled version dispatch', () => {
+  it('uses current source-approved release and rejects unknown or changed snapshots', async () => {
+    const applied = buildAppliedSettings({ ...createDraft(), days: '1', budget: '2000' });
+    if (applied.status !== 'applied') throw new Error('Invalid settings');
+    const inputs = createPlanInputs(applied.settings, bundledCatalog, { seed: 'version-dispatch' });
+    const producer = createVersionedGeneration(sourceApprovedCatalogPorts);
+    const result = await producer.generate({ requestId: 'current', inputs }, new AbortController().signal);
+    expect(result.status).toBe('success');
+    if (result.status === 'success') expect(result.plan.inputs).toEqual(inputs);
+    const unknown = await producer.generate({ requestId: 'unknown', inputs: { ...inputs, catalogVersion: 'unknown' } }, new AbortController().signal);
+    expectError(unknown, 'GENERATION_DATA_INCOMPLETE');
+    if (unknown.status === 'error') expect(unknown.error.diagnostics[0].code).toBe('UNSUPPORTED_CATALOG_VERSION');
+    const changedCatalog = { ...bundledCatalog, recipes: bundledCatalog.recipes.slice(1) };
+    const changed = createPlanInputs(applied.settings, changedCatalog, { seed: 'changed' });
+    const refused = await producer.generate({ requestId: 'same-version-tamper', inputs: changed }, new AbortController().signal);
+    expectError(refused, 'GENERATION_DATA_INCOMPLETE');
+    if (refused.status === 'error') expect(refused.error.diagnostics[0].code).toBe('CATALOG_SNAPSHOT_MISMATCH');
+  });
+  it('retains cancellation and a shared deadline including deferred release loading', async () => {
+    const data = catalog(2), gate = deferred<Awaited<ReturnType<CatalogPort['load']>>>();
+    const port = { ...createLocalCatalog(data), load: () => gate.promise };
+    const producer = createVersionedGeneration({ [data.version]: port }, { timeoutMs: 5 });
+    const timed = await producer.generate(request(data), new AbortController().signal);
+    expectError(timed, 'TIMEOUT');
+    const abort = new AbortController();
+    const cancelled = createVersionedGeneration({ [data.version]: port }).generate(request(data), abort.signal);
+    abort.abort();
+    expect((await cancelled).status).toBe('cancelled');
+    gate.resolve({ status: 'loaded', catalog: data });
+    await tick();
+  });
+});
 
 describe('request options and one common deadline', () => {
   beforeEach(() => vi.useFakeTimers()); afterEach(() => vi.useRealTimers());

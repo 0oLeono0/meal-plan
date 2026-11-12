@@ -29,6 +29,27 @@ function storage() {
 const current = { isCurrent: () => true };
 const rawPlan = (plan = fixture()) => JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
 
+it('saves and reloads a real current seven-day twelve-variant envelope within unchanged byte ceiling', async () => {
+  const applied = buildAppliedSettings({ ...createDraft(), budget: '10000' });
+  if (applied.status !== 'applied') throw new Error('Invalid settings');
+  const inputs = createPlanInputs(applied.settings, bundledCatalog, { seed: 'cap12-source-release' });
+  const recipeIds = inputs.dates.flatMap(() => ['familiar-omelet-tomato-bread', 'familiar-chicken-rice-carrot', 'familiar-lentil-cabbage-tomato', 'familiar-yogurt-apple']);
+  const variants = Array.from({ length: 12 }, (_, index) => ({ id: `current-${index}`, instances: createRecipeInstances(inputs, recipeIds, (date, slot) => `current-${index}/${date}/${slot}`)
+    .map(row => ({ ...row, selectedServings: decimal(((index + 5) / 10).toFixed(1)) })) }));
+  const plan = buildActivePlanEnvelope(inputs, variants, variants[11].id);
+  const store = storage(), adapter = createActivePlanAdapter(() => store);
+  await adapter.load();
+  expect((await adapter.save(plan, current)).status).toBe('saved');
+  const bytes = store.map.get(ACTIVE_PLAN_KEY)!;
+  const size = new TextEncoder().encode(bytes).length;
+  expect(size).toBeLessThan(ACTIVE_PLAN_MAX_BYTES);
+  console.info('CURRENT_CAP12_UTF8_BYTES', size);
+  const loaded = await createActivePlanAdapter(() => store).load();
+  expect(loaded.status).toBe('loaded');
+  if (loaded.status === 'loaded') expect(loaded.bundle.plan).toEqual(plan);
+  expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(bytes);
+});
+
 describe('Phase2 legacy and all-alternative persistence', () => {
   // Real producer1789eea, captured before production changes on2026-11-04.
   // Exact UTF8 SHA256: f8aed6836ac1d28a27dcc9a187ec5e49a0b3ca7f928b45b550406532bc855b73.

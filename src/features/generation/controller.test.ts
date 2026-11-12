@@ -11,10 +11,8 @@ import { createGenerationController as productionController } from './controller
 import type { GenerationControllerOptions } from './controller';
 import { createTrustedCatalogRegistry } from '../../adapters/trustedCatalogs';
 import legacyRaw from '../../test/fixtures/phase02-active-plan-v1.json?raw';
-import * as generationAdapters from '../../adapters/generation';
-import { bundledCatalogPort, sourceApprovedCatalogPorts } from '../../data/catalog';
-import type { GenerationOptions } from '../../adapters/generation';
-import type { CatalogPort } from '../../domain/catalog';
+import { createVersionedGeneration } from '../../adapters/generation';
+import { sourceApprovedCatalogPorts } from '../../data/catalog';
 import { variantFingerprint } from '../../domain/generatePlan';
 
 const origin = { returnRoute: '/plan/new', focusAnchor: 'generate' };
@@ -39,8 +37,7 @@ it('real legacy load select append recreate preserves original identities settin
   const values = new Map([[ACTIVE_PLAN_KEY, legacyRaw]]);
   const store = { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); } };
   const adapter = createActivePlanAdapter(() => store);
-  const factory = (generationAdapters as { createVersionedGeneration?: (ports: Readonly<Record<string, CatalogPort>>, options?: GenerationOptions) => GenerationPort }).createVersionedGeneration;
-  const generation = factory ? factory(sourceApprovedCatalogPorts) : generationAdapters.createLocalGeneration(bundledCatalogPort);
+  const generation = createVersionedGeneration(sourceApprovedCatalogPorts);
   const controller = productionController({ generation, activePlan: adapter });
   await controller.load();
   const original = controller.getSnapshot().active!.plan;

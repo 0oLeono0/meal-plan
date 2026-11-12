@@ -1,4 +1,4 @@
-import { bundledCatalog } from '../data/catalog';
+import { sourceApprovedCatalogs } from '../data/catalog';
 import { sameSnapshot } from '../domain/appliedSettings';
 import { catalogError } from '../domain/catalog';
 import type { Catalog, InvalidCatalog } from '../domain/catalog';
@@ -30,4 +30,4 @@ export function createTrustedCatalogRegistry(catalogs: readonly Catalog[]): Trus
 
 // Only compiled source-backed versions belong here. Add historical releases
 // explicitly when the application ships an updated catalog.
-export const trustedCatalogs = createTrustedCatalogRegistry([bundledCatalog]);
+export const trustedCatalogs = createTrustedCatalogRegistry(sourceApprovedCatalogs);

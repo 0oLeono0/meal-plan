@@ -1,5 +1,5 @@
 {
-  "derivation": "Python Decimal arithmetic from original USDA rows, historical price strings and explicit phase031 representative estimates. No production imports. Edible inputs, base 2 servings.",
+  "derivation": "Python Decimal arithmetic from original USDA rows, historical price strings and explicit phase031 representative estimates. No production imports. Edible inputs, base 2 servings. Displayed costs sum independently half-up rounded aggregated product rows, per existing projection contract.",
   "recipeIds": [
     "familiar-omelet-tomato-bread",
     "familiar-chicken-rice-carrot",
@@ -105,8 +105,8 @@
     "purchase": "579.2863724691357984"
   },
   "kopecks": {
-    "ingredient": 70129,
+    "ingredient": 70128,
     "covered": 12200,
-    "purchase": 57929
+    "purchase": 57928
   }
 }

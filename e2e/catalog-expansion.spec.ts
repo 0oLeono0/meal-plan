@@ -3,6 +3,7 @@ import oracle from './fixtures/catalog031-oracle.json' with { type: 'json' };
 import legacy from '../src/test/fixtures/phase02-active-plan-v1.json' with { type: 'json' };
 
 const activeKey = 'mealplan:guest:active-plan:v1';
+interface TracerRow { id: string; required: string; covered: string; purchase: string }
 
 async function saveTracer(page: Page, servings = '2') {
   await page.goto('/');
@@ -51,15 +52,15 @@ test('tracer source-backed B1 L1 D7 S1 save menu recipe shopping reload', async 
   expect(saved.family).toEqual(oracle.familyNutrition.map(value => String(Number(value))));
   expect(saved.costs).toEqual({ ...oracle.costs, covered: '122' });
   expect(saved.kopecks).toEqual(Object.fromEntries(Object.entries(oracle.kopecks).map(([key, value]) => [key, String(value)])));
-  expect(saved.rows?.find(row => row.id === 'chicken')).toEqual({ id: 'chicken', required: '300', covered: '200', purchase: '100' });
-  for (const [id, grams] of Object.entries(oracle.requiredGrams)) expect(saved.rows?.find(row => row.id === id)?.required).toBe(String(grams));
+  expect(saved.rows?.find((row: TracerRow) => row.id === 'chicken')).toEqual({ id: 'chicken', required: '300', covered: '200', purchase: '100' });
+  for (const [id, grams] of Object.entries(oracle.requiredGrams)) expect(saved.rows?.find((row: TracerRow) => row.id === id)?.required).toBe(String(grams));
   await page.goto('/menu');
   await expect(page.getByRole('heading', { level: 1, name: 'Меню на 1 день' })).toBeVisible();
   const budget = page.getByRole('region', { name: 'Бюджет меню' });
-  await expect(budget).toContainText('701,29');
+  await expect(budget).toContainText('701,28');
   await expect(budget).toContainText('122,00');
-  await expect(budget).toContainText('579,29');
-  await expect(page.getByText('1 422 ккал', { exact: true })).toBeVisible();
+  await expect(budget).toContainText('579,28');
+  await expect(page.locator('.menu-day-totals').getByText('1 422 ккал', { exact: true })).toBeVisible();
   const chicken = page.locator('[data-instance-id="tracer-1"]');
   await chicken.getByRole('link').click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Куриное филе с рисом и морковью');
@@ -69,7 +70,7 @@ test('tracer source-backed B1 L1 D7 S1 save menu recipe shopping reload', async 
   await page.getByRole('link', { name: 'К меню', exact: true }).click();
   await page.getByRole('link', { name: /^Список покупок ·/ }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Список покупок');
-  await expect(page.getByText('100 г', { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('main')).toContainText('100 г');
   expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(saved.raw);
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Список покупок');
@@ -80,10 +81,10 @@ test('tracer scales edible inputs once for half and double family servings', asy
   const half = await saveTracer(page, '1');
   expect(half.version).toBe('mealplan-2026-11-11-1');
   expect(half.family).toEqual(['1421.72', '86.767', '40.709', '180.033']);
-  expect(half.rows?.find(row => row.id === 'chicken')).toEqual({ id: 'chicken', required: '150', covered: '150', purchase: '0' });
+  expect(half.rows?.find((row: TracerRow) => row.id === 'chicken')).toEqual({ id: 'chicken', required: '150', covered: '150', purchase: '0' });
   const double = await saveTracer(page, '4');
   expect(double.family).toEqual(['5686.88', '347.068', '162.836', '720.132']);
-  expect(double.rows?.find(row => row.id === 'chicken')).toEqual({ id: 'chicken', required: '600', covered: '200', purchase: '400' });
+  expect(double.rows?.find((row: TracerRow) => row.id === 'chicken')).toEqual({ id: 'chicken', required: '600', covered: '200', purchase: '400' });
 });
 
 test('ordinary-mixed wizard uses current compiled foods and persists append reload', async ({ page }) => {

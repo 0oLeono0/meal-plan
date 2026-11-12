@@ -10,6 +10,8 @@ import { createDraft, dietaryRestrictions } from './settings';
 import type { SettingsDraft } from './settings';
 import { createPlanSearch, variantFingerprint } from './generatePlan';
 import type { SearchOptions } from './generatePlan';
+import { bundledCatalog, historicalCatalog } from '../data/catalog';
+import sourceOracle from '../../e2e/fixtures/catalog031-oracle.json';
 
 // Synthetic arithmetic/safety oracles only. These are not production food claims.
 const source = { sourceId: 'synthetic', recordId: 'fixture', release: 'v1', license: 'CC0-1.0', url: 'https://example.org/synthetic' };
@@ -45,6 +47,52 @@ function success(result: GenerationResult) {
 }
 function error(result: GenerationResult) { expect(result.status).toBe('error'); if (result.status !== 'error') throw new Error('Expected error'); return result.error; }
 const stock = (amount: string, unit: 'g' | 'ml' = 'g'): readonly PantrySnapshotRow[] => [{ productId: 'rice', expiresSoon: true, quantity: { status: 'known', value: { amount: decimal(amount), unit } } }];
+
+describe('source-backed mixed starts', () => {
+  function currentInputs(change: Partial<SettingsDraft> = {}, seed = 'mixed-source-11') {
+    const applied = buildAppliedSettings({ ...createDraft(), days: '1', budget: '2000', ...change });
+    if (applied.status !== 'applied') throw new Error('Invalid current settings');
+    return createPlanInputs(applied.settings, bundledCatalog, { seed, now: () => new Date(2026, 10, 12) });
+  }
+  it('actually selects egg poultry legume dairy in the full production one-day catalog', () => {
+    const inputs = currentInputs();
+    const { plan, projection, ids } = success(run(inputs).result);
+    expect(ids).toEqual(sourceOracle.recipeIds);
+    expect(Object.values(projection.averagePersonDayNutrition).map(formatExact)).toEqual(['1421.72', '86.767', '40.709', '180.033']);
+    expect(formatExact(projection.costs.exact.purchase)).toBe('701.2863724691357984');
+    expect(run(inputs).result).toEqual({ status: 'success', plan });
+  });
+  it.each(['same', 'medium', 'max'] as const)('keeps affordable mixed defaults and deterministic bounded starts at variety %s', variety => {
+    const inputs = currentInputs({ days: '7', budget: '3000', variety });
+    const first = run(inputs), selected = success(first.result);
+    const familiar = new Set(selected.ids.filter(id => id.startsWith('familiar-')));
+    expect(familiar.size).toBe(4);
+    expect(first.progress.evaluatedCandidates).toBeLessThanOrEqual(512);
+    expect(first.progress.transitions).toBeLessThanOrEqual(200000);
+    expect(run(inputs).result).toEqual(first.result);
+  }, 30_000);
+  it('retains hard exclusions and final budget while using only available groups', () => {
+    const inputs = currentInputs({ restrictions: ['vegetarian'], exclusionIds: ['egg'], budget: '500' });
+    const selected = success(run(inputs).result);
+    for (const variant of selected.plan.variants) {
+      expect(variant.instances.every(instance => instance.recipeSnapshot.ingredients.every(row => !['egg', 'chicken'].includes(row.productId)))).toBe(true);
+      const projection = projectPlan(inputs, variant);
+      if (projection.status !== 'projected') throw new Error('Invalid projection');
+      expect(projection.projection.budget.check.accepted).toBe(true);
+    }
+  });
+  it.each(['gluten-free', 'lactose-free', 'halal'])('keeps unknown %s unsuitable for all new starts', restriction => {
+    expect(error(run(currentInputs({ restrictions: [restriction] })).result).code).toBe('GENERATION_DATA_INCOMPLETE');
+  });
+  it('keeps the historical seven-day exact deterministic output', () => {
+    const applied = buildAppliedSettings(createDraft());
+    if (applied.status !== 'applied') throw new Error('Invalid historical settings');
+    const inputs = createPlanInputs(applied.settings, historicalCatalog, { seed: 'real-default-proof', now: () => new Date(2026, 9, 28) });
+    const result = success(run(inputs).result);
+    expect(formatExact(result.projection.costs.exact.purchase)).toBe('461.9293627901234552');
+    expect(formatExact(result.projection.averagePersonDayNutrition.calories)).toBe('706773/700');
+  }, 30_000);
+});
 
 describe('semantic alternative search', () => {
   const catalog = (count: number): Catalog => ({ version: 'finite', foods: [food('rice')], recipes: [

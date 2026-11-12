@@ -91,8 +91,9 @@ test('ordinary-mixed wizard uses current compiled foods and persists append relo
   test.setTimeout(75_000);
   await page.goto('/plan/new');
   await page.getByLabel('Число дней', { exact: true }).fill('1');
-  await page.getByLabel('Бюджет на неделю', { exact: true }).fill('2000');
-  for (let step = 0; step < 3; step++) await page.getByRole('button', { name: 'Далее', exact: true }).click();
+  await page.getByRole('button', { name: 'Далее', exact: true }).click();
+  await page.getByLabel('Бюджет на 1 день', { exact: true }).fill('2000');
+  for (let step = 0; step < 2; step++) await page.getByRole('button', { name: 'Далее', exact: true }).click();
   await page.getByRole('button', { name: 'Составить меню', exact: true }).click();
   await expect(page).toHaveURL(/\/menu$/, { timeout: 32_000 });
   const first = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).plan, activeKey);

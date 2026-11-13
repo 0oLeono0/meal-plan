@@ -3,6 +3,7 @@ import oracle from './fixtures/catalog031-oracle.json' with { type: 'json' };
 import legacy from '../src/test/fixtures/phase02-active-plan-v1.json' with { type: 'json' };
 import release1 from '../src/test/fixtures/phase031-release1-active-plan.json' with { type: 'json' };
 import lunchOracle from './fixtures/catalog031-lunches-oracle.json' with { type: 'json' };
+import dinnerOracle from './fixtures/catalog031-dinners-oracle.json' with { type: 'json' };
 
 const activeKey = 'mealplan:guest:active-plan:v1';
 interface TracerRow { id: string; required: string; covered: string; purchase: string }
@@ -250,5 +251,81 @@ for (const width of [360, 768, 1280]) test(`lunches current release family porti
   await page.screenshot({ path: `.tmp/phase031-03-shopping-${width}.png`, fullPage: true });
   await page.reload();
   await expect(page.locator('[data-product-id="chicken"]')).toContainText('Купить 320 г');
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(saved.raw);
+});
+
+for (const width of [360, 768, 1280]) test(`dinners current release family portions menu recipe shopping reload at ${width}px`, async ({ page }) => {
+  test.setTimeout(45_000);
+  await page.setViewportSize({ width, height: 900 });
+  await page.goto('/');
+  const saved = await page.evaluate(async ids => {
+    const catalogPath = '/src/data/catalog.ts', settingsPath = '/src/domain/settings.ts';
+    const appliedPath = '/src/domain/appliedSettings.ts', planPath = '/src/domain/plan.ts';
+    const activePath = '/src/adapters/activePlan.ts', quantitiesPath = '/src/domain/quantities.ts';
+    const { bundledCatalog, bundledCatalogPort } = await import(catalogPath);
+    const loaded = await bundledCatalogPort.load();
+    if (loaded.status !== 'loaded') throw new Error(JSON.stringify(loaded));
+    const { createDraft } = await import(settingsPath);
+    const { buildAppliedSettings } = await import(appliedPath);
+    const { createPlanInputs, buildActivePlanEnvelope, mealSlots } = await import(planPath);
+    const { decimal, formatExact } = await import(quantitiesPath);
+    const { createActivePlanAdapter } = await import(activePath);
+    const applied = buildAppliedSettings({ ...createDraft(), days: '7', budget: '20000', cookingTime: 'any' });
+    if (applied.status !== 'applied') throw new Error('Invalid lunch settings');
+    const inputs = createPlanInputs(applied.settings, bundledCatalog, { seed: 'seven-dinners', now: () => new Date(2026, 10, 13), pantrySnapshot: [
+      { productId: 'pork', quantity: { status: 'known', value: { amount: decimal('200'), unit: 'g' } }, expiresSoon: false },
+    ] });
+    const variant = { id: 'dinners', instances: ids.flatMap((dinnerId, day) =>
+      ['familiar-omelet-tomato-bread', 'familiar-chicken-rice-carrot', dinnerId, 'familiar-yogurt-apple'].map((id, slot) => ({
+        id: slot === 2 ? `dinner-${day}` : `other-${day}-${slot}`, date: inputs.dates[day], slot: mealSlots[slot], recipeId: id,
+        catalogVersion: bundledCatalog.version, recipeSnapshot: bundledCatalog.recipes.find((recipe: { id: string }) => recipe.id === id), selectedServings: decimal('4'),
+      }))) };
+    const adapter = createActivePlanAdapter();
+    await adapter.load();
+    const result = await adapter.save(buildActivePlanEnvelope(inputs, [variant], variant.id), { isCurrent: () => true });
+    if (result.status !== 'saved') throw new Error(JSON.stringify(result));
+    return { version: bundledCatalog.version, raw: localStorage.getItem('mealplan:guest:active-plan:v1'),
+      instances: result.bundle.projections[0].instances.filter((row: { instance: { slot: string } }) => row.instance.slot === 'dinner').map((row: { instance: { recipeId: string }; familyNutrition: Record<string, Parameters<typeof formatExact>[0]> }) => ({
+        id: row.instance.recipeId, nutrition: Object.values(row.familyNutrition).map(value => formatExact(value)),
+      })),
+    };
+  }, dinnerOracle.map(row => row.id));
+  expect(saved.version).toBe('mealplan-2026-11-11-4');
+  expect(saved.instances.map((row: { id: string }) => row.id)).toEqual(dinnerOracle.map(row => row.id));
+  await page.goto('/menu?view=week');
+  await expect(page.getByRole('heading', { level: 1, name: 'Меню на неделю' })).toBeVisible();
+  await expect(page.getByText('Цены и КБЖУ примерные', { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+  await page.screenshot({ path: `.tmp/phase031-04-menu-${width}.png`, fullPage: true });
+  for (const [index, row] of dinnerOracle.entries()) {
+    expect(saved.instances[index].nutrition.map(Number)).toEqual(row.nutrition.map(value => Number(value) * 2));
+    const card = page.locator(`[data-instance-id="dinner-${index}"]`);
+    await card.getByRole('link').click();
+    const portion = page.getByRole('region', { name: 'На одну порцию' });
+    await expect(portion).toBeVisible();
+    await expect(page.getByText('Порций для семьи: 4', { exact: true })).toBeVisible();
+    await expect(portion).toContainText(`${Math.round(Number(row.nutrition[0]) / 2)} ккал`);
+    await expect(portion).toContainText((Number(row.cost) / 2).toFixed(2).replace('.', ','));
+    await expect(page.getByRole('list', { name: 'Шаги приготовления' }).locator('li')).toHaveCount(4);
+    await expect(page.getByText('Цены и КБЖУ примерные', { exact: true })).toBeVisible();
+    if (index === 1) await expect(page.getByText('Нужно 600 г · Из запасов 200 г · Докупить 400 г', { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+    await page.screenshot({ path: `.tmp/phase031-04-${row.id}-${width}.png`, fullPage: true });
+    await page.getByRole('link', { name: 'К меню', exact: true }).click();
+  }
+  await page.getByRole('link', { name: /^Список покупок ·/ }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Список покупок' })).toBeVisible();
+  await expect(page.locator('[data-product-id="pork"]')).toContainText('Купить 400 г');
+  await expect(page.locator('[data-product-id="pasta"]')).toContainText('Купить 320 г');
+  // Two base batches: seven breakfasts10g + seven lunches14g + dinners82g.
+  await expect(page.locator('[data-product-id="oil"]')).toContainText('Купить 500 г');
+  await expect(page.getByRole('region', { name: 'Мясо и рыба' }).locator('[data-product-id="pork"]')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Мясо и рыба' }).locator('[data-product-id="pollock"]')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Бакалея' }).locator('[data-product-id="pasta"]')).toBeVisible();
+  await expect(page.getByText('Цены и КБЖУ примерные', { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+  await page.screenshot({ path: `.tmp/phase031-04-shopping-${width}.png`, fullPage: true });
+  await page.reload();
+  await expect(page.locator('[data-product-id="pork"]')).toContainText('Купить 400 г');
   expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(saved.raw);
 });

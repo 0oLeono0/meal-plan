@@ -18,6 +18,7 @@ const releaseSourceHashes: Readonly<Record<string, string>> = Object.freeze({
   'mealplan-2026-11-11-1': '7e06f5d4ea1dd341571a54cc8fd62fff04988a32f843d0cd637413b4681ab1a3',
   'mealplan-2026-11-11-2': 'fab951b0150ec725b273bb3e9fe4fe92b127b76e6377fbf1ad40b5f651f60af5',
   'mealplan-2026-11-11-3': '0d1880370710718a9140cde07319fac51eb483c0044a47a3d3657f0a400e9bd2',
+  'mealplan-2026-11-11-4': '9017b1515f78652a7c64ed5da0e476d01b71e6ab293c9cf5c6c37086be338d36',
 });
 
 function foodFromSource(row: SourceRow): FoodProfile {
@@ -98,7 +99,7 @@ export async function validateExpandedCatalog(input: Catalog, manifest: Manifest
         || !/^https:\/\//.test(price.url) || !/^\d+(\.\d+)?$/.test(price.amount) || !/^\d+(\.\d+)?$/.test(price.observedAmount)) return catalogError('SOURCE_PRICE_ESTIMATE_INVALID', id);
       const { originalEvidence: safetyEvidence, sha256: safetyHash, ...safety } = row.safety;
       const expectedFacts = [{ kind: 'restriction', key: 'no-fish', suitable: !['pollock', 'cod'].includes(row.productId) },
-        { kind: 'restriction', key: 'vegetarian', suitable: !['chicken', 'turkey', 'pollock', 'cod', 'beef-mince'].includes(row.productId) }];
+        { kind: 'restriction', key: 'vegetarian', suitable: !['chicken', 'turkey', 'pollock', 'cod', 'beef-mince', 'pork'].includes(row.productId) }];
       if (!sameSnapshot(JSON.parse(safetyEvidence), safety) || safety.identity !== row.identity || !sameSnapshot(safety.facts, expectedFacts)
         || !sameSnapshot(safety.unknown, ['halal', 'gluten-free', 'lactose-free', 'allergen-guarantees']) || !safety.rationale) return catalogError('SOURCE_SAFETY_MISMATCH', id);
       if (await sha256(nutritionEvidence) !== row.nutrition.sha256 || await sha256(priceEvidence) !== priceHash
@@ -108,6 +109,10 @@ export async function validateExpandedCatalog(input: Catalog, manifest: Manifest
     if (!sameSnapshot(JSON.parse(cookingEvidence), cooking)
       || cookingHash !== '4e5a4c097e77bb32d4612847860ed0c8cbf1f83cd3b2b90f0d6bdc6c9fc13620'
       || await sha256(cookingEvidence) !== cookingHash) return catalogError('SOURCE_COOKING_GUIDANCE_MISMATCH', 'sources');
+    const { originalEvidence: porkEvidence, sha256: porkHash, ...porkGuidance } = manifest.porkCookingGuidance;
+    if (!sameSnapshot(JSON.parse(porkEvidence), porkGuidance)
+      || porkHash !== '324b7f7f4c50e2f21367b2fd15578b7af6a6723af2684922f960cf2a88c77e4c'
+      || await sha256(porkEvidence) !== porkHash) return catalogError('SOURCE_COOKING_GUIDANCE_MISMATCH', 'sources');
     return checked;
   } catch { return catalogError('SOURCE_MANIFEST_INVALID', 'sources'); }
 }

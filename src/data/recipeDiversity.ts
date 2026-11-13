@@ -25,10 +25,7 @@ const secondRelease: RecipeDiversityMap = Object.freeze({
     'familiar-baked-apple-oats': { groups: ['plant'], family: 'baked-fruit-crumble' },
     'familiar-bean-tomato-cabbage-salad': { groups: ['legume', 'plant'], family: 'bean-vegetable-salad' },
   } satisfies RecipeDiversityMap);
-const releases: Readonly<Record<string, RecipeDiversityMap>> = Object.freeze({
-  'mealplan-2026-11-11-1': firstRelease,
-  'mealplan-2026-11-11-2': secondRelease,
-  'mealplan-2026-11-11-3': Object.freeze({
+const thirdRelease: RecipeDiversityMap = Object.freeze({
     ...secondRelease,
     'familiar-chicken-pasta-soup': { groups: ['poultry'], family: 'chicken-pasta-soup' },
     'familiar-turkey-balls-buckwheat': { groups: ['poultry'], family: 'turkey-meatballs-grain' },
@@ -37,6 +34,20 @@ const releases: Readonly<Record<string, RecipeDiversityMap>> = Object.freeze({
     'familiar-cod-rice-soup': { groups: ['fish'], family: 'fish-rice-soup' },
     'familiar-beef-pasta-tomato': { groups: ['meat'], family: 'beef-pasta-tomato' },
     'familiar-lentil-vegetable-soup': { groups: ['legume', 'plant'], family: 'lentil-vegetable-soup' },
+  } satisfies RecipeDiversityMap);
+const releases: Readonly<Record<string, RecipeDiversityMap>> = Object.freeze({
+  'mealplan-2026-11-11-1': firstRelease,
+  'mealplan-2026-11-11-2': secondRelease,
+  'mealplan-2026-11-11-3': thirdRelease,
+  'mealplan-2026-11-11-4': Object.freeze({
+    ...thirdRelease,
+    'familiar-pollock-yogurt-buckwheat': { groups: ['fish', 'dairy'], family: 'fish-yogurt-grain' },
+    'familiar-pork-potato-cabbage': { groups: ['meat'], family: 'pork-vegetable-braise' },
+    'familiar-lazy-cabbage-rolls': { groups: ['meat'], family: 'beef-rice-cabbage-rolls' },
+    'familiar-turkey-pasta-tomato': { groups: ['poultry'], family: 'turkey-pasta-vegetables' },
+    'familiar-chickpea-tomato-rice': { groups: ['legume', 'plant'], family: 'chickpea-rice-skillet' },
+    'familiar-bean-potato-stew': { groups: ['legume', 'plant'], family: 'bean-potato-stew' },
+    'familiar-potato-tomato-frittata': { groups: ['egg'], family: 'potato-egg-frittata' },
   } satisfies RecipeDiversityMap),
 });
 export function recipeDiversityFor(version: string): RecipeDiversityMap | undefined {

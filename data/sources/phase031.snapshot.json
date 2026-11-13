@@ -2594,6 +2594,145 @@
         "originalEvidence": "{\"identity\":\"Pasta, dry, unenriched\",\"facts\":[{\"kind\":\"restriction\",\"key\":\"no-fish\",\"suitable\":true},{\"kind\":\"restriction\",\"key\":\"vegetarian\",\"suitable\":true}],\"unknown\":[\"halal\",\"gluten-free\",\"lactose-free\",\"allergen-guarantees\"],\"rationale\":\"Single plain ingredient identity supports fish and vegetarian classification only. Meat and fish are not vegetarian. Package cross-contact, certification and supplier-specific allergens remain unverified.\"}",
         "sha256": "38489634f861b008c8a97b891e7d1a5b4110adba4246092ca591999c4a6b72cc"
       }
+    },
+    {
+      "productId": "pork",
+      "profileId": "usda-168249-raw",
+      "sourceVersion": "phase031-source-2026-11-13-4",
+      "name": "Свиная вырезка сырая, мякоть без видимого жира",
+      "identity": "Pork, fresh, loin, tenderloin, separable lean only, raw",
+      "state": "raw",
+      "category": "Мясо и птица",
+      "reference": {
+        "amount": "100",
+        "unit": "g",
+        "basis": "edible"
+      },
+      "mapping": "Trimmed raw separable lean tenderloin without bones and visible fat, weighed before cooking. Boneless retail price rounded to a representative edible-input estimate, no carcass or cooked yield conversion. All served oil and sauce are counted. Cooked yield and nutrient retention are not modelled.",
+      "nutrition": {
+        "kind": "usda",
+        "food": {
+          "fdc_id": "168249",
+          "data_type": "sr_legacy_food",
+          "description": "Pork, fresh, loin, tenderloin, separable lean only, raw",
+          "food_category_id": "10",
+          "publication_date": "2019-04-01"
+        },
+        "foodLine": 739,
+        "nutrients": [
+          {
+            "id": "1342518",
+            "fdc_id": "168249",
+            "nutrient_id": "1008",
+            "amount": "109",
+            "data_points": "0",
+            "derivation_id": "49",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1342515",
+            "fdc_id": "168249",
+            "nutrient_id": "1003",
+            "amount": "20.95",
+            "data_points": "12",
+            "derivation_id": "1",
+            "min": "15.58",
+            "max": "22.97",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1342467",
+            "fdc_id": "168249",
+            "nutrient_id": "1004",
+            "amount": "2.17",
+            "data_points": "12",
+            "derivation_id": "1",
+            "min": "1.38",
+            "max": "3.21",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          },
+          {
+            "id": "1342528",
+            "fdc_id": "168249",
+            "nutrient_id": "1005",
+            "amount": "0",
+            "data_points": "0",
+            "derivation_id": "68",
+            "min": "",
+            "max": "",
+            "median": "",
+            "footnote": "",
+            "min_year_acquired": ""
+          }
+        ],
+        "nutrientLines": [
+          58846,
+          58843,
+          58795,
+          58856
+        ],
+        "originalCsv": "\"168249\",\"sr_legacy_food\",\"Pork, fresh, loin, tenderloin, separable lean only, raw\",\"10\",\"2019-04-01\"\n\"1342518\",\"168249\",\"1008\",\"109\",\"0\",\"49\",\"\",\"\",\"\",\"\",\"\"\n\"1342515\",\"168249\",\"1003\",\"20.95\",\"12\",\"1\",\"15.58\",\"22.97\",\"\",\"\",\"\"\n\"1342467\",\"168249\",\"1004\",\"2.17\",\"12\",\"1\",\"1.38\",\"3.21\",\"\",\"\",\"\"\n\"1342528\",\"168249\",\"1005\",\"0\",\"0\",\"68\",\"\",\"\",\"\",\"\",\"\"",
+        "sha256": "3c28c45be3e4040d523e6e3b4e3427eeabf5528c38d0c3deb4b566a8f8886604"
+      },
+      "price": {
+        "amount": "600",
+        "currency": "RUB",
+        "reference": {
+          "amount": "1",
+          "unit": "kg",
+          "basis": "edible"
+        },
+        "estimate": true,
+        "observedAmount": "549",
+        "observedQuantity": {
+          "amount": "1000",
+          "unit": "g"
+        },
+        "observedAt": "2026-11-13",
+        "scope": "Санкт-Петербург, интернет-витрина МясоСторе",
+        "targetScope": "Санкт-Петербург",
+        "assessmentDate": "2026-11-13",
+        "url": "https://myasostore.ru/catalog/svinina/vyrezka-svinaya/",
+        "excerpt": "Boneless chilled pork tenderloin549 RUB/kg; out of stock. Variable pack0.5-1kg, displayed pack420 RUB is not a fixed-weight observation.",
+        "derivation": "549 RUB/kg rounded upward to representative600 RUB/kg edible trimmed lean tenderloin. No carcass-to-meat conversion.",
+        "assumptions": "Boneless retail tenderloin is represented by trimmed separable lean USDA raw tenderloin.600 is an estimate allowing trimming and retail variability, no measured edible yield is claimed. Listing unavailable for ordering at observation. Weigh trimmed raw edible flesh; cooked mass is not substituted.",
+        "accessMethod": "Official retailer page opened with web tool on2026-11-13. Numeric excerpt and location only.",
+        "reuseDisposition": "Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.",
+        "originalEvidence": "{\"amount\":\"600\",\"currency\":\"RUB\",\"reference\":{\"amount\":\"1\",\"unit\":\"kg\",\"basis\":\"edible\"},\"estimate\":true,\"observedAmount\":\"549\",\"observedQuantity\":{\"amount\":\"1000\",\"unit\":\"g\"},\"observedAt\":\"2026-11-13\",\"scope\":\"Санкт-Петербург, интернет-витрина МясоСторе\",\"targetScope\":\"Санкт-Петербург\",\"assessmentDate\":\"2026-11-13\",\"url\":\"https://myasostore.ru/catalog/svinina/vyrezka-svinaya/\",\"excerpt\":\"Boneless chilled pork tenderloin549 RUB/kg; out of stock. Variable pack0.5-1kg, displayed pack420 RUB is not a fixed-weight observation.\",\"derivation\":\"549 RUB/kg rounded upward to representative600 RUB/kg edible trimmed lean tenderloin. No carcass-to-meat conversion.\",\"assumptions\":\"Boneless retail tenderloin is represented by trimmed separable lean USDA raw tenderloin.600 is an estimate allowing trimming and retail variability, no measured edible yield is claimed. Listing unavailable for ordering at observation. Weigh trimmed raw edible flesh; cooked mass is not substituted.\",\"accessMethod\":\"Official retailer page opened with web tool on2026-11-13. Numeric excerpt and location only.\",\"reuseDisposition\":\"Minimal numeric observation with attribution. Retailer text and imagery are not redistributed. Estimate policy is MealPlan original content.\"}",
+        "sha256": "40a2099084f4840152d3e5986d578351142be95c5e43f5b1a771b9fcf9455c7a"
+      },
+      "safety": {
+        "identity": "Pork, fresh, loin, tenderloin, separable lean only, raw",
+        "facts": [
+          {
+            "kind": "restriction",
+            "key": "no-fish",
+            "suitable": true
+          },
+          {
+            "kind": "restriction",
+            "key": "vegetarian",
+            "suitable": false
+          }
+        ],
+        "unknown": [
+          "halal",
+          "gluten-free",
+          "lactose-free",
+          "allergen-guarantees"
+        ],
+        "rationale": "Plain pork tenderloin is meat and is not fish or vegetarian. Ingredient identity establishes only those two classifications. Halal certification, cross-contact and package allergen guarantees remain unverified.",
+        "originalEvidence": "{\"identity\":\"Pork, fresh, loin, tenderloin, separable lean only, raw\",\"facts\":[{\"kind\":\"restriction\",\"key\":\"no-fish\",\"suitable\":true},{\"kind\":\"restriction\",\"key\":\"vegetarian\",\"suitable\":false}],\"unknown\":[\"halal\",\"gluten-free\",\"lactose-free\",\"allergen-guarantees\"],\"rationale\":\"Plain pork tenderloin is meat and is not fish or vegetarian. Ingredient identity establishes only those two classifications. Halal certification, cross-contact and package allergen guarantees remain unverified.\"}",
+        "sha256": "016326cfa44ce179701d1d5e22684da2c381b4921b7999d715aa3543cc7823c9"
+      }
     }
   ],
   "releases": [
@@ -2701,6 +2840,63 @@
         "familiar-beef-pasta-tomato",
         "familiar-lentil-vegetable-soup"
       ]
+    },
+    {
+      "version": "mealplan-2026-11-11-4",
+      "profileIds": [
+        "usda-171287-raw",
+        "usda-171077-raw",
+        "usda-172420-dry",
+        "usda-171025-ready",
+        "usda-170000-raw",
+        "usda-171284-ready",
+        "usda-171688-raw",
+        "usda-172688-ready",
+        "usda-172217-ready",
+        "usda-173904-dry",
+        "usda-173800-drained",
+        "usda-174285-drained",
+        "usda-168409-raw",
+        "label-vkusvill-51256-ready",
+        "usda-174515-raw",
+        "usda-173725-raw",
+        "usda-171955-raw",
+        "usda-174030-raw",
+        "usda-168927-dry",
+        "usda-168249-raw"
+      ],
+      "recipeIds": [
+        "familiar-omelet-tomato-bread",
+        "familiar-chicken-rice-carrot",
+        "familiar-lentil-cabbage-tomato",
+        "familiar-yogurt-apple",
+        "familiar-milk-oats-apple",
+        "familiar-syrniki",
+        "familiar-cottage-apple-bake",
+        "familiar-buckwheat-egg-carrot",
+        "familiar-oat-pancake-yogurt",
+        "familiar-chickpea-pancakes",
+        "familiar-water-oats-apple",
+        "familiar-cottage-cucumber-bread",
+        "familiar-chickpea-cucumber-toast",
+        "familiar-steamed-egg-pudding",
+        "familiar-baked-apple-oats",
+        "familiar-bean-tomato-cabbage-salad",
+        "familiar-chicken-pasta-soup",
+        "familiar-turkey-balls-buckwheat",
+        "familiar-turkey-potato-cabbage",
+        "familiar-pollock-potato-carrot",
+        "familiar-cod-rice-soup",
+        "familiar-beef-pasta-tomato",
+        "familiar-lentil-vegetable-soup",
+        "familiar-pollock-yogurt-buckwheat",
+        "familiar-pork-potato-cabbage",
+        "familiar-lazy-cabbage-rolls",
+        "familiar-turkey-pasta-tomato",
+        "familiar-chickpea-tomato-rice",
+        "familiar-bean-potato-stew",
+        "familiar-potato-tomato-frittata"
+      ]
     }
   ],
   "cookingGuidance": {
@@ -2720,5 +2916,19 @@
     "method": "Measure internal temperature with a food thermometer. Continue cooking if threshold not reached.",
     "originalEvidence": "{\"sourceId\":\"foodsafety-gov-safe-minimum-temperatures\",\"url\":\"https://www.foodsafety.gov/food-safety-charts/safe-minimum-internal-temperatures\",\"accessedAt\":\"2026-11-12\",\"reviewedAt\":\"2024-11-21\",\"attribution\":\"FoodSafety.gov, Safe Minimum Internal Temperature Chart\",\"license\":\"Attributed minimal factual numeric excerpt\",\"excerpt\":\"Poultry74C; ground beef71C; fish63C; egg dishes71C\",\"temperaturesC\":{\"poultry\":\"74\",\"beefGround\":\"71\",\"fish\":\"63\",\"eggDishes\":\"71\"},\"method\":\"Measure internal temperature with a food thermometer. Continue cooking if threshold not reached.\"}",
     "sha256": "4e5a4c097e77bb32d4612847860ed0c8cbf1f83cd3b2b90f0d6bdc6c9fc13620"
+  },
+  "porkCookingGuidance": {
+    "sourceId": "foodsafety-gov-safe-minimum-temperatures",
+    "url": "https://www.foodsafety.gov/food-safety-charts/safe-minimum-internal-temperatures",
+    "accessedAt": "2026-11-13",
+    "reviewedAt": "2024-11-21",
+    "attribution": "FoodSafety.gov Safe Minimum Internal Temperature Chart",
+    "license": "Attributed minimal factual numeric excerpt",
+    "excerpt": "Pork steaks roasts chops63C, rest3minutes; ground pork71C.",
+    "temperatureC": "63",
+    "restMinutes": "3",
+    "method": "Use intact tenderloin cut into medallions, measure the thickest centre with a food thermometer and rest3minutes. Ground pork is a different preparation.",
+    "originalEvidence": "{\"sourceId\":\"foodsafety-gov-safe-minimum-temperatures\",\"url\":\"https://www.foodsafety.gov/food-safety-charts/safe-minimum-internal-temperatures\",\"accessedAt\":\"2026-11-13\",\"reviewedAt\":\"2024-11-21\",\"attribution\":\"FoodSafety.gov Safe Minimum Internal Temperature Chart\",\"license\":\"Attributed minimal factual numeric excerpt\",\"excerpt\":\"Pork steaks roasts chops63C, rest3minutes; ground pork71C.\",\"temperatureC\":\"63\",\"restMinutes\":\"3\",\"method\":\"Use intact tenderloin cut into medallions, measure the thickest centre with a food thermometer and rest3minutes. Ground pork is a different preparation.\"}",
+    "sha256": "324b7f7f4c50e2f21367b2fd15578b7af6a6723af2684922f960cf2a88c77e4c"
   }
 }

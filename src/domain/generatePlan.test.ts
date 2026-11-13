@@ -202,6 +202,7 @@ describe('source-backed mixed starts', () => {
     const result = success(run(inputs).result);
     expect(formatExact(result.projection.costs.exact.purchase)).toBe('461.9293627901234552');
     expect(formatExact(result.projection.averagePersonDayNutrition.calories)).toBe('706773/700');
+    expect(result.plan.variants.map(variantFingerprint)).toEqual(sourceOracle.historicalSearchBaseline.fingerprints);
   }, 30_000);
 });
 

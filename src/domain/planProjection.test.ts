@@ -7,6 +7,7 @@ import type { PlanVariant, RecipeInstance } from './plan';
 import { decimal, formatExact, rational } from './quantities';
 import { createDraft } from './settings';
 import * as projection from './planProjection';
+import { bundledCatalog } from '../data/catalog';
 
 // All numbers and provenance in this file are synthetic test oracles, never production data.
 const source = { sourceId: 'synthetic', recordId: 'test', release: 'v1', license: 'CC0-1.0', url: 'https://example.org/test' };
@@ -25,6 +26,28 @@ function fixture(pantry: readonly PantrySnapshotRow[] = [], foods: readonly Food
   return { inputs, variant: { id: 'test', instances } satisfies PlanVariant };
 }
 const stock = (amount: string, unit: 'g' | 'kg' | 'ml' = 'g'): readonly PantrySnapshotRow[] => [{ productId: 'rice', quantity: { status: 'known', value: { amount: decimal(amount), unit } }, expiresSoon: true }];
+
+it('current82 repeated chicken lunches spend exactly200g once and retain all three source costs', () => {
+  const applied = buildAppliedSettings({ ...createDraft(), days: '2' });
+  if (applied.status !== 'applied') throw new Error('Current settings');
+  const inputs = createPlanInputs(applied.settings, bundledCatalog, { seed: 'source-chicken-stock', now: () => new Date(2026, 10, 13), pantrySnapshot: [
+    { productId: 'chicken', quantity: { status: 'known', value: { amount: decimal('200'), unit: 'g' } }, expiresSoon: true },
+  ] });
+  const recipe = bundledCatalog.recipes.find(row => row.id === 'familiar-chicken-rice-carrot')!;
+  const variant: PlanVariant = { id: 'chicken-twice', instances: inputs.dates.map(date => ({ id: `chicken/${date}`, date, slot: 'lunch', recipeId: recipe.id,
+    catalogVersion: bundledCatalog.version, recipeSnapshot: recipe, selectedServings: decimal('2') })) };
+  for (const instances of [variant.instances, [...variant.instances].reverse()]) {
+    const result = projection.projectPlan(inputs, { ...variant, instances });
+    if (result.status !== 'projected') throw new Error('Current lunch projection');
+    const projected = result.projection;
+    const chicken = projected.rows.find(row => row.productId === 'chicken')!;
+    expect([chicken.required.amount, chicken.covered.amount, chicken.purchase.amount].map(formatExact)).toEqual(['600', '200', '400']);
+    expect(projected.instances.map(instance => instance.ingredients.find(row => row.productId === 'chicken')!.covered.amount).map(formatExact)).toEqual(['200', '0']);
+    expect(Object.fromEntries(Object.entries(projected.costs.exact).map(([key, value]) => [key, formatExact(value)])))
+      .toEqual({ ingredient: '422.1460671604938188', covered: '122', purchase: '300.1460671604938188' });
+    expect(formatExact(projected.familyNutrition.calories)).toBe('2217.52');
+  }
+});
 function projected(data = fixture(stock('200'))) {
   const result = projection.projectPlan(data.inputs, data.variant);
   expect(result.status).toBe('projected');

@@ -9,6 +9,9 @@ import { ACTIVE_PLAN_KEY, ACTIVE_PLAN_MAX_BYTES, createActivePlanAdapter, create
 import { bundledCatalog } from '../data/catalog';
 import { createTrustedCatalogRegistry } from './trustedCatalogs';
 import legacyRaw from '../test/fixtures/phase02-active-plan-v1.json?raw';
+import release1Raw from '../test/fixtures/phase031-release1-active-plan.json?raw';
+import release2Raw from '../test/fixtures/phase031-release2-active-plan.json?raw';
+import release3Raw from '../test/fixtures/phase031-release3-active-plan.json?raw';
 
 // Synthetic test data, never a production catalog or factual food claim.
 function fixture(change = {}): ActivePlanEnvelope {
@@ -28,6 +31,23 @@ function storage() {
 }
 const current = { isCurrent: () => true };
 const rawPlan = (plan = fixture()) => JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
+
+it.each([['historical52', legacyRaw], ['issued56', release1Raw], ['issued68', release2Raw], ['issued75', release3Raw]])(
+  'preserves %s unsupported and tampered persisted bytes with typed diagnostics', async (_, originalRaw) => {
+    for (const mutation of ['unknown-version', 'unused-source', 'inactive-recipe'] as const) {
+      const encoded = JSON.parse(originalRaw);
+      if (mutation === 'unknown-version') encoded.plan.inputs.catalogVersion = 'unsupported-release';
+      if (mutation === 'unused-source') encoded.plan.inputs.catalog.foods.at(-1).nutrition.source.recordId = 'forged-source';
+      if (mutation === 'inactive-recipe') encoded.plan.variants.at(-1).instances[0].recipeSnapshot.steps = ['forged'];
+      const raw = JSON.stringify(encoded), store = storage(); store.map.set(ACTIVE_PLAN_KEY, raw);
+      const write = vi.fn(store.setItem), adapter = createActivePlanAdapter(() => ({ ...store, setItem: write }));
+      const loaded = await adapter.load(); expect(loaded.status).toBe('corrupt');
+      if (loaded.status === 'corrupt') expect(loaded.diagnostics?.length).toBeGreaterThan(0);
+      expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+      expect((await adapter.save(fixture(), current)).status).toBe('blocked');
+      expect(write).not.toHaveBeenCalled(); expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+    }
+  });
 
 it('saves and reloads a real current seven-day twelve-variant envelope within unchanged byte ceiling', async () => {
   const applied = buildAppliedSettings({ ...createDraft(), budget: '10000' });

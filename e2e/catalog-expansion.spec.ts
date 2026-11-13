@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import oracle from './fixtures/catalog031-oracle.json' with { type: 'json' };
 import legacy from '../src/test/fixtures/phase02-active-plan-v1.json' with { type: 'json' };
 import release1 from '../src/test/fixtures/phase031-release1-active-plan.json' with { type: 'json' };
+import release2 from '../src/test/fixtures/phase031-release2-active-plan.json' with { type: 'json' };
 import release3 from '../src/test/fixtures/phase031-release3-active-plan.json' with { type: 'json' };
 import lunchOracle from './fixtures/catalog031-lunches-oracle.json' with { type: 'json' };
 import dinnerOracle from './fixtures/catalog031-dinners-oracle.json' with { type: 'json' };
@@ -133,8 +134,58 @@ test('ordinary-mixed wizard uses current compiled foods and persists append relo
   await expect(page.getByText('Вариант 4 из 4', { exact: true })).toBeVisible();
 });
 
-for (const fixture of [legacy, release1, release3]) test(`legacy ${fixture.plan.inputs.catalogVersion} saved bytes reload and append using their compiled version`, async ({ page }) => {
-  test.setTimeout(65_000);
+interface SavedPlan {
+  inputs: { catalogVersion: string };
+  activeVariantId: string;
+  variants: { id: string; instances: { id: string; recipeId: string; catalogVersion: string; recipeSnapshot: { name: string } }[] }[];
+}
+async function continueSavedSet(page: Page, original: SavedPlan) {
+  const count = original.variants.length;
+  await page.getByRole('button', { name: 'Пересобрать', exact: true }).click();
+  await expect(page.getByText(`Вариант ${count + 1} из ${count + 1}`, { exact: true })).toBeVisible({ timeout: 32_000 });
+  const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).plan, activeKey);
+  expect(saved.inputs).toEqual(original.inputs);
+  expect(saved.variants.slice(0, count)).toEqual(original.variants);
+  expect(saved.variants[count].instances.every((row: { catalogVersion: string }) => row.catalogVersion === original.inputs.catalogVersion)).toBe(true);
+  await page.getByRole('button', { name: 'Предыдущий вариант', exact: true }).click();
+  await expect(page.getByText(`Вариант ${count} из ${count + 1}`, { exact: true })).toBeVisible();
+  const selectedRaw = await page.evaluate(key => localStorage.getItem(key)!, activeKey);
+  const selected = JSON.parse(selectedRaw).plan as SavedPlan;
+  expect(selected.activeVariantId).toBe(original.variants[count - 1].id);
+  const card = page.locator('[data-instance-id]:visible').first();
+  const instanceId = await card.getAttribute('data-instance-id');
+  const instance = selected.variants[count - 1].instances.find(row => row.id === instanceId)!;
+  expect(instance).toBeDefined();
+  // Use the visible contextual instance, including its actual day and slot.
+  const href = await card.getByRole('link').getAttribute('href');
+  expect(href).toContain(`variant=${encodeURIComponent(selected.activeVariantId)}`);
+  expect(href).toContain(`instance=${encodeURIComponent(instance.id)}`);
+  await card.getByRole('link').click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(instance.recipeSnapshot.name);
+  await expect(page.getByRole('list', { name: 'Шаги приготовления' })).toBeVisible();
+  await page.getByRole('link', { name: 'К меню', exact: true }).click();
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(selectedRaw);
+  await page.reload();
+  await expect(page.getByText(`Вариант ${count} из ${count + 1}`, { exact: true })).toBeVisible();
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(selectedRaw);
+  await page.getByText('Действия с меню', { exact: true }).click();
+  await page.getByRole('button', { name: 'Составить заново', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Создать новый набор', exact: true }).click();
+  await expect(page.getByText('Вариант 1 из 3', { exact: true })).toBeVisible({ timeout: 32_000 });
+  const recreatedRaw = await page.evaluate(key => localStorage.getItem(key)!, activeKey);
+  const recreated = JSON.parse(recreatedRaw).plan as SavedPlan;
+  expect(recreated.inputs).toEqual(original.inputs);
+  expect(recreated.variants).toHaveLength(3);
+  expect(recreated.variants.every(variant => variant.instances.every(row => row.catalogVersion === original.inputs.catalogVersion))).toBe(true);
+  await page.reload();
+  await expect(page.getByText('Вариант 1 из 3', { exact: true })).toBeVisible();
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(recreatedRaw);
+}
+
+for (const [index, fixture] of [legacy, release1, release2, release3].entries()) test(`legacy ${fixture.plan.inputs.catalogVersion} saved bytes load select append recreate recipe reload`, async ({ page }) => {
+  test.setTimeout(95_000);
+  const width = [360, 768, 1280, 360][index];
+  await page.setViewportSize({ width, height: 900 });
   await page.goto('/');
   const raw = JSON.stringify(fixture);
   await page.evaluate(({ key, raw }) => localStorage.setItem(key, raw), { key: activeKey, raw });
@@ -145,12 +196,8 @@ for (const fixture of [legacy, release1, release3]) test(`legacy ${fixture.plan.
   await page.reload();
   await expect(page.getByText(`Вариант 1 из ${count}`, { exact: true })).toBeVisible();
   expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(raw);
-  await page.getByRole('button', { name: 'Пересобрать', exact: true }).click();
-  await expect(page.getByText(`Вариант ${count + 1} из ${count + 1}`, { exact: true })).toBeVisible({ timeout: 32_000 });
-  const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).plan, activeKey);
-  expect(saved.inputs).toEqual(fixture.plan.inputs);
-  expect(saved.variants.slice(0, count)).toEqual(fixture.plan.variants);
-  expect(saved.variants[count].instances.every((row: { catalogVersion: string }) => row.catalogVersion === fixture.plan.inputs.catalogVersion)).toBe(true);
+  await continueSavedSet(page, fixture.plan);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
 });
 
 // Future release acceptance is authored now and executed by its owning plan.
@@ -168,8 +215,9 @@ for (const [group, ids] of Object.entries(futureGroups)) test(`${group} compiled
   }
 });
 
-test('ordinary-week smoke defaults retain affordable real mixed meals', async ({ page }) => {
-  test.setTimeout(45_000);
+for (const width of [360, 768, 1280]) test(`ordinary-week smoke defaults current82 select append recreate recipe reload at ${width}px`, async ({ page }) => {
+  test.setTimeout(95_000);
+  await page.setViewportSize({ width, height: 900 });
   await page.goto('/');
   await page.getByRole('button', { name: 'Меню за 1 клик', exact: true }).click();
   await expect(page).toHaveURL(/\/menu$/, { timeout: 32_000 });
@@ -179,6 +227,10 @@ test('ordinary-week smoke defaults retain affordable real mixed meals', async ({
   expect(new Set(saved.variants[0].instances.filter((row: { recipeId: string }) => row.recipeId.startsWith('familiar-')).map((row: { recipeId: string }) => row.recipeId)).size).toBeGreaterThanOrEqual(2);
   await page.reload();
   await expect(page.getByRole('heading', { level: 1, name: 'Меню на неделю' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+  await continueSavedSet(page, saved);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+  await page.screenshot({ path: `.tmp/phase031-05-current82-${width}.png`, fullPage: true });
 });
 
 for (const width of [360, 768, 1280]) test(`lunches current release family portions menu recipe shopping reload at ${width}px`, async ({ page }) => {

@@ -8,7 +8,7 @@ const readFileSync: (path: string, encoding: string) => string = nodeRead;
 const writeFileSync: (path: string, content: string) => void = nodeWrite;
 const copyFileSync: (from: string, to: string) => void = nodeCopy;
 const unlinkSync: (path: string) => void = nodeUnlink;
-import { bundledCatalog } from './catalog';
+import { bundledCatalog, sourceApprovedCatalogs } from './catalog';
 import { recipes } from './recipes';
 import { getRecipeMedia, mediaCatalogVersion, recipeMedia, recipeMediaIds } from './recipeMedia';
 
@@ -32,9 +32,9 @@ describe('compiled presentation media', () => {
     const scoped = spawnSync('node', ['scripts/check-recipe-media.mjs', '--ids', 'rice-sweet-porridge'], { encoding: 'utf8' });
     expect(scoped.status, scoped.stderr).toBe(0);
     expect(JSON.parse(scoped.stdout)).toEqual({ checked: 1, full: false });
-    const full = spawnSync('node', ['scripts/check-recipe-media.mjs', '--all'], { encoding: 'utf8' });
+    const full = spawnSync('node', ['scripts/check-recipe-media.mjs', '--version', mediaCatalogVersion], { encoding: 'utf8' });
     expect(full.status).toBe(0);
-    expect(JSON.parse(full.stdout)).toEqual({ checked: 52, full: true });
+    expect(JSON.parse(full.stdout)).toEqual({ checked: 52, full: false });
     const aggregate = JSON.parse(readFileSync('docs/data/recipe-media.json', 'utf8'));
     for (const batch of ['01', '02', '03', '04', '05']) {
       for (const row of JSON.parse(readFileSync(`docs/data/recipe-media-batches/${batch}.json`, 'utf8'))) {
@@ -65,5 +65,26 @@ describe('compiled presentation media', () => {
   it('rejects unsupported versions and untrusted keys/URLs', () => {
     for (const id of ['__proto__', 'constructor', '../rice-sweet-porridge', 'https://evil.test/a.png', 'data:image/png;base64,xx', '']) expect(getRecipeMedia(mediaCatalogVersion, id)).toBeUndefined();
     expect(getRecipeMedia('old', 'rice-sweet-porridge')).toBeUndefined();
+  });
+  it('resolves historical media in every issued release and B1 only in admitted releases', () => {
+    for (const catalog of sourceApprovedCatalogs) {
+      expect(getRecipeMedia(catalog.version, 'rice-sweet-porridge')?.src).toBe('/recipes/rice-sweet-porridge.png');
+      const media = getRecipeMedia(catalog.version, 'familiar-omelet-tomato-bread');
+      expect(Boolean(media)).toBe(catalog.recipes.some(recipe => recipe.id === 'familiar-omelet-tomato-bread'));
+      if (media) {
+        expect(media.generated).toBe(true);
+        expect(media.width * 3).toBe(media.height * 4);
+        expect(Object.isFrozen(media)).toBe(true);
+      }
+    }
+  });
+  it('audits selected release membership and keeps full 82 gate incomplete', () => {
+    const scoped = spawnSync('node', ['scripts/check-recipe-media.mjs', '--version', bundledCatalog.version, '--ids', 'familiar-omelet-tomato-bread'], { encoding: 'utf8' });
+    expect(scoped.status, scoped.stderr).toBe(0);
+    expect(JSON.parse(scoped.stdout)).toEqual({ checked: 1, full: false });
+    const wrong = spawnSync('node', ['scripts/check-recipe-media.mjs', '--version', mediaCatalogVersion, '--ids', 'familiar-omelet-tomato-bread'], { encoding: 'utf8' });
+    expect(wrong.status).toBe(1);
+    const full = spawnSync('node', ['scripts/check-recipe-media.mjs', '--all'], { encoding: 'utf8' });
+    expect(full.status).toBe(1);
   });
 });

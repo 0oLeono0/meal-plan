@@ -1,0 +1,9 @@
+[
+  { "id": "familiar-chicken-pasta-soup", "nutrition": ["988.92", "77.636", "16.87", "128.618"], "cost": "202.5758533333333294" },
+  { "id": "familiar-turkey-balls-buckwheat", "nutrition": ["1011.28", "89.61", "23.384", "122.516"], "cost": "343.9009471604938274" },
+  { "id": "familiar-turkey-potato-cabbage", "nutrition": ["834.48", "81.588", "19.842", "88.38"], "cost": "289.4113533333333294" },
+  { "id": "familiar-pollock-potato-carrot", "nutrition": ["763.28", "65.664", "15.524", "94.724"], "cost": "295.3241199999999934" },
+  { "id": "familiar-cod-rice-soup", "nutrition": ["939.52", "64.1", "11.168", "142.81"], "cost": "506.6114582716049354" },
+  { "id": "familiar-beef-pasta-tomato", "nutrition": ["1260.8", "80.384", "41.096", "138.614"], "cost": "334.8774533333333334" },
+  { "id": "familiar-lentil-vegetable-soup", "nutrition": ["987.68", "48.456", "14.776", "173.916"], "cost": "127.5515866666666614" }
+]

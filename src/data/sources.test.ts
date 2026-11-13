@@ -53,10 +53,33 @@ describe('archived primary sources', () => {
     for (const [version, digest] of [
       ['mealplan-2026-11-11-1', '7e06f5d4ea1dd341571a54cc8fd62fff04988a32f843d0cd637413b4681ab1a3'],
       ['mealplan-2026-11-11-2', 'fab951b0150ec725b273bb3e9fe4fe92b127b76e6377fbf1ad40b5f651f60af5'],
+      ['mealplan-2026-11-11-3', '0d1880370710718a9140cde07319fac51eb483c0044a47a3d3657f0a400e9bd2'],
     ]) {
       const release = manifest.releases.find(release => release.version === version)!;
       const records = release.profileIds.map(id => manifest.records.find(row => row.profileId === id));
       expect(await hash(JSON.stringify({ release, records }))).toBe(digest);
+    }
+  });
+  it('retains attributed cooking temperatures and explicit assumed fish edible pricing', async () => {
+    expect(manifest.cookingGuidance.temperaturesC).toEqual({ poultry: '74', beefGround: '71', fish: '63', eggDishes: '71' });
+    expect(await hash(manifest.cookingGuidance.originalEvidence)).toBe(manifest.cookingGuidance.sha256);
+    for (const product of ['pollock', 'cod']) {
+      const row = manifest.records.find(row => row.productId === product)!;
+      expect(row.price.assumptions).toContain('price-only');
+      expect(row.price.assumptions).toMatch(/not measured|no measured/);
+      expect(row.price.derivation).toContain('0.95');
+      expect(row.mapping).toContain('Cooked yield and nutrient retention are not modelled');
+    }
+    for (const mutate of [
+      (data: typeof manifest) => { data.records.find(row => row.productId === 'cod')!.state = 'cooked'; },
+      (data: typeof manifest) => { data.records.find(row => row.productId === 'pollock')!.price.reference.basis = 'carcass'; },
+      (data: typeof manifest) => { data.records.find(row => row.productId === 'beef-mince')!.safety.facts[1].suitable = true; },
+      (data: typeof manifest) => { data.records.find(row => row.productId === 'pasta')!.nutrition.nutrients![0].amount = '120'; },
+      (data: typeof manifest) => { data.cookingGuidance.temperaturesC.fish = '40'; },
+    ]) {
+      const altered = structuredClone(manifest);
+      mutate(altered);
+      expect((await validateExpandedCatalog(bundledCatalog, altered)).status).toBe('invalid');
     }
   });
   it('retains six independently acquired breakfast snack profiles and the separate label attribution', async () => {

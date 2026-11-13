@@ -6,7 +6,7 @@ import { createLocalGeneration } from '../adapters/generation';
 import { createActivePlanAdapter, validateActiveBundle } from '../adapters/activePlan';
 import { createPlanSearch } from '../domain/generatePlan';
 import { validateCatalog } from '../adapters/catalog';
-import { compare, decimal, divide, formatExact, multiply } from '../domain/quantities';
+import { add, compare, decimal, divide, formatExact, multiply } from '../domain/quantities';
 import { projectPlan } from '../domain/planProjection';
 import type { Catalog } from '../domain/catalog';
 import foodEvidence from '../../data/sources/food.snapshot.json';
@@ -14,6 +14,7 @@ import priceEvidence from '../../data/sources/prices.snapshot.json';
 import safetyEvidence from '../../data/sources/safety.snapshot.json';
 import { historicalCatalog, historicalCatalogPort } from './catalog';
 import release1Raw from '../test/fixtures/phase031-release1-active-plan.json?raw';
+import release2Raw from '../test/fixtures/phase031-release2-active-plan.json?raw';
 import { sourceApprovedCatalogs, sourceApprovedCatalogPorts } from './catalog';
 import { createVersionedGeneration } from '../adapters/generation';
 import type { PantrySnapshotRow } from '../domain/appliedSettings';
@@ -40,6 +41,48 @@ const modules = import.meta.glob('./catalog.ts', { eager: true });
 const production = () => modules['./catalog.ts'] as { bundledCatalog: Catalog; bundledCatalogPort: Parameters<typeof createLocalGeneration>[0]; validateBundledCatalog: (input: Catalog, sources?: typeof sourceEvidence) => Promise<ReturnType<typeof validateCatalog>> } | undefined;
 describe('source-backed production corpus', () => {
   it.each<[string, string[], string]>([
+    ['familiar-chicken-pasta-soup', ['988.92', '77.636', '16.87', '128.618'], '202.5758533333333294'],
+    ['familiar-turkey-balls-buckwheat', ['1011.28', '89.61', '23.384', '122.516'], '343.9009471604938274'],
+    ['familiar-turkey-potato-cabbage', ['834.48', '81.588', '19.842', '88.38'], '289.4113533333333294'],
+    ['familiar-pollock-potato-carrot', ['763.28', '65.664', '15.524', '94.724'], '295.3241199999999934'],
+    ['familiar-cod-rice-soup', ['939.52', '64.1', '11.168', '142.81'], '506.6114582716049354'],
+    ['familiar-beef-pasta-tomato', ['1260.8', '80.384', '41.096', '138.614'], '334.8774533333333334'],
+    ['familiar-lentil-vegetable-soup', ['987.68', '48.456', '14.776', '173.916'], '127.5515866666666614'],
+  ])('independent lunch input arithmetic includes all oil sauce and garnish in %s', (id, nutrition, cost) => {
+    const base = projectBreakfastSnack([id], '2');
+    expect(Object.values(base.familyNutrition).map(formatExact)).toEqual(nutrition);
+    expect(formatExact(base.costs.exact.ingredient)).toBe(cost);
+    for (const [servings, factor] of [['1', '0.5'], ['4', '2']]) {
+      const scaled = projectBreakfastSnack([id], servings);
+      expect(Object.values(scaled.familyNutrition).map(formatExact)).toEqual(nutrition.map(value => formatExact(multiply(decimal(value), decimal(factor)))));
+      expect(formatExact(scaled.costs.exact.ingredient)).toBe(formatExact(multiply(decimal(cost), decimal(factor))));
+    }
+  });
+  it('spends chicken pantry once across soup and repeated rice meals at scaled servings', () => {
+    const pantry: PantrySnapshotRow[] = [{ productId: 'chicken', quantity: { status: 'known', value: { amount: decimal('200'), unit: 'g' } }, expiresSoon: false }];
+    const ids = ['familiar-chicken-pasta-soup', 'familiar-chicken-rice-carrot', 'familiar-chicken-pasta-soup'];
+    for (const [servings, required, purchase] of [['1', '410', '210'], ['2', '820', '620'], ['4', '1640', '1440']]) {
+      const result = projectBreakfastSnack(ids, servings, pantry);
+      const chicken = result.rows.find(row => row.productId === 'chicken')!;
+      expect([chicken.required.amount, chicken.covered.amount, chicken.purchase.amount].map(formatExact)).toEqual([required, '200', purchase]);
+      expect(formatExact(result.costs.exact.covered)).toBe('122');
+      expect(compare(result.costs.exact.ingredient, add(result.costs.exact.purchase, result.costs.exact.covered))).toBe(0);
+    }
+  });
+  it('preserves issued68 facts and all three previous trusted compiled releases after75', async () => {
+    const saved = validateActiveBundle(JSON.parse(release2Raw).plan);
+    expect(saved.status).toBe('valid');
+    if (saved.status !== 'valid') throw new Error('Issued68 must remain trusted');
+    const current = production()!.bundledCatalog;
+    expect(current.version).toBe('mealplan-2026-11-11-3');
+    expect(current.recipes).toHaveLength(75);
+    expect(current.foods).toHaveLength(31);
+    expect(current.recipes.slice(0, 68)).toEqual(saved.bundle.plan.inputs.catalog.recipes);
+    expect(current.foods.slice(0, 26)).toEqual(saved.bundle.plan.inputs.catalog.foods);
+    expect(sourceApprovedCatalogs.find(catalog => catalog.version === 'mealplan-2026-11-11-2')).toEqual(saved.bundle.plan.inputs.catalog);
+    for (const catalog of sourceApprovedCatalogs) expect((await sourceApprovedCatalogPorts[catalog.version].load()).status).toBe('loaded');
+  });
+  it.each<[string, string[], string]>([
     ['familiar-syrniki', ['923.7', '78.478', '35.343', '72.142'], '301.52290049382716'],
     ['familiar-cottage-apple-bake', ['973.96', '84.152', '36.27', '79.4688'], '345.530420148148148'],
     ['familiar-cottage-cucumber-bread', ['512.4', '50.86', '15.02', '45.028'], '256.0258177777777778'],
@@ -54,13 +97,13 @@ describe('source-backed production corpus', () => {
       expect(scaled.rows.map(row => formatExact(row.required.amount))).toEqual(base.rows.map(row => formatExact(multiply(row.required.amount, decimal(factor)))));
     }
   });
-  it('loads selects appends and recreates issued56 through the real controller after release68', async () => {
-    let raw = release1Raw;
+  it.each([['issued56', release1Raw], ['issued68', release2Raw]])('loads selects appends and recreates %s through the real controller after release75', async (_, originalRaw) => {
+    let raw = originalRaw;
     const storage = { getItem: () => raw, setItem: (_key: string, value: string) => { raw = value; } };
     const controller = createGenerationController({ activePlan: createActivePlanAdapter(() => storage), generation: createVersionedGeneration(sourceApprovedCatalogPorts) });
     try {
       await controller.load();
-      expect(raw).toBe(release1Raw);
+      expect(raw).toBe(originalRaw);
       const original = controller.getSnapshot().active!.plan;
       const origin = { returnRoute: '/menu', focusAnchor: 'rebuild' };
       await controller.appendVariant(origin);
@@ -75,7 +118,7 @@ describe('source-backed production corpus', () => {
       expect(controller.getSnapshot().error).toBeNull();
       expect(controller.getSnapshot().active!.plan.variants).toHaveLength(3);
       expect(controller.getSnapshot().active!.plan.inputs).toEqual(original.inputs);
-      expect(controller.getSnapshot().active!.plan.variants.every(variant => variant.instances.every(row => row.catalogVersion === 'mealplan-2026-11-11-1'))).toBe(true);
+      expect(controller.getSnapshot().active!.plan.variants.every(variant => variant.instances.every(row => row.catalogVersion === original.inputs.catalogVersion))).toBe(true);
     } finally { controller.dispose(); }
   }, 60000);
   it('keeps pcs and ml incompatible while spending known gram stocks once across repeated recipes', () => {
@@ -103,7 +146,7 @@ describe('source-backed production corpus', () => {
     expect(canned.rows.filter(row => row.productId.endsWith('-canned')).map(row => formatExact(row.covered.amount))).toEqual(['0', '0']);
   });
   it('ships the exact breakfast snack release and preserves the original 56 recipe snapshot', async () => {
-    const current = production()!.bundledCatalog;
+    const current = sourceApprovedCatalogs.find(catalog => catalog.version === 'mealplan-2026-11-11-2')!;
     expect(current.version).toBe('mealplan-2026-11-11-2');
     expect(current.recipes).toHaveLength(68);
     expect(current.foods).toHaveLength(26);

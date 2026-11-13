@@ -5,7 +5,7 @@ import type { Catalog, FoodProfile, Recipe, SafetyFact } from './catalog';
 import { createPlanInputs, mealSlots } from './plan';
 import type { GenerationResult, PlanInputs } from './plan';
 import { projectPlan } from './planProjection';
-import { decimal, formatExact } from './quantities';
+import { add, compare, decimal, formatExact } from './quantities';
 import { createDraft, dietaryRestrictions } from './settings';
 import type { SettingsDraft } from './settings';
 import { createPlanSearch, variantFingerprint } from './generatePlan';
@@ -48,6 +48,113 @@ function success(result: GenerationResult) {
 }
 function error(result: GenerationResult) { expect(result.status).toBe('error'); if (result.status !== 'error') throw new Error('Expected error'); return result.error; }
 const stock = (amount: string, unit: 'g' | 'ml' = 'g'): readonly PantrySnapshotRow[] => [{ productId: 'rice', expiresSoon: true, quantity: { status: 'known', value: { amount: decimal(amount), unit } } }];
+
+describe('current82 independent weekly acceptance', () => {
+  const seeds = ['11', '23', '37', '53', '71', '89', '107'];
+  const groups = {
+    poultry: ['chicken', 'turkey'], fish: ['pollock', 'cod'], meat: ['beef-mince', 'pork'],
+    legume: ['lentil', 'chickpea-canned', 'bean-canned'], eggOrDairy: ['egg', 'milk', 'yogurt', 'cottage-cheese'],
+  };
+  function inputs(seed: string, variety: SettingsDraft['variety'], change: Partial<SettingsDraft> = {}) {
+    return { ...fixture({ people: '2', days: '7', cookingTime: '30', budget: '6000', variety, ...change }, bundledCatalog), seed };
+  }
+  function metrics(variant: ReturnType<typeof success>['plan']['variants'][number]) {
+    const ids = variant.instances.map(row => row.recipeId);
+    return { ids: new Set(ids).size, families: new Set(ids.map(id => recipeDiversityFor(bundledCatalog.version)?.[id]?.family ?? id)).size,
+      repeats: ids.filter((id, index) => index >= 4 && ids[index - 4] === id).length };
+  }
+  it('proves a full mixed 28-meal witness affordable by independent edible gram price arithmetic', () => {
+    const ids = Array.from({ length: 7 }, () => ['familiar-omelet-tomato-bread', 'familiar-chicken-rice-carrot', 'familiar-lentil-cabbage-tomato', 'familiar-yogurt-apple']).flat();
+    ids[5] = 'familiar-pollock-potato-carrot'; ids[9] = 'familiar-beef-pasta-tomato';
+    let rubles = 0;
+    const products = new Set<string>();
+    for (const id of ids) {
+      const recipe = bundledCatalog.recipes.find(row => row.id === id)!;
+      expect(recipe.cookingMinutes).toBeLessThanOrEqual(30);
+      for (const ingredient of recipe.ingredients) {
+        products.add(ingredient.productId);
+        const price = bundledCatalog.foods.find(row => row.profileId === ingredient.profileId)!.price;
+        if (price.status !== 'known') throw new Error('Witness needs an explicit price');
+        expect(ingredient.quantity.unit).toBe('g'); expect(['g', 'kg']).toContain(price.reference.unit);
+        rubles += Number(ingredient.quantity.amount.numerator) / Number(ingredient.quantity.amount.denominator)
+          * 2 / (Number(recipe.baseServings.numerator) / Number(recipe.baseServings.denominator)) * Number(price.amount)
+          / (Number(price.reference.amount) * (price.reference.unit === 'kg' ? 1000 : 1));
+      }
+    }
+    for (const members of Object.values(groups)) expect(members.some(id => products.has(id))).toBe(true);
+    expect(rubles).toBeCloseTo(Number(sourceOracle.weeklyWitness.ingredientRub), 8);
+    expect(rubles).toBeLessThan(6000);
+    console.info('current82 independent witness RUB', rubles);
+  });
+  it.each(seeds)('returns reproducible medium/max full mixed weeks for independent seed %s', seed => {
+    const byVariety = (['medium', 'max'] as const).map(variety => {
+      const input = { ...inputs(seed, variety), seed };
+      const started = performance.now(); const output = run(input); const selected = success(output.result);
+      if (seed === '11') expect(run(input).result).toEqual(output.result);
+      expect(output.progress.evaluatedCandidates).toBeLessThanOrEqual(512);
+      expect(output.progress.transitions).toBeLessThanOrEqual(200000);
+      for (const variant of selected.plan.variants) {
+        const products = new Set(variant.instances.flatMap(row => row.recipeSnapshot.ingredients.map(ingredient => ingredient.productId)));
+        for (const [group, members] of Object.entries(groups)) expect(members.some(id => products.has(id)), `${seed}/${variety}/${variant.id}/${group}`).toBe(true);
+        expect(new Set(variant.instances.map(row => row.recipeId).filter(id => id.startsWith('familiar-'))).size).toBeGreaterThanOrEqual(5);
+        for (const instance of variant.instances) {
+          expect(instance.recipeSnapshot).toEqual(bundledCatalog.recipes.find(row => row.id === instance.recipeId));
+          expect(instance.recipeSnapshot.cookingMinutes).toBeLessThanOrEqual(30);
+        }
+        const projected = projectPlan(input, variant);
+        if (projected.status !== 'projected') throw new Error('Invalid weekly projection');
+        expect(compare(projected.projection.costs.exact.purchase, decimal('6000'))).toBeLessThanOrEqual(0);
+        expect(add(projected.projection.costs.exact.purchase, projected.projection.costs.exact.covered)).toEqual(projected.projection.costs.exact.ingredient);
+      }
+      console.info('current82 weekly', seed, variety, Math.round(performance.now() - started), output.progress, metrics(selected.plan.variants[0]));
+      return metrics(selected.plan.variants[0]);
+    });
+    expect(byVariety[1].families).toBeGreaterThanOrEqual(byVariety[0].families);
+    expect(byVariety[1].ids).toBeGreaterThanOrEqual(byVariety[0].ids);
+  }, 60_000);
+  it.each([
+    { name: 'vegetarian30', change: { restrictions: ['vegetarian'] }, absent: ['chicken', 'turkey', 'pollock', 'cod', 'beef-mince', 'pork'] },
+    { name: 'plant-only30', change: { exclusionIds: ['chicken', 'turkey', 'pollock', 'cod', 'beef-mince', 'pork', 'egg', 'milk', 'yogurt', 'cottage-cheese'] }, absent: ['chicken', 'turkey', 'pollock', 'cod', 'beef-mince', 'pork', 'egg', 'milk', 'yogurt', 'cottage-cheese'] },
+    { name: 'no-fish30', change: { restrictions: ['no-fish'] }, absent: ['pollock', 'cod'] },
+    { name: 'excluded-poultry30', change: { exclusionIds: ['chicken', 'turkey'] }, absent: ['chicken', 'turkey'] },
+  ])('keeps every current variant hard-admitted for $name', ({ change, absent }) => {
+    const input = inputs('constraints-23', 'max', change);
+    const { plan } = success(run(input, { maxEvaluations: 32 }).result);
+    expect(plan.variants).toHaveLength(3);
+    const fishRecipes = new Set(bundledCatalog.recipes.filter(recipe => recipe.ingredients.some(row => ['pollock', 'cod'].includes(row.productId))).map(row => row.id));
+    expect(fishRecipes).toEqual(new Set(['familiar-pollock-potato-carrot', 'familiar-cod-rice-soup', 'familiar-pollock-yogurt-buckwheat']));
+    for (const variant of plan.variants) {
+      for (const instance of variant.instances) {
+        expect(instance.recipeSnapshot.cookingMinutes).toBeLessThanOrEqual(input.appliedSettings.cookingMinutes!);
+        expect(instance.recipeSnapshot.ingredients.some(row => absent.includes(row.productId))).toBe(false);
+        if (input.appliedSettings.restrictions.includes('no-fish')) expect(fishRecipes.has(instance.recipeId)).toBe(false);
+      }
+      const result = projectPlan(input, variant);
+      if (result.status !== 'projected') throw new Error('Invalid constrained projection');
+      expect(compare(result.projection.costs.exact.purchase, decimal('6000'))).toBeLessThanOrEqual(0);
+    }
+  });
+  it('explains an independently empty 15-minute slot without silently raising the time cap', () => {
+    const input = inputs('fast-15', 'max', { cookingTime: '15' });
+    expect(mealSlots.some(slot => !bundledCatalog.recipes.some(recipe => recipe.cookingMinutes <= 15 && recipe.slots.includes(slot)))).toBe(true);
+    expect(error(run(input).result).code).toBe('NO_RECIPES');
+  });
+  it('keeps unknown package allergen facts separate from no-fish identity evidence', () => {
+    const input = inputs('allergy-37', 'max', { restrictions: ['no-fish'] });
+    expect(error(run(input, { allergenKeys: ['seafood'] }).result).code).toBe('GENERATION_DATA_INCOMPLETE');
+  });
+  it('resists many cheap same-ingredient decoys without losing admitted main groups', () => {
+    const groupIds = ['familiar-omelet-tomato-bread', 'familiar-chicken-rice-carrot', 'familiar-lentil-cabbage-tomato', 'familiar-yogurt-apple', 'familiar-pollock-potato-carrot', 'familiar-beef-pasta-tomato'];
+    const corpus: Catalog = { version: bundledCatalog.version, foods: [food('rice')], recipes: [
+      ...Array.from({ length: 80 }, (_, i) => recipe(`cheap-rice-decoy-${i}`, 'rice', '1')),
+      ...groupIds.map(id => recipe(id, 'rice', '2')),
+    ] };
+    const { plan } = success(run(fixture({ days: '7', variety: 'max', budget: '1000' }, corpus), { maxEvaluations: 32 }).result);
+    for (const variant of plan.variants) for (const id of groupIds.filter(id => id !== 'familiar-yogurt-apple')) {
+      expect(variant.instances.some(row => row.recipeId === id)).toBe(true);
+    }
+  });
+});
 
 describe('source-backed mixed starts', () => {
   function currentInputs(change: Partial<SettingsDraft> = {}, seed = 'mixed-source-11', catalog: Catalog = bundledCatalog) {

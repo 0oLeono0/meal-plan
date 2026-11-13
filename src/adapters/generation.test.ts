@@ -34,6 +34,28 @@ function expectError(result: GenerationResult, code: string) {
 }
 
 describe('compiled version dispatch', () => {
+  it('cancels current82 seven-day search through a real macrotask before any plan escapes', async () => {
+    const applied = buildAppliedSettings({ ...createDraft(), budget: '6000' });
+    if (applied.status !== 'applied') throw new Error('Current settings');
+    const inputs = createPlanInputs(applied.settings, bundledCatalog, { seed: 'current82-cancel' });
+    const controller = new AbortController(); let pending = true, interruptedWhilePending = false;
+    const timer = setTimeout(() => { interruptedWhilePending = pending; controller.abort(); }, 0);
+    const started = performance.now();
+    try {
+      const result = await createVersionedGeneration(sourceApprovedCatalogPorts).generate({ requestId: 'current82-cancel', inputs }, controller.signal);
+      pending = false;
+      expect(result.status).toBe('cancelled'); expect(interruptedWhilePending).toBe(true);
+      expect(performance.now() - started).toBeLessThan(30000);
+    } finally { clearTimeout(timer); }
+  });
+  it('enforces a shorter current82 deadline without publishing a late feasible plan', async () => {
+    const applied = buildAppliedSettings({ ...createDraft(), budget: '6000' });
+    if (applied.status !== 'applied') throw new Error('Current settings');
+    const inputs = createPlanInputs(applied.settings, bundledCatalog, { seed: 'current82-deadline' });
+    const started = performance.now();
+    const result = await createVersionedGeneration(sourceApprovedCatalogPorts, { timeoutMs: 50 }).generate({ requestId: 'current82-deadline', inputs }, new AbortController().signal);
+    expectError(result, 'TIMEOUT'); expect(performance.now() - started).toBeLessThan(30000);
+  });
   it('uses current source-approved release and rejects unknown or changed snapshots', async () => {
     const applied = buildAppliedSettings({ ...createDraft(), days: '1', budget: '2000' });
     if (applied.status !== 'applied') throw new Error('Invalid settings');

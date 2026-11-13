@@ -15,6 +15,9 @@ import safetyEvidence from '../../data/sources/safety.snapshot.json';
 import { historicalCatalog, historicalCatalogPort } from './catalog';
 import release1Raw from '../test/fixtures/phase031-release1-active-plan.json?raw';
 import release2Raw from '../test/fixtures/phase031-release2-active-plan.json?raw';
+import release3Raw from '../test/fixtures/phase031-release3-active-plan.json?raw';
+import dinnerOracle from '../../e2e/fixtures/catalog031-dinners-oracle.json';
+import { recipeDiversityFor } from './recipeDiversity';
 import { sourceApprovedCatalogs, sourceApprovedCatalogPorts } from './catalog';
 import { createVersionedGeneration } from '../adapters/generation';
 import type { PantrySnapshotRow } from '../domain/appliedSettings';
@@ -40,6 +43,48 @@ const modules = import.meta.glob('./catalog.ts', { eager: true });
 // An absent production catalog is an assertion failure, never an import/discovery error.
 const production = () => modules['./catalog.ts'] as { bundledCatalog: Catalog; bundledCatalogPort: Parameters<typeof createLocalGeneration>[0]; validateBundledCatalog: (input: Catalog, sources?: typeof sourceEvidence) => Promise<ReturnType<typeof validateCatalog>> } | undefined;
 describe('source-backed production corpus', () => {
+  it.each(dinnerOracle)('independent dinner source arithmetic and full grams scale once for $id', row => {
+    const base = projectBreakfastSnack([row.id], '2');
+    expect(Object.values(base.familyNutrition).map(formatExact)).toEqual(row.nutrition);
+    expect(formatExact(base.costs.exact.ingredient)).toBe(row.cost);
+    for (const [servings, factor] of [['1', '0.5'], ['2', '1'], ['4', '2']]) {
+      const scaled = projectBreakfastSnack([row.id], servings);
+      expect(Object.values(scaled.familyNutrition).map(formatExact)).toEqual(row.nutrition.map(value => formatExact(multiply(decimal(value), decimal(factor)))));
+      expect(formatExact(scaled.costs.exact.ingredient)).toBe(formatExact(multiply(decimal(row.cost), decimal(factor))));
+      expect(Object.fromEntries(scaled.rows.map(value => [value.productId, formatExact(value.required.amount)]))).toEqual(Object.fromEntries(Object.entries(row.grams).map(([id, grams]) => [id, formatExact(multiply(decimal(String(grams)), decimal(factor)))])));
+    }
+  });
+  it('allocates pork pantry once across repeated dinners at half base and double servings', () => {
+    const pantry: PantrySnapshotRow[] = [{ productId: 'pork', quantity: { status: 'known', value: { amount: decimal('200'), unit: 'g' } }, expiresSoon: false }];
+    for (const [servings, required, purchase] of [['1', '450', '250'], ['2', '900', '700'], ['4', '1800', '1600']]) {
+      const result = projectBreakfastSnack(Array(3).fill('familiar-pork-potato-cabbage'), servings, pantry);
+      const pork = result.rows.find(row => row.productId === 'pork')!;
+      expect([pork.required.amount, pork.covered.amount, pork.purchase.amount].map(formatExact)).toEqual([required, '200', purchase]);
+      expect(formatExact(result.costs.exact.covered)).toBe('120');
+      expect(compare(result.costs.exact.ingredient, add(result.costs.exact.purchase, result.costs.exact.covered))).toBe(0);
+    }
+  });
+  it('freezes issued75 while final82 contains exactly the reviewed8 8 8 6 distinct recipes', async () => {
+    const saved = validateActiveBundle(JSON.parse(release3Raw).plan);
+    expect(saved.status).toBe('valid');
+    if (saved.status !== 'valid') throw new Error('Issued75 must remain trusted');
+    const current = production()!.bundledCatalog;
+    expect(current.version).toBe('mealplan-2026-11-11-4');
+    expect(current.recipes.slice(0, 75)).toEqual(saved.bundle.plan.inputs.catalog.recipes);
+    expect(current.foods.slice(0, 31)).toEqual(saved.bundle.plan.inputs.catalog.foods);
+    const recipes = current.recipes.slice(52);
+    expect(['breakfast', 'lunch', 'dinner', 'snack'].map(slot => recipes.filter(recipe => recipe.slots[0] === slot).length)).toEqual([8, 8, 8, 6]);
+    const metadata = recipeDiversityFor(current.version)!;
+    expect(Object.keys(metadata).sort()).toEqual(recipes.map(recipe => recipe.id).sort());
+    // Proportional aliases share an ingredient-ratio signature even at changed serving mass.
+    const signatures = recipes.map(recipe => {
+      const total = recipe.ingredients.reduce((sum, ingredient) => add(sum, ingredient.quantity.amount), decimal('0'));
+      return recipe.ingredients.map(ingredient => `${ingredient.productId}:${formatExact(divide(ingredient.quantity.amount, total))}`).sort().join('|');
+    });
+    expect(new Set(signatures).size).toBe(30);
+    expect(new Set(Object.values(metadata).map(row => row.family)).size).toBe(30);
+    for (const catalog of sourceApprovedCatalogs) expect((await sourceApprovedCatalogPorts[catalog.version].load()).status).toBe('loaded');
+  });
   it.each<[string, string[], string]>([
     ['familiar-chicken-pasta-soup', ['988.92', '77.636', '16.87', '128.618'], '202.5758533333333294'],
     ['familiar-turkey-balls-buckwheat', ['1011.28', '89.61', '23.384', '122.516'], '343.9009471604938274'],
@@ -73,7 +118,7 @@ describe('source-backed production corpus', () => {
     const saved = validateActiveBundle(JSON.parse(release2Raw).plan);
     expect(saved.status).toBe('valid');
     if (saved.status !== 'valid') throw new Error('Issued68 must remain trusted');
-    const current = production()!.bundledCatalog;
+    const current = sourceApprovedCatalogs.find(catalog => catalog.version === 'mealplan-2026-11-11-3')!;
     expect(current.version).toBe('mealplan-2026-11-11-3');
     expect(current.recipes).toHaveLength(75);
     expect(current.foods).toHaveLength(31);
@@ -97,7 +142,7 @@ describe('source-backed production corpus', () => {
       expect(scaled.rows.map(row => formatExact(row.required.amount))).toEqual(base.rows.map(row => formatExact(multiply(row.required.amount, decimal(factor)))));
     }
   });
-  it.each([['issued56', release1Raw], ['issued68', release2Raw]])('loads selects appends and recreates %s through the real controller after release75', async (_, originalRaw) => {
+  it.each([['issued56', release1Raw], ['issued68', release2Raw], ['issued75', release3Raw]])('loads selects appends and recreates %s through the real controller after release82', async (_, originalRaw) => {
     let raw = originalRaw;
     const storage = { getItem: () => raw, setItem: (_key: string, value: string) => { raw = value; } };
     const controller = createGenerationController({ activePlan: createActivePlanAdapter(() => storage), generation: createVersionedGeneration(sourceApprovedCatalogPorts) });

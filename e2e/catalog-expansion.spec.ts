@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import oracle from './fixtures/catalog031-oracle.json' with { type: 'json' };
 import legacy from '../src/test/fixtures/phase02-active-plan-v1.json' with { type: 'json' };
 import release1 from '../src/test/fixtures/phase031-release1-active-plan.json' with { type: 'json' };
+import release3 from '../src/test/fixtures/phase031-release3-active-plan.json' with { type: 'json' };
 import lunchOracle from './fixtures/catalog031-lunches-oracle.json' with { type: 'json' };
 import dinnerOracle from './fixtures/catalog031-dinners-oracle.json' with { type: 'json' };
 
@@ -118,9 +119,10 @@ test('ordinary-mixed wizard uses current compiled foods and persists append relo
   await page.getByRole('button', { name: 'Составить меню', exact: true }).click();
   await expect(page).toHaveURL(/\/menu$/, { timeout: 32_000 });
   const first = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).plan, activeKey);
-  expect(first.inputs.catalogVersion).toBe('mealplan-2026-11-11-3');
+  expect(first.inputs.catalogVersion).toBe('mealplan-2026-11-11-4');
   expect(first.variants[0].instances.some((row: { recipeId: string }) => futureGroups['breakfast-snack'].includes(row.recipeId))).toBe(true);
-  expect(first.inputs.catalog.recipes).toHaveLength(75);
+  expect(first.inputs.catalog.recipes).toHaveLength(82);
+  expect(first.variants.some((variant: { instances: { recipeId: string }[] }) => variant.instances.some(row => futureGroups.dinners.includes(row.recipeId)))).toBe(true);
   await page.getByRole('button', { name: 'Пересобрать', exact: true }).click();
   await expect(page.getByText('Вариант 4 из 4', { exact: true })).toBeVisible({ timeout: 32_000 });
   const next = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).plan, activeKey);
@@ -131,7 +133,7 @@ test('ordinary-mixed wizard uses current compiled foods and persists append relo
   await expect(page.getByText('Вариант 4 из 4', { exact: true })).toBeVisible();
 });
 
-for (const fixture of [legacy, release1]) test(`legacy ${fixture.plan.inputs.catalogVersion} saved bytes reload and append using their compiled version`, async ({ page }) => {
+for (const fixture of [legacy, release1, release3]) test(`legacy ${fixture.plan.inputs.catalogVersion} saved bytes reload and append using their compiled version`, async ({ page }) => {
   test.setTimeout(65_000);
   await page.goto('/');
   const raw = JSON.stringify(fixture);
@@ -215,7 +217,7 @@ for (const width of [360, 768, 1280]) test(`lunches current release family porti
       })),
     };
   }, lunchOracle.map(row => row.id));
-  expect(saved.version).toBe('mealplan-2026-11-11-3');
+  expect(saved.version).toBe('mealplan-2026-11-11-4');
   expect(saved.instances.map((row: { id: string }) => row.id)).toEqual(lunchOracle.map(row => row.id));
   await page.goto('/menu?view=week');
   await expect(page.getByRole('heading', { level: 1, name: 'Меню на неделю' })).toBeVisible();
@@ -322,6 +324,8 @@ for (const width of [360, 768, 1280]) test(`dinners current release family porti
   await expect(page.getByRole('region', { name: 'Мясо и рыба' }).locator('[data-product-id="pork"]')).toBeVisible();
   await expect(page.getByRole('region', { name: 'Мясо и рыба' }).locator('[data-product-id="pollock"]')).toBeVisible();
   await expect(page.getByRole('region', { name: 'Бакалея' }).locator('[data-product-id="pasta"]')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Бакалея' }).locator('[data-product-id="chickpea-canned"]')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Бакалея' }).locator('[data-product-id="bean-canned"]')).toBeVisible();
   await expect(page.getByText('Цены и КБЖУ примерные', { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
   await page.screenshot({ path: `.tmp/phase031-04-shopping-${width}.png`, fullPage: true });

@@ -1,6 +1,32 @@
 import { expect, it, vi } from 'vitest';
+import { bundledCatalog, bundledCatalogPort, validateBundledCatalog } from '../data/catalog';
+import { validateCatalog } from './catalog';
+import { decimal, formatExact } from '../domain/quantities';
+import { productNames, searchProducts } from './products';
 
 type MutableSource = { foods: { nutrition: { reference: { amount: string }; source: { recordId?: string }; values: Record<string, string> }; safety: unknown }[] };
+
+it('evaluates raw pork and searches all32 identities without inventing piece or volume conversion', async () => {
+  expect(productNames).toHaveLength(32);
+  expect(searchProducts('свиная вырезка').map(row => row.id)).toContain('pork');
+  expect(searchProducts('свиная вырезка')[0].allowedUnits).toEqual(['g', 'kg']);
+  const result = await bundledCatalogPort.evaluate({ productId: 'pork', profileId: 'usda-168249-raw', quantity: { amount: decimal('300'), unit: 'g' } });
+  expect(result.status).toBe('evaluated');
+  if (result.status !== 'evaluated') throw new Error('Final source profile is unavailable');
+  expect(Object.values(result.nutrition).map(formatExact)).toEqual(['327', '62.85', '6.51', '0']);
+  expect(result.price.status).toBe('known');
+  if (result.price.status === 'known') expect(formatExact(result.price.amount)).toBe('180');
+  for (const unit of ['ml', 'pcs'] as const) expect((await bundledCatalogPort.evaluate({ productId: 'pork', profileId: 'usda-168249-raw', quantity: { amount: decimal('1'), unit } })).status).toBe('invalid');
+});
+
+it('admits the real82 corpus within unchanged ceilings and refuses oversized untrusted input', async () => {
+  expect(validateCatalog(bundledCatalog).status).toBe('loaded');
+  expect((await validateBundledCatalog(bundledCatalog)).status).toBe('loaded');
+  expect(validateCatalog({ ...bundledCatalog, recipes: Array(5001).fill(bundledCatalog.recipes[0]) })).toMatchObject({ status: 'invalid', diagnostics: [{ code: 'CATALOG_SIZE_LIMIT' }] });
+  expect(validateCatalog({ ...bundledCatalog, version: 'v'.repeat(4097) })).toMatchObject({ status: 'invalid', diagnostics: [{ code: 'CATALOG_SIZE_LIMIT' }] });
+  const forged = { ...bundledCatalog, version: 'stale-unregistered82' };
+  expect((await validateBundledCatalog(forged)).status).toBe('invalid');
+});
 
 async function modules() {
   const adapter = await vi.importActual<typeof import('./catalog')>('./catalog').catch(() => null);

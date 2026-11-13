@@ -6,6 +6,52 @@ const originals = import.meta.glob('../../data/sources/*.snapshot.json', { query
 const read = (name: string) => JSON.parse(String(originals[`../../data/sources/${name}.snapshot.json`]));
 const hash = async (value: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))), byte => byte.toString(16).padStart(2, '0')).join('');
 describe('archived primary sources', () => {
+  it('rejects independent source basis price identity safety and hash mutations for every new profile', async () => {
+    for (const [index, original] of manifest.records.entries()) {
+      const mutations: ((data: typeof manifest) => void)[] = [
+        data => { data.records[index].state = 'wrong-cooked-state'; },
+        data => { data.records[index].reference.amount = '1'; },
+        data => { data.records[index].price.currency = 'USD'; },
+        data => { data.records[index].price.observedQuantity.unit = 'pcs'; },
+        data => { data.records[index].price.observedAt = '2000-01-01'; },
+        data => { data.records[index].price.scope = 'unverified scope'; },
+        data => { data.records[index].price.amount = '0.01'; },
+        data => { data.records[index].price.sha256 = '0'.repeat(64); },
+        data => { data.records[index].nutrition.sha256 = '0'.repeat(64); },
+        data => { const row = data.records[index]; if (row.nutrition.nutrients) row.nutrition.nutrients[0].amount = '999'; else row.nutrition.values!.calories = '999'; },
+        data => { data.records[index].safety.facts[0].suitable = !original.safety.facts[0].suitable; },
+        data => { data.records[index].safety.unknown = []; },
+        data => { data.records[index].safety.sha256 = '0'.repeat(64); },
+        data => { data.records.splice(index, 1); },
+        data => { data.records.push(data.records[index]); },
+      ];
+      for (const mutate of mutations) {
+        const changed = structuredClone(manifest);
+        mutate(changed);
+        expect((await validateExpandedCatalog(bundledCatalog, changed)).status, original.profileId).toBe('invalid');
+      }
+      expect(original.safety.unknown).toEqual(['halal', 'gluten-free', 'lactose-free', 'allergen-guarantees']);
+      expect(original.safety.facts.map(fact => [fact.kind, fact.key, fact.suitable])).toEqual([
+        ['restriction', 'no-fish', !['pollock', 'cod'].includes(original.productId)],
+        ['restriction', 'vegetarian', !['chicken', 'turkey', 'pollock', 'cod', 'beef-mince', 'pork'].includes(original.productId)],
+      ]);
+    }
+  });
+  it('rejects stale final release membership and forged pork cooking guidance', async () => {
+    for (const mutate of [
+      (data: typeof manifest) => { data.releases[3].recipeIds.pop(); },
+      (data: typeof manifest) => { data.releases[3].profileIds.push(data.releases[3].profileIds[0]); },
+      (data: typeof manifest) => { data.releases[3].version = 'unreviewed-version'; },
+      (data: typeof manifest) => { data.porkCookingGuidance.temperatureC = '40'; },
+      (data: typeof manifest) => { data.porkCookingGuidance.restMinutes = '0'; },
+    ]) {
+      const changed = structuredClone(manifest);
+      mutate(changed);
+      expect((await validateExpandedCatalog(bundledCatalog, changed)).status).toBe('invalid');
+    }
+    expect(manifest.porkCookingGuidance).toMatchObject({ temperatureC: '63', restMinutes: '3' });
+    expect(await hash(manifest.porkCookingGuidance.originalEvidence)).toBe(manifest.porkCookingGuidance.sha256);
+  });
   it('pins final82 dinners membership and independent raw pork source facts', async () => {
     const data = read('phase031');
     const pork = data.records.find((row: { productId: string }) => row.productId === 'pork');

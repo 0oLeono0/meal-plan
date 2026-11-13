@@ -1,11 +1,34 @@
 import { describe, expect, it } from 'vitest';
 import manifest from '../../data/sources/phase031.snapshot.json';
-import { bundledCatalog } from './catalog';
+import { bundledCatalog, sourceApprovedCatalogs } from './catalog';
 import { validateExpandedCatalog } from './catalogExpansion';
 const originals = import.meta.glob('../../data/sources/*.snapshot.json', { query: '?raw', import: 'default', eager: true });
 const read = (name: string) => JSON.parse(String(originals[`../../data/sources/${name}.snapshot.json`]));
 const hash = async (value: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))), byte => byte.toString(16).padStart(2, '0')).join('');
 describe('archived primary sources', () => {
+  it('pins final82 dinners membership and independent raw pork source facts', async () => {
+    const data = read('phase031');
+    const pork = data.records.find((row: { productId: string }) => row.productId === 'pork');
+    expect(pork, 'the final raw edible pork profile must be acquired').toBeDefined();
+    expect(pork.profileId).toBe('usda-168249-raw');
+    expect(pork.identity).toBe('Pork, fresh, loin, tenderloin, separable lean only, raw');
+    expect(pork.state).toBe('raw');
+    expect(pork.reference).toEqual({ amount: '100', unit: 'g', basis: 'edible' });
+    expect(['1008', '1003', '1004', '1005'].map(id => pork.nutrition.nutrients.find((n: { nutrient_id: string }) => n.nutrient_id === id).amount)).toEqual(['109', '20.95', '2.17', '0']);
+    expect(await hash(pork.nutrition.originalCsv)).toBe(pork.nutrition.sha256);
+    expect(pork.price).toMatchObject({ amount: '600', observedAmount: '549', currency: 'RUB', scope: 'Санкт-Петербург, интернет-витрина МясоСторе', targetScope: 'Санкт-Петербург', observedAt: '2026-11-13', estimate: true });
+    expect(pork.safety.facts.map((fact: { suitable: boolean }) => fact.suitable)).toEqual([true, false]);
+    expect(data.records).toHaveLength(20);
+    expect(data.records.filter((row: { nutrition: { kind: string } }) => row.nutrition.kind === 'usda')).toHaveLength(19);
+    expect(bundledCatalog.version).toBe('mealplan-2026-11-11-4');
+    expect(bundledCatalog.recipes).toHaveLength(82);
+    expect(bundledCatalog.foods).toHaveLength(32);
+    const issued75 = sourceApprovedCatalogs.find(catalog => catalog.version === 'mealplan-2026-11-11-3')!;
+    expect(bundledCatalog.recipes.slice(0, 75)).toEqual(issued75.recipes);
+    expect(bundledCatalog.foods.slice(0, 31)).toEqual(issued75.foods);
+    expect(bundledCatalog.recipes.slice(75).map(recipe => recipe.id)).toEqual(['pollock-yogurt-buckwheat', 'pork-potato-cabbage', 'lazy-cabbage-rolls', 'turkey-pasta-tomato', 'chickpea-tomato-rice', 'bean-potato-stew', 'potato-tomato-frittata'].map(id => `familiar-${id}`));
+    expect((await validateExpandedCatalog(bundledCatalog)).status).toBe('loaded');
+  });
   it('pins five lunch raw dry profiles and complete issued75 membership', async () => {
     const data = read('phase031');
     for (const [productId, fdcId, state, values, price] of [
@@ -29,10 +52,10 @@ describe('archived primary sources', () => {
       expect(await hash(row.safety.originalEvidence)).toBe(row.safety.sha256);
       expect(row.safety.facts.map((fact: { suitable: boolean }) => fact.suitable)).toEqual([!['pollock', 'cod'].includes(productId), productId === 'pasta']);
     }
-    expect(bundledCatalog.version).toBe('mealplan-2026-11-11-3');
-    expect(bundledCatalog.recipes).toHaveLength(75);
-    expect(bundledCatalog.foods).toHaveLength(31);
-    expect((await validateExpandedCatalog(bundledCatalog)).status).toBe('loaded');
+    const issued75 = sourceApprovedCatalogs.find(catalog => catalog.version === 'mealplan-2026-11-11-3')!;
+    expect(issued75.recipes).toHaveLength(75);
+    expect(issued75.foods).toHaveLength(31);
+    expect((await validateExpandedCatalog(issued75)).status).toBe('loaded');
   });
   it.each<[string, (data: typeof manifest) => void]>([
     ['observed scope', data => { data.records[8].price.scope = 'Санкт-Петербург verified'; }],

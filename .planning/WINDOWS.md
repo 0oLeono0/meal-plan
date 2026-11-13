@@ -2,9 +2,9 @@
 schema_version: 1
 open_count: 8
 waived_count: 0
-fixed_count: 19
-total_count: 27
-last_updated: 2026-11-12T12:47:12.952Z
+fixed_count: 20
+total_count: 28
+last_updated: 2026-11-13T08:19:32.994Z
 ---
 
 # Broken Windows Ledger
@@ -42,6 +42,7 @@ last_updated: 2026-11-12T12:47:12.952Z
 | 25 | 03 | unmet-truth | e2e/phase03-recipes.spec.ts |  | Windows WebKit real Tab recipe path omits exact meal-card anchor; retained assertion failed08Nov before recipe entry; native Safari15 keyboard and AT remain unverified, related WINDOWS15/16 | open |  | 2026-11-08T06:46:35.389Z |  |
 | 26 | 03 | unrun-verify | docs/qa/phase03-accessibility.md |  | Phase03 native Safari15/device/AT, real safe-area and browser200percent zoom human checks remain unverified; automated text enlargement and Windows WebKit are not substitutes | open |  | 2026-11-08T06:46:58.550Z |  |
 | 27 | 03.1 | deviation | src/domain/generatePlan.test.ts |  | Versioned regression fixtures preserve issued56 exact goldens and validate current68 diversity; resolved in plan02 | fixed |  | 2026-11-12T12:46:31.899Z | 2026-11-12T12:47:12.952Z |
+| 28 | 03.1 | deviation | src/features/shopping/ShoppingPage.tsx | 13 | Lunch release adds store category aliases for meat poultry and dry pasta; independent browser category assertions verified after meaningful RED | fixed |  | 2026-11-13T08:19:23.077Z | 2026-11-13T08:19:32.994Z |
 
 ````json
 [
@@ -394,6 +395,19 @@ last_updated: 2026-11-12T12:47:12.952Z
     "reason": "",
     "recorded_at": "2026-11-12T12:46:31.899Z",
     "resolved_at": "2026-11-12T12:47:12.952Z",
+    "milestone": "v1.0"
+  },
+  {
+    "id": 28,
+    "kind": "deviation",
+    "phase": "03.1",
+    "file": "src/features/shopping/ShoppingPage.tsx",
+    "line": 13,
+    "description": "Lunch release adds store category aliases for meat poultry and dry pasta; independent browser category assertions verified after meaningful RED",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-11-13T08:19:23.077Z",
+    "resolved_at": "2026-11-13T08:19:32.994Z",
     "milestone": "v1.0"
   }
 ]

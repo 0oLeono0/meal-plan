@@ -4,18 +4,17 @@ milestone: v1.0
 milestone_name: P0 MVP
 current_phase: "03.1"
 current_phase_name: Разнообразный каталог привычных блюд
-current_plan: 4
+current_plan: 5
 status: executing
-stopped_at: Completed 03.1-03-PLAN.md; next 03.1-04, phase 3/8 complete
-last_updated: "2026-11-13T08:22:38.073Z"
+stopped_at: Completed 03.1-04-PLAN.md; next03.1-05, phase4/8 complete
+last_updated: "2026-11-13T08:45:20.714Z"
 last_activity: 2026-11-13
-last_activity_desc: 03.1-03 complete, next 03.1-04, 3/8 plans
-state_head: 9c350eacff8f21604d6a3971d840490a69972fbf
+state_head: 07ea96dc71282d08a5c60bf223fa23e205a4fc34
 progress:
   total_phases: 8
   completed_phases: 3
   total_plans: 38
-  completed_plans: 33
+  completed_plans: 34
 ---
 
 # Project State
@@ -25,15 +24,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-30)
 
 **Core value:** Допустимое меню с прозрачным бюджетом и согласованные покупки с количественным учётом домашних запасов.
-**Current focus:** Phase 03.1 — Разнообразный каталог привычных блюд, выполнен 03/08, следующий 04
+**Current focus:** Phase03.1 — Разнообразный каталог привычных блюд, выполнен04/08, следующий05
 
 ## Current Position
 
 Phase: 03.1 — Разнообразный каталог привычных блюд
-Current Plan: 4
+Current Plan: 5
 Total Plans in Phase: 8
 Status: Ready to execute
-Last activity: 2026-11-13 — 03.1-03 complete, next 03.1-04, 3/8 plans
+Last activity: 2026-11-13
 
 Progress: [████░░░░░░] 38%
 
@@ -91,6 +90,7 @@ Progress: [████░░░░░░] 38%
 | Phase 03.1 P01 | 30min | 3 tasks | 23 files |
 | Phase 03.1 P02 | 19min | 2 tasks | 19 files |
 | Phase 03.1 P03 | 1166min wall; interruption included; active unknown | 2 tasks | 11 files |
+| Phase 03.1 P04 | 18min | 2 tasks | 18 files |
 
 ## Accumulated Context
 
@@ -131,6 +131,8 @@ Progress: [████░░░░░░] 38%
 - [Phase 03.1]: 03.1-01 shipped current56/20 alongside immutable historical52/12; generation dispatch uses compiled release ports and bounded mixed starts, CAT acceptance remains pending.
 - [Phase 03.1]: 03.1-02 ships current68/26 alongside immutable issued56 and historical52; label-derived tvorog and separate drained legume IDs preserve sourced basis and pantry units.
 - [Phase 03.1]: Current75 preserves issued52/56/68 snapshots. Fish95percent assumption affects estimated edible price only, raw nutrition uses weighed thawed deboned flesh.
+- [Phase 03.1]: Final82 preserves issued75 bytes and source facts while52/56/68/75 remain trusted and version-dispatched
+- [Phase 03.1]: Raw lean pork USDA168249 uses explicit600RUB/kg estimate from SPb549RUB/kg observation; reviewed D2/D3 durations35/45min
 
 ### Pending Todos
 
@@ -164,6 +166,6 @@ Progress: [████░░░░░░] 38%
 
 ## Session Continuity
 
-Last session: 2026-11-13T08:22:09.458Z
-Stopped at: Completed 03.1-03-PLAN.md; next 03.1-04, phase 3/8 complete
-Resume file: .planning/phases/03.1-raznoobraznyy-katalog-privychnyh-blyud/03.1-04-PLAN.md
+Last session: 2026-11-13T08:44:18.064Z
+Stopped at: Completed 03.1-04-PLAN.md; next03.1-05, phase4/8 complete
+Resume file: None

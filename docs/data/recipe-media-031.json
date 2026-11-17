@@ -103,5 +103,83 @@
     "height": 1086,
     "bytes": 2458364,
     "sha256": "2c99018426cc9ae093c33b6731aae40265c77c72b39867cad83327ee93422dba"
+  },
+  {
+    "recipeId": "familiar-buckwheat-egg-carrot",
+    "catalogVersion": "mealplan-2026-11-11-2",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-2",
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-buckwheat-egg-carrot.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8bd-3320-7981-87b0-9e11c09b5ca4/exec-b00ccdae-6792-4799-8d8c-21b125c082f3.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-buckwheat-egg-carrot, «Гречка с яйцом и тушёной морковью». Exact two-serving recipe: dry buckwheat groats 140 g, egg without shells 150 g, carrot 180 g, onion 60 g, vegetable oil 12 g, salt 2 g. Boil buckwheat covered in 280 ml water 15–20 minutes until soft then rest 3 minutes. Finely chop carrot and onion, saute in all oil 4 minutes then stew with 60 ml water 7–8 minutes. Pour beaten salted egg into the soft vegetables and stir 3–4 minutes until fully set to 71 C. Serve buckwheat alongside scrambled egg mixed with softened carrot and onion, including all pan juices. Show one complete serving on a simple neutral ceramic plate, distinct cooked brown buckwheat grains on one side, fully set golden scrambled egg with small orange carrot and translucent onion on the other, modest oily cooking juices. Natural home-cooked texture and daylight. No fried whole egg, raw egg, herbs, green garnish, cheese, tomato, bread, sauces or extra ingredients. No text, brands or watermark. Generated illustration, no actual cooking claim.",
+    "generatedAt": "2026-11-17T09:07:58Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:08:38Z",
+      "notes": "Native image individually viewed against recipe. Cooked buckwheat side plus fully set scrambled egg mixed with carrot and translucent onion, pan juices included. No extra garnish. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2717463,
+    "sha256": "155275b197ff06f74e83a86f58d8ed3c1d2f710df189c606efea95806c180c9a"
+  },
+  {
+    "recipeId": "familiar-oat-pancake-yogurt",
+    "catalogVersion": "mealplan-2026-11-11-2",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-2",
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-oat-pancake-yogurt.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8bd-3320-7981-87b0-9e11c09b5ca4/exec-aa0467d2-da12-4493-a7b9-469224db9926.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-oat-pancake-yogurt, «Овсяноблин с йогуртом и яблоком». Two-serving recipe: rolled oats ground into flour 100 g, egg without shells 100 g, milk 120 g, plain yogurt 100 g, cored apple with skin 160 g, vegetable oil 8 g. Mix ground oats egg milk, rest 5 minutes. Cut apple into thin slices. Cook two thin pancakes separately using 4 g oil each for 3–4 minutes on each side, fully set 71 C. Put half yogurt and half apple onto each pancake, fold in half and serve immediately. Show one complete serving as one thin golden oat pancake folded in half with a modest layer of plain white yogurt and thin skin-on apple slices visible inside the opening. Plain ceramic plate, neutral table, natural homemade texture, soft daylight. No extra cream dollop or sides, no berries, honey, syrup, nuts, cinnamon, powdered sugar, mint or other garnish. No text brands watermark. Only listed ingredients. Generated illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:08:55Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:09:33Z",
+      "notes": "Native output individually viewed beside recipe. One folded golden oat pancake with plain yogurt and thin skin-on apple slices inside. No extra sides or toppings. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2473257,
+    "sha256": "f7a1982a27e25e2a6a5f493952a9a8c42f7e660b16004ae54160a4d91015d766"
+  },
+  {
+    "recipeId": "familiar-chickpea-pancakes",
+    "catalogVersion": "mealplan-2026-11-11-2",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-2",
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-chickpea-pancakes.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8bd-3320-7981-87b0-9e11c09b5ca4/exec-66ad9168-29c8-4cee-b122-0b673ae82f4f.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-chickpea-pancakes, «Растительные оладьи из нута с томатом». Two-serving recipe: canned chickpeas drained and rinsed 300 g, wheat flour 50 g, tomatoes 200 g, vegetable oil 12 g, salt 2 g, water 40–60 ml. Mash drained cooked chickpeas to paste, mix all flour salt water, form eight thin pancakes about 5 mm thick. Fry gently with all oil in two batches 3–4 minutes each side until golden crisp and firm hot middle. Serve four pancakes per person with half the fresh chopped tomatoes and their juice and allocated pan oil. Show one complete serving of exactly four thin irregular golden beige chickpea patties and a generous side of fresh red tomato chunks with juice on a simple neutral ceramic plate. Coarse chickpea texture, natural homemade daylight. No egg, milk, yogurt, sauces, garlic, green herbs, lettuce, cucumber, lemon or garnish. No text brands watermark. Only listed ingredients, AI illustration, no actual cooking claim.",
+    "generatedAt": "2026-11-17T09:09:44Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:10:30Z",
+      "notes": "Native output individually inspected. Four thin golden chickpea pancakes, coarse mashed texture, fresh tomato side with juices and light oil. No dairy, herbs or additional garnish. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2824887,
+    "sha256": "1da607bcb64090563026df808c35fc134179eff81e99a5768af7da31da39048e"
   }
 ]

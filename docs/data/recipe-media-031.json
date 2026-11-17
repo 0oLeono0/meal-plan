@@ -181,5 +181,83 @@
     "height": 1086,
     "bytes": 2824887,
     "sha256": "1da607bcb64090563026df808c35fc134179eff81e99a5768af7da31da39048e"
+  },
+  {
+    "recipeId": "familiar-water-oats-apple",
+    "catalogVersion": "mealplan-2026-11-11-2",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-2",
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-water-oats-apple.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8bd-3320-7981-87b0-9e11c09b5ca4/exec-cadfbd60-d1fc-48cd-bdeb-33b3308e7601.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-water-oats-apple, «Тёплая овсяная каша с яблоком на воде». Exact recipe for two servings: dry rolled oats 140 g, apple with skin without core 240 g, sugar 12 g, salt 1 g, water 500 ml. Coarsely grate the skin-on apple. Boil oats with water sugar salt 5–7 minutes until soft. Remove from heat, fold in all grated raw apple, cover 3 minutes so apple warms with residual heat. Divide all porridge into two bowls. Show one complete serving in a simple neutral ceramic bowl, warm beige water-cooked oat porridge with visible soft flakes and fine pale grated apple strands and tiny red skin flecks mixed throughout. Moist coarse homemade texture, gentle daylight on a plain neutral table. No milk, butter, oil, cream, yogurt, separate apple cubes or slices, cinnamon, berries, nuts, herbs, sauces or garnish. No text brand watermark. Only listed ingredients. Generated illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:10:46Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:11:24Z",
+      "notes": "Native image individually inspected against water-oats method. Beige moist cooked flakes with coarse grated apple strands and red skin flecks mixed in, no milk, separate fruit slices or toppings. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2371211,
+    "sha256": "83945f8842a8ae0d44bf747775bb7c0ef8fe46d32f135e6e8d05ba8def39100f"
+  },
+  {
+    "recipeId": "familiar-chicken-rice-carrot",
+    "catalogVersion": "mealplan-2026-11-11-1",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-1",
+      "mealplan-2026-11-11-2",
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-chicken-rice-carrot.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8bd-3320-7981-87b0-9e11c09b5ca4/exec-99bba88d-ef6a-4b00-bc1a-c28a15c3eb88.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-chicken-rice-carrot, «Куриное филе с рисом и морковью». Exact recipe for two portions: raw skinless boneless chicken breast 300 g, dry white rice 140 g, carrot 200 g, onion 80 g, vegetable oil 14 g, salt 3 g. Boil rice in 280 ml water 15–18 minutes until soft. Grate carrot, finely chop onion, cut chicken into 2 cm chunks. Saute carrot onion in all oil 4–5 minutes, add chicken salt and 100 ml water, cover and stew 12–15 minutes until chicken reaches 74 C. Serve all cooked rice beside chicken, vegetables and all moist pan sauce. Show one complete serving on a simple neutral ceramic plate with distinct soft white rice grains and separate fully cooked chicken breast chunks coated in soft grated orange carrot and translucent onion with modest golden pan juices. Soft daylight, neutral table, plausible home-cooked texture. No tomato, pepper, curry, cream, butter, herbs, green garnish, extra sauce, salad, bread, lemon or other ingredients. No text brands watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:11:34Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:12:14Z",
+      "notes": "Native output individually viewed against recipe. Complete white rice side, cooked chicken chunks with grated soft carrot, onion and pan juices. No extra herbs or sauce. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2446754,
+    "sha256": "3f4c019b79f77e6a96350e5503bc7e5a7a63882e936a04c1c6e37829e6db3dfa"
+  },
+  {
+    "recipeId": "familiar-chicken-pasta-soup",
+    "catalogVersion": "mealplan-2026-11-11-3",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-chicken-pasta-soup.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8bd-3320-7981-87b0-9e11c09b5ca4/exec-31bb2e15-0db0-4ab7-aad1-57891b6dbdfe.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-chicken-pasta-soup, «Куриный суп с макаронами и овощами». Exact two-serving recipe: raw skinless boneless chicken breast 260 g, dry small pasta 100 g, peeled potato 200 g, carrot 120 g, onion 80 g, vegetable oil 8 g, salt 3 g, water 850 ml. Cut potato in 1 cm cubes, carrot thin quarter-rounds, onion finely, chicken in 1.5 cm cubes. Saute onion carrot in all oil 4–5 minutes. Add chicken potato salt hot water, simmer 10 minutes then add dry small pasta and simmer 8–10 minutes until soft pasta and potato and fully cooked chicken 74 C. Divide all soup including broth vegetables chicken and pasta into two portions. Show one complete serving in a deep plain ceramic bowl. Light golden broth with small cooked chicken cubes, short small pasta, potato cubes, orange carrot quarter-rounds, translucent onion and tiny oil droplets. Natural homemade soup texture, soft daylight on neutral table. No parsley dill or green garnish, no peppercorns, bay leaf, tomato, cream, bread, lemon or other ingredients. No text brands watermark. Generated illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:12:25Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:13:05Z",
+      "notes": "Native image individually reviewed against recipe. Golden soup broth with cooked chicken, short pasta, potato cubes, carrot quarter-rounds, onion and oil droplets. No herbs or extra sides. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2435235,
+    "sha256": "d8f2390d79675cb0fa00fecbf7c54fdfad2d994892947a32abc639588da0d982"
   }
 ]

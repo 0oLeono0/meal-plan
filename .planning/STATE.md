@@ -4,18 +4,18 @@ milestone: v1.0
 milestone_name: P0 MVP
 current_phase: "03.1"
 current_phase_name: Разнообразный каталог привычных блюд
-current_plan: 6
+current_plan: 7
 status: executing
-stopped_at: Completed 03.1-05-PLAN.md; next03.1-06, phase5/8 complete
-last_updated: "2026-11-13T09:10:57.240Z"
-last_activity: 2026-11-13
-last_activity_desc: 03.1-05 complete, next03.1-06,5/8 plans
-state_head: 6e1663ba0ebd0c248d276312ebc08dc9eec246e4
+stopped_at: Completed 03.1-06-PLAN.md; next03.1-07, phase6/8 complete
+last_updated: "2026-11-17T09:26:03.083Z"
+last_activity: 2026-11-17
+last_activity_desc: 03.1-06 complete, next03.1-07,6/8 plans
+state_head: 4a0cad5611b7cd1062dbd47f170032ab606d197b
 progress:
   total_phases: 8
   completed_phases: 3
   total_plans: 38
-  completed_plans: 35
+  completed_plans: 36
 ---
 
 # Project State
@@ -25,17 +25,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-10-30)
 
 **Core value:** Допустимое меню с прозрачным бюджетом и согласованные покупки с количественным учётом домашних запасов.
-**Current focus:** Phase03.1 — Разнообразный каталог привычных блюд, выполнен05/08, следующий06
+**Current focus:** Phase03.1 — Разнообразный каталог привычных блюд, выполнен06/08, следующий07
 
 ## Current Position
 
 Phase: 03.1 — Разнообразный каталог привычных блюд
-Current Plan: 6
+Current Plan: 7
 Total Plans in Phase: 8
 Status: Ready to execute
-Last activity: 2026-11-13
+Last activity: 2026-11-17
 
-Last Activity Description: 03.1-05 complete, next03.1-06,5/8 plans
+Last Activity Description: 03.1-06 complete, next03.1-07,6/8 plans
 
 Progress: [████░░░░░░] 38%
 
@@ -95,6 +95,7 @@ Progress: [████░░░░░░] 38%
 | Phase 03.1 P03 | 1166min wall; interruption included; active unknown | 2 tasks | 11 files |
 | Phase 03.1 P04 | 18min | 2 tasks | 18 files |
 | Phase 03.1 P05 | 21min observed; initial reads unrecorded | 2 tasks | 7 files |
+| Phase 03.1 P06 | 4days wall;22min resumed observed; active unknown | 2 tasks | 15 files |
 
 ## Accumulated Context
 
@@ -138,6 +139,7 @@ Progress: [████░░░░░░] 38%
 - [Phase 03.1]: Final82 preserves issued75 bytes and source facts while52/56/68/75 remain trusted and version-dispatched
 - [Phase 03.1]: Raw lean pork USDA168249 uses explicit600RUB/kg estimate from SPb549RUB/kg observation; reviewed D2/D3 durations35/45min
 - [Phase 03.1]: Existing current82 bounded search verified by seven-seed independent mixed-week matrix; preserve production implementation and hard limits
+- [Phase 03.1]: Media source-version and support versions are separate. Historical aggregate provenance is pinned and all five compiled release manifests resolve local assets.
 
 ### Pending Todos
 
@@ -171,6 +173,6 @@ Progress: [████░░░░░░] 38%
 
 ## Session Continuity
 
-Last session: 2026-11-13T09:10:48.840Z
-Stopped at: Completed 03.1-05-PLAN.md; next03.1-06, phase5/8 complete
+Last session: 2026-11-17T09:25:41.394Z
+Stopped at: Completed 03.1-06-PLAN.md; next03.1-07, phase6/8 complete
 Resume file: None

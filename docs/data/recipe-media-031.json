@@ -481,5 +481,29 @@
     "height": 1086,
     "bytes": 2981027,
     "sha256": "dc09f71b1ba691995c0cb0d1c623a20e5ecfab313176f6cdec4066d7b2e932ba"
+  },
+  {
+    "recipeId": "familiar-turkey-pasta-tomato",
+    "catalogVersion": "mealplan-2026-11-11-4",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-turkey-pasta-tomato.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-0dea594a-1873-44b9-a9a8-b1bba0fd47fe.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-turkey-pasta-tomato, «Индейка с макаронами и тушёными томатами». Exact two-serving recipe: skinless turkey breast 300 g in 1.5 cm pieces, dry wheat pasta 160 g, tomato 280 g diced, carrot 160 g grated, vegetable oil 12 g, salt 3 g. Boil pasta separately. Heat turkey and carrots in all oil 4–5 minutes, add tomatoes and 100 ml water, simmer covered 10–12 minutes until turkey fully cooked. Mix drained pasta into turkey-carrot-tomato sauce, loosen with a little reserved pasta water, serve full mixture. Show cooked short pasta mingled with distinct pale turkey breast chunks, fine orange grated carrot and softened red tomato, all glossy sauce served. No onion, no cheese. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:37:41Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:38:28Z",
+      "notes": "Native output individually inspected against ingredients and steps. Distinct cooked turkey breast pieces, short pasta, grated carrot and softened tomato with full glossy sauce, no cheese or extra side. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2635358,
+    "sha256": "eda6201b2f70f34f1619d719e25bf74c111e138f3117e31dcdb49457269a94ab"
   }
 ]

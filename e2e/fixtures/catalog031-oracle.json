@@ -177,5 +177,105 @@
     },
     "elapsedMs": 3384.2999999998137,
     "derivation": "Recorded unchanged historical52 search path at a569e65 before any production edit in03.1-05. Fixed real-default-proof seed and2026-10-28 date. Semantic fingerprints exclude opaque IDs."
+  },
+  "fourPortionCase": {
+    "derivation": "Independent Python Decimal over original source price strings and literal recipe grams. Double base2 ingredients and nutrition, subtract chicken200g once. Half-up each aggregate product row before summing display kopecks. No production imports.",
+    "servings": "4",
+    "familyNutrition": [
+      "5686.88",
+      "347.068",
+      "162.836",
+      "720.132"
+    ],
+    "costs": {
+      "ingredient": "1402.5727449382715968",
+      "covered": "122.0000000000000",
+      "purchase": "1280.5727449382715968"
+    },
+    "kopecks": {
+      "ingredient": 140257,
+      "covered": 12200,
+      "purchase": 128057
+    },
+    "rows": [
+      {
+        "id": "egg",
+        "required": "400",
+        "covered": "0",
+        "purchase": "400"
+      },
+      {
+        "id": "tomato",
+        "required": "1000",
+        "covered": "0",
+        "purchase": "1000"
+      },
+      {
+        "id": "bread",
+        "required": "240",
+        "covered": "0",
+        "purchase": "240"
+      },
+      {
+        "id": "oil",
+        "required": "72",
+        "covered": "0",
+        "purchase": "72"
+      },
+      {
+        "id": "salt",
+        "required": "16",
+        "covered": "0",
+        "purchase": "16"
+      },
+      {
+        "id": "chicken",
+        "required": "600",
+        "covered": "200",
+        "purchase": "400"
+      },
+      {
+        "id": "rice",
+        "required": "280",
+        "covered": "0",
+        "purchase": "280"
+      },
+      {
+        "id": "carrot",
+        "required": "400",
+        "covered": "0",
+        "purchase": "400"
+      },
+      {
+        "id": "onion",
+        "required": "320",
+        "covered": "0",
+        "purchase": "320"
+      },
+      {
+        "id": "lentil",
+        "required": "280",
+        "covered": "0",
+        "purchase": "280"
+      },
+      {
+        "id": "cabbage",
+        "required": "400",
+        "covered": "0",
+        "purchase": "400"
+      },
+      {
+        "id": "yogurt",
+        "required": "600",
+        "covered": "0",
+        "purchase": "600"
+      },
+      {
+        "id": "apple",
+        "required": "400",
+        "covered": "0",
+        "purchase": "400"
+      }
+    ]
   }
 }

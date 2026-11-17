@@ -27,6 +27,43 @@ function fixture(pantry: readonly PantrySnapshotRow[] = [], foods: readonly Food
 }
 const stock = (amount: string, unit: 'g' | 'kg' | 'ml' = 'g'): readonly PantrySnapshotRow[] => [{ productId: 'rice', quantity: { status: 'known', value: { amount: decimal(amount), unit } }, expiresSoon: true }];
 
+it('current82 four-person repeated lunches retain exact family nutrition and spend200g stock once', () => {
+  const applied = buildAppliedSettings({ ...createDraft(), people: '4', days: '2' });
+  if (applied.status !== 'applied') throw new Error('Four-person settings');
+  const inputs = createPlanInputs(applied.settings, bundledCatalog, { seed: 'four-portion-ledger', now: () => new Date(2026, 10, 17), pantrySnapshot: [
+    { productId: 'chicken', quantity: { status: 'known', value: { amount: decimal('0.2'), unit: 'kg' } }, expiresSoon: false },
+  ] });
+  const chickenRecipe = bundledCatalog.recipes.find(row => row.id === 'familiar-chicken-rice-carrot')!;
+  const variant: PlanVariant = { id: 'four-portions', instances: inputs.dates.map((date, index) => ({ id: `four-${index}`, date, slot: 'lunch', recipeId: chickenRecipe.id,
+    catalogVersion: bundledCatalog.version, recipeSnapshot: chickenRecipe, selectedServings: decimal('4') })) };
+  const result = projection.projectPlan(inputs, variant);
+  if (result.status !== 'projected') throw new Error('Four-person projection');
+  const projected = result.projection;
+  expect(Object.values(projected.familyNutrition).map(formatExact)).toEqual(['4435.04', '320.888', '93.376', '554.248']);
+  expect(Object.values(projected.instances[0].perPortionNutrition).map(formatExact)).toEqual(['554.38', '40.111', '11.672', '69.281']);
+  expect(projected.instances.map(row => row.ingredients.find(ingredient => ingredient.productId === 'chicken')!.covered.amount).map(formatExact)).toEqual(['200', '0']);
+  const row = projected.rows.find(row => row.productId === 'chicken')!;
+  expect([row.required.amount, row.covered.amount, row.purchase.amount].map(formatExact)).toEqual(['1200', '200', '1000']);
+  expect(Object.fromEntries(Object.entries(projected.costs.exact).map(([key, value]) => [key, formatExact(value)]))).toEqual({ ingredient: '844.2921343209876376', covered: '122', purchase: '722.2921343209876376' });
+});
+
+it.each(['unknown', 'incompatible'] as const)('current82 %s pantry retains full purchases through the real projection boundary', kind => {
+  const applied = buildAppliedSettings({ ...createDraft(), people: '4', days: '1' });
+  if (applied.status !== 'applied') throw new Error('Current settings');
+  const quantity: PantrySnapshotRow['quantity'] = kind === 'unknown' ? { status: 'unknown' }
+    : { status: 'known', value: { amount: decimal('200'), unit: 'ml' } };
+  const inputs = createPlanInputs(applied.settings, bundledCatalog, { seed: `current-${kind}-stock`, pantrySnapshot: [{ productId: 'chicken', quantity, expiresSoon: false }] });
+  const recipe = bundledCatalog.recipes.find(row => row.id === 'familiar-chicken-rice-carrot')!;
+  const variant: PlanVariant = { id: kind, instances: [{ id: kind, date: inputs.dates[0], slot: 'lunch', recipeId: recipe.id, catalogVersion: bundledCatalog.version, recipeSnapshot: recipe, selectedServings: decimal('4') }] };
+  const result = projection.projectPlan(inputs, variant);
+  if (result.status !== 'projected') throw new Error('Current projection');
+  const row = result.projection.rows.find(row => row.productId === 'chicken')!;
+  expect([row.required.amount, row.covered.amount, row.purchase.amount].map(formatExact)).toEqual(['600', '0', '600']);
+  expect(result.projection.pantryIssues[0].code).toBe(kind === 'unknown' ? 'UNKNOWN_PANTRY_QUANTITY' : 'INCOMPATIBLE_PANTRY_UNIT');
+  expect(result.projection.costs.exact.covered).toEqual(decimal('0'));
+  expect(result.projection.costs.exact.ingredient).toEqual(result.projection.costs.exact.purchase);
+});
+
 it('current82 repeated chicken lunches spend exactly200g once and retain all three source costs', () => {
   const applied = buildAppliedSettings({ ...createDraft(), days: '2' });
   if (applied.status !== 'applied') throw new Error('Current settings');

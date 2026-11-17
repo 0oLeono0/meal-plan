@@ -11,6 +11,8 @@ import { formatNutrition } from './presentation';
 import { createDraft } from './settings';
 import { projectRecipeView, resolveRecipeContext } from './recipeView';
 import type { RecipeRequest } from './recipeView';
+import { bundledCatalog } from '../data/catalog';
+import { formatExact } from './quantities';
 
 // Synthetic independent fixtures only: never production facts or a trusted-registry bypass.
 const source = { sourceId: 'synthetic', recordId: 'oracle', release: 'v1', license: 'test-only', url: 'https://example.org/oracle' };
@@ -40,6 +42,31 @@ function viewed(request = fixture().request) {
 }
 
 describe('recipe basis and shared ledger', () => {
+  it('current82 contextual four portions preserve independent source facts and exact pantry allocation', () => {
+    const applied = buildAppliedSettings({ ...createDraft(), people: '4', days: '1' });
+    if (applied.status !== 'applied') throw new Error('Four-person settings');
+    const inputs = createPlanInputs(applied.settings, bundledCatalog, { seed: 'four-portion-view', now: () => new Date(2026, 10, 17), pantrySnapshot: [
+      { productId: 'chicken', quantity: { status: 'known', value: { amount: decimal('200'), unit: 'g' } }, expiresSoon: false },
+    ] });
+    const recipe = bundledCatalog.recipes.find(row => row.id === 'familiar-chicken-rice-carrot')!;
+    const instance = { id: 'four-chicken', date: inputs.dates[0], slot: 'lunch' as const, recipeId: recipe.id, catalogVersion: bundledCatalog.version, recipeSnapshot: recipe, selectedServings: decimal('4') };
+    const variant = { id: 'four', instances: [instance] };
+    const projection = projectPlan(inputs, variant);
+    if (projection.status !== 'projected') throw new Error('Four-person projection');
+    const active: ActiveBundle = { plan: { schemaVersion: 1, inputs, variants: [variant], activeVariantId: variant.id }, projections: [projection.projection] };
+    const request: RecipeRequest = { pathname: `/recipe/${recipe.id}`, search: '?variant=four&instance=four-chicken', active, loadStatus: 'loaded', catalog: null };
+    const view = viewed(request);
+    expect(view.catalogVersion).toBe('mealplan-2026-11-11-4');
+    expect(view.servingsLabel).toBe('4 порции');
+    expect(view.perPortionNutrition.status).toBe('known');
+    if (view.perPortionNutrition.status !== 'known') throw new Error('Missing nutrition');
+    expect(Object.values(view.perPortionNutrition.value).map(formatExact)).toEqual(['554.38', '40.111', '11.672', '69.281']);
+    const chicken = view.ingredients.find(row => row.food.productId === 'chicken')!;
+    expect([chicken.required.amount, chicken.stock!.covered.amount, chicken.stock!.purchase.amount].map(formatExact)).toEqual(['600', '200', '400']);
+    const rice = view.ingredients.find(row => row.food.productId === 'rice')!;
+    expect(formatExact(rice.required.amount)).toBe('280');
+    expect(projectRecipeView({ ...request, search: '?variant=four&instance=other' }).status).toBe('stale');
+  });
   it('accepts exact 256 character unicode identity values without an accidental encoded length limit', () => {
     const { request, active } = fixture();
     const variantId = '米'.repeat(256), instanceId = '菜'.repeat(256);

@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+
+const historicalMedia: { recipeId: string }[] = JSON.parse(readFileSync('docs/data/recipe-media.json', 'utf8'));
 
 const firstBatch = [
   'familiar-omelet-tomato-bread', 'familiar-milk-oats-apple', 'familiar-syrniki',
@@ -7,7 +10,32 @@ const firstBatch = [
   'familiar-chicken-pasta-soup',
 ];
 
-for (const [name, ids] of [['media-tracer', [firstBatch[0]]], ['media-batch-01', firstBatch]] as const) {
+const secondBatch = [
+  'familiar-turkey-balls-buckwheat', 'familiar-turkey-potato-cabbage',
+  'familiar-pollock-potato-carrot', 'familiar-cod-rice-soup',
+  'familiar-beef-pasta-tomato', 'familiar-lentil-vegetable-soup',
+  'familiar-pollock-yogurt-buckwheat', 'familiar-pork-potato-cabbage',
+  'familiar-lazy-cabbage-rolls', 'familiar-turkey-pasta-tomato',
+];
+const thirdBatch = [
+  'familiar-chickpea-tomato-rice', 'familiar-bean-potato-stew',
+  'familiar-lentil-cabbage-tomato', 'familiar-potato-tomato-frittata',
+  'familiar-yogurt-apple', 'familiar-cottage-cucumber-bread',
+  'familiar-chickpea-cucumber-toast', 'familiar-steamed-egg-pudding',
+  'familiar-baked-apple-oats', 'familiar-bean-tomato-cabbage-salad',
+];
+const allIds = [...historicalMedia.map(row => row.recipeId), ...firstBatch, ...secondBatch, ...thirdBatch];
+const groups: [string, string[]][] = [
+  ['media-tracer', [firstBatch[0]]], ['media-batch-01', firstBatch],
+  ['media-tracer-07', [secondBatch[0]]],
+];
+for (const [name, ids] of [['media-batch-02', secondBatch], ['media-batch-03', thirdBatch], ['full-media', allIds]] as const) {
+  for (let offset = 0; offset < ids.length; offset += 3) {
+    groups.push([`${name}-group-${offset / 3 + 1}`, ids.slice(offset, offset + 3)]);
+  }
+}
+
+for (const [name, ids] of groups) {
   test(`${name} local recipe heroes decode with disclosure`, async ({ page, context }, testInfo) => {
     test.setTimeout(60_000);
     await page.setViewportSize({ width: 360, height: 900 });
@@ -45,6 +73,7 @@ for (const [name, ids] of [['media-tracer', [firstBatch[0]]], ['media-batch-01',
       }));
     });
     expect(releases).toHaveLength(5);
+    expect([...allIds].sort()).toEqual(releases[4].recipes);
     for (const release of releases) {
       expect(release.mediaIds).toEqual(release.recipes);
       expect(release.historical).toBe('/recipes/rice-sweet-porridge.png');

@@ -259,5 +259,80 @@
     "height": 1086,
     "bytes": 2435235,
     "sha256": "d8f2390d79675cb0fa00fecbf7c54fdfad2d994892947a32abc639588da0d982"
+  },
+  {
+    "recipeId": "familiar-turkey-balls-buckwheat",
+    "catalogVersion": "mealplan-2026-11-11-3",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-turkey-balls-buckwheat.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-d13bf511-74d7-4937-8b66-ab98fa11057b.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-turkey-balls-buckwheat, «Тефтели из индейки с гречкой и томатным соусом». Exact two-serving recipe: skinless turkey breast 300 g minced with half of onion 80 g, dry buckwheat 140 g, tomatoes 260 g, vegetable oil 12 g, salt 3 g, technological water. Cook buckwheat in 280 ml water. Shape ten small dense turkey-and-onion meatballs without egg or breadcrumbs. Soften remaining onion in all oil, add chopped tomatoes and 120 ml water, simmer meatballs covered until fully cooked. Show one complete portion: five small pale cooked turkey meatballs nestled in chunky tomato-onion sauce beside a mound of distinct brown cooked buckwheat groats. Serve all sauce, modest oil sheen, natural homemade texture on neutral ceramic plate, plain table, soft daylight. Only listed ingredients. No herbs, garnish, cheese, extra sides, text, logos or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:28:29Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:29:15Z",
+      "notes": "Individually inspected native image beside source recipe. Five turkey meatballs, complete buckwheat side and tomato-onion sauce with oil sheen. No extra ingredients. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2710905,
+    "sha256": "bf3c3fb500efcc0bc6168e7eabb7134bfb9b3ab2ef63e9665035dd215aef5bdc"
+  },
+  {
+    "recipeId": "familiar-turkey-potato-cabbage",
+    "catalogVersion": "mealplan-2026-11-11-3",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-turkey-potato-cabbage.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-58cc2cec-fd9b-4bd4-a050-9a4b0c372689.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-turkey-potato-cabbage, «Индейка с картофелем и капустой». Exact two-serving recipe: turkey breast 300 g, potatoes 360 g, cabbage 240 g, carrots 120 g, vegetable oil 12 g, salt 3 g, water 200 ml. Cut potatoes into 1 cm cubes, carrots into thin slices, shred cabbage. Cut turkey into 1.5–2 cm pieces, heat with carrots in all oil 4–5 minutes, add remaining ingredients, simmer covered 18–22 minutes until fully cooked. Show turkey breast pieces mingled with tender potato cubes, pale softened shredded cabbage and carrot slices, with complete light stewing juices. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:30:23Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:31:04Z",
+      "notes": "Individually inspected native output beside recipe. Cooked turkey pieces, soft potato cubes, shredded cabbage and carrot slices in light oily juices, complete mixed serving. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2369392,
+    "sha256": "ac36881053febfcad436621b4459d4e224a89cbfe67fe5d7fc48b13f9b591383"
+  },
+  {
+    "recipeId": "familiar-pollock-potato-carrot",
+    "catalogVersion": "mealplan-2026-11-11-3",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-pollock-potato-carrot.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-9a7857cc-b675-432b-b0e1-e7e795d93a35.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-pollock-potato-carrot, «Минтай с картофелем и морковью». Two-serving recipe: boneless skinless thawed pollock flesh 320 g, potatoes 400 g, carrot 200 g, onion 60 g, vegetable oil 12 g, salt 3 g, water 180 ml. Cut pollock into 3–4 cm pieces, potatoes thin 4–5 mm slices, grate carrots and finely chop onion. Soften onion and carrot in all oil 3 minutes, simmer potatoes with water 10–12 minutes, lay fish on top and gently steam-stew covered 7–9 minutes until opaque and flaky. Show opaque white flaky pollock chunks atop tender thin potato slices with grated orange carrot and softened onion, complete light vegetable juices. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:31:04Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:32:02Z",
+      "notes": "Individually viewed native output against recipe. Opaque flaky pollock, sliced potatoes, grated carrot and softened onion with complete light oily juices. No added garnish. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2516908,
+    "sha256": "72a7c914dbc1517cf7f48064de53728b03c7e5c154be099271a94090de37e892"
   }
 ]

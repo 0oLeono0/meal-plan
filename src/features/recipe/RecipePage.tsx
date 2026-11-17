@@ -7,7 +7,7 @@ import type { GenerationSnapshot } from '../generation/controller';
 import { projectRecipeView } from '../../domain/recipeView';
 import type { NutritionFact } from '../../domain/recipeView';
 import { formatCurrency, formatDateOnly, formatNutrition, formatQuantity } from '../../domain/presentation';
-import { formatExact, roundHalfUp } from '../../domain/quantities';
+import { compare, divide, formatExact, roundHalfUp } from '../../domain/quantities';
 import { Button } from '../../shared/ui';
 import { PlanLoading } from '../plan/PlanLoading';
 
@@ -55,7 +55,12 @@ export function RecipePage({ snapshot, catalog, onRetry }: { snapshot: Generatio
           <p>Нужно {formatQuantity(row.required)} · Из запасов {formatQuantity(row.stock.covered)} · Докупить {formatQuantity(row.stock.purchase)}</p></div>}
       </li>)}
     </ul></section>
-    <section className="card"><h2>Приготовление</h2><ol aria-label="Шаги приготовления" className="list-decimal pl-6 space-y-4 leading-relaxed">{view.recipe.steps.map((step, index) => <li key={index}>{step}</li>)}</ol></section>
+    <section className="card"><h2>Приготовление</h2>
+      {compare(view.servings, view.recipe.baseServings) !== 0 && <p role="note" aria-label="Пересчёт шагов" className="notice">
+        Исходные шаги рассчитаны на {formatExact(view.recipe.baseServings).replace('.', ',')} порции. Выбрано порций: {formatExact(view.servings).replace('.', ',')}. В составе выше количества для выбранных порций. Количества продуктов и воды в шагах умножьте на {formatExact(divide(view.servings, view.recipe.baseServings)).replace('.', ',')}. Время приготовления зависит от готовности блюда.
+      </p>}
+      <ol aria-label="Шаги приготовления" className="list-decimal pl-6 space-y-4 leading-relaxed">{view.recipe.steps.map((step, index) => <li key={index}>{step}</li>)}</ol>
+    </section>
     <p>Расчёт не подтверждает полноценность рациона</p><p>КБЖУ рассчитаны по составу продуктов и не являются медицинской рекомендацией</p>
   </section>;
 }

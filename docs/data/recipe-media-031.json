@@ -334,5 +334,80 @@
     "height": 1086,
     "bytes": 2516908,
     "sha256": "72a7c914dbc1517cf7f48064de53728b03c7e5c154be099271a94090de37e892"
+  },
+  {
+    "recipeId": "familiar-cod-rice-soup",
+    "catalogVersion": "mealplan-2026-11-11-3",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-cod-rice-soup.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-04c6710f-cc34-424e-99a2-9f9638771f1f.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-cod-rice-soup, «Рыбный суп с рисом и овощами». Exact two-serving recipe: thawed skinless boneless cod 280 g cut into 2–3 cm chunks, dry white rice 100 g, potatoes 240 g in 1 cm cubes, carrots 140 g thinly sliced, onion 80 g finely chopped, vegetable oil 8 g, salt 3 g, water 1000 ml. Soften onion and carrot in all oil, simmer potatoes and rice 15 minutes, add cod and gently cook 6–8 minutes to opaque flaky flesh. Show a complete bowl of lightly golden clear fish soup containing abundant visible white cod flakes and chunks, cooked white rice, potato cubes, carrot slices and softened onion, broth included. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:32:39Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:33:17Z",
+      "notes": "Native image individually inspected against ingredients and steps. Clear golden broth with opaque cod chunks, cooked rice, potato cubes, carrot slices and softened onion. Complete soup, no additional garnish. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2382837,
+    "sha256": "c73c1cc629642354fa23badb3e035e4499a7e112bba881dc2c3c73b6b01036d7"
+  },
+  {
+    "recipeId": "familiar-beef-pasta-tomato",
+    "catalogVersion": "mealplan-2026-11-11-3",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-beef-pasta-tomato.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-bc46635e-fd1e-47d2-bbee-1b873ca2abbc.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-beef-pasta-tomato, «Макароны с говяжьим фаршем в томатном соусе». Exact two-serving recipe: lean beef mince 280 g, dry wheat pasta 160 g, tomatoes 300 g, onion 80 g, vegetable oil 10 g, salt 3 g. Heat onion in all oil, brown mince crumbling into small lumps, add chopped tomatoes, salt and 100 ml water. Add dry pasta and 350 ml water, simmer covered 10–12 minutes until pasta soft and beef fully cooked, serve all absorbed sauce without draining. Show a complete portion of short cooked wheat pasta with distinct fine browned beef mince, softened tomato pieces and onion in chunky tomato sauce with modest oil sheen. No cheese. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:33:18Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:33:59Z",
+      "notes": "Native output individually inspected alongside recipe. Short pasta with small cooked beef crumbles, softened tomato and onion, full glossy tomato sauce, no cheese or garnish. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2940209,
+    "sha256": "d2e5ab5c855f3eb7e192f746d985c52108c228b7f5a848127544c1f519cad41a"
+  },
+  {
+    "recipeId": "familiar-lentil-vegetable-soup",
+    "catalogVersion": "mealplan-2026-11-11-3",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-lentil-vegetable-soup.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-c0d39dd1-e191-4512-a06f-ed301cb23cd6.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-lentil-vegetable-soup, «Густой чечевичный суп с овощами». Exact two-serving recipe: dry split red lentils 160 g, potato 240 g in 1 cm cubes, carrots 160 g thin slices, tomato 200 g chopped, onion 80 g finely chopped, vegetable oil 12 g, salt 3 g, water 850 ml. Soften onion and carrot in all oil, add potato lentils water and simmer 15 minutes, add tomatoes and salt and cook 5–7 minutes until lentils very soft, preserve full broth. Show a complete bowl of thick orange-red lentil soup with soft split red lentil texture and visible tender potato cubes, carrot slices and tomato pieces, subtle oil sheen, homemade texture. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:33:59Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:34:35Z",
+      "notes": "Native output individually inspected beside recipe. Thick orange split-lentil soup with potato, sliced carrot, softened tomato and onion, oil sheen and full broth. No extra ingredients. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2355123,
+    "sha256": "e0b9ca0765c6762ce79f991fca4b9869be65fd2d24232f556b557a45f8a0b2b4"
   }
 ]

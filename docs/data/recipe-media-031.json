@@ -580,5 +580,82 @@
     "height": 1086,
     "bytes": 2634376,
     "sha256": "7147d06fe342f142e6ccbe63a654a37ce01327c419c972cb86295a29681b237a"
+  },
+  {
+    "recipeId": "familiar-potato-tomato-frittata",
+    "catalogVersion": "mealplan-2026-11-11-4",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-potato-tomato-frittata.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-67f33be5-bb3b-4f22-b780-73472e5b5f4b.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-potato-tomato-frittata, «Картофельная фриттата с томатами». Exact two-serving recipe: beaten egg without shells 240 g, potatoes 360 g cut into 3 mm thin slices, tomatoes 240 g chopped retaining juices, onion 60 g finely chopped, vegetable oil 12 g, salt 3 g. Heat onion in all oil, add potatoes salt and 100 ml water, cook covered 10–12 minutes until soft, add tomatoes and all juices 2 minutes. Pour beaten eggs over vegetables, cover and cook gently 7–9 minutes until completely set, rest 2 minutes. Show one half-round portion of a fully set golden potato-tomato frittata with visible thin layered potatoes and softened red tomato embedded in egg, light oily cooking juices. No milk or cheese. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:41:29Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:42:11Z",
+      "notes": "Native output individually viewed against recipe. Half-round set golden egg frittata, visible thin potato layers, tomato and onion, oil juices, no milk cheese or side. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2722871,
+    "sha256": "c3a9aa86c253e23869b181fe55d5b5c652d620d8bee6ed1a713dbc712afb1453"
+  },
+  {
+    "recipeId": "familiar-yogurt-apple",
+    "catalogVersion": "mealplan-2026-11-11-1",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-1",
+      "mealplan-2026-11-11-2",
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-yogurt-apple.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-62c78c38-3953-41c7-9e6a-03fd5c1b1cb4.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-yogurt-apple, «Натуральный йогурт с яблоком». Exact two-serving recipe: natural plain whole-milk yogurt without additives 300 g and cored skin-on fresh apple 200 g. Wash core and dice apple into small pieces, divide into two bowls each 150 g yogurt and 100 g apple, mix before eating and serve immediately. Show one complete small bowl of thick plain white natural yogurt mixed with plentiful small fresh crisp skin-on apple cubes, homemade simple snack. This recipe has exactly two ingredients. No oats, sugar, syrup, honey, cinnamon, nuts, berries or mint. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:42:12Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:42:55Z",
+      "notes": "Native output individually reviewed beside recipe. Plain white yogurt mixed with fresh small skin-on apple pieces. Exactly the two listed ingredients, no toppings. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2329990,
+    "sha256": "c7b71d598bf887159eaf1eac4cf3c5f73a77146f2f167438a5bb751f6f91c722"
+  },
+  {
+    "recipeId": "familiar-cottage-cucumber-bread",
+    "catalogVersion": "mealplan-2026-11-11-2",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-2",
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-cottage-cucumber-bread.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-56a90cac-163d-4e23-8945-85b52cce8f89.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-cottage-cucumber-bread, «Несладкий творог с огурцом и хлебом». Exact two-serving recipe: cottage cheese 5% 240 g, fresh cucumber with skin 200 g, whole-wheat bread 80 g, salt 1 g. Dice cucumber small, mash cottage cheese with fork and mix cucumber and salt, preserving cucumber juice. Serve two portions each with 40 g wholegrain bread. Show one complete portion of coarse white curd cottage cheese visibly mixed with small green skin-on cucumber cubes, beside slices of plain whole-wheat bread. No oil, cream, sour cream, herbs or toppings. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:42:55Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:43:34Z",
+      "notes": "Native output individually reviewed beside recipe. Coarse white curd mixed with small skin-on cucumber cubes, complete plain wholegrain bread side and cucumber juice, no added cream oil or garnish. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2676452,
+    "sha256": "3cf8766f540265dba54490e9ac51fb861aa700ee5948ed22171d5ad5eea8086c"
   }
 ]

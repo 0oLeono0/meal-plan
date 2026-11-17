@@ -64,6 +64,7 @@ test('scaled-instructions current recipe explains four and half portions while b
     await expect(note).toContainText(`Количества продуктов и воды в шагах умножьте на ${factor}`);
     await expect(note).toContainText('Время приготовления зависит от готовности блюда');
     await expect(page.getByRole('list', { name: 'Шаги приготовления' })).toContainText('280 мл воды');
+    await page.screenshot({ path: `.tmp/phase031-08-scaled-${servings}.png`, fullPage: true });
   }
   await page.goto('/recipe/familiar-chicken-rice-carrot');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Куриное филе с рисом и морковью');
@@ -94,7 +95,8 @@ test('current82 actual budget refusal keeps raw settings and corrupt active byte
     await page.waitForTimeout(270);
   }
   await page.getByRole('button', { name: 'Составить меню', exact: true }).click();
-  await expect(page.getByRole('alert')).toContainText('бюджет', { timeout: 32_000 });
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('бюджета недостаточно', { timeout: 32_000 });
+  await expect(page.getByRole('alert')).toContainText('Настройки сохранены в черновике');
   expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBeNull();
   const draft = await page.evaluate(() => JSON.parse(localStorage.getItem('mealplan:guest:draft:v1')!).draft);
   expect(draft.people).toBe('10');
@@ -133,6 +135,7 @@ test('current82 cap12 exact real storage reload retains bounded bytes and disabl
   await page.reload();
   await expect(page.getByText('Вариант 12 из 12', { exact: true })).toBeVisible();
   expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(evidence.raw);
+  console.info('CAT031_CAP12', JSON.stringify({ bytes: evidence.bytes, maxBytes: evidence.maxBytes }));
   await testInfo.attach('current82-cap12-storage', { body: JSON.stringify({ bytes: evidence.bytes, maxBytes: evidence.maxBytes }), contentType: 'application/json' });
 });
 
@@ -147,6 +150,7 @@ for (const width of [360, 390, 430, 768, 1280]) test(`acceptance smoke current82
   await page.setViewportSize({ width, height: 900 });
   await page.goto('/menu');
   for (const amount of Object.values(expected.kopecks)) await expect(page.getByRole('region', { name: 'Бюджет меню' })).toContainText(rub(amount));
+  await expect(page.locator('.menu-day-totals').getByText('1 422 ккал', { exact: true })).toBeVisible();
   await checkCalculationNote(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
   await page.screenshot({ path: `.tmp/phase031-08-fixed-menu-${width}.png`, fullPage: true });
@@ -274,7 +278,9 @@ for (const width of [360, 768, 1280]) test(`acceptance smoke real wizard mixed w
   expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(evidence.raw);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
   await page.screenshot({ path: `.tmp/phase031-08-wizard-shopping-${width}.png`, fullPage: true });
-  await testInfo.attach('current82-week-evidence', { body: JSON.stringify({ width, generationMs, seed: plan.inputs.seed, recipeIds: variant.instances.map((row: { recipeId: string }) => row.recipeId), products: [...grams.keys()], costs: independentCosts, serializedBytes: new TextEncoder().encode(evidence.raw).length }), contentType: 'application/json' });
+  const measured = { width, generationMs, seed: plan.inputs.seed, recipeIds: variant.instances.map((row: { recipeId: string }) => row.recipeId), products: [...grams.keys()], costs: independentCosts, serializedBytes: new TextEncoder().encode(evidence.raw).length };
+  console.info('CAT031_WEEK', JSON.stringify(measured));
+  await testInfo.attach('current82-week-evidence', { body: JSON.stringify(measured), contentType: 'application/json' });
 });
 
 for (const width of [360, 768, 1280]) test(`tracer source-backed B1 L1 D7 S1 save menu recipe shopping reload at ${width}px`, async ({ page }) => {

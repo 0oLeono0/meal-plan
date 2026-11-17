@@ -25,5 +25,83 @@
     "height": 1086,
     "bytes": 2775299,
     "sha256": "0aa49849c13d7fd906afaeab3c3c8c7f9547ae0364b81754332b834623964c63"
+  },
+  {
+    "recipeId": "familiar-milk-oats-apple",
+    "catalogVersion": "mealplan-2026-11-11-2",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-2",
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-milk-oats-apple.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8bd-3320-7981-87b0-9e11c09b5ca4/exec-7c2e80ad-ff25-49e1-ba38-510b56d2a972.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: local MealPlan recipe hero, native PNG landscape exactly 4:3. AI culinary illustration of familiar-milk-oats-apple, «Молочная овсянка с яблоком». Exact recipe for two servings: dry rolled oats 120 g, milk 360 g, apple with skin without core 200 g, sugar 12 g, salt 1 g, water 180 ml. Cut apple into small cubes, heat milk and water, add oats sugar salt and apple, simmer stirring 5–7 minutes, rest covered 2 minutes. Show one complete portion of soft creamy milk oatmeal with visible cooked oat flakes and softened small skin-on apple cubes mixed throughout, in a neutral ceramic bowl on a plain table. Natural homemade texture, soft daylight. Only listed ingredients. No separate raw apple slices, berries, cinnamon, nuts, butter, herbs, extra toppings, syrup, text, brands or watermark. AI illustration only, no actual cooking claim.",
+    "generatedAt": "2026-11-17T09:05:22Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:05:59Z",
+      "notes": "Individually inspected native output against ingredients and method. Creamy cooked milk oats, small softened skin-on apple pieces mixed through. No extra garnish or ingredients. Generated illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2242919,
+    "sha256": "a3034dee1c078853b590bf8dfede98fbbe2cb7e3d19b0b7888874c02534e1e18"
+  },
+  {
+    "recipeId": "familiar-syrniki",
+    "catalogVersion": "mealplan-2026-11-11-2",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-2",
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-syrniki.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8bd-3320-7981-87b0-9e11c09b5ca4/exec-2a5292c6-9b44-46a2-9372-6a3bff5924d8.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration of familiar-syrniki, «Сырники на сковороде». Recipe for two servings: firm cottage cheese 5% 400 g, egg without shell 50 g, wheat flour 60 g, sugar 20 g, vegetable oil 10 g. Mash cottage cheese, mix egg and sugar and all flour, rest 5 minutes. Shape eight small round syrniki about 1 cm thick with wet hands, no flour coating. Pan fry gently in all oil 4–5 minutes on first side, then covered 5–7 minutes until center fully set to 71 C. Show one complete serving of exactly four small golden browned cottage cheese pancakes with homemade uneven edges, subtle oil sheen, on a plain neutral ceramic plate. Natural daylight and plain table. No sour cream, yogurt, berries, jam, apple, mint, powdered sugar, flour dusting, sauces, garnish, text, brands or watermark. Only recipe ingredients. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:06:11Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:06:49Z",
+      "notes": "Native image individually inspected against recipe. Exactly four golden syrniki, set curd texture, light oil sheen, no toppings, dusting or extra sides. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2573334,
+    "sha256": "aee8ddca144fedb6a5a5d15fb3097210e000b7775cba1485db1a9da0dc2fd66b"
+  },
+  {
+    "recipeId": "familiar-cottage-apple-bake",
+    "catalogVersion": "mealplan-2026-11-11-2",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-2",
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-cottage-apple-bake.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8bd-3320-7981-87b0-9e11c09b5ca4/exec-6e8ecea0-668e-4174-8e03-d37a8097933f.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: local MealPlan recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-cottage-apple-bake, «Творожно-яблочная запеканка». Exact two-serving recipe: cottage cheese 5% 400 g, egg without shells 100 g, dry semolina 40 g, cored apple with skin 200 g, sugar 16 g, vegetable oil 6 g. Mash cheese with egg sugar semolina, hydrate 10 minutes. Mix finely chopped apple. Oil small baking dish with all oil, bake mixture in layer no thicker than 3 cm at 180 C for 25–30 minutes until firm center 71 C, rest 5 minutes, divide into two portions and serve all apple and juices. Show one complete portion as a thick rectangular piece of golden homemade cottage cheese casserole about 3 cm high, lightly browned top and visible set pale curd crumb with small embedded apple pieces. Simple ceramic plate and neutral table, soft daylight. No sour cream, cream, yogurt, sauces, berries, nuts, cinnamon, powdered sugar, garnish, extra sides, text, logo or watermark. Only recipe ingredients. AI illustration, no actual cooking claim.",
+    "generatedAt": "2026-11-17T09:06:59Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:07:45Z",
+      "notes": "Individually viewed native output beside recipe. Golden baked set curd casserole, apple pieces within crumb, plain served portion. No sauces or extra ingredients. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2458364,
+    "sha256": "2c99018426cc9ae093c33b6731aae40265c77c72b39867cad83327ee93422dba"
   }
 ]

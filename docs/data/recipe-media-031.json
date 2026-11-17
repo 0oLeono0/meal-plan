@@ -409,5 +409,77 @@
     "height": 1086,
     "bytes": 2355123,
     "sha256": "e0b9ca0765c6762ce79f991fca4b9869be65fd2d24232f556b557a45f8a0b2b4"
+  },
+  {
+    "recipeId": "familiar-pollock-yogurt-buckwheat",
+    "catalogVersion": "mealplan-2026-11-11-4",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-pollock-yogurt-buckwheat.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-53ee1eed-8145-4f9e-9782-98fc125fbf2a.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-pollock-yogurt-buckwheat, «Минтай в йогуртовом соусе с гречкой». Exact two-serving recipe: thawed boneless skinless pollock flesh 320 g, dry buckwheat 140 g, plain yogurt 160 g, grated carrot 200 g, vegetable oil 10 g, salt 3 g. Cook buckwheat separately in 280 ml water. Soften grated carrots in all oil, add 80 ml water and stew 5 minutes, add 3–4 cm fish chunks and simmer covered 7–9 minutes until opaque and flaky. Temper yogurt with hot cooking juices, pour all yogurt into fish and carrots, gently heat without boiling. Show full opaque white pollock pieces in pale creamy yogurt-carrot sauce, visible fine orange carrot shreds, beside a generous mound of brown cooked buckwheat. Serve all sauce and complete side. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:35:06Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:35:46Z",
+      "notes": "Native output individually inspected against recipe. Opaque flaky pollock pieces with grated carrot and complete pale yogurt sauce, separate full buckwheat side. No extra garnish. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2640577,
+    "sha256": "9a09fd9b82d21c77ee776f8afed7facb69b2f2ce0e06c3961aa84975a58091b9"
+  },
+  {
+    "recipeId": "familiar-pork-potato-cabbage",
+    "catalogVersion": "mealplan-2026-11-11-4",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-pork-potato-cabbage.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-f43d4c1a-814b-4d2a-bb8b-8a179ebfcd2c.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-pork-potato-cabbage, «Свиная вырезка с картофелем и капустой». Exact two-serving recipe: trimmed lean pork tenderloin 300 g cut into 1.5 cm medallions, potato 360 g in 1 cm cubes, white cabbage 300 g finely shredded, onion 80 g chopped, vegetable oil 12 g, salt 3 g, water 180 ml. Sear medallions briefly in all oil, remove, soften onion, add potato cabbage water and simmer 15–18 minutes. Return medallions with meat juices and gently stew 4–6 minutes until fully cooked then rest 3 minutes. Show lean lightly browned pork medallions with tender potato cubes and pale soft shredded cabbage and onion in light natural cooking juices. No carrot. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:35:47Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:36:31Z",
+      "notes": "Native image individually inspected alongside recipe. Lean seared pork medallions, soft potato cubes, shredded cabbage and onion with full light cooking juices. Brown sear marks, no separate garnish. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2568043,
+    "sha256": "144aa96f8d0bc8d20969414c6ed5a2096c1af642c1a0824c1754ee819965ef47"
+  },
+  {
+    "recipeId": "familiar-lazy-cabbage-rolls",
+    "catalogVersion": "mealplan-2026-11-11-4",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-lazy-cabbage-rolls.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-ea359172-1ba6-4ee7-abca-d8d549d4d024.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-lazy-cabbage-rolls, «Ленивые голубцы с говядиной». Exact two-serving recipe: lean beef mince 280 g, dry white rice 120 g, finely chopped cabbage 320 g, tomatoes 240 g, onion 80 g, vegetable oil 10 g, salt 3 g. Cook rice in 240 ml water. Soften onion in all oil, add cabbage and 80 ml water, stew. Mix half softened cabbage with raw beef and all cooked rice, shape eight small dense oval rolls. Stew in remaining cabbage, chopped tomato and 150 ml water covered 15–18 minutes until cooked through. Show one full portion of exactly four compact oval beef-rice-cabbage rolls in chunky tomato-cabbage sauce. Rice grains visible within rolls, loose softened cabbage in red sauce, all sauce served. No wrapped whole cabbage leaves, no egg, no breading, no additional rice side. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:36:31Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:37:15Z",
+      "notes": "Native output individually viewed beside source recipe. Four compact oval beef-rice rolls, visible rice grains, complete tomato-cabbage-onion sauce, no whole-leaf wrapping or extra side. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2981027,
+    "sha256": "dc09f71b1ba691995c0cb0d1c623a20e5ecfab313176f6cdec4066d7b2e932ba"
   }
 ]

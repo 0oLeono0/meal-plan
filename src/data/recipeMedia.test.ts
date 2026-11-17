@@ -10,7 +10,7 @@ const copyFileSync: (from: string, to: string) => void = nodeCopy;
 const unlinkSync: (path: string) => void = nodeUnlink;
 import { bundledCatalog, sourceApprovedCatalogs } from './catalog';
 import { recipes } from './recipes';
-import { getRecipeMedia, mediaCatalogVersion, recipeMedia, recipeMediaIds } from './recipeMedia';
+import { getRecipeMedia, mediaCatalogVersion, mediaReleaseIds, recipeMedia, recipeMediaIds } from './recipeMedia';
 
 describe('compiled presentation media', () => {
   it('covers exactly 52 factual IDs without changing factual snapshots', () => {
@@ -68,6 +68,7 @@ describe('compiled presentation media', () => {
   });
   it('resolves historical media in every issued release and B1 only in admitted releases', () => {
     for (const catalog of sourceApprovedCatalogs) {
+      expect([...mediaReleaseIds[catalog.version]].sort()).toEqual(catalog.recipes.map(recipe => recipe.id).sort());
       expect(getRecipeMedia(catalog.version, 'rice-sweet-porridge')?.src).toBe('/recipes/rice-sweet-porridge.png');
       const media = getRecipeMedia(catalog.version, 'familiar-omelet-tomato-bread');
       expect(Boolean(media)).toBe(catalog.recipes.some(recipe => recipe.id === 'familiar-omelet-tomato-bread'));
@@ -76,6 +77,15 @@ describe('compiled presentation media', () => {
         expect(media.width * 3).toBe(media.height * 4);
         expect(Object.isFrozen(media)).toBe(true);
       }
+    }
+  });
+  it('rejects changed historical provenance and incorrect expansion support versions', () => {
+    const oldRows = JSON.parse(readFileSync('docs/data/recipe-media.json', 'utf8'));
+    const newRows = JSON.parse(readFileSync('docs/data/recipe-media-031.json', 'utf8'));
+    for (const row of [{ ...oldRows[0], provider: 'another provider' }, { ...newRows[0], supportedCatalogVersions: [bundledCatalog.version] }]) {
+      writeFileSync('.tmp/031-corrupt-media.json', JSON.stringify([row]));
+      const result = spawnSync('node', ['scripts/check-recipe-media.mjs', '--ledger', '.tmp/031-corrupt-media.json', '--ids', row.recipeId], { encoding: 'utf8' });
+      expect(result.status).toBe(1);
     }
   });
   it('audits selected release membership and keeps full 82 gate incomplete', () => {

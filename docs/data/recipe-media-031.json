@@ -657,5 +657,83 @@
     "height": 1086,
     "bytes": 2676452,
     "sha256": "3cf8766f540265dba54490e9ac51fb861aa700ee5948ed22171d5ad5eea8086c"
+  },
+  {
+    "recipeId": "familiar-chickpea-cucumber-toast",
+    "catalogVersion": "mealplan-2026-11-11-2",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-2",
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-chickpea-cucumber-toast.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-ed9a644d-731d-4641-9d72-5d87ef50bd18.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-chickpea-cucumber-toast, «Паста из нута с огурцом на хлебе». Exact two-serving recipe: canned cooked drained chickpeas 240 g, cucumber with skin 160 g thin slices, wholegrain bread 80 g, vegetable oil 8 g, salt 1 g, drinking water 20–30 ml. Mash chickpeas with all oil salt and water into thick spread. Dry-toast bread on skillet 1–2 minutes per side. Spread all chickpea paste on bread and arrange all thin fresh cucumber slices on top, serve equal portions. Show one complete serving of plain wholegrain toast slices generously covered with coarse pale beige chickpea paste and overlapping thin green skin-on cucumber rounds. No tahini, sesame seeds, lemon, garlic, herbs, paprika or separate garnish. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:44:08Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:44:50Z",
+      "notes": "Native image individually inspected alongside recipe. Dry-toasted wholegrain bread generously topped with coarse chickpea paste and thin skin-on cucumber rounds, complete serving, no added spices tahini or herbs. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2643750,
+    "sha256": "2a252fb35b83e299e666dc4329a00cc9f578660b68f23a1c9e7657f6533c1ce8"
+  },
+  {
+    "recipeId": "familiar-steamed-egg-pudding",
+    "catalogVersion": "mealplan-2026-11-11-2",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-2",
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-steamed-egg-pudding.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-3de0622f-6f7b-4753-acce-bdf93e7e718d.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-steamed-egg-pudding, «Порционный паровой яичный пудинг». Exact two-serving recipe: egg mass without shell 120 g, milk 160 g, sugar 12 g. Mix egg milk sugar gently without whipping, divide into two small approximately 200 ml heatproof ramekins, cover from condensation and steam gently 12–15 minutes until completely set, rest 2 minutes. Show one full small plain ceramic ramekin filled with smooth pale yellow steamed egg-milk pudding, fully set satin surface and a small spoon indentation revealing tender uniform custard texture. No caramel, browned baked crust, syrup, vanilla, cinnamon, fruit, cream, oil or garnish. Technological steaming water stays outside pudding. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:44:50Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:45:29Z",
+      "notes": "Native output individually viewed beside recipe. Plain pale yellow steamed egg-milk pudding in single ramekin, fully set satin texture exposed by spoon, no browned crust caramel toppings or extra ingredient. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2076349,
+    "sha256": "c51ec1f2cf5a203498b3fa568da13a7cfc4728047f42656e3f65885f5fbbb65b"
+  },
+  {
+    "recipeId": "familiar-baked-apple-oats",
+    "catalogVersion": "mealplan-2026-11-11-2",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-2",
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-baked-apple-oats.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-d55ee8c7-c97a-4db6-a1ce-4674007cc218.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-baked-apple-oats, «Запечённое яблоко с овсяной крошкой». Exact two-serving recipe: cored edible apple halves with skin 320 g, dry small oat flakes 60 g, sugar 12 g, vegetable oil 6 g, water 20 ml in crumble plus 40 ml in baking dish. Place apple halves cut side up, mix oats sugar all oil and 20 ml water, spread moist crumble on cut apple surfaces, bake at 180 C 20–25 minutes until apples soft and oats lightly golden. Show one complete serving of two baked skin-on apple halves with cored centers topped generously with golden coarse oat flake crumble, all crumble and small amount of apple baking juice served. No cinnamon, nuts, honey, raisins, butter, cream, yogurt or berries. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:45:29Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:46:08Z",
+      "notes": "Native output individually inspected alongside ingredients and method. Two soft baked skin-on apple halves topped with golden oat flake crumble and served baking juice, no extra toppings. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2652677,
+    "sha256": "6c79778d34e5b435085d77924d25af55f214fbf0c2e0e3e61a992e8e24efba20"
   }
 ]

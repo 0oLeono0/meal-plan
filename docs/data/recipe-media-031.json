@@ -1,0 +1,29 @@
+[
+  {
+    "recipeId": "familiar-omelet-tomato-bread",
+    "catalogVersion": "mealplan-2026-11-11-1",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-1",
+      "mealplan-2026-11-11-2",
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-omelet-tomato-bread.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1d42d-c561-7e01-ab84-6d082d1caf4b/exec-8d8dad05-8212-4172-a6b5-5f35f3ebe129.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration of familiar-omelet-tomato-bread, «Омлет с томатами и хлебом». Exact recipe for two portions: egg mass without shells 200 g, tomatoes 200 g, wholegrain bread 120 g, vegetable oil 10 g, salt 2 g. Warm all oil in pan, cook chopped tomatoes 3–4 minutes preserving juice, pour salted beaten eggs over tomatoes, cover and gently cook 6–8 minutes until fully set with no liquid egg. Divide omelet and all tomato juices into two portions and serve each with 60 g wholegrain bread. Show one complete portion on a simple neutral ceramic plate, a cooked fully set yellow omelet containing softened red tomato pieces, modest glossy tomato/oil juices, wholegrain bread slices beside it. Soft daylight, neutral table, natural homemade texture. Only recipe ingredients, no herbs, green garnish, cheese, milk, butter, extra sauce, salad, fruit, nuts, condiments, text, brands or watermark. Generated illustration, not evidence of an actual cooked dish.",
+    "generatedAt": "2026-11-13T09:13:13Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-13 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-13T09:14:01Z",
+      "notes": "Native output individually inspected beside recipe. Fully set yellow tomato omelet with softened red pieces, tomato/oil juices and wholegrain bread. Whole served accompaniment present, no extra garnish. Generated illustration only, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2775299,
+    "sha256": "0aa49849c13d7fd906afaeab3c3c8c7f9547ae0364b81754332b834623964c63"
+  }
+]

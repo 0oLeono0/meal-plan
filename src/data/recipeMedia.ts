@@ -1,4 +1,6 @@
 // Presentation sidecar only; never persisted with factual recipe snapshots.
+import sourceManifest from '../../data/sources/phase031.snapshot.json';
+import generatedMedia from '../../docs/data/recipe-media-031.json';
 export const mediaCatalogVersion = 'mealplan-2026-10-28-1';
 export const recipeMediaIds = [
   "rice-sweet-porridge",
@@ -57,6 +59,16 @@ export const recipeMediaIds = [
 export interface RecipeMedia { readonly src: string; readonly width: number; readonly height: number; readonly generated: true }
 const entries = recipeMediaIds.map(id => [id, Object.freeze({ src: `/recipes/${id}.png`, width: 1448, height: 1086, generated: true as const })]);
 export const recipeMedia: Readonly<Record<string, RecipeMedia>> = Object.freeze(Object.fromEntries(entries));
+// The immutable release manifest supplies both CLI and runtime membership.
+export const mediaReleaseIds: Readonly<Record<string, readonly string[]>> = Object.freeze({
+  [mediaCatalogVersion]: recipeMediaIds,
+  ...Object.fromEntries(sourceManifest.releases.map(release => [release.version, Object.freeze([...recipeMediaIds, ...release.recipeIds])])),
+});
+const expansionMedia: Readonly<Record<string, RecipeMedia>> = Object.freeze(Object.fromEntries(generatedMedia.map(row => [row.recipeId,
+  Object.freeze({ src: row.path, width: row.width, height: row.height, generated: true as const }),
+])));
 export function getRecipeMedia(catalogVersion: string, recipeId: string): RecipeMedia | undefined {
-  return catalogVersion === mediaCatalogVersion && Object.prototype.hasOwnProperty.call(recipeMedia, recipeId) ? recipeMedia[recipeId] : undefined;
+  if (!Object.prototype.hasOwnProperty.call(mediaReleaseIds, catalogVersion) || !mediaReleaseIds[catalogVersion].includes(recipeId)) return undefined;
+  return Object.prototype.hasOwnProperty.call(recipeMedia, recipeId) ? recipeMedia[recipeId]
+    : Object.prototype.hasOwnProperty.call(expansionMedia, recipeId) ? expansionMedia[recipeId] : undefined;
 }

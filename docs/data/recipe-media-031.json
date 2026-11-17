@@ -505,5 +505,80 @@
     "height": 1086,
     "bytes": 2635358,
     "sha256": "eda6201b2f70f34f1619d719e25bf74c111e138f3117e31dcdb49457269a94ab"
+  },
+  {
+    "recipeId": "familiar-chickpea-tomato-rice",
+    "catalogVersion": "mealplan-2026-11-11-4",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-chickpea-tomato-rice.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-e7933e62-fc90-4473-b4fa-5a56c4ee2d54.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-chickpea-tomato-rice, «Нут с томатами и рисом». Exact two-serving recipe: canned drained cooked chickpeas 320 g, dry white rice 140 g, chopped tomatoes 300 g, onion 80 g, vegetable oil 14 g, salt 3 g, water 280 ml. Soften onion in all oil 3 minutes, add tomatoes 3 minutes, stir in rice, chickpeas, water and salt, cook gently covered 15–17 minutes until rice soft, rest 2 minutes, fluff and serve all juices. Show a complete portion of moist lightly tomato-tinted rice grains evenly mingled with round beige chickpeas, softened red tomato and onion, natural modest oil sheen. A single mixed one-pot dish. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:39:00Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:39:44Z",
+      "notes": "Native output individually inspected beside recipe. Moist tomato rice with distinct beige chickpeas, softened tomato and onion throughout, complete one-pot serving and oil sheen. No extra garnish. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2484185,
+    "sha256": "b86481b269d80ea04657c0b5d883082c47177430d615925b35928fe32b09e1ac"
+  },
+  {
+    "recipeId": "familiar-bean-potato-stew",
+    "catalogVersion": "mealplan-2026-11-11-4",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-bean-potato-stew.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-bdac8987-8f78-49ba-8274-c1616e4c31a5.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-bean-potato-stew, «Тёплое рагу из фасоли с картофелем». Exact two-serving recipe: canned drained cooked red kidney beans 320 g, potato 360 g cut into 1 cm cubes, carrot 160 g thin quarter-round slices, onion 80 g chopped, vegetable oil 12 g, salt 3 g, water 220 ml. Soften onion and carrot in all oil 3–4 minutes, add potatoes water salt and simmer covered 15–18 minutes until soft, stir in cooked beans and warm gently 3–4 minutes. Serve all sauce and juices. Show a complete bowl of red kidney beans mixed with tender pale potato cubes, thin orange carrot pieces and softened onion in a small amount of light natural stewing juices. No tomatoes or tomato sauce. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:39:44Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:40:23Z",
+      "notes": "Native output individually reviewed against recipe. Red kidney beans, tender potato cubes, carrot pieces and softened onion in light natural juices with oil, no tomato sauce or extra ingredient. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2488981,
+    "sha256": "98cba91afae8d6b949bd6cd2c51eba24f586561e0784bb78a390c6d73d1f9359"
+  },
+  {
+    "recipeId": "familiar-lentil-cabbage-tomato",
+    "catalogVersion": "mealplan-2026-11-11-1",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-1",
+      "mealplan-2026-11-11-2",
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-lentil-cabbage-tomato.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-82d8ab52-c0b7-48e0-af74-d923b33748d8.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-lentil-cabbage-tomato, «Чечевица с капустой и томатами». Exact two-serving recipe: dry split red lentils 140 g, tomatoes 300 g diced, white cabbage 200 g finely shredded, onion 80 g chopped, vegetable oil 12 g, salt 3 g, water 350 ml. Heat onion in all oil 3 minutes, add cabbage 4 minutes, then lentils tomatoes salt and water, stew covered 15–18 minutes until soft. Show a thick moist plant-based stew of soft orange-red split lentils with distinct tender pale cabbage ribbons, softened red tomatoes and translucent onion, all tomato cooking sauce included. It is a thick main dish with no soup broth, no potatoes. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:40:24Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:41:03Z",
+      "notes": "Individually inspected native output beside ingredients and method. Thick soft orange-red lentils, tender cabbage ribbons, softened tomato and onion, complete sauce. Distinct from potato lentil soup, no extra garnish. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2634376,
+    "sha256": "7147d06fe342f142e6ccbe63a654a37ce01327c419c972cb86295a29681b237a"
   }
 ]

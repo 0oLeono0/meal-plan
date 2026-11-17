@@ -735,5 +735,31 @@
     "height": 1086,
     "bytes": 2652677,
     "sha256": "6c79778d34e5b435085d77924d25af55f214fbf0c2e0e3e61a992e8e24efba20"
+  },
+  {
+    "recipeId": "familiar-bean-tomato-cabbage-salad",
+    "catalogVersion": "mealplan-2026-11-11-2",
+    "supportedCatalogVersions": [
+      "mealplan-2026-11-11-2",
+      "mealplan-2026-11-11-3",
+      "mealplan-2026-11-11-4"
+    ],
+    "path": "/recipes/familiar-bean-tomato-cabbage-salad.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1e8d4-f6ad-72b0-95c7-0d900f2b0a26/exec-a000767e-d21d-459e-99ae-56dbab51b038.png",
+    "prompt": "Use case: photorealistic-natural. Asset type: MealPlan local recipe hero, native PNG landscape exactly 4:3. AI culinary illustration familiar-bean-tomato-cabbage-salad, «Салат из фасоли, томатов и капусты». Exact two-serving recipe: cooked canned drained red kidney beans without sauce 240 g, fresh tomatoes 180 g chopped, raw white cabbage 120 g finely shredded, vegetable oil 8 g, salt 1 g. Drain rinse and weigh beans, finely shred cabbage and gently massage with salt, mix beans cabbage tomatoes and all oil, serve all vegetable juices immediately. Show one complete portion of fresh salad with distinct glossy burgundy red kidney beans, juicy fresh red tomato chunks and fine pale white/light-green cabbage ribbons, lightly dressed with clear vegetable oil and juices. No lettuce, cucumber, onion, carrot, herbs, vinegar, mayonnaise, seeds or bread. Show one complete portion on a simple neutral ceramic plate or bowl on a plain table. Soft natural daylight, realistic homemade texture, modest sheen from all recipe oil and complete cooking juices. Only listed recipe ingredients. No herbs, green garnish, cheese, butter, extra sides, sauces, decorative ingredients, text, brands or watermark. AI illustration, actual cooking unperformed.",
+    "generatedAt": "2026-11-17T09:46:34Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-17 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-17T09:47:20Z",
+      "notes": "Native output individually inspected beside recipe. Red kidney beans, fresh tomato chunks and finely shredded pale cabbage with clear oil and vegetable juices, no mayonnaise herbs or extra ingredients. AI illustration, actual cooking unperformed."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2663180,
+    "sha256": "1e447fd9549b572814b3c20295b87d6dedf5e4341de4d26db2d6762c02881513"
   }
 ]

@@ -88,13 +88,14 @@ describe('compiled presentation media', () => {
       expect(result.status).toBe(1);
     }
   });
-  it('audits selected release membership and keeps full 82 gate incomplete', () => {
+  it('audits selected release membership and the complete 82 physical union', () => {
     const scoped = spawnSync('node', ['scripts/check-recipe-media.mjs', '--version', bundledCatalog.version, '--ids', 'familiar-omelet-tomato-bread'], { encoding: 'utf8' });
     expect(scoped.status, scoped.stderr).toBe(0);
     expect(JSON.parse(scoped.stdout)).toEqual({ checked: 1, full: false });
     const wrong = spawnSync('node', ['scripts/check-recipe-media.mjs', '--version', mediaCatalogVersion, '--ids', 'familiar-omelet-tomato-bread'], { encoding: 'utf8' });
     expect(wrong.status).toBe(1);
     const full = spawnSync('node', ['scripts/check-recipe-media.mjs', '--all'], { encoding: 'utf8' });
-    expect(full.status).toBe(1);
+    expect(full.status, full.stderr).toBe(0);
+    expect(JSON.parse(full.stdout)).toEqual({ checked: 82, full: true });
   });
 });

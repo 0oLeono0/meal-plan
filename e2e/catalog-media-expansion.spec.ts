@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+// @ts-expect-error Test-only Node runtime API follows the existing media unit harness without @types/node.
 import { readFileSync } from 'node:fs';
 
 const historicalMedia: { recipeId: string }[] = JSON.parse(readFileSync('docs/data/recipe-media.json', 'utf8'));
@@ -34,6 +35,18 @@ for (const [name, ids] of [['media-batch-02', secondBatch], ['media-batch-03', t
     groups.push([`${name}-group-${offset / 3 + 1}`, ids.slice(offset, offset + 3)]);
   }
 }
+
+test('media-contact-sheet all thirty new illustrations remain distinct', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 1600 });
+  await page.goto('/');
+  await page.setContent(`<main style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;font:12px sans-serif">${[...firstBatch, ...secondBatch, ...thirdBatch].map(id => `<figure style="margin:0"><img src="/recipes/${id}.png" style="width:100%;aspect-ratio:4/3;object-fit:contain"><figcaption>${id}</figcaption></figure>`).join('')}</main>`);
+  const images = page.locator('img');
+  await expect(images).toHaveCount(30);
+  await images.evaluateAll(async nodes => {
+    await Promise.all(nodes.map(node => (node as HTMLImageElement).decode()));
+  });
+  await page.screenshot({ path: '.tmp/phase031-media/contact-sheet-30.png', fullPage: true });
+});
 
 for (const [name, ids] of groups) {
   test(`${name} local recipe heroes decode with disclosure`, async ({ page, context }, testInfo) => {

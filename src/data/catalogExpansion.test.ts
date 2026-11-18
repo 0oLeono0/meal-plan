@@ -8,6 +8,24 @@ import { validateExpandedCatalog } from './catalogExpansion';
 import { historicalCatalog, validateHistoricalCatalog } from './catalog';
 
 describe('immutable source-approved release expansion', () => {
+  it('pins recipe contents for every published catalog version', async () => {
+    const versions = [];
+    for (const { version, recipes } of sourceApprovedCatalogs) {
+      const payload = JSON.stringify(recipes, (_, value: unknown) =>
+        typeof value === 'bigint' ? value.toString() : value);
+      const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(payload));
+      const sha256 = Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2, '0')).join('');
+      versions.push([version, sha256]);
+    }
+    expect(Object.fromEntries(versions)).toEqual({
+      'mealplan-2026-10-28-1': '8a278e5f30878afafe3a283dd0751b5a259c407fbe54f926a63cc0637590c2a8',
+      'mealplan-2026-11-11-1': '2516287fb2b899e555167f6facfe7494a5b1c100583ddf1347850579454aaa90',
+      'mealplan-2026-11-11-2': '2011733d0aab25c3089c88fd1bfe63776ba1acef8916ccad03e355441d8e8e89',
+      'mealplan-2026-11-11-3': 'a9ab154426c10f8bdb205c0cebb887692023e1b3872c982335925e44821c2056',
+      'mealplan-2026-11-11-4': '3bb1b6a00cd112f543c08253201530a76e65841ed14c0022dd5a497e7d897dc2',
+    });
+  });
+
   it('ships four original recipes and keeps all original historical facts', async () => {
     const firstRelease = sourceApprovedCatalogs.find(catalog => catalog.version === 'mealplan-2026-11-11-1')!;
     expect(firstRelease.recipes).toHaveLength(56);

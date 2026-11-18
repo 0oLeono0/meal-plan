@@ -27,6 +27,32 @@ function fixture(pantry: readonly PantrySnapshotRow[] = [], foods: readonly Food
 }
 const stock = (amount: string, unit: 'g' | 'kg' | 'ml' = 'g'): readonly PantrySnapshotRow[] => [{ productId: 'rice', quantity: { status: 'known', value: { amount: decimal(amount), unit } }, expiresSoon: true }];
 
+it.each([
+  ['chicken', 'pantry-chicken-fillet', 'familiar-chicken-rice-carrot', 'lunch'],
+  ['egg', 'pantry-egg-mass', 'familiar-steamed-egg-pudding', 'snack'],
+] as const)('preserves %s from the draft but credits only confirmed edible weight on a new plan', (productId, confirmedId, recipeId, slot) => {
+  const original = { productId, quantity: '0,1', unit: 'kg' as const, expiresSoon: true };
+  const apply = (home: { productId: string; quantity: string; unit: 'kg'; expiresSoon: boolean }[]) => {
+    const result = buildAppliedSettings({ ...createDraft(), days: '1', home });
+    if (result.status !== 'applied') throw new Error('Pantry settings did not apply');
+    return result.settings;
+  };
+  const legacy = apply([original]);
+  expect(legacy.raw.home).toEqual([original]);
+  const settings = { seed: 'pantry-basis' };
+  const current = createPlanInputs(legacy, bundledCatalog, settings);
+  const historical = createPlanInputs(legacy, bundledCatalog, { ...settings, pantrySnapshot: legacy.home });
+  const recipe = bundledCatalog.recipes.find(row => row.id === recipeId)!;
+  const project = (inputs: typeof current) => projected({ inputs, variant: {
+    id: 'pantry-basis', instances: [{ id: 'pantry-meal', date: inputs.dates[0], slot, recipeId, recipeSnapshot: recipe,
+      catalogVersion: inputs.catalogVersion, selectedServings: decimal('2') }],
+  } }).rows.find(row => row.productId === productId)!;
+  expect(project(current).covered.amount).toEqual(decimal('0'));
+  expect(project(historical).covered.amount).toEqual(decimal('100'));
+  const confirmed = apply([{ ...original, productId: confirmedId }]);
+  expect(project(createPlanInputs(confirmed, bundledCatalog, settings)).covered.amount).toEqual(decimal('100'));
+});
+
 it('current82 four-person repeated lunches retain exact family nutrition and spend200g stock once', () => {
   const applied = buildAppliedSettings({ ...createDraft(), people: '4', days: '2' });
   if (applied.status !== 'applied') throw new Error('Four-person settings');

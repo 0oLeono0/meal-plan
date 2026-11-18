@@ -13,6 +13,56 @@ async function choose(page: Page, query: string, name: string, key = 'Enter') {
   await input.press(key);
 }
 
+test('pantry confirms edible weight from an existing draft without changing its quantity or unit', async ({ page }) => {
+  await mountAppFixture(page, { draft: { step: 4, home: [
+    { productId: 'chicken', quantity: '0,2', unit: 'kg', expiresSoon: true },
+    { productId: 'egg', quantity: '3', unit: 'pcs', expiresSoon: false },
+  ] } });
+  await expect(page.getByText('Уточните вид продукта, чтобы учесть этот вес в покупках.', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Указать куриное филе без кожи и костей' }).click();
+  await expect(page.getByLabel('Количество Куриное филе без кожи и костей', { exact: true })).toHaveValue('0,2');
+  await expect(page.getByLabel('Единица Куриное филе без кожи и костей', { exact: true })).toHaveValue('kg');
+  await expect(page.getByLabel('Скоро испортится Куриное филе без кожи и костей', { exact: true })).toBeChecked();
+  await page.getByRole('combobox', { name: 'Найти продукт', exact: true }).fill('без скорлупы');
+  await page.getByRole('option', { name: 'Яичная масса без скорлупы', exact: true }).click();
+  await expect(page.getByLabel('Единица Яичная масса без скорлупы', { exact: true }).locator('option')).toHaveText(['Не выбрана', 'г', 'кг']);
+  await expect(page.getByLabel('Количество Яйца', { exact: true })).toHaveValue('3');
+  await page.reload();
+  await expect(page.getByLabel('Количество Куриное филе без кожи и костей', { exact: true })).toHaveValue('0,2');
+});
+
+test('pantry real generation preserves old draft weight and only snapshots explicitly confirmed fillet', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'Production entry coverage on Chromium');
+  test.setTimeout(45_000);
+  const row = { productId: 'chicken', quantity: '0,2', unit: 'kg', expiresSoon: true };
+  await mountAppFixture(page, { draft: { step: 4, days: '1', budget: '2000', home: [row] } });
+  await page.reload();
+  await expect(page.getByText('Уточните вид продукта, чтобы учесть этот вес в покупках.', { exact: true })).toBeVisible();
+
+  async function generate(replace = false) {
+    await page.getByRole('button', { name: 'Составить меню', exact: true }).click();
+    if (replace) {
+      await page.getByRole('dialog', { name: 'Составить меню с новыми настройками?' })
+        .getByRole('button', { name: 'Составить меню', exact: true }).click();
+    }
+    await expect(page).toHaveURL(/\/menu$/, { timeout: 25_000 });
+    return page.evaluate(() => JSON.parse(localStorage.getItem('mealplan:guest:active-plan:v1')!).plan.inputs);
+  }
+
+  const unconfirmed = await generate();
+  expect(unconfirmed.appliedSettings.raw.home).toEqual([row]);
+  expect(unconfirmed.pantrySnapshot).toEqual([]);
+  await page.goto('/plan/new');
+  await expect(page.getByLabel('Количество Курица', { exact: true })).toHaveValue('0,2');
+  await page.getByRole('button', { name: 'Указать куриное филе без кожи и костей' }).click();
+  const confirmed = await generate(true);
+  expect(confirmed.appliedSettings.raw.home).toEqual([{ ...row, productId: 'pantry-chicken-fillet' }]);
+  expect(confirmed.pantrySnapshot).toEqual([{
+    productId: 'pantry-chicken-fillet', expiresSoon: true,
+    quantity: { status: 'known', value: { amount: { numerator: '200', denominator: '1' }, unit: 'g' } },
+  }]);
+});
+
 test('exclusions populated keyboard: exactly five restrictions and resolved ID tags', async ({ page }) => {
   await exclusions(page);
   await expect(page.getByRole('checkbox')).toHaveCount(5);

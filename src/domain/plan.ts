@@ -2,6 +2,7 @@ import { immutableSnapshot, sameSnapshot, validateAppliedSettings } from './appl
 import type { AppliedSettings, PantrySnapshotRow } from './appliedSettings';
 import type { Catalog, CatalogDiagnostic, MealSlot, Recipe, SourceReference } from './catalog';
 import { validateCatalog } from '../adapters/catalog';
+import { needsPantryWeightConfirmation } from './pantry';
 import { compare, decimal, decodeRational, dimension, encodeRational, rational } from './quantities';
 import type { Rational } from './quantities';
 
@@ -156,7 +157,9 @@ export function createPlanInputs(appliedSettings: AppliedSettings, catalog: Cata
   const startDate = localDateOnly((options.now ?? (() => new Date()))());
   const value = immutableSnapshot({ schemaVersion: PLAN_SCHEMA_VERSION, appliedSettings, startDate, dateBasis: 'local-calendar',
     dates: calendarDates(startDate, appliedSettings.days), seed: options.seed, catalogVersion: catalog.version, catalog,
-    sourceSnapshots: sources(catalog), pantrySnapshot: options.pantrySnapshot ?? appliedSettings.home });
+    sourceSnapshots: sources(catalog), pantrySnapshot: options.pantrySnapshot ?? appliedSettings.home.filter(
+      row => row.quantity.status !== 'known' || !needsPantryWeightConfirmation(row.productId, row.quantity.value.unit),
+    ) });
   assertInputs(value);
   return value;
 }

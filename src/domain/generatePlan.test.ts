@@ -49,6 +49,29 @@ function success(result: GenerationResult) {
 function error(result: GenerationResult) { expect(result.status).toBe('error'); if (result.status !== 'error') throw new Error('Expected error'); return result.error; }
 const stock = (amount: string, unit: 'g' | 'ml' = 'g'): readonly PantrySnapshotRow[] => [{ productId: 'rice', expiresSoon: true, quantity: { status: 'known', value: { amount: decimal(amount), unit } } }];
 
+it('uses confirmed edible stock consistently for budget bounds, expiry preference and exclusions', () => {
+  const profileId = 'usda-171077-raw';
+  const chicken = { ...food('chicken', '2'), profileId };
+  const recipes = (grams: string) => {
+    const entry = recipe('chicken', 'chicken', grams);
+    return { ...entry, ingredients: entry.ingredients.map(ingredient => ({ ...ingredient, profileId })) };
+  };
+  const home = (productId: string, quantity: string): SettingsDraft['home'] => [{ productId, quantity, unit: 'g', expiresSoon: true }];
+  const required = { version: 'confirmed-budget', foods: [chicken], recipes: [recipes('100')] };
+  const refused = error(run(fixture({ budget: '500', home: home('chicken', '200') }, required)).result);
+  expect(refused.code).toBe('BUDGET_TOO_LOW');
+  expect(refused.budgetEvidence).toMatchObject({ kind: 'lower-bound', amount: decimal('800') });
+  const funded = success(run(fixture({ budget: '500', home: home('pantry-chicken-fillet', '200') }, required)).result);
+  expect(funded.projection.costs.exact).toEqual({ ingredient: decimal('800'), covered: decimal('400'), purchase: decimal('400') });
+
+  const alternatives = { version: 'confirmed-expiry', foods: [chicken, food('rice')], recipes: [recipes('10'), recipe('rice', 'rice', '1')] };
+  for (const input of [{ home: home('chicken', '10') }, { home: home('pantry-chicken-fillet', '10'), exclusionIds: ['chicken'] }]) {
+    expect(success(run(fixture(input, alternatives)).result).ids).toEqual(Array(4).fill('rice'));
+  }
+  const prioritized = success(run(fixture({ home: home('pantry-chicken-fillet', '10') }, alternatives)).result);
+  expect(prioritized.ids.filter(id => id === 'chicken')).toHaveLength(1);
+});
+
 describe('current82 independent weekly acceptance', () => {
   const seeds = ['11', '23', '37', '53', '71', '89', '107'];
   const groups = {

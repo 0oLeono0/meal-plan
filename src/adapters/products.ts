@@ -1,4 +1,5 @@
 import type { Unit } from '../domain/settings';
+import { ediblePantryProducts } from '../domain/pantry';
 import foodSnapshot from '../../data/sources/food.snapshot.json';
 import expansion from '../../data/sources/phase031.snapshot.json';
 
@@ -17,9 +18,15 @@ export const productNames: readonly ProductName[] = [
   })),
 ];
 export const popularProductIds = productNames.slice(0, 6).map(product => product.id);
+export const pantryProductNames: readonly ProductName[] = [
+  ...productNames,
+  { id: ediblePantryProducts[0].pantryId, name: 'Куриное филе без кожи и костей', synonyms: ['курица'], allowedUnits: ['g', 'kg'] },
+  { id: ediblePantryProducts[1].pantryId, name: 'Яичная масса без скорлупы', synonyms: ['яйца', 'яйцо'], allowedUnits: ['g', 'kg'] },
+];
 const normalize = (value: string) => value.trim().normalize('NFC').toLocaleLowerCase('ru');
-export function searchProducts(query: string): readonly ProductName[] {
+export function searchProducts(query: string, names = productNames): readonly ProductName[] {
   const term = normalize(query);
-  return term ? productNames.filter(product => [product.name, ...product.synonyms].some(name => normalize(name).includes(term))) : [];
+  return term ? names.filter(product => [product.name, ...product.synonyms].some(name => normalize(name).includes(term))) : [];
 }
 export const localProductCatalog: ProductCatalogPort = { async search(query) { return searchProducts(query); } };
+export const pantryProductCatalog: ProductCatalogPort = { async search(query) { return searchProducts(query, pantryProductNames); } };

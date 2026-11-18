@@ -2,6 +2,7 @@ import { immutableSnapshot, sameSnapshot } from './appliedSettings';
 import { evaluateIngredient, nutrientKeys } from './catalog';
 import type { CatalogDiagnostic, FoodProfile, MealSlot, Nutrition, PriceProfile } from './catalog';
 import { mealSlots, validatePlanInputs } from './plan';
+import { matchesPantryFood } from './pantry';
 import type { PlanInputs, PlanVariant, RecipeInstance } from './plan';
 import { add, compare, convertQuantity, decimal, divide, multiply, normalizeQuantity, rational, roundHalfUp, subtract } from './quantities';
 import type { Quantity, Rational } from './quantities';
@@ -104,20 +105,25 @@ export function projectPlan(rawInputs: PlanInputs, variant: PlanVariant): Projec
         // A food's verified nutrient basis provides a single compatible row, including evidenced cross-unit conversions.
         const quantity = normalizeQuantity(convertQuantity(ingredient.quantity, food.nutrition.reference.unit, food, food.conversions));
         let coveredAmount = zero(), issue: PantryIssue | null = null;
-        const pantry = inputs.pantrySnapshot.find(row => row.productId === food.productId);
-        const remainder = stock.get(food.productId);
-        if (pantry?.quantity.status === 'unknown') issue = 'UNKNOWN_PANTRY_QUANTITY';
-        if (remainder) {
+        for (const pantry of inputs.pantrySnapshot.filter(row => matchesPantryFood(row.productId, food))) {
+          const remainder = stock.get(pantry.productId);
+          if (!remainder) {
+            issue ??= 'UNKNOWN_PANTRY_QUANTITY';
+            continue;
+          }
           try {
             const available = convertQuantity(remainder, quantity.unit, food, food.conversions);
-            coveredAmount = compare(available.amount, quantity.amount) > 0 ? quantity.amount : available.amount;
-            const consumed = convertQuantity({ amount: coveredAmount, unit: quantity.unit }, remainder.unit, food, food.conversions);
-            stock.set(food.productId, { ...remainder, amount: subtract(remainder.amount, consumed.amount) });
+            const needed = subtract(quantity.amount, coveredAmount);
+            const fromRow = compare(available.amount, needed) > 0 ? needed : available.amount;
+            const consumed = convertQuantity({ amount: fromRow, unit: quantity.unit }, remainder.unit, food, food.conversions);
+            stock.set(pantry.productId, { ...remainder, amount: subtract(remainder.amount, consumed.amount) });
+            coveredAmount = add(coveredAmount, fromRow);
           } catch (error) {
             if (!(error instanceof Error) || error.message !== 'INCOMPATIBLE_DIMENSION') throw error;
-            issue = 'INCOMPATIBLE_PANTRY_UNIT';
+            issue ??= 'INCOMPATIBLE_PANTRY_UNIT';
           }
         }
+        if (coveredAmount.numerator > 0n) issue = null;
         if (issue) {
           const issueKey = JSON.stringify([food.productId, food.profileId, issue]);
           if (!issueKeys.has(issueKey)) { issueKeys.add(issueKey); pantryIssues.push({ productId: food.productId, profileId: food.profileId, code: issue }); }

@@ -3,6 +3,7 @@ import type { CatalogDiagnostic, Recipe } from './catalog';
 import { buildActivePlanEnvelope, mealSlots, validatePlanInputs } from './plan';
 import type { BudgetEvidence, GenerationErrorCode, GenerationResult, GenerationSelectionOptions, PlanInputs, PlanVariant } from './plan';
 import { projectPlan } from './planProjection';
+import { matchesPantryFood } from './pantry';
 import type { PlanProjection } from './planProjection';
 import { add, compare, convertQuantity, decimal, divide, multiply, rational, subtract } from './quantities';
 import type { Rational } from './quantities';
@@ -51,7 +52,7 @@ function makeVariant(inputs: PlanInputs, ids: readonly string[]): PlanVariant {
 function score(inputs: PlanInputs, projection: PlanProjection, ids: readonly string[], diversity?: RecipeDiversityMap): readonly Rational[] {
   let early = zero();
   for (const stock of inputs.pantrySnapshot.filter(row => row.expiresSoon)) {
-    const rows = projection.rows.filter(row => row.productId === stock.productId);
+    const rows = projection.rows.filter(row => matchesPantryFood(stock.productId, row));
     if (stock.quantity.status === 'unknown') {
       if (rows.some(row => row.sources.some(source => inputs.dates.slice(0, 2).includes(source.date)))) early = add(early, decimal('1'));
       continue;
@@ -191,7 +192,7 @@ export function* createPlanSearch(rawInputs: PlanInputs, options: SearchOptions 
     const eligibleProfiles = new Set(admitted.flatMap(row => row.recipe.ingredients.map(ingredient => ingredient.profileId)));
     for (const stock of inputs.pantrySnapshot) if (stock.quantity.status === 'known') {
       let maximum = zero();
-      for (const food of inputs.catalog.foods.filter(food => food.productId === stock.productId && eligibleProfiles.has(food.profileId))) {
+      for (const food of inputs.catalog.foods.filter(food => matchesPantryFood(stock.productId, food) && eligibleProfiles.has(food.profileId))) {
         if (food.price.status !== 'known' || food.nutrition.status !== 'known') continue;
         try {
           // Projection covers stock in the nutrition row's compatible basis, then prices

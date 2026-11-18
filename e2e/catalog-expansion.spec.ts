@@ -226,9 +226,9 @@ for (const width of [360, 768, 1280]) test(`acceptance smoke real wizard mixed w
   await page.waitForTimeout(270);
   await page.getByRole('button', { name: 'Далее', exact: true }).click();
   await page.getByRole('combobox').fill('курица');
-  await page.getByRole('option', { name: 'Курица', exact: true }).click();
-  await page.getByLabel('Количество Курица', { exact: true }).fill('200');
-  await page.getByLabel('Единица Курица', { exact: true }).selectOption('g');
+  await page.getByRole('option', { name: 'Куриное филе без кожи и костей', exact: true }).click();
+  await page.getByLabel('Количество Куриное филе без кожи и костей', { exact: true }).fill('200');
+  await page.getByLabel('Единица Куриное филе без кожи и костей', { exact: true }).selectOption('g');
   const started = Date.now();
   await page.getByRole('button', { name: 'Составить меню', exact: true }).click();
   await expect(page).toHaveURL(/\/menu$/, { timeout: 32_000 });

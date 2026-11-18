@@ -6,11 +6,11 @@ current_phase: 4
 current_phase_name: Изменение блюд и порций
 current_plan: Not started
 status: planning
-stopped_at: Фаза 03.1 принята. Следующая фаза 4 — изменение блюд и порций.
-last_updated: "2026-11-18T14:30:35.290Z"
+stopped_at: "Фаза 4: зафиксированы решения по замене блюд, порциям и пересчёту, начинается планирование."
+last_updated: "2026-11-18T14:34:44.884Z"
 last_activity: 2026-11-18
 last_activity_desc: Phase 03.1 complete, transitioned to Phase 4
-state_head: f7b611e24117e452531cd5edcaedcb89d3290c64
+state_head: dd8eef3062ffc102dba3c341ae831f5cd7f158dd
 progress:
   total_phases: 8
   completed_phases: 4
@@ -176,6 +176,6 @@ Progress: [█████░░░░░] 50%
 
 ## Session Continuity
 
-Last session: 2026-11-18T14:30:32.452Z
-Stopped at: Фаза 03.1 принята. Следующая фаза 4 — изменение блюд и порций.
-Resume file: .planning/ROADMAP.md
+Last session: 2026-11-18T14:34:42.023Z
+Stopped at: Фаза 4: зафиксированы решения по замене блюд, порциям и пересчёту, начинается планирование.
+Resume file: .planning/phases/04-izmenenie-blyud-i-portsiy/04-CONTEXT.md

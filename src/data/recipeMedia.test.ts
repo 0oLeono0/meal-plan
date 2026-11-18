@@ -51,6 +51,21 @@ describe('compiled presentation media', () => {
       expect(result.stderr.trim()).toContain('Physical PNG set');
     } finally { unlinkSync(extra); }
   });
+  it('checks file contents only for the requested IDs while full audit checks every image', () => {
+    const historical = JSON.parse(readFileSync('docs/data/recipe-media.json', 'utf8'));
+    const expansion = JSON.parse(readFileSync('docs/data/recipe-media-031.json', 'utf8'));
+    expansion[0].sha256 = '0'.repeat(64);
+    const path = '.tmp/scoped-media-unselected-content.json';
+    writeFileSync(path, JSON.stringify([...historical, ...expansion]));
+    try {
+      const scoped = spawnSync('node', ['scripts/check-recipe-media.mjs', '--ledger', path, '--version', mediaCatalogVersion], { encoding: 'utf8' });
+      expect(scoped.status, scoped.stderr).toBe(0);
+      expect(JSON.parse(scoped.stdout)).toEqual({ checked: 52, full: false });
+      const full = spawnSync('node', ['scripts/check-recipe-media.mjs', '--ledger', path, '--all'], { encoding: 'utf8' });
+      expect(full.status).toBe(1);
+      expect(full.stderr).toContain('Hash/duplicate/size mismatch');
+    } finally { unlinkSync(path); }
+  });
   it('rejects mismatched hash, ratio, path, missing identity and unreviewed provenance', () => {
     const rows = JSON.parse(readFileSync('docs/data/recipe-media.json', 'utf8'));
     const corruptions = [{ sha256: '0'.repeat(64) }, { height: 12 }, { path: '/recipes/../secret.png' }, { provider: '' }, { visualReview: { status: 'rejected' } }, { recipeId: 'missing' }];

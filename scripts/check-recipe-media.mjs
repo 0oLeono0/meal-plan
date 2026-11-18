@@ -27,6 +27,8 @@ export function auditMedia(rows, ids, version = currentVersion, requireFull = fa
   const expected = expectedIds.map(id => `${id}.png`).sort();
   if (physical.some(file => !expected.includes(file)) || (full && (physical.length !== expected.length || physical.some((file, i) => file !== expected[i])))) throw Error('Physical PNG set must match supported union of 82 recipe IDs');
   const hashes = new Set();
+  const requested = new Set(ids);
+  const contained = fs.realpathSync(path.join(root, 'public/recipes')) + path.sep;
   const identities = new Set();
   const paths = new Set();
   // Validate all supplied rows, so nonselected entries cannot conceal duplicates.
@@ -43,16 +45,17 @@ export function auditMedia(rows, ids, version = currentVersion, requireFull = fa
     }
     for (const key of ['originalArtifact', 'prompt', 'generatedAt', 'provider', 'termsUrl', 'effectiveDate']) if (typeof row[key] !== 'string' || !row[key].trim()) throw Error(`Missing provenance ${key}: ${id}`);
     if (!Number.isFinite(Date.parse(row.generatedAt)) || !row.termsUrl.startsWith('https://') || row.visualReview?.status !== 'accepted' || !row.visualReview.notes?.trim() || !Number.isFinite(Date.parse(row.visualReview.reviewedAt))) throw Error(`Unreviewed provenance: ${id}`);
+    if (typeof row.sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(row.sha256) || hashes.has(row.sha256)) throw Error(`Invalid or duplicate ledger hash: ${id}`);
+    hashes.add(row.sha256);
+    if (!full && !requested.has(id)) continue;
     const file = path.resolve(root, `public${row.path}`);
-    const contained = fs.realpathSync(path.join(root, 'public/recipes')) + path.sep;
     if (!fs.realpathSync(file).startsWith(contained)) throw Error(`Path escapes assets: ${id}`);
     const png = fs.readFileSync(file);
     if (png.length < 33 || png.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a' || png.readUInt32BE(8) !== 13 || png.subarray(12, 16).toString() !== 'IHDR') throw Error(`Invalid PNG header: ${id}`);
     const width = png.readUInt32BE(16), height = png.readUInt32BE(20);
     if (!width || !height || width * 3 !== height * 4 || width !== row.width || height !== row.height) throw Error(`Invalid dimensions: ${id}`);
     const hash = crypto.createHash('sha256').update(png).digest('hex');
-    if (hash !== row.sha256 || hashes.has(hash) || (row.bytes !== undefined && row.bytes !== png.length)) throw Error(`Hash/duplicate/size mismatch: ${id}`);
-    hashes.add(hash);
+    if (hash !== row.sha256 || (row.bytes !== undefined && row.bytes !== png.length)) throw Error(`Hash/duplicate/size mismatch: ${id}`);
   }
   for (const id of ids) if (!identities.has(id)) throw Error(`Missing ledger ID: ${id}`);
   if (full && (rows.length !== expectedIds.length || ids.length !== selectedIds.length)) throw Error('Full mode requires exactly 82 entries');

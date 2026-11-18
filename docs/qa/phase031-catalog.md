@@ -1,0 +1,80 @@
+# Интегрированная приёмка каталога Phase03.1
+
+Дата17.11.2026. Выпуск mealplan-2026-11-11-4 содержит82рецепта,32профиля и30новых локальных иллюстраций. CAT-01…05 ожидают независимую проверку фазы и пользовательскую UAT.
+
+## Проверяемые случаи
+
+Первый literal oracle B1/L1/D7/S1 использует2порции и200г запаса курицы. На человека1421.72ккал,86.767Б,40.709Ж,180.033У. Для семьи2843.44ккал. Стоимости701.2863724691357984/122/579.2863724691357984RUB. Второй case удваивает исходные граммы до4порций. Семья5686.88ккал,347.068Б,162.836Ж,720.132У. Стоимости1402.5727449382715968/122/1280.5727449382715968RUB. Display-row rounding даёт140257/12200/128057коп. JSON содержит13literal потребностей и каждые covered/purchase grams. Ожидания получены Python Decimal из исходных price strings и граммов, без production imports.
+
+Новый реальный flow проходит production App и мастер7дней/4человека/12000RUB/30минут с явным исключением pork и200г chicken. Затем выбирает второй из трёх вариантов, проверяет сохранённый exact instance/variant recipe context, семейные порции, сгруппированные покупки и неизменность bytes после reload. Независимый цикл суммирует исходные ingredients, nutrient values и price strings из сохранённого source snapshot, отдельно сравнивает КБЖУ семьи,13+продуктовых строк и три стоимости. Expected не вызывает domain projector или presentation formatter. По фактическим productId проверяются птица, рыба, мясо, бобовые и яйцо/молочка, минимум5новыхrecipeId. Исторические тесты выполняют load/select/append/recreate/recipe/reload для52/56/68/75. Новые входные данные получают82.
+
+Фиксированный current case проверяет360/390/430/768/1280px. Реальный wizard flow проверяет360/768/1280px. На каждом экране проверяются overflow, единая сноска примерных расчётов и нативный disclosure с Enter/Space. Изображение рецепта имеет meaningful alt и реально декодируется. Отдельные cases проверяют реальный отказ10людей/7дней/500RUB, неизменность испорченных saved bytes после retry и cap12 через настоящий active adapter/localStorage. Unit cases используют current82 и4порции для unknown/incompatible pantry и однократного списания.
+
+## Исправление пояснения порций
+
+При визуальном просмотре выявлено, что ингредиенты масштабируются, а сохранённые шаги описывают базовые2порции и280мл воды. Добавлено условное пояснение исходного/выбранного числа порций и точного коэффициента для количеств продуктов и воды. Оно также сообщает зависимость времени от готовности блюда. Существующий текст рецептов и исходные доверенные факты сохранены.
+
+RED browser test действительно достиг current recipe и упал на отсутствующем role=note. Неизменённый JUnit и evidence находятся в .tmp/phase031-08/scaled-red.xml и scaled-red-evidence.json. GSD classifier вернул RED_EVIDENCE_OK. GREEN проверил4порции с коэффициентом2,1порцию с0.5, сохранение текста шагов и отсутствие notice у исходного direct recipe. Focused fix committed2265f78.
+
+## Фактические проверки
+
+Подробные stdout/JUnit/JSON сохраняются в .tmp/phase031-08. Полные browser gates выполняются последовательно, каждый engine использует workers1.
+
+| Область | Фактический результат |
+|---|---|
+| First focused fixed360 | Passed4.8s |
+| First focused real wizard360 после исправления test selector | Passed13.7s |
+| Focused domain cases |45/45,2files,597ms runner до двух дополнительных pantry cases |
+| Scaled instructions GREEN | Passed4.7s |
+| Corrected smoke и новые recovery cases |14/14,exit0,135.96s command |
+| Full unit |575/575,22files,exit0,220.82s runner/222.51s command, без параллельного браузера |
+| Actual cap12 storage UI | Passed2.4s |
+| Actual wizard1280 после исправления test-only mobile toggle assumption | Passed13.6s |
+| Typecheck | Exit0,6.32s command |
+| Lint | Exit0,5.23s command |
+| Build | Exit0,2.4s command,858ms Vite,JS742.84kB/gzip189.68kB |
+| CLI full media |82/82,full=true,exit0,0.36s |
+| CLI five versions |52/56/68/75/82,exit0,0.4/0.49/0.49/0.44/0.45s |
+
+Build сохраняет известное предупреждение размера чанка WINDOWS21. Production deadline30s и остальные work/byte bounds сохранены.
+
+## Traceability CAT
+
+| Требование | Source и artifact evidence | Автоматическая проверка |
+|---|---|---|
+| CAT-01 | familiarRecipes и recipeDiversity,30review строк B1…S6 в sources review,82recipe IDs | catalogExpansion.test,generatePlan.test,actual wizard mixed groups |
+| CAT-02 |20новых records в phase031.snapshot,12исторических profiles,USDA archive и label basis,явные estimates | sources.test,catalog.test,catalogExpansion.test,две независимые literal oracles |
+| CAT-03 |30полных составов/steps/oil/garnish,actual ImageGen provenance и ingredient/method visualReview | recipeView/planProjection tests,current recipe routes,media CLI и decode |
+| CAT-04 |7seed matrix11/23/37/53/71/89/107 и feasible witness5117.0601134567900968RUB | generatePlan/adapters/controller tests,actual wizard4people12000,actual failure10people500 |
+| CAT-05 | trusted52/56/68/75/82,unchanged source/media historical bytes,current save/select/recipe/shopping/reload | activePlan/generation tests,versioned catalog browser flows,full82media и per-version audits |
+
+Все пять требований сохраняют Pending до независимого verifier. Выполненные автоматические проверки и agent review передаются ему как evidence.
+
+## История начальных неуспешных прогонов
+
+- Первый новый wizard test искал несуществующий label «Свинина». Фактическое sourced name «Свиная вырезка сырая, мякоть без видимого жира». Test query исправлен на «свин» и точный существующий label. Production search сохранён.
+- Первый smoke прошёл10/11. Desktop1280 показывает всю неделю без mobile toggle, новый test ожидал скрытую на этом breakpoint кнопку. Ветвление теста приведено к действующему responsive contract. Таймаут приложения сохранён.
+- Focused group прошёл3/4. Новый budget assertion искал причину внутри role=alert, тогда как причина находится в h1, alert содержит пояснение сохранённого черновика. Оба семантических элемента теперь проверяются отдельно.
+- Эти три ошибки авторства тестов не использованы как production RED. Единственный production RED относится к отсутствующему пояснению шага при масштабировании.
+
+## Визуальный и человеческий охват
+
+Агент реально просмотрел screenshots fixed menu360, recipe768, shopping1280 и контактный лист всех30новых иллюстраций. Полные списки, тексты, локальные изображения и цены читаются, переполнение проверяется браузерными assertions. Первые screenshots four-portion fixture ещё использовали applied people2. Fixture приведён к4людям для current case и теперь отдельно проверяет1422ккал на человека. Исторический scale fixture сохраняет исходные2люди для собственного regression contract.
+
+Индивидуальные ingredient/method visual reviews30изображений записаны в media ledger планами06–07. Новый контактный лист сверён с recipe matrix в sources review. Hash/decode не оценивают вкус блюда. Практическая готовка, native Safari, физические устройства и AT в этом плане не выполнялись. Прежние native-Tab Windows WebKit failures15/16/24/25 сохраняются в историческом QA. Повторная пользовательская UAT Phase03 и полный960suite остаются за scope этого плана.
+
+Для пользовательской UAT достаточно проверить, привычны ли составы и порции выбранных блюд и соответствует ли иллюстрация ожидаемой подаче. Ответы фиксируются отдельным шагом root orchestrator. Автоматизированные результаты сохраняют статус CAT Pending до независимого verifier.
+
+## Итоговый браузерный прогон
+
+В каждом движке выполнены `e2e/catalog-expansion.spec.ts` и `e2e/catalog-media-expansion.spec.ts` с одним работником. Числа сверены с JUnit.
+
+| Движок | Пройдено | Время |
+| --- | --- | --- |
+| chromium | 72/72 | 351.49 с |
+| firefox | 72/72 | 461.83 с |
+| webkit | 72/72 | 626.71 с |
+
+Адресная регрессия фазы 03 в Chromium прошла 3/3. Проверены выбор варианта, добавление варианта после перезагрузки и переход к связанному рецепту без изменения сохранённых данных. Отчёт в `.tmp/phase031-08/phase03-targeted.xml`.
+
+На этом этапе проверены браузерные движки Playwright. Практическое приготовление, физические устройства и нативная доступность остаются отдельными проверками.

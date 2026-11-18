@@ -88,6 +88,7 @@ export function RecipePage({ snapshot, catalog, onRetry }: { snapshot: Generatio
           ? <p><strong>Для выбранного числа порций:</strong> {cookingGuidance}</p>
           : <p>Если в шагах указано общее число заготовок, пересчитайте его в той же пропорции. Делите готовое блюдо на выбранное число порций. Если продукты не помещаются в посуду при исходной толщине слоя, готовьте партиями.</p>}
       </div>}
+      {scaled && <h3 className="mt-4">Исходные шаги рецепта</h3>}
       <ol aria-label="Шаги приготовления" className="list-decimal pl-6 space-y-4 leading-relaxed">{view.recipe.steps.map((step, index) => <li key={index}>{step}</li>)}</ol>
     </section>
     <p>Расчёт не подтверждает полноценность рациона</p><p>КБЖУ рассчитаны по составу продуктов и не являются медицинской рекомендацией</p>

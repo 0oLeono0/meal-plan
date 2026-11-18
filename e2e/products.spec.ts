@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { mountAppFixture, draftKey } from './fixtures';
-import type { DraftAction, SettingsDraft } from '../src/domain/settings';
+import type { DraftAction, HomeDraftRow, SettingsDraft } from '../src/domain/settings';
 
 async function exclusions(page: Page) {
   await mountAppFixture(page, { draft: { step: 3 } });
@@ -34,7 +34,7 @@ test('pantry confirms edible weight from an existing draft without changing its 
 test('pantry real generation preserves old draft weight and only snapshots explicitly confirmed fillet', async ({ page, browserName }) => {
   test.skip(browserName !== 'chromium', 'Production entry coverage on Chromium');
   test.setTimeout(45_000);
-  const row = { productId: 'chicken', quantity: '0,2', unit: 'kg', expiresSoon: true };
+  const row: HomeDraftRow = { productId: 'chicken', quantity: '0,2', unit: 'kg', expiresSoon: true };
   await mountAppFixture(page, { draft: { step: 4, days: '1', budget: '2000', home: [row] } });
   await page.reload();
   await expect(page.getByText('Уточните вид продукта, чтобы учесть этот вес в покупках.', { exact: true })).toBeVisible();

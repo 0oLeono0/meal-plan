@@ -61,9 +61,12 @@ test('scaled-molds pudding keeps 200 ml per mold and uses enough batches', async
     await saveTracer(page, servings, currentVersion, ids);
     await page.goto('/recipe/familiar-steamed-egg-pudding?variant=source-tracer&instance=tracer-3');
     const note = page.getByRole('note', { name: 'Пересчёт шагов', exact: true });
+    const originalSteps = page.getByRole('heading', { name: 'Исходные шаги рецепта', exact: true });
     if (servings === '2') {
       await expect(note).toHaveCount(0);
+      await expect(originalSteps).toHaveCount(0);
     } else {
+      await expect(originalSteps).toBeVisible();
       await expect(note).toContainText(`Замесите всю смесь по списку ингредиентов (${146 * Number(servings)} г).`);
       await expect(note).toContainText(`Формочки по 200 мл. Всего формочек: ${servings}.`);
       await expect(note).toContainText('Готовьте партиями, если все формочки не помещаются на паровую вставку');

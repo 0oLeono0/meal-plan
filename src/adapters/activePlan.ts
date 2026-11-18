@@ -19,6 +19,9 @@ export interface ActivePlanPort {
   save(plan: ActivePlanEnvelope, guard: { readonly isCurrent: () => boolean }): Promise<ActivePlanSaveResult>;
 }
 type PlanStorage = Pick<Storage, 'getItem' | 'setItem'>;
+function fitsActivePlanStorage(raw: string): boolean {
+  return raw.length <= ACTIVE_PLAN_MAX_BYTES && new TextEncoder().encode(raw).byteLength <= ACTIVE_PLAN_MAX_BYTES;
+}
 /** Shared load/save trust boundary. Derived totals are always recomputed, never trusted JSON. */
 export function validateActiveBundle(input: unknown, registry: TrustedCatalogRegistry = trustedCatalogs): { readonly status: 'valid'; readonly bundle: ActiveBundle }
   | { readonly status: 'invalid'; readonly diagnostics: readonly CatalogDiagnostic[] } {
@@ -63,7 +66,7 @@ export function createActivePlanAdapter(getStorage: () => PlanStorage = () => wi
       inspectedRaw = raw;
       if (raw === null) { writable = true; return { status: 'missing' }; }
       try {
-        if (raw.length > ACTIVE_PLAN_MAX_BYTES) return { status: 'corrupt' };
+        if (!fitsActivePlanStorage(raw)) return { status: 'corrupt' };
         const value: unknown = JSON.parse(raw);
         if (typeof value !== 'object' || value === null || Array.isArray(value)
           || Object.keys(value).sort().join(',') !== 'plan,schemaVersion'
@@ -81,7 +84,7 @@ export function createActivePlanAdapter(getStorage: () => PlanStorage = () => wi
       if (checked.status === 'invalid') return { status: 'error', diagnostics: checked.diagnostics };
       try {
         const raw = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(checked.bundle.plan) });
-        if (raw.length > ACTIVE_PLAN_MAX_BYTES) return { status: 'error' };
+        if (!fitsActivePlanStorage(raw)) return { status: 'error' };
         const storage = getStorage();
         // Another tab/adapter may have changed storage since our successful inspection.
         if (storage.getItem(ACTIVE_PLAN_KEY) !== inspectedRaw) { writable = false; return { status: 'blocked' }; }

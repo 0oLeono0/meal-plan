@@ -32,6 +32,22 @@ function storage() {
 const current = { isCurrent: () => true };
 const rawPlan = (plan = fixture()) => JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
 
+it('rejects oversized UTF-8 storage before parsing and preserves the original value', async () => {
+  const store = storage();
+  const raw = JSON.stringify({ padding: 'я'.repeat(ACTIVE_PLAN_MAX_BYTES / 2) });
+  expect(raw.length).toBeLessThan(ACTIVE_PLAN_MAX_BYTES);
+  expect(new TextEncoder().encode(raw).byteLength).toBeGreaterThan(ACTIVE_PLAN_MAX_BYTES);
+  store.map.set(ACTIVE_PLAN_KEY, raw);
+  const parse = vi.spyOn(JSON, 'parse');
+  try {
+    expect(await createActivePlanAdapter(() => store).load()).toEqual({ status: 'corrupt' });
+    expect(parse.mock.calls.length).toBe(0);
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+  } finally {
+    parse.mockRestore();
+  }
+});
+
 it.each([['historical52', legacyRaw], ['issued56', release1Raw], ['issued68', release2Raw], ['issued75', release3Raw]])(
   'preserves %s unsupported and tampered persisted bytes with typed diagnostics', async (_, originalRaw) => {
     for (const mutation of ['unknown-version', 'unused-source', 'inactive-recipe'] as const) {

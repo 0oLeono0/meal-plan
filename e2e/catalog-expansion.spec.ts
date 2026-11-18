@@ -10,7 +10,7 @@ import dinnerOracle from './fixtures/catalog031-dinners-oracle.json' with { type
 const activeKey = 'mealplan:guest:active-plan:v1';
 interface TracerRow { id: string; required: string; covered: string; purchase: string }
 
-async function saveTracer(page: Page, servings = '2', version = 'mealplan-2026-11-11-1') {
+async function saveTracer(page: Page, servings = '2', version = 'mealplan-2026-11-11-1', selection = oracle.recipeIds) {
   await page.goto('/');
   return page.evaluate(async ({ recipeIds, servings, version }) => {
     const catalogPath = '/src/data/catalog.ts', planPath = '/src/domain/plan.ts';
@@ -48,11 +48,44 @@ async function saveTracer(page: Page, servings = '2', version = 'mealplan-2026-1
       kopecks: Object.fromEntries(Object.entries(projection.costs.kopecks).map(([key, value]) => [key, String(value)])),
       rows: projection.rows.map((row: { productId: string; required: { amount: Parameters<typeof formatExact>[0] }; covered: { amount: Parameters<typeof formatExact>[0] }; purchase: { amount: Parameters<typeof formatExact>[0] } }) => ({ id: row.productId, required: formatExact(row.required.amount), covered: formatExact(row.covered.amount), purchase: formatExact(row.purchase.amount) })),
     };
-  }, { recipeIds: oracle.recipeIds, servings, version });
+  }, { recipeIds: selection, servings, version });
 }
 
 const currentVersion = 'mealplan-2026-11-11-4';
 const rub = (kopecks: number) => `${Math.floor(kopecks / 100).toLocaleString('ru-RU')},${String(kopecks % 100).padStart(2, '0')}`;
+
+test('scaled-molds pudding keeps 200 ml per mold and uses enough batches', async ({ page }) => {
+  const ids = [...oracle.recipeIds];
+  ids[3] = 'familiar-steamed-egg-pudding';
+  for (const servings of ['1', '2', '4']) {
+    await saveTracer(page, servings, currentVersion, ids);
+    await page.goto('/recipe/familiar-steamed-egg-pudding?variant=source-tracer&instance=tracer-3');
+    const note = page.getByRole('note', { name: 'Пересчёт шагов', exact: true });
+    if (servings === '2') {
+      await expect(note).toHaveCount(0);
+    } else {
+      await expect(note).toContainText(`Замесите всю смесь по списку ингредиентов (${146 * Number(servings)} г).`);
+      await expect(note).toContainText(`Формочки по 200 мл. Всего формочек: ${servings}.`);
+      await expect(note).toContainText('Готовьте партиями, если все формочки не помещаются на паровую вставку');
+    }
+    await expect(page.getByRole('list', { name: 'Шаги приготовления' })).toContainText('две термостойкие формочки примерно по 200 мл');
+  }
+});
+
+test('scaled-molds thin pancakes and syrniki keep the base size per portion', async ({ page }) => {
+  const ids = [...oracle.recipeIds];
+  for (const [id, countText, perBatch] of [
+    ['familiar-oat-pancake-yogurt', 'Всего блинов: 4', 'Жарьте по одному тонкому блину за партию'],
+    ['familiar-syrniki', 'Всего сырников: 16', 'Сохраняйте толщину около 1 см'],
+  ]) {
+    ids[0] = id;
+    await saveTracer(page, '4', currentVersion, ids);
+    await page.goto(`/recipe/${id}?variant=source-tracer&instance=tracer-0`);
+    const note = page.getByRole('note', { name: 'Пересчёт шагов', exact: true });
+    await expect(note).toContainText(countText);
+    await expect(note).toContainText(perBatch);
+  }
+});
 
 test('scaled-instructions current recipe explains four and half portions while base has no notice', async ({ page }) => {
   for (const [servings, factor] of [['4', '2'], ['1', '0,5']]) {

@@ -3,12 +3,15 @@ import { RecipeImage } from '../../shared/RecipeImage';
 import { CalculationNote } from '../../shared/CalculationNote';
 import { Link, useLocation } from 'react-router';
 import type { CatalogLoadResult } from '../../domain/catalog';
+import { mealPortionMultipliers, selectedPortionMultiplier } from '../../domain/mealEdits';
+import type { MealEditTarget, MealPortionMultiplier } from '../../domain/mealEdits';
+import type { ActivePlanEnvelope } from '../../domain/plan';
 import type { GenerationSnapshot } from '../generation/controller';
 import { projectRecipeView } from '../../domain/recipeView';
 import type { NutritionFact, RecipeView } from '../../domain/recipeView';
 import { formatCurrency, formatDateOnly, formatNutrition, formatQuantity } from '../../domain/presentation';
 import { add, compare, decimal, divide, formatExact, roundHalfUp, type Rational } from '../../domain/quantities';
-import { Button } from '../../shared/ui';
+import { Button, Status } from '../../shared/ui';
 import { PlanLoading } from '../plan/PlanLoading';
 
 const notices = {
@@ -46,7 +49,13 @@ function NutritionValues({ fact }: { fact: NutritionFact }) {
   const values = fact.status === 'known' ? formatNutrition(fact.value) : null;
   return <>{(['calories', 'protein', 'fat', 'carbohydrates'] as const).map((key, index) => <div key={key} className="min-w-0"><dt>{['Калории', 'Белки', 'Жиры', 'Углеводы'][index]}</dt><dd className="tabular-nums">{values ? `${values[key]} ${key === 'calories' ? 'ккал' : 'г'}` : 'Нет подтверждённых данных'}</dd></div>)}</>;
 }
-export function RecipePage({ snapshot, catalog, onRetry }: { snapshot: GenerationSnapshot; catalog: CatalogLoadResult | null; onRetry(source: 'plan' | 'catalog'): Promise<unknown> }) {
+export function RecipePage({ snapshot, catalog, onRetry, onChangePortions, onRetrySave }: {
+  snapshot: GenerationSnapshot;
+  catalog: CatalogLoadResult | null;
+  onRetry(source: 'plan' | 'catalog'): Promise<unknown>;
+  onChangePortions(target: MealEditTarget, multiplier: MealPortionMultiplier, expectedPlan: ActivePlanEnvelope, returnRoute: string): void;
+  onRetrySave(): void;
+}) {
   const { pathname, search } = useLocation();
   const [retrying, setRetrying] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -60,6 +69,12 @@ export function RecipePage({ snapshot, catalog, onRetry }: { snapshot: Generatio
   </section>;
   const scaled = compare(view.servings, view.recipe.baseServings) !== 0;
   const cookingGuidance = scaled ? scaledCookingGuidance(view) : null;
+  const plan = snapshot.active?.plan;
+  const context = view.instance;
+  const route = pathname + search;
+  const busy = snapshot.status === 'saving' || snapshot.status === 'pending';
+  const portionEdit = snapshot.intent === 'edit' && snapshot.origin?.focusAnchor === 'recipe-portions' && snapshot.origin.returnRoute === route;
+  const selected = plan && context ? selectedPortionMultiplier(plan.inputs.appliedSettings.people, view.servings) : null;
   return <section className="plan-read-model [overflow-wrap:anywhere] max-w-[960px] mx-auto" data-instance-id={view.instance?.id}>
     <Link className="action-link" to={view.returnTo}>К меню</Link>
     <div className="recipe-hero grid md:grid-cols-2 gap-6 items-start">
@@ -70,6 +85,32 @@ export function RecipePage({ snapshot, catalog, onRetry }: { snapshot: Generatio
     <p>{view.status === 'context' ? `Порций для семьи: ${formatExact(view.servings)}` : `Исходный рецепт · ${view.servingsLabel}`}</p>
     <p>{view.ingredientBasis}. КБЖУ и цена — на одну порцию</p>
     <p>Время приготовления: {view.recipe.cookingMinutes} мин</p>
+    {plan && context && <>
+      <div id="recipe-portions" role="group" aria-label="Порции для семьи" className="flex flex-wrap gap-2">
+        {mealPortionMultipliers.map(multiplier => {
+          const label = `×${multiplier.replace('.', ',')}`;
+          return <Button key={multiplier}
+            aria-label={`${label} от исходных порций для семьи`}
+            aria-pressed={selected === multiplier}
+            aria-disabled={busy}
+            className="aria-pressed:bg-[var(--color-selected)] aria-pressed:text-[var(--color-text)] aria-disabled:opacity-60"
+            onClick={() => {
+              if (busy) return;
+              onChangePortions({ variantId: plan.activeVariantId, date: context.date, slot: context.slot, instanceId: context.id, recipeId: context.recipeId },
+                multiplier, plan, route);
+            }}>{label}</Button>;
+        })}
+      </div>
+      {portionEdit && snapshot.status === 'saving' && <Status>Сохраняем изменения меню…</Status>}
+      {portionEdit && snapshot.status === 'succeeded' && <Status>Изменения сохранены</Status>}
+      {portionEdit && snapshot.status === 'error' && <p className="field-error" role="alert">{snapshot.error?.message}</p>}
+      {portionEdit && snapshot.status === 'memory-only' && <div role="alert">
+        <p>{snapshot.saveError === 'blocked' ? 'Меню изменилось. Обновите его перед новой правкой' : 'Не удалось сохранить изменения. Восстановлено прежнее меню'}</p>
+        {snapshot.saveError === 'blocked'
+          ? <Button onClick={() => { void onRetry('plan'); }}>Обновить меню</Button>
+          : <Button onClick={onRetrySave}>Повторить сохранение</Button>}
+      </div>}
+    </>}
     </header></div>
     <section className="card" aria-label="На одну порцию"><h2>На одну порцию</h2><dl className="grid grid-cols-2 sm:grid-cols-4 gap-4"><NutritionValues fact={view.perPortionNutrition} /><div className="col-span-2 sm:col-span-4"><dt>Цена</dt><dd>{view.perPortionCost === null ? 'Нет подтверждённых данных' : `≈ ${formatCurrency(roundHalfUp(view.perPortionCost, 2))}`}</dd></div></dl></section>
     <CalculationNote />

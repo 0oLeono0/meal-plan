@@ -296,7 +296,11 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
       onRetryLoad={() => void controller.retryLoad()} onSelectVariant={id => void controller.selectVariant(id, { returnRoute: '/menu', focusAnchor: 'variants' })} onRetrySave={() => void controller.retrySave()} onCancel={controller.cancel} onAppend={() => void controller.appendVariant({ returnRoute: '/menu', focusAnchor: 'append-variant' })} onRetryGeneration={() => void controller.retryGeneration()} onRecreate={focusAnchor => void controller.recreateSet({ returnRoute: '/menu', focusAnchor })} />} />
     <Route path="/shopping" element={<ShoppingPage snapshot={visible} onRetryLoad={() => void controller.retryLoad()} />} />
     <Route path="/pantry" element={<GuestSectionPage section="pantry" />} />
-    <Route path="/recipe/:id?" element={<RecipePage snapshot={visible} catalog={catalog} onRetry={source => source === 'plan' ? controller.retryLoad() : reloadCatalog()} />} />
+    <Route path="/recipe/:id?" element={<RecipePage snapshot={visible} catalog={catalog}
+      onRetry={source => source === 'plan' ? controller.retryLoad() : reloadCatalog()}
+      onChangePortions={(target, multiplier, expectedPlan, returnRoute) =>
+        void controller.changePortions(target, multiplier, expectedPlan, { returnRoute, focusAnchor: 'recipe-portions' })}
+      onRetrySave={() => void controller.retrySave()} />} />
     <Route path="*" element={<RouteStatePage title="Страница не найдена" description="Проверьте адрес или начните с главной страницы." to="/" action="На главную" />} />
   </Routes>{launchConfirmation && <ConfirmDialog title="Составить меню с новыми настройками?" description={`После успешного сохранения новое меню заменит прежний набор вариантов.${saved ? ' Черновик настроек сохранится' : ''}`} cancelLabel="Оставить варианты" confirmLabel="Составить меню" returnFocus={launchConfirmation.trigger} fallbackFocusId="wizard-title" onCancel={() => setLaunchConfirmation(null)} onConfirm={() => {
     const confirmed = launchConfirmation; setLaunchConfirmation(null); performStart(confirmed.settings, confirmed.origin);

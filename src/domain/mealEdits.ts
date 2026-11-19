@@ -4,7 +4,7 @@ import type { ActivePlanEnvelope, MealCoordinate, PlanVariant, RecipeInstance } 
 import { projectPlan } from './planProjection';
 import type { InstanceProjection, PlanProjection } from './planProjection';
 import { createRecipeEligibility } from './recipeEligibility';
-import { compare, decimal, subtract } from './quantities';
+import { compare, decimal, multiply, subtract } from './quantities';
 import type { Rational } from './quantities';
 
 export interface MealEditTarget extends MealCoordinate {
@@ -17,6 +17,16 @@ export interface EmptyMealTarget extends MealCoordinate {
   readonly kind: 'empty';
 }
 export type MealSelectionTarget = MealEditTarget | EmptyMealTarget;
+export const mealPortionMultipliers = ['0.5', '1', '2'] as const;
+export type MealPortionMultiplier = (typeof mealPortionMultipliers)[number];
+
+function familyServings(people: number, multiplier: MealPortionMultiplier): Rational {
+  return multiply(decimal(String(people)), decimal(multiplier));
+}
+
+export function selectedPortionMultiplier(people: number, servings: Rational): MealPortionMultiplier | null {
+  return mealPortionMultipliers.find(multiplier => compare(servings, familyServings(people, multiplier)) === 0) ?? null;
+}
 
 export interface MealAlternative {
   readonly recipeId: string;
@@ -76,16 +86,35 @@ export function freeMealId(plan: ActivePlanEnvelope, seed: string): string {
 type ReplacementProjection = { status: 'ready'; variant: PlanVariant; projection: PlanProjection; meal: InstanceProjection }
   | { status: 'over-budget' | 'incomplete' };
 
-function projectSelection(plan: ActivePlanEnvelope, variant: PlanVariant, index: number, recipe: Recipe, extra?: RecipeInstance): ReplacementProjection {
+function projectInstance(plan: ActivePlanEnvelope, variant: PlanVariant, index: number, selected: RecipeInstance, insert = false): ReplacementProjection {
   const instances = [...variant.instances];
-  const selected = extra ?? { ...instances[index], recipeId: recipe.id, recipeSnapshot: recipe };
-  instances.splice(index, extra ? 0 : 1, selected);
+  instances.splice(index, insert ? 0 : 1, selected);
   const next = { ...variant, instances };
   const result = projectPlan(plan.inputs, next);
   if (result.status === 'invalid') return { status: 'incomplete' };
   if (!result.projection.budget.check.accepted) return { status: 'over-budget' };
   const meal = result.projection.instances.find(row => row.instance.id === selected.id);
   return meal ? { status: 'ready', variant: next, projection: result.projection, meal } : { status: 'incomplete' };
+}
+
+function projectSelection(plan: ActivePlanEnvelope, variant: PlanVariant, index: number, recipe: Recipe, extra?: RecipeInstance): ReplacementProjection {
+  return projectInstance(plan, variant, index, extra ?? { ...variant.instances[index], recipeId: recipe.id, recipeSnapshot: recipe }, Boolean(extra));
+}
+
+function installInstances(plan: ActivePlanEnvelope, next: PlanVariant): MealEditResult {
+  const install = <T extends PlanVariant>(variant: T): T => variant.id === next.id ? { ...variant, instances: next.instances } : variant;
+  return { status: 'ready', plan: plan.schemaVersion === EDITED_PLAN_SCHEMA_VERSION
+    ? { ...plan, variants: plan.variants.map(install) }
+    : { ...plan, variants: plan.variants.map(install) } };
+}
+
+export function changeMealServings(plan: ActivePlanEnvelope, baseline: PlanProjection, target: MealEditTarget, multiplier: MealPortionMultiplier): MealEditResult {
+  const current = resolveTarget(plan, baseline, target);
+  if (!current) return { status: 'stale' };
+  if (!mealPortionMultipliers.includes(multiplier)) return { status: 'incompatible' };
+  const selectedServings = familyServings(plan.inputs.appliedSettings.people, multiplier);
+  const next = projectInstance(plan, current.variant, current.index, { ...current.row.instance, selectedServings });
+  return next.status === 'ready' ? installInstances(plan, next.variant) : next;
 }
 function newInstance(plan: ActivePlanEnvelope, target: EmptyMealTarget, recipe: Recipe, id: string): RecipeInstance {
   return { id, date: target.date, slot: target.slot, recipeId: recipe.id, recipeSnapshot: recipe, catalogVersion: plan.inputs.catalogVersion,
@@ -100,11 +129,7 @@ export function replaceMeal(plan: ActivePlanEnvelope, baseline: PlanProjection, 
   const eligibility = createRecipeEligibility(plan.inputs)(recipe);
   if (eligibility.status !== 'eligible') return { status: eligibility.status === 'incomplete' ? 'incomplete' : 'incompatible' };
   const next = projectSelection(plan, current.variant, current.index, recipe);
-  if (next.status !== 'ready') return next;
-  const install = <T extends PlanVariant>(row: T): T => row.id === current.variant.id ? { ...row, instances: next.variant.instances } : row;
-  return { status: 'ready', plan: plan.schemaVersion === EDITED_PLAN_SCHEMA_VERSION
-    ? { ...plan, variants: plan.variants.map(install) }
-    : { ...plan, variants: plan.variants.map(install) } };
+  return next.status === 'ready' ? installInstances(plan, next.variant) : next;
 }
 
 export function addMeal(plan: ActivePlanEnvelope, baseline: PlanProjection, target: EmptyMealTarget, recipeId: string, newId: string): MealEditResult {

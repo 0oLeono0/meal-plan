@@ -6,8 +6,8 @@ import { variantFingerprint } from '../../domain/generatePlan';
 import { immutableSnapshot, sameSnapshot } from '../../domain/appliedSettings';
 import { trustedCatalogs as defaultTrustedCatalogs } from '../../adapters/trustedCatalogs';
 import type { TrustedCatalogRegistry } from '../../adapters/trustedCatalogs';
-import { addMeal as addToPlan, freeMealId, listMealAlternatives, removeMeal as removeFromPlan, replaceMeal } from '../../domain/mealEdits';
-import type { EmptyMealTarget, MealAlternativesResult, MealEditTarget, MealSelectionTarget } from '../../domain/mealEdits';
+import { addMeal as addToPlan, changeMealServings, freeMealId, listMealAlternatives, removeMeal as removeFromPlan, replaceMeal } from '../../domain/mealEdits';
+import type { EmptyMealTarget, MealAlternativesResult, MealEditTarget, MealPortionMultiplier, MealSelectionTarget } from '../../domain/mealEdits';
 import type { PlanProjection } from '../../domain/planProjection';
 
 export interface GenerationOrigin { readonly returnRoute: string; readonly focusAnchor: string; readonly firstErroneousStep?: number }
@@ -263,7 +263,8 @@ export function createGenerationController({ generation, activePlan, trustedCata
     return result.status === 'ready' ? { ...result, revision: atRevision } : result;
   }
   async function applyMealEdit<T extends MealSelectionTarget>(target: T, origin: GenerationOrigin, isExpected: (base: ActiveBundle) => boolean,
-    edit: (plan: ActivePlanEnvelope, projection: PlanProjection, target: T) => ReturnType<typeof replaceMeal>) {
+    edit: (plan: ActivePlanEnvelope, projection: PlanProjection, target: T) => ReturnType<typeof replaceMeal>,
+    budgetMessage = 'Изменение превышает бюджет покупок') {
     const base = snapshot.active;
     if (!base || disposed || snapshot.status === 'pending' || snapshot.status === 'saving') return;
     const projection = base.projections.find(row => row.variantId === target.variantId);
@@ -271,12 +272,12 @@ export function createGenerationController({ generation, activePlan, trustedCata
       ? edit(base.plan, projection, target) : { status: 'stale' as const };
     if (next.status !== 'ready') {
       const message = next.status === 'stale' ? 'Меню изменилось. Обновите его перед новой правкой'
-        : next.status === 'over-budget' ? 'Изменение превышает бюджет покупок' : 'Не удалось изменить блюдо';
-      invalidate(); publish({ intent: 'edit', status: 'error', error: failure('FAILED', message), candidate: null, saveError: null }); return;
+        : next.status === 'over-budget' ? budgetMessage : 'Не удалось изменить блюдо';
+      invalidate(); publish({ intent: 'edit', origin, status: 'error', error: failure('FAILED', message), candidate: null, saveError: null, requestId: null }); return;
     }
     const candidate = validateActiveBundle(next.plan, trustedCatalogs);
     if (candidate.status !== 'valid') {
-      invalidate(); publish({ intent: 'edit', status: 'error', error: failure('FAILED', 'Не удалось проверить изменения меню'), candidate: null, saveError: null }); return;
+      invalidate(); publish({ intent: 'edit', origin, status: 'error', error: failure('FAILED', 'Не удалось проверить изменения меню'), candidate: null, saveError: null, requestId: null }); return;
     }
     invalidate();
     const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: base.plan.inputs, origin: immutableSnapshot(origin), deadline: clock.now() + 30_000, baseRevision: revision, intent: 'edit' };
@@ -291,6 +292,11 @@ export function createGenerationController({ generation, activePlan, trustedCata
   async function removeMeal(target: MealEditTarget, expectedPlan: ActivePlanEnvelope, origin: GenerationOrigin) {
     await applyMealEdit(target, origin, base => base.plan === expectedPlan, removeFromPlan);
   }
+  async function changePortions(target: MealEditTarget, multiplier: MealPortionMultiplier, expectedPlan: ActivePlanEnvelope, origin: GenerationOrigin) {
+    await applyMealEdit(target, origin, base => base.plan === expectedPlan,
+      (plan, projection, target) => changeMealServings(plan, projection, target, multiplier),
+      'Эти порции превышают бюджет покупок. Выберите меньше порций');
+  }
   async function addMeal(target: EmptyMealTarget, recipeId: string, expectedRevision: number, origin: GenerationOrigin) {
     await applyMealEdit(target, origin, () => expectedRevision === revision, (plan, projection, target) => {
       let seed: string;
@@ -304,7 +310,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
   return {
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { if (!disposed) listeners.add(listener); return () => { listeners.delete(listener); }; },
-    load, retryLoad: load, start, cancel, retrySave, selectVariant, appendVariant, recreateSet, mealAlternatives, editMeal, removeMeal, addMeal,
+    load, retryLoad: load, start, cancel, retrySave, selectVariant, appendVariant, recreateSet, mealAlternatives, editMeal, removeMeal, addMeal, changePortions,
     async retryGeneration() {
       if (!lastRequest || (snapshot.status !== 'error' && snapshot.status !== 'no-new-result')
         || (lastRequest.baseRevision !== undefined && lastRequest.baseRevision !== revision)) return;

@@ -6,11 +6,13 @@ import { variantFingerprint } from '../../domain/generatePlan';
 import { immutableSnapshot, sameSnapshot } from '../../domain/appliedSettings';
 import { trustedCatalogs as defaultTrustedCatalogs } from '../../adapters/trustedCatalogs';
 import type { TrustedCatalogRegistry } from '../../adapters/trustedCatalogs';
+import { listMealAlternatives, replaceMeal } from '../../domain/mealEdits';
+import type { MealAlternativesResult, MealEditTarget } from '../../domain/mealEdits';
 
 export interface GenerationOrigin { readonly returnRoute: string; readonly focusAnchor: string; readonly firstErroneousStep?: number }
 export interface GenerationSnapshot {
   readonly status: 'idle' | 'pending' | 'error' | 'saving' | 'memory-only' | 'succeeded' | 'no-new-result';
-  readonly intent?: 'append' | 'replace' | 'select';
+  readonly intent?: 'append' | 'replace' | 'select' | 'edit';
   readonly loadStatus: 'unloaded' | 'pending' | 'missing' | 'loaded' | 'corrupt' | 'error';
   readonly active: ActiveBundle | null;
   readonly candidate: ActiveBundle | null;
@@ -24,6 +26,13 @@ export interface GenerationSnapshot {
   readonly origin: GenerationOrigin | null;
   readonly initialSearchCount: number | null;
 }
+export type MealAlternativesRequest = Extract<MealAlternativesResult, { status: 'ready' }> & { revision: number }
+  | { status: 'stale' | 'cancelled' };
+
+export function visiblePlanSnapshot(snapshot: GenerationSnapshot): GenerationSnapshot {
+  return snapshot.intent === 'edit' && snapshot.status === 'saving' && snapshot.candidate
+    ? { ...snapshot, active: snapshot.candidate } : snapshot;
+}
 export interface GenerationScheduler { setTimeout(callback: () => void, milliseconds: number): unknown; clearTimeout(handle: unknown): void }
 export interface GenerationControllerOptions {
   readonly generation: GenerationPort; readonly activePlan: ActivePlanPort;
@@ -36,7 +45,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
 } }: GenerationControllerOptions) {
   let snapshot: GenerationSnapshot = immutableSnapshot({ status: 'idle', loadStatus: 'unloaded', active: null, candidate: null, lastApplied: null,
     presence: { status: 'absent' }, error: null, saveError: null, requestId: null, pendingTextIndex: 0, startedAt: null, origin: null, initialSearchCount: null });
-  interface Operation { readonly id: string; readonly abort: AbortController; readonly inputs: PlanInputs; readonly origin: GenerationOrigin; readonly deadline: number; readonly baseRevision?: number; readonly intent?: 'append' | 'replace' | 'select'; readonly base?: ActiveBundle; initialSearchCount?: number; timeout?: unknown; rotation?: unknown }
+  interface Operation { readonly id: string; readonly abort: AbortController; readonly inputs: PlanInputs; readonly origin: GenerationOrigin; readonly deadline: number; readonly baseRevision?: number; readonly intent?: GenerationSnapshot['intent']; readonly base?: ActiveBundle; initialSearchCount?: number; timeout?: unknown; rotation?: unknown }
   let operation: Operation | null = null, sequence = 0, disposed = false, revision = 0, loadSequence = 0, writeAllowed = false;
   let lastRequest: { inputs: PlanInputs; origin: GenerationOrigin; intent: 'append' | 'replace'; base?: ActiveBundle; baseRevision?: number }
     | { intent: 'select'; variantId: string; origin: GenerationOrigin; baseRevision: number } | null = null;
@@ -74,7 +83,9 @@ export function createGenerationController({ generation, activePlan, trustedCata
   const timeOut = (op: Operation) => {
     if (!owned(op)) return;
     invalidate();
-    publish({ status: 'error', error: failure('TIMEOUT', op.intent === 'append' ? 'Не удалось найти новый вариант за 30 секунд. Прежнее меню не изменено' : 'Подбор прерван: время ожидания 30 секунд истекло'), candidate: null, saveError: null });
+    const message = op.intent === 'append' ? 'Не удалось найти новый вариант за 30 секунд. Прежнее меню не изменено'
+      : op.intent === 'edit' ? 'Время сохранения изменений истекло. Восстановлено прежнее меню' : 'Подбор прерван: время ожидания 30 секунд истекло';
+    publish({ status: 'error', error: failure('TIMEOUT', message), candidate: null, saveError: null });
   };
   const rejectExpired = (op: Operation) => {
     if (clock.now() < op.deadline) return false;
@@ -146,7 +157,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
     }
   }
   async function run(rawInputs: PlanInputs, origin: GenerationOrigin, intent: 'append' | 'replace', base?: ActiveBundle, baseRevision?: number) {
-    if (disposed) return;
+    if (disposed || (snapshot.status === 'saving' && snapshot.intent === 'edit')) return;
     if (operation && (snapshot.status === 'pending' || snapshot.status === 'saving') && operation.intent === intent && sameSnapshot(operation.inputs, rawInputs)) return;
     // Only installation of active memory advances revision. Starting a request must
     // not abandon an outstanding read's status and write-permission bookkeeping.
@@ -220,7 +231,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
   }
   async function selectVariant(variantId: string, origin: GenerationOrigin) {
     const active = snapshot.active;
-    if (disposed || !active || variantId === active.plan.activeVariantId || !active.plan.variants.some(variant => variant.id === variantId)) return;
+    if (disposed || !active || (snapshot.status === 'saving' && snapshot.intent === 'edit') || variantId === active.plan.activeVariantId || !active.plan.variants.some(variant => variant.id === variantId)) return;
     invalidate();
     const candidate = validateActiveBundle({ ...active.plan, activeVariantId: variantId }, trustedCatalogs);
     if (candidate.status !== 'valid') {
@@ -231,10 +242,44 @@ export function createGenerationController({ generation, activePlan, trustedCata
     publish({ requestId: op.id, startedAt: clock.now(), origin: op.origin, intent: 'select' });
     await save(op, candidate.bundle);
   }
+  async function mealAlternatives(target: MealEditTarget, signal: AbortSignal): Promise<MealAlternativesRequest> {
+    const base = snapshot.active, atRevision = revision;
+    const current = () => !disposed && snapshot.loadStatus === 'loaded' && snapshot.active === base && revision === atRevision
+      && snapshot.status !== 'pending' && snapshot.status !== 'saving';
+    const projection = base?.projections.find(row => row.variantId === target.variantId);
+    if (!base || !projection || !current()) return { status: 'stale' };
+    // Let the panel render its loading state before the first projection.
+    await new Promise<void>(resolve => globalThis.setTimeout(resolve, 0));
+    if (signal.aborted) return { status: 'cancelled' };
+    if (!current()) return { status: 'stale' };
+    const result = listMealAlternatives(base.plan, projection, target);
+    return result.status === 'ready' ? { ...result, revision: atRevision } : result;
+  }
+  async function editMeal(target: MealEditTarget, recipeId: string, expectedRevision: number, origin: GenerationOrigin) {
+    const base = snapshot.active;
+    if (!base || disposed || snapshot.status === 'pending' || snapshot.status === 'saving') return;
+    const projection = base.projections.find(row => row.variantId === target.variantId);
+    const next = expectedRevision === revision && snapshot.loadStatus === 'loaded' && projection
+      ? replaceMeal(base.plan, projection, target, recipeId) : { status: 'stale' as const };
+    if (next.status !== 'ready') {
+      const message = next.status === 'stale' ? 'Меню изменилось. Обновите его перед новой правкой'
+        : next.status === 'over-budget' ? 'Замена превышает бюджет покупок' : 'Не удалось применить замену блюда';
+      invalidate(); publish({ intent: 'edit', status: 'error', error: failure('FAILED', message), candidate: null, saveError: null }); return;
+    }
+    const candidate = validateActiveBundle(next.plan, trustedCatalogs);
+    if (candidate.status !== 'valid') {
+      invalidate(); publish({ intent: 'edit', status: 'error', error: failure('FAILED', 'Не удалось проверить изменения меню'), candidate: null, saveError: null }); return;
+    }
+    invalidate();
+    const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: base.plan.inputs, origin: immutableSnapshot(origin), deadline: clock.now() + 30_000, baseRevision: revision, intent: 'edit' };
+    operation = op; lastRequest = null; armTimeout(op);
+    publish({ requestId: op.id, startedAt: clock.now(), origin: op.origin, intent: 'edit' });
+    await save(op, candidate.bundle);
+  }
   return {
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { if (!disposed) listeners.add(listener); return () => { listeners.delete(listener); }; },
-    load, retryLoad: load, start, cancel, retrySave, selectVariant, appendVariant, recreateSet,
+    load, retryLoad: load, start, cancel, retrySave, selectVariant, appendVariant, recreateSet, mealAlternatives, editMeal,
     async retryGeneration() {
       if (!lastRequest || (snapshot.status !== 'error' && snapshot.status !== 'no-new-result')
         || (lastRequest.baseRevision !== undefined && lastRequest.baseRevision !== revision)) return;

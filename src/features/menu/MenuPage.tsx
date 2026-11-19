@@ -7,12 +7,14 @@ import { formatCount, formatDateOnly, formatNutrition, selectPlanPresentation } 
 import type { TargetComparison } from '../../domain/presentation';
 import { localDateOnly } from '../../domain/plan';
 import type { Nutrition } from '../../domain/catalog';
+import type { MealEditTarget } from '../../domain/mealEdits';
 import { PlanSummary } from '../plan/PlanSummary';
 import { PlanLoading } from '../plan/PlanLoading';
 import { menuSearch, resolveMenuView } from '../../domain/menuView';
 import type { MenuView } from '../../domain/menuView';
 import type { PlanProjection } from '../../domain/planProjection';
-import { MealCard } from './MealCard';
+import { MealCard, mealSlotNames } from './MealCard';
+import { MealAlternatives, type MealAlternativesActions } from './MealAlternatives';
 
 const labels = { calories: 'Калории', protein: 'Белки', fat: 'Жиры', carbohydrates: 'Углеводы' } as const;
 const desktopQuery = '(min-width: 1280px)';
@@ -43,15 +45,17 @@ function ShoppingAction({ label }: { label: string }) {
   return <div ref={bar} className="menu-shopping"><Link className="primary action-link" to="/shopping">Список покупок · {label}</Link></div>;
 }
 
-function MenuDays({ projection, catalogVersion, selected, onChange, days, today }: {
+function MenuDays({ projection, catalogVersion, selected, onChange, days, today, editingDisabled, onReplace }: {
   projection: PlanProjection; catalogVersion: string; selected: MenuView; onChange(value: MenuView): void;
-  days: ReturnType<typeof selectPlanPresentation>['days']; today: string;
+  days: ReturnType<typeof selectPlanPresentation>['days']; today: string; editingDisabled: boolean;
+  onReplace?: (target: MealEditTarget, recipeName: string, trigger: HTMLElement) => void;
 }) {
   const desktop = useSyncExternalStore(subscribeDesktop, () => window.matchMedia(desktopQuery).matches);
   const grid = useRef<HTMLDivElement>(null);
   const tabs = useRef<HTMLDivElement>(null);
   const pointerFocus = useRef(false);
   const [focusedDay, setFocusedDay] = useState<string | null>(null);
+  const [openActions, setOpenActions] = useState<string | null>(null);
   const dayMode = !desktop && selected.mode === 'day';
   useEffect(() => {
     // Safari can focus the containing tabpanel on pointerdown. Scrolling it
@@ -123,7 +127,22 @@ function MenuDays({ projection, catalogVersion, selected, onChange, days, today 
         event.target.scrollIntoView({ block: event.target === event.currentTarget ? 'start' : 'nearest' });
       }}>
         <header><h2 id={`day-title-${day.dateOnly}`} className="menu-day-title">{day.date}{day.dateOnly === today ? ' · Сегодня' : ''}</h2></header>
-        {projection.instances.filter(row => row.instance.date === day.dateOnly).map((row, index) => <MealCard key={row.instance.id} row={row} catalogVersion={catalogVersion} variantId={projection.variantId} view={selected} priority={index === 0 && (desktop ? day.dateOnly === days[0]?.dateOnly : day.dateOnly === selected.day)} onOpen={() => { recipeOrigin = { variantId: projection.variantId, instanceId: row.instance.id }; }} />)}
+        {projection.instances.filter(row => row.instance.date === day.dateOnly).map((row, index) => {
+          const instance = row.instance, recipeName = instance.recipeSnapshot.name;
+          const expanded = openActions === instance.id && !editingDisabled;
+          const actionsId = `actions-${instance.id}`;
+          const actions = onReplace && <div className="mt-2 flex flex-wrap items-center justify-end gap-2" onKeyDown={event => {
+            if (event.key === 'Escape' && expanded) {
+              event.preventDefault(); setOpenActions(null); event.currentTarget.querySelector('button')?.focus();
+            }
+          }}>
+            <Button className="!px-2" aria-label={`Действия для блюда ${recipeName} · ${day.date} · ${mealSlotNames[instance.slot]}`} aria-expanded={expanded} aria-controls={actionsId} disabled={editingDisabled} onClick={() => setOpenActions(expanded ? null : instance.id)}>⋯</Button>
+            <div id={actionsId} hidden={!expanded}>
+              <Button className="!px-2" aria-label="Заменить блюдо" onClick={event => onReplace({ variantId: projection.variantId, date: instance.date, slot: instance.slot, instanceId: instance.id, recipeId: instance.recipeId }, recipeName, event.currentTarget)}>Заменить</Button>
+            </div>
+          </div>;
+          return <MealCard key={instance.id} row={row} catalogVersion={catalogVersion} variantId={projection.variantId} view={selected} priority={index === 0 && (desktop ? day.dateOnly === days[0]?.dateOnly : day.dateOnly === selected.day)} actions={actions} onOpen={() => { recipeOrigin = { variantId: projection.variantId, instanceId: instance.id }; }} />;
+        })}
         <div className="menu-day-totals"><h3>На человека за день</h3><NutritionSummary values={day.personNutrition} target={day.targetComparison} /><p>{day.costBasis}: {day.ingredientCost}</p><details><summary className="min-h-[44px] py-2">КБЖУ семьи за день</summary><NutritionSummary values={day.familyNutrition} /></details></div>
       </section>)}
     </div>
@@ -139,8 +158,9 @@ function NutritionSummary({ values, target }: { values: ReturnType<typeof format
     </dd></div>;
   })}</dl>;
 }
-export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, onCancel, onAppend, onRetryGeneration, onRecreate }: { snapshot: GenerationSnapshot; onRetryLoad(): void; onSelectVariant?(id: string): void; onRetrySave?(): void; onCancel?(): void; onAppend?(): void; onRetryGeneration?(): void; onRecreate?(focusAnchor: string): void }) {
+export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, onCancel, onAppend, onRetryGeneration, onRecreate, mealAlternatives }: { snapshot: GenerationSnapshot; onRetryLoad(): void; onSelectVariant?(id: string): void; onRetrySave?(): void; onCancel?(): void; onAppend?(): void; onRetryGeneration?(): void; onRecreate?(focusAnchor: string): void; mealAlternatives?: MealAlternativesActions }) {
   const [replacementTrigger, setReplacementTrigger] = useState<HTMLElement | null>(null);
+  const [mealChoice, setMealChoice] = useState<{ target: MealEditTarget; recipeName: string; trigger: HTMLElement } | null>(null);
   const [params, setParams] = useSearchParams();
   useEffect(() => {
     if (snapshot.status === 'succeeded' && snapshot.intent === 'replace') document.getElementById('menu-title')?.focus();
@@ -156,6 +176,7 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
   const settings = plan.inputs.appliedSettings;
   const activeIndex = plan.variants.findIndex(variant => variant.id === plan.activeVariantId);
   const saving = snapshot.status === 'saving';
+  const editing = snapshot.intent === 'edit';
   const busy = saving || snapshot.status === 'pending';
   const view = selectPlanPresentation(projection, settings.target);
   const today = localDateOnly(new Date());
@@ -163,7 +184,7 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
   return <section data-plan-id={plan.activeVariantId} className="plan-read-model menu-page [overflow-wrap:anywhere]">
     <h1 id="menu-title" tabIndex={-1}>{view.days.length === 7 ? 'Меню на неделю' : `Меню на ${view.period}`}</h1>
     <p>{formatDateOnly(plan.inputs.dates[0])} — {formatDateOnly(plan.inputs.dates[plan.inputs.dates.length - 1])} · На {view.people}</p>
-    <p className="hint">Меню сохранено на этом устройстве</p>
+    {!(saving && editing) && <p className="hint">Меню сохранено на этом устройстве</p>}
     <section id="variants" tabIndex={-1} className="card" aria-label="Варианты меню" aria-busy={busy}>
       <h2>Вариант {activeIndex + 1} из {plan.variants.length}</h2>
       {snapshot.initialSearchCount === null && plan.variants.length === 1 && <p>В сохранённом наборе 1 вариант</p>}
@@ -182,12 +203,12 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
       {plan.variants.length >= 12 && <div><p>В наборе 12 вариантов — это предел хранения на этом устройстве. Чтобы продолжить подбор, создайте новый набор</p><Button id="create-new-set" disabled={busy} onClick={event => setReplacementTrigger(event.currentTarget)}>Создать новый набор</Button></div>}
       <details><summary className="min-h-[44px] py-2">Действия с меню</summary><div className="grid gap-2"><Button id="recreate-set" disabled={busy} onClick={event => setReplacementTrigger(event.currentTarget)}>Составить заново</Button><Link className="action-link" to="/plan/new">Изменить настройки</Link></div></details>
       {snapshot.status === 'pending' && <div><progress aria-label={snapshot.intent === 'replace' ? 'Подбор нового набора' : 'Подбор нового варианта'} /><p role="status">{snapshot.intent === 'replace' ? 'Подбираем новый набор…' : 'Ищем новый вариант…'} Используем применённые настройки и даты этого меню. Прежнее меню остаётся доступным</p><Button onClick={onCancel}>Отменить подбор</Button></div>}
-      {saving && <div>{snapshot.intent !== 'select' && <p role="status">{snapshot.intent === 'append' ? 'Сохраняем новый вариант…' : 'Сохраняем новый набор…'} Предыдущее меню остаётся активным</p>}<Button onClick={onCancel}>Отмена</Button></div>}
-      {snapshot.status === 'succeeded' && <p role="status">{snapshot.intent === 'append' ? `Новый вариант добавлен и выбран. В наборе ${formatCount(plan.variants.length, 'variant')}` : `Выбран вариант ${activeIndex + 1} из ${plan.variants.length}. Меню и список покупок обновлены`}</p>}
-      {snapshot.status === 'memory-only' && <div role="alert"><p>{snapshot.intent === 'append' ? 'Новый вариант рассчитан, но не сохранён' : snapshot.intent === 'replace' ? 'Новый набор рассчитан, но не сохранён' : 'Не удалось сохранить выбор варианта'}</p><p>{snapshot.intent === 'select' ? 'Активным осталось прежнее меню. Повторите сохранение' : 'Результат доступен только до закрытия страницы. Прежнее меню не изменено'}</p><Button onClick={onRetrySave}>Повторить сохранение</Button><Button onClick={onCancel}>Оставить текущее меню</Button>{snapshot.saveError === 'blocked' && <Button onClick={onRetryLoad}>Повторить загрузку</Button>}</div>}
+      {saving && !editing && <div>{snapshot.intent !== 'select' && <p role="status">{snapshot.intent === 'append' ? 'Сохраняем новый вариант…' : 'Сохраняем новый набор…'} Предыдущее меню остаётся активным</p>}<Button onClick={onCancel}>Отмена</Button></div>}
+      {snapshot.status === 'succeeded' && !editing && <p role="status">{snapshot.intent === 'append' ? `Новый вариант добавлен и выбран. В наборе ${formatCount(plan.variants.length, 'variant')}` : `Выбран вариант ${activeIndex + 1} из ${plan.variants.length}. Меню и список покупок обновлены`}</p>}
+      {snapshot.status === 'memory-only' && !editing && <div role="alert"><p>{snapshot.intent === 'append' ? 'Новый вариант рассчитан, но не сохранён' : snapshot.intent === 'replace' ? 'Новый набор рассчитан, но не сохранён' : 'Не удалось сохранить выбор варианта'}</p><p>{snapshot.intent === 'select' ? 'Активным осталось прежнее меню. Повторите сохранение' : 'Результат доступен только до закрытия страницы. Прежнее меню не изменено'}</p><Button onClick={onRetrySave}>Повторить сохранение</Button><Button onClick={onCancel}>Оставить текущее меню</Button>{snapshot.saveError === 'blocked' && <Button onClick={onRetryLoad}>Повторить загрузку</Button>}</div>}
       {snapshot.status === 'no-new-result' && <div role="alert"><h3>Новый вариант не найден</h3><p>За отведённый поиск не удалось найти ещё один допустимый вариант. Прежние варианты сохранены</p><Button onClick={onRetryGeneration}>Повторить</Button><Link className="action-link" to="/plan/new">Изменить настройки</Link></div>}
       {snapshot.status === 'idle' && snapshot.origin && (snapshot.intent === 'append' || snapshot.intent === 'replace') && <p role="status">Подбор отменён. Прежнее меню не изменено</p>}
-      {snapshot.status === 'error' && <div role="alert"><p>{snapshot.error?.message}. Предыдущее меню не изменено</p><Button onClick={onRetryGeneration}>Повторить</Button><Link className="action-link" to="/plan/new">Изменить настройки</Link></div>}
+      {snapshot.status === 'error' && !editing && <div role="alert"><p>{snapshot.error?.message}. Предыдущее меню не изменено</p><Button onClick={onRetryGeneration}>Повторить</Button><Link className="action-link" to="/plan/new">Изменить настройки</Link></div>}
     </section>
     <PlanSummary bundle={bundle} projection={projection} />
     <section className="card"><h2>Среднее на человека в день</h2><NutritionSummary values={view.averagePersonDayNutrition} target={view.targetComparison} />
@@ -195,7 +216,12 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
       <p className="hint">КБЖУ рассчитаны по составу продуктов и не являются медицинской рекомендацией</p>
       <p className="hint">Расчёт не подтверждает полноценность рациона.</p>
     </section>
-    <MenuDays projection={projection} catalogVersion={plan.inputs.catalogVersion} selected={selected} onChange={next => setParams(menuSearch(next))} days={view.days} today={today} />
+    <MenuDays projection={projection} catalogVersion={plan.inputs.catalogVersion} selected={selected} onChange={next => setParams(menuSearch(next))} days={view.days} today={today} editingDisabled={busy} onReplace={mealAlternatives ? (target, recipeName, trigger) => setMealChoice({ target, recipeName, trigger }) : undefined} />
+    {mealChoice && mealAlternatives && <MealAlternatives {...mealChoice} request={mealAlternatives.request} onClose={() => setMealChoice(null)} onChoose={(recipeId, revision) => {
+      const link = mealChoice.trigger.closest('article')?.querySelector('a');
+      setMealChoice(null); mealAlternatives.select(mealChoice.target, recipeId, revision);
+      requestAnimationFrame(() => link?.isConnected && link.focus());
+    }} />}
     <ShoppingAction label={view.itemCount} />
     {replacementTrigger && <ConfirmDialog title="Создать новый набор меню?" description={`После успешного сохранения нового набора прежние ${formatCount(plan.variants.length, 'variant')} будут заменены. До этого текущее меню останется доступным`} cancelLabel="Оставить варианты" confirmLabel="Создать новый набор" returnFocus={replacementTrigger} fallbackFocusId="menu-title" onCancel={() => setReplacementTrigger(null)} onConfirm={() => {
       const anchor = replacementTrigger.id;

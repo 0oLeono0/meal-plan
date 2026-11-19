@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import type { ReactNode } from 'react';
 import type { InstanceProjection } from '../../domain/planProjection';
 import type { MenuView } from '../../domain/menuView';
 import { formatDateOnly } from '../../domain/presentation';
@@ -6,8 +7,8 @@ import { presentMealCard } from '../../domain/menuView';
 import { RecipeImage } from '../../shared/RecipeImage';
 
 export const mealSlotNames = { breakfast: 'Завтрак', lunch: 'Обед', dinner: 'Ужин', snack: 'Перекус' } as const;
-export function MealCard({ row, catalogVersion, variantId, view, priority, onOpen }: {
-  row: InstanceProjection; catalogVersion: string; variantId: string; view: MenuView; priority: boolean; onOpen(): void;
+export function MealCard({ row, catalogVersion, variantId, view, priority, actions, onOpen }: {
+  row: InstanceProjection; catalogVersion: string; variantId: string; view: MenuView; priority: boolean; actions?: ReactNode; onOpen(): void;
 }) {
   const { instance } = row, recipe = instance.recipeSnapshot;
   const { nutrition, price, servings, usesPantry } = presentMealCard(row);
@@ -24,5 +25,6 @@ export function MealCard({ row, catalogVersion, variantId, view, priority, onOpe
         <p className="hint meal-nutrition">На порцию: {nutrition.calories} ккал · Б {nutrition.protein} г · Ж {nutrition.fat} г · У {nutrition.carbohydrates} г · ≈ {price}</p>
       </div>
     </Link>
+    {actions}
   </article>;
 }

@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import type { ActivePlanEnvelope, PlanVariant } from '../src/domain/plan';
 
 const activeKey = 'mealplan:guest:active-plan:v1';
+const formatDate = (date: string) => new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${date}T00:00:00Z`));
 
 async function readMenu(page: Page) {
   const raw = await page.evaluate(key => localStorage.getItem(key), activeKey);
@@ -61,22 +62,28 @@ test('tracer replaces a generated lunch and keeps recipe and shopping after relo
   expect(edited.plan.variants.filter(row => row.id !== before.variant.id)).toEqual(before.plan.variants.filter(row => row.id !== before.variant.id));
   expect(othersAt(edited.variant, original.id)).toEqual(othersAt(before.variant, original.id));
   await expect(lunch.getByRole('link')).toContainText(replacement.recipeSnapshot.name);
+  const facts = (await lunch.getByText(/^На порцию:/).textContent())?.match(/^На порцию: (.+) ккал · Б (.+) г · Ж (.+) г · У (.+) г · ≈ (.+)$/);
+  expect(facts).toBeTruthy();
+  const total = await page.getByRole('region', { name: 'Бюджет меню' }).innerText();
   await lunch.getByRole('link').click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(replacement.recipeSnapshot.name);
   expect(new URL(page.url()).searchParams.get('instance')).toBe(original.id);
   await expect(page.getByText('Порций для семьи: 2', { exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'На одну порцию' }).locator('dd')).toHaveText([
+    `${facts![1]} ккал`, `${facts![2]} г`, `${facts![3]} г`, `${facts![4]} г`, `≈ ${facts![5]}`,
+  ]);
   await page.getByRole('link', { name: 'К меню', exact: true }).click();
   await page.getByRole('link', { name: /^Список покупок ·/ }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Список покупок');
-  const source = `${original.date} · Обед · ${replacement.recipeSnapshot.name} ·`;
-  const previousSource = `${original.date} · Обед · ${original.recipeSnapshot.name} ·`;
+  const source = `${formatDate(original.date)} · Обед · ${replacement.recipeSnapshot.name} ·`;
+  const previousSource = `${formatDate(original.date)} · Обед · ${original.recipeSnapshot.name} ·`;
   const purchases = page.locator('article[data-product-id]');
   const sources = await purchases.locator('details li').allTextContents();
   expect(sources.some(row => row.includes(source))).toBe(true);
   expect(sources.some(row => row.includes(previousSource))).toBe(false);
-  const total = await page.getByRole('region', { name: 'Бюджет меню' }).innerText();
+  await expect(page.getByRole('region', { name: 'Бюджет меню' })).toHaveText(total, { useInnerText: true });
   await page.reload();
-  await expect(page.getByRole('region', { name: 'Бюджет меню' })).toHaveText(total);
+  await expect(page.getByRole('region', { name: 'Бюджет меню' })).toHaveText(total, { useInnerText: true });
   expect((await readMenu(page)).raw).toBe(edited.raw);
   expect(await purchases.locator('details li').allTextContents()).toEqual(sources);
 });

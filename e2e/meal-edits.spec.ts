@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import type { ActivePlanEnvelope, PlanVariant } from '../src/domain/plan';
+import { openSyntheticPlan } from './plan-fixtures';
 
 const activeKey = 'mealplan:guest:active-plan:v1';
 const formatDate = (date: string) => new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${date}T00:00:00Z`));
@@ -86,4 +87,24 @@ test('tracer replaces a generated lunch and keeps recipe and shopping after relo
   await expect(page.getByRole('region', { name: 'Бюджет меню' })).toHaveText(total, { useInnerText: true });
   expect((await readMenu(page)).raw).toBe(edited.raw);
   expect(await purchases.locator('details li').allTextContents()).toEqual(sources);
+});
+
+for (const count of [0, 1]) test(`alternatives show ${count} actual choices and return focus when closed`, async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openSyntheticPlan(page, { split: count === 1 ? 'one' : undefined });
+  const before = (await readMenu(page)).raw;
+  const breakfast = page.locator('article[data-slot="breakfast"]');
+  await breakfast.getByRole('button', { name: /^Действия для блюда/ }).click();
+  const trigger = breakfast.getByRole('button', { name: 'Заменить блюдо', exact: true });
+  await trigger.click();
+  const dialog = page.getByRole('dialog', { name: 'Заменить блюдо' });
+  const close = dialog.getByRole('button', { name: 'Закрыть подбор' });
+  await expect(close).toBeFocused();
+  await expect(dialog.getByRole('button').filter({ hasText: 'Покупки за период' })).toHaveCount(count);
+  if (count === 0) await expect(dialog.getByRole('heading', { name: 'Нет подходящих блюд' })).toBeVisible();
+  else await expect(dialog.getByRole('status')).toHaveText('Найден 1 подходящий вариант');
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  expect((await readMenu(page)).raw).toBe(before);
 });

@@ -7,7 +7,7 @@ import { buildActivePlanEnvelope, createPlanInputs, createRecipeInstances, mealS
 import type { GenerationPort, GenerationResult } from '../../domain/plan';
 import { createDraft } from '../../domain/settings';
 import { decimal } from '../../domain/quantities';
-import { createGenerationController as productionController } from './controller';
+import { createGenerationController as productionController, visiblePlanSnapshot } from './controller';
 import type { GenerationControllerOptions } from './controller';
 import { createTrustedCatalogRegistry } from '../../adapters/trustedCatalogs';
 import legacyRaw from '../../test/fixtures/phase02-active-plan-v1.json?raw';
@@ -36,6 +36,50 @@ function fixture(seed = 'one') {
 function deferred<T>() { let resolve!: (value: T) => void; let reject!: (reason: unknown) => void; const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; }
 const trustedCatalogs = createTrustedCatalogRegistry([fixture().inputs.catalog]);
 const createGenerationController = (options: GenerationControllerOptions) => productionController({ trustedCatalogs, ...options });
+
+it('phase04-edit previews one candidate, restores the confirmed ledger on refusal, and retries the same edit', async () => {
+  const base = fixture('meal-edit');
+  const currentRecipe = base.inputs.catalog.recipes[0], replacement = { ...currentRecipe, id: 'alternative', name: 'Второе блюдо' };
+  const catalog = { ...base.inputs.catalog, recipes: [currentRecipe, replacement] };
+  const inputs = createPlanInputs(base.inputs.appliedSettings, catalog, { seed: 'meal-edit', now: () => new Date(2026, 9, 28) });
+  const plan = buildActivePlanEnvelope(inputs, base.plan.variants, base.plan.activeVariantId);
+  const registry = createTrustedCatalogRegistry([catalog]);
+  const initial = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
+  let raw = initial, resolveSave = deferred<'error' | 'write'>();
+  const store = { getItem: () => raw, setItem: (_key: string, value: string) => { raw = value; } };
+  const adapter = createActivePlanAdapter(() => store, registry);
+  const port: ActivePlanPort = { load: adapter.load, async save(candidate, guard) {
+    return await resolveSave.promise === 'write' ? adapter.save(candidate, guard) : { status: 'error' };
+  } };
+  const controller = productionController({ generation: { async generate() { throw new Error('Edit must not generate a menu'); } }, activePlan: port, trustedCatalogs: registry });
+  try {
+    await controller.load();
+    const instance = plan.variants[0].instances[1];
+    const target = { variantId: plan.activeVariantId, date: instance.date, slot: instance.slot, recipeId: instance.recipeId, instanceId: instance.id };
+    const options = await controller.mealAlternatives(target, new AbortController().signal);
+    if (options.status !== 'ready') throw new Error('No replacement candidates');
+    const pending = controller.editMeal(target, replacement.id, options.revision, origin);
+    expect(controller.getSnapshot().status).toBe('saving');
+    expect(controller.getSnapshot().active?.plan).toEqual(plan);
+    const edited = visiblePlanSnapshot(controller.getSnapshot()).active?.plan;
+    expect(edited?.variants[0].instances.map(row => row.recipeId)).toEqual(['r', 'alternative', 'r', 'r']);
+    expect(raw).toBe(initial);
+    resolveSave.resolve('error'); await pending;
+    expect(controller.getSnapshot()).toMatchObject({ status: 'memory-only', intent: 'edit', saveError: 'error' });
+    expect(visiblePlanSnapshot(controller.getSnapshot()).active?.plan).toEqual(plan);
+    expect(raw).toBe(initial);
+
+    resolveSave = deferred();
+    const retry = controller.retrySave();
+    resolveSave.resolve('write'); await retry;
+    expect(controller.getSnapshot()).toMatchObject({ status: 'succeeded', intent: 'edit' });
+    expect((await createActivePlanAdapter(() => store, registry).load())).toMatchObject({ status: 'loaded', bundle: { plan: edited } });
+    const confirmed = raw;
+    await controller.editMeal(target, replacement.id, options.revision, origin);
+    expect(controller.getSnapshot()).toMatchObject({ status: 'error', intent: 'edit', error: { message: 'Меню изменилось. Обновите его перед новой правкой' } });
+    expect(raw).toBe(confirmed);
+  } finally { controller.dispose(); }
+});
 
 it.each([
   ['historical52', legacyRaw], ['issued56', release1Raw], ['issued68', release2Raw], ['issued75', release3Raw], ['current82', null],

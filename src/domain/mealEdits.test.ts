@@ -50,8 +50,8 @@ it('uses the whole-period purchase delta and keeps the exact budget boundary', a
   const { plan, baseline, target } = fixture();
   expect(baseline.costs.exact.purchase).toEqual(decimal('300'));
   expect(await listMealAlternatives(plan, baseline, target)).toEqual({ status: 'ready', overBudget: true, incomplete: true, options: [
-    { recipeId: 'swap', name: 'swap', cookingMinutes: 15, purchaseDeltaKopecks: -7500n, familyCalorieDelta: decimal('-75') },
-    { recipeId: 'exact', name: 'exact', cookingMinutes: 15, purchaseDeltaKopecks: 20000n, familyCalorieDelta: decimal('200') },
+    { recipeId: 'swap', name: 'swap', cookingMinutes: 15, purchaseDelta: decimal('-75'), purchaseDeltaKopecks: -7500n, familyCalorieDelta: decimal('-75') },
+    { recipeId: 'exact', name: 'exact', cookingMinutes: 15, purchaseDelta: decimal('200'), purchaseDeltaKopecks: 20000n, familyCalorieDelta: decimal('200') },
   ] });
   // Four original meals need 500g and the shared pantry covers 200g. The swap leaves 375g rice and adds 25g oats.
   // New purchase = (375 - 200) × 1 + 25 × 2 = 225 RUB. Old lunch was one of four draws from that shared stock.
@@ -76,8 +76,7 @@ it.each([0, 1, 2, 7])('returns only the supported count for %i ties in determini
 it('stops projecting when the caller closes or invalidates the lookup between batches', async () => {
   const { plan, baseline, target } = fixture(Array.from({ length: 8 }, (_, index) => recipe(`alt-${index}`, '125')));
   const abort = new AbortController();
-  // The additional argument defines the new cancellation contract. Once implemented, call through the typed API.
-  const run = (options: object) => Reflect.apply(listMealAlternatives, undefined, [plan, baseline, target, options]);
+  const run = (options: Parameters<typeof listMealAlternatives>[3]) => listMealAlternatives(plan, baseline, target, options);
   let batches = 0;
   expect(await run({ signal: abort.signal, isCurrent: () => true, yieldControl: async () => { batches++; abort.abort(); } })).toEqual({ status: 'cancelled' });
   expect(batches).toBe(1);

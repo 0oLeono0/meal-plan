@@ -45,9 +45,9 @@ export function MealAlternatives({ target, recipeName, trigger, request, onChoos
   }, [target, request, attempt]);
 
   return createPortal(<div ref={overlay} className="dialog-overlay !items-end !p-0 md:!items-center md:!p-[var(--space-md)]">
-    <div className="app-shell !min-h-0 w-full md:max-w-[480px]">
-      <section className="confirm-dialog mx-auto !max-h-[85vh] !rounded-b-none !pb-[max(var(--space-lg),env(safe-area-inset-bottom))] md:!rounded-b-[var(--radius-card)] [overflow-wrap:anywhere]" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} aria-describedby={`${id}-description`}>
-        <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+    <div className="app-shell !min-h-0 w-full md:max-w-[560px]">
+      <section className="confirm-dialog mx-auto !max-w-[560px] !max-h-[85vh] !rounded-b-none !p-[var(--space-md)] !pb-[max(var(--space-md),env(safe-area-inset-bottom))] md:!p-[var(--space-lg)] md:!rounded-b-[var(--radius-card)] [overflow-wrap:anywhere]" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} aria-describedby={`${id}-description`}>
+        <div className="sticky top-0 z-10 grid gap-2 bg-[var(--color-surface)] sm:grid-cols-[1fr_auto]">
           <h2 id={`${id}-title`}>Заменить блюдо</h2>
           <button type="button" ref={close} aria-label="Закрыть подбор" onClick={onClose}>Закрыть</button>
         </div>
@@ -57,8 +57,9 @@ export function MealAlternatives({ target, recipeName, trigger, request, onChoos
         {state.status === 'error' && <div><p role="alert">Не удалось подобрать блюда</p><Button onClick={() => { setState({ status: 'pending' }); setAttempt(value => value + 1); }}>Повторить подбор</Button></div>}
         {state.status === 'ready' && (state.options.length === 0 ? <>
           <h3>Нет подходящих блюд</h3>
-          <p>{state.overBudget ? 'Доступных замен в пределах бюджета нет' : 'При текущих настройках подходящих блюд не найдено. Закройте список, чтобы вернуться к меню'}</p>
-          {state.incomplete && <p>Не удалось рассчитать покупку для части подходящих блюд</p>}
+          {state.overBudget && <p>{state.incomplete ? 'Проверенные замены превышают бюджет покупок' : 'Доступных замен в пределах бюджета нет'}</p>}
+          {state.incomplete && <p>Не удалось рассчитать покупку для подходящих блюд. Вернитесь к меню</p>}
+          {!state.incomplete && !state.overBudget && <p>При текущих настройках подходящих блюд не найдено. Закройте список, чтобы вернуться к меню</p>}
         </> : <>
           <p className="hint">Для всей семьи, цены примерные</p>
           {state.options.length < 3 && <Status>{state.options.length === 1 ? 'Найден 1 подходящий вариант' : 'Найдено 2 подходящих варианта'}</Status>}

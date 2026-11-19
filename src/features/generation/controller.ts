@@ -27,7 +27,7 @@ export interface GenerationSnapshot {
   readonly initialSearchCount: number | null;
 }
 export type MealAlternativesRequest = Extract<MealAlternativesResult, { status: 'ready' }> & { revision: number }
-  | { status: 'stale' | 'cancelled' };
+  | Exclude<MealAlternativesResult, { status: 'ready' }>;
 
 export function visiblePlanSnapshot(snapshot: GenerationSnapshot): GenerationSnapshot {
   return snapshot.intent === 'edit' && snapshot.status === 'saving' && snapshot.candidate
@@ -243,16 +243,18 @@ export function createGenerationController({ generation, activePlan, trustedCata
     await save(op, candidate.bundle);
   }
   async function mealAlternatives(target: MealEditTarget, signal: AbortSignal): Promise<MealAlternativesRequest> {
-    const base = snapshot.active, atRevision = revision;
+    const base = snapshot.active, atRevision = revision, atLoad = loadSequence;
     const current = () => !disposed && snapshot.loadStatus === 'loaded' && snapshot.active === base && revision === atRevision
-      && snapshot.status !== 'pending' && snapshot.status !== 'saving';
+      && loadSequence === atLoad && snapshot.status !== 'pending' && snapshot.status !== 'saving';
     const projection = base?.projections.find(row => row.variantId === target.variantId);
     if (!base || !projection || !current()) return { status: 'stale' };
     // Let the panel render its loading state before the first projection.
     await new Promise<void>(resolve => globalThis.setTimeout(resolve, 0));
     if (signal.aborted) return { status: 'cancelled' };
     if (!current()) return { status: 'stale' };
-    const result = listMealAlternatives(base.plan, projection, target);
+    const result = await listMealAlternatives(base.plan, projection, target, { signal, isCurrent: current });
+    if (signal.aborted) return { status: 'cancelled' };
+    if (!current()) return { status: 'stale' };
     return result.status === 'ready' ? { ...result, revision: atRevision } : result;
   }
   async function editMeal(target: MealEditTarget, recipeId: string, expectedRevision: number, origin: GenerationOrigin) {

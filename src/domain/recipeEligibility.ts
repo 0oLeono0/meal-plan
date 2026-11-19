@@ -8,7 +8,7 @@ type Eligibility = { status: 'eligible'; ingredientCost: Rational }
   | { status: 'rejected' | 'incomplete'; diagnostics: readonly CatalogDiagnostic[] };
 
 /** Eligibility uses the plan's stored catalog and applied restrictions. Budget needs a whole-plan projection. */
-export function createRecipeEligibility({ catalog, appliedSettings }: PlanInputs, allergens: readonly string[] = []) {
+export function createRecipeEligibility({ catalog, appliedSettings }: PlanInputs, allergens: readonly string[] = [], { checkIngredientFacts = true } = {}) {
   const requirements = [
     ...appliedSettings.restrictions.map(key => ({ kind: 'restriction', key })),
     ...allergens.map(key => ({ kind: 'allergen', key })),
@@ -34,9 +34,13 @@ export function createRecipeEligibility({ catalog, appliedSettings }: PlanInputs
       if (food.safety.status !== 'known') diagnostics.push({ code: 'SAFETY_UNKNOWN', path, message: 'SAFETY_UNKNOWN' });
       for (const required of requirements) {
         const fact = food.safety.status === 'known' ? food.safety.facts.find(row => row.kind === required.kind && row.key === required.key) : undefined;
-        if (fact?.suitable === false) incompatible = true;
+        if (fact?.suitable === false) {
+          incompatible = true;
+          diagnostics.push({ code: 'SAFETY_FACT_UNSUITABLE', path, message: `${required.kind}:${required.key}` });
+        }
         else if (!fact) diagnostics.push({ code: 'SAFETY_FACT_MISSING', path, message: `${required.kind}:${required.key}` });
       }
+      if (!checkIngredientFacts) continue;
       const evaluated = evaluateIngredient(food, ingredient);
       if (evaluated.status !== 'evaluated') diagnostics.push(...evaluated.diagnostics);
       else if (evaluated.price.status !== 'known') diagnostics.push({ code: 'PRICE_UNKNOWN', path, message: 'PRICE_UNKNOWN' });

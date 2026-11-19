@@ -5,6 +5,7 @@ import type { PlanProjection } from '../domain/planProjection';
 import type { CatalogDiagnostic } from '../domain/catalog';
 import { trustedCatalogs } from './trustedCatalogs';
 import type { TrustedCatalogRegistry } from './trustedCatalogs';
+import { createRecipeEligibility } from '../domain/recipeEligibility';
 
 export const ACTIVE_PLAN_KEY = 'mealplan:guest:active-plan:v1';
 export const ACTIVE_PLAN_MAX_BYTES = 4_000_000;
@@ -30,20 +31,16 @@ export function validateActiveBundle(input: unknown, registry: TrustedCatalogReg
   const plan = validated.plan, projections: PlanProjection[] = [];
   const trust = registry.validate(plan.inputs.catalog);
   if (trust.status === 'invalid') return trust;
-  const settings = plan.inputs.appliedSettings;
-  // Match generation: no-fish covers fish/seafood ingredients, not allergen traces.
-  const requirements = settings.restrictions.map(key => ({ kind: 'restriction', key }));
+  // The shared projection below checks nutrition and price for each serving and row.
+  const evaluateEligibility = createRecipeEligibility(plan.inputs, [], { checkIngredientFacts: false });
   const invalid = (code: string, path: string) => ({ status: 'invalid' as const, diagnostics: [{ code, path, message: code }] });
   for (const variant of plan.variants) {
     for (const instance of variant.instances) {
-      const recipe = instance.recipeSnapshot;
-      if (settings.cookingMinutes !== null && recipe.cookingMinutes > settings.cookingMinutes) return invalid('COOKING_LIMIT', instance.id);
-      for (const ingredient of recipe.ingredients) {
-        if (settings.exclusionIds.includes(ingredient.productId)) return invalid('EXCLUDED_PRODUCT', instance.id);
-        const food = plan.inputs.catalog.foods.find(food => food.profileId === ingredient.profileId);
-        if (!food || food.safety.status !== 'known') return invalid('SAFETY_UNKNOWN', instance.id);
-        const facts = food.safety.facts;
-        if (requirements.some(required => !facts.some(fact => fact.kind === required.kind && fact.key === required.key && fact.suitable))) return invalid('SAFETY_FACT_MISSING_OR_UNSUITABLE', instance.id);
+      const eligibility = evaluateEligibility(instance.recipeSnapshot);
+      if (eligibility.status !== 'eligible') {
+        const code = eligibility.diagnostics[0]?.code;
+        const boundaryCode = code === 'SAFETY_FACT_MISSING' || code === 'SAFETY_FACT_UNSUITABLE' ? 'SAFETY_FACT_MISSING_OR_UNSUITABLE' : code === 'UNKNOWN_PROFILE' ? 'SAFETY_UNKNOWN' : code;
+        return invalid(boundaryCode ?? 'SAFETY_UNKNOWN', instance.id);
       }
     }
     const result = projectPlan(plan.inputs, variant);

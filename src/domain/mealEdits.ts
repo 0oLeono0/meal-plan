@@ -18,6 +18,7 @@ export interface MealAlternative {
   readonly recipeId: string;
   readonly name: string;
   readonly cookingMinutes: number;
+  readonly purchaseDelta: Rational;
   readonly purchaseDeltaKopecks: bigint;
   readonly familyCalorieDelta: Rational;
 }
@@ -25,7 +26,16 @@ export interface MealAlternative {
 type Unavailable = 'stale' | 'incompatible' | 'over-budget' | 'incomplete';
 type MealEditResult = { status: 'ready'; plan: ActivePlanEnvelope } | { status: Unavailable };
 export type MealAlternativesResult = { status: 'ready'; options: readonly MealAlternative[]; overBudget: boolean; incomplete: boolean }
-  | { status: 'stale' };
+  | { status: 'stale' | 'cancelled' };
+
+interface MealSearchOptions {
+  readonly signal?: AbortSignal;
+  readonly isCurrent?: () => boolean;
+  readonly yieldControl?: () => Promise<void>;
+}
+
+const alternativesBatchSize = 4;
+const yieldMacroTask = () => new Promise<void>(resolve => globalThis.setTimeout(resolve, 0));
 
 function resolveTarget(plan: ActivePlanEnvelope, baseline: PlanProjection, target: MealEditTarget) {
   if (target.variantId !== plan.activeVariantId || target.variantId !== baseline.variantId) return null;
@@ -63,14 +73,26 @@ export function replaceMeal(plan: ActivePlanEnvelope, baseline: PlanProjection, 
   return { status: 'ready', plan: { ...plan, variants: plan.variants.map(row => row.id === current.variant.id ? next.variant : row) } };
 }
 
-export function listMealAlternatives(plan: ActivePlanEnvelope, baseline: PlanProjection, target: MealEditTarget): MealAlternativesResult {
+export async function listMealAlternatives(plan: ActivePlanEnvelope, baseline: PlanProjection, target: MealEditTarget, { signal, isCurrent, yieldControl = yieldMacroTask }: MealSearchOptions = {}): Promise<MealAlternativesResult> {
+  function interrupted(): 'cancelled' | 'stale' | null {
+    return signal?.aborted ? 'cancelled' : isCurrent && !isCurrent() ? 'stale' : null;
+  }
+  const initial = interrupted();
+  if (initial) return { status: initial };
   const current = resolveTarget(plan, baseline, target);
   if (!current) return { status: 'stale' };
   const evaluate = createRecipeEligibility(plan.inputs);
-  const admitted: { alternative: MealAlternative; purchase: Rational }[] = [];
+  const admitted: MealAlternative[] = [];
   let overBudget = false, incomplete = false;
+  let attempted = 0;
   for (const recipe of plan.inputs.catalog.recipes) {
     if (recipe.id === target.recipeId || !recipe.slots.includes(target.slot)) continue;
+    if (attempted > 0 && attempted % alternativesBatchSize === 0) {
+      await yieldControl();
+      const stopped = interrupted();
+      if (stopped) return { status: stopped };
+    }
+    attempted++;
     const eligibility = evaluate(recipe);
     if (eligibility.status === 'rejected') continue;
     if (eligibility.status === 'incomplete') { incomplete = true; continue; }
@@ -80,12 +102,15 @@ export function listMealAlternatives(plan: ActivePlanEnvelope, baseline: PlanPro
       incomplete ||= candidate.status === 'incomplete';
       continue;
     }
-    admitted.push({ purchase: candidate.projection.costs.exact.purchase, alternative: {
+    admitted.push({
       recipeId: recipe.id, name: recipe.name, cookingMinutes: recipe.cookingMinutes,
+      purchaseDelta: subtract(candidate.projection.costs.exact.purchase, baseline.costs.exact.purchase),
       purchaseDeltaKopecks: candidate.projection.costs.kopecks.purchase - baseline.costs.kopecks.purchase,
       familyCalorieDelta: subtract(candidate.meal.familyNutrition.calories, current.row.familyNutrition.calories),
-    } });
+    });
   }
-  admitted.sort((left, right) => compare(left.purchase, right.purchase) || (left.alternative.recipeId < right.alternative.recipeId ? -1 : 1));
-  return { status: 'ready', options: admitted.slice(0, 5).map(row => row.alternative), overBudget, incomplete };
+  const stopped = interrupted();
+  if (stopped) return { status: stopped };
+  admitted.sort((left, right) => compare(left.purchaseDelta, right.purchaseDelta) || (left.recipeId < right.recipeId ? -1 : left.recipeId === right.recipeId ? 0 : 1));
+  return { status: 'ready', options: admitted.slice(0, 5), overBudget, incomplete };
 }

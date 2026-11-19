@@ -1,4 +1,4 @@
-import { evaluateIngredient, nutrientKeys } from './catalog';
+import { nutrientKeys } from './catalog';
 import type { CatalogDiagnostic, Recipe } from './catalog';
 import { buildActivePlanEnvelope, mealSlots, validatePlanInputs } from './plan';
 import type { BudgetEvidence, GenerationErrorCode, GenerationResult, GenerationSelectionOptions, PlanInputs, PlanVariant } from './plan';
@@ -9,6 +9,7 @@ import { add, compare, convertQuantity, decimal, divide, multiply, rational, sub
 import type { Rational } from './quantities';
 import { recipeDiversityFor } from '../data/recipeDiversity';
 import type { RecipeDiversityMap } from '../data/recipeDiversity';
+import { createRecipeEligibility } from './recipeEligibility';
 
 export interface SearchOptions extends GenerationSelectionOptions {
   readonly allergenKeys?: readonly string[];
@@ -149,34 +150,19 @@ export function* createPlanSearch(rawInputs: PlanInputs, options: SearchOptions 
       || excludedFingerprints.some(key => typeof key !== 'string' || !key.trim() || key.length > 32768)) {
       diagnostics.push(diagnostic('INVALID_SEARCH_OPTIONS', 'search')); return refuse('GENERATION_DATA_INCOMPLETE');
     }
-    // Reviewed no-fish restriction facts cover fish and seafood ingredients.
-    // Package-level allergen guarantees are a separate, explicitly requested policy.
-    const requirements = [...inputs.appliedSettings.restrictions.map(key => ({ kind: 'restriction', key })),
-      ...allergens.map(key => ({ kind: 'allergen', key }))];
+    const evaluateEligibility = createRecipeEligibility(inputs, allergens);
     const admitted: Candidate[] = [], incomplete: Recipe[] = [], rejected: Recipe[] = [];
-    const foods = new Map(inputs.catalog.foods.map(food => [food.profileId, food]));
+    const familyServings = decimal(String(inputs.appliedSettings.people));
     for (const recipe of [...inputs.catalog.recipes].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)) {
       if (transitions >= maxTransitions) return refuse('SEARCH_EXHAUSTED');
-      let incompatible = inputs.appliedSettings.cookingMinutes !== null && recipe.cookingMinutes > inputs.appliedSettings.cookingMinutes;
-      incompatible ||= recipe.ingredients.some(row => inputs.appliedSettings.exclusionIds.includes(row.productId));
-      let missing = false, ingredientCost = zero();
-      const recipeDiagnostics: CatalogDiagnostic[] = [];
-      if (!incompatible) for (const ingredient of recipe.ingredients) {
-        const food = foods.get(ingredient.profileId)!;
-        if (food.safety.status !== 'known') { missing = true; recipeDiagnostics.push(diagnostic('SAFETY_UNKNOWN', `recipes.${recipe.id}.${food.profileId}`)); }
-        for (const required of requirements) {
-          const fact = food.safety.status === 'known' ? food.safety.facts.find(fact => fact.kind === required.kind && fact.key === required.key) : undefined;
-          if (fact?.suitable === false) incompatible = true;
-          else if (!fact) { missing = true; recipeDiagnostics.push(diagnostic('SAFETY_FACT_MISSING', `recipes.${recipe.id}.${food.profileId}`, `${required.kind}:${required.key}`)); }
-        }
-        const evaluated = evaluateIngredient(food, ingredient);
-        if (evaluated.status !== 'evaluated') { missing = true; recipeDiagnostics.push(...evaluated.diagnostics); }
-        else if (evaluated.price.status !== 'known') { missing = true; recipeDiagnostics.push(diagnostic('PRICE_UNKNOWN', `recipes.${recipe.id}.${food.profileId}`)); }
-        else ingredientCost = add(ingredientCost, multiply(evaluated.price.amount, divide(decimal(String(inputs.appliedSettings.people)), recipe.baseServings)));
+      const evaluation = evaluateEligibility(recipe);
+      if (evaluation.status === 'eligible') {
+        admitted.push({ recipe, ingredientCost: multiply(evaluation.ingredientCost, divide(familyServings, recipe.baseServings)) });
+      } else if (evaluation.status === 'incomplete') {
+        incomplete.push(recipe); diagnostics.push(...evaluation.diagnostics);
+      } else {
+        rejected.push(recipe);
       }
-      if (incompatible) rejected.push(recipe);
-      else if (missing) { incomplete.push(recipe); diagnostics.push(...recipeDiagnostics); }
-      else admitted.push({ recipe, ingredientCost });
       transitions++; yield progress();
     }
     const slots = inputs.dates.flatMap(() => mealSlots.map(slot => admitted.filter(row => row.recipe.slots.includes(slot))

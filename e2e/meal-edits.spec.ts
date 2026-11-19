@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import type { ActivePlanEnvelope, PlanVariant } from '../src/domain/plan';
-import { openSyntheticPlan } from './plan-fixtures';
+import { generateRealPlan, openSyntheticPlan } from './plan-fixtures';
 
 const activeKey = 'mealplan:guest:active-plan:v1';
 const formatDate = (date: string) => new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${date}T00:00:00Z`));
@@ -197,4 +197,24 @@ test('add-slot fills a persisted empty meal with a new identity and updated purc
   expect((await list.allTextContents()).some(row => row.includes(source))).toBe(true);
   await page.goto(oldRecipe!);
   await expect(page.getByRole('link', { name: 'К актуальному меню' })).toBeVisible();
+});
+
+test('remove-slot keeps all four add actions when no meals remain and explains zero purchases', async ({ page }) => {
+  test.setTimeout(60_000);
+  await page.setViewportSize({ width: 1280, height: 850 });
+  await generateRealPlan(page, 1);
+  const before = await readMenu(page);
+  for (const instance of before.variant.instances) {
+    const meal = page.locator(`[data-instance-id="${instance.id}"]`);
+    await meal.getByRole('button', { name: /^Действия для блюда/ }).click();
+    await meal.getByRole('button', { name: 'Убрать из меню' }).click();
+    await page.getByRole('dialog', { name: 'Убрать блюдо из меню?' }).getByRole('button', { name: 'Убрать из меню' }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Изменения сохранены' })).toBeVisible();
+  }
+  await page.reload();
+  await expect(page.getByRole('button', { name: '+ Добавить блюдо', exact: true })).toHaveCount(4);
+  expect((await readMenu(page)).variant.instances).toHaveLength(0);
+  await page.getByRole('link', { name: 'Список покупок · 0 товаров' }).click();
+  await expect(page.getByRole('heading', { name: 'В меню пока нет блюд' })).toBeVisible({ timeout: 5_000 });
+  await expect(page.locator('article[data-product-id]')).toHaveCount(0);
 });

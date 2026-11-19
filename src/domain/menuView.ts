@@ -1,4 +1,4 @@
-import { calendarDates } from './plan';
+import { calendarDates, planCoordinates } from './plan';
 import type { InstanceProjection } from './planProjection';
 import { formatCurrency, formatNutrition } from './presentation';
 import { divide, formatExact, roundHalfUp } from './quantities';
@@ -23,6 +23,9 @@ export function menuSearch(view: MenuView): string {
   const params = new URLSearchParams({ view: view.mode });
   if (view.day !== null) params.set('day', view.day);
   return params.toString();
+}
+export function menuDaySlots(date: string, instances: readonly InstanceProjection[]) {
+  return planCoordinates([date]).map(({ slot }) => ({ slot, row: instances.find(item => item.instance.date === date && item.instance.slot === slot) ?? null }));
 }
 export function presentMealCard(row: InstanceProjection) {
   return { nutrition: formatNutrition(row.perPortionNutrition), price: formatCurrency(roundHalfUp(divide(row.ingredientCost, row.instance.selectedServings), 2)),

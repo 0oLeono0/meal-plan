@@ -32,6 +32,28 @@ function envelopeFixture(days = '1') {
   return plan.buildActivePlanEnvelope(inputs, [{ id: 'variant-1', instances }], 'variant-1');
 }
 
+it('phase04-remove keeps schema1 strict and requires complete ordered coverage of schema2 slots', () => {
+  const original = envelopeFixture('2');
+  const [first, second, ...remaining] = original.variants[0].instances;
+  const coordinate = ({ date, slot }: plan.MealCoordinate) => ({ date, slot });
+  const variant = { id: original.activeVariantId, instances: remaining, emptySlots: [coordinate(first), coordinate(second)] };
+  const edited = { ...original, schemaVersion: 2 as const, variants: [variant] };
+  expect(plan.validateActivePlanEnvelope(original).status).toBe('valid');
+  expect(plan.validateActivePlanEnvelope({ ...original, variants: [{ id: variant.id, instances: remaining }] }).status).toBe('invalid');
+  expect(plan.validateActivePlanEnvelope(JSON.parse(JSON.stringify(plan.encodePlanEnvelope(edited))))).toMatchObject({ status: 'valid', plan: edited });
+  for (const altered of [
+    { ...variant, emptySlots: variant.emptySlots.slice(1) },
+    { ...variant, emptySlots: [coordinate(first), coordinate(first)] },
+    { ...variant, emptySlots: [coordinate(first), coordinate(remaining[0])] },
+    { ...variant, emptySlots: [...variant.emptySlots].reverse() },
+    { ...variant, emptySlots: [{ ...coordinate(first), date: '2026-10-01' }, coordinate(second)] },
+    { ...variant, emptySlots: [{ ...coordinate(first), unexpected: true }, coordinate(second)] },
+    { ...variant, instances: [...remaining].reverse() },
+    { ...variant, instances: remaining.map(row => ({ ...row, id: 'shared' })) },
+  ]) expect(plan.validateActivePlanEnvelope({ ...edited, variants: [altered] }).status).toBe('invalid');
+  expect(plan.validateActivePlanEnvelope({ ...edited, variants: [{ ...variant, instances: [], emptySlots: plan.planCoordinates(original.inputs.dates) }] }).status).toBe('valid');
+});
+
 describe('alternative envelope boundaries', () => {
   function alternatives(count: number) {
     const original = envelopeFixture();

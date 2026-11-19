@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { menuSearch, resolveMenuView } from './menuView';
+import { menuDaySlots, menuSearch, resolveMenuView } from './menuView';
+
+it('phase04-remove shows all four ordered positions even when that day has no recipes', () => {
+  expect(menuDaySlots('2026-10-31', [])).toEqual([
+    { slot: 'breakfast', row: null }, { slot: 'lunch', row: null },
+    { slot: 'dinner', row: null }, { slot: 'snack', row: null },
+  ]);
+});
 
 describe('EC-18/19/20/22/23/24 actual date presentation query', () => {
   it.each([

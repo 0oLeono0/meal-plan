@@ -7,6 +7,7 @@ import { compare, decimal, decodeRational, dimension, encodeRational, rational }
 import type { Rational } from './quantities';
 
 export const PLAN_SCHEMA_VERSION = 1;
+export const EDITED_PLAN_SCHEMA_VERSION = 2;
 export const mealSlots = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 export interface PlanInputs {
   readonly schemaVersion: 1;
@@ -21,10 +22,12 @@ export interface PlanInputs {
   readonly sourceSnapshots: readonly SourceReference[];
   readonly pantrySnapshot: readonly PantrySnapshotRow[];
 }
-export interface RecipeInstance {
-  readonly id: string;
+export interface MealCoordinate {
   readonly date: string;
   readonly slot: MealSlot;
+}
+export interface RecipeInstance extends MealCoordinate {
+  readonly id: string;
   readonly recipeId: string;
   readonly catalogVersion: string;
   readonly recipeSnapshot: Recipe;
@@ -32,12 +35,18 @@ export interface RecipeInstance {
   readonly selectedServings: Rational;
 }
 export interface PlanVariant { readonly id: string; readonly instances: readonly RecipeInstance[] }
-export interface ActivePlanEnvelope {
+export interface EditedPlanVariant extends PlanVariant { readonly emptySlots: readonly MealCoordinate[] }
+export interface CompletePlanEnvelope {
   readonly schemaVersion: 1;
   readonly inputs: PlanInputs;
   readonly variants: readonly PlanVariant[];
   readonly activeVariantId: string;
 }
+export interface EditedPlanEnvelope extends Omit<CompletePlanEnvelope, 'schemaVersion' | 'variants'> {
+  readonly schemaVersion: 2;
+  readonly variants: readonly EditedPlanVariant[];
+}
+export type ActivePlanEnvelope = CompletePlanEnvelope | EditedPlanEnvelope;
 export interface GenerationSelectionOptions {
   /** Initial target3; append requests may ask for1. Runtime boundary accepts only1..3. */
   readonly targetCount?: number;
@@ -63,7 +72,7 @@ export interface GenerationError {
   readonly budgetEvidence?: BudgetEvidence;
 }
 /** Canonical contract: adapter/controller consumers import these types, without local copies. */
-export type GenerationResult = { readonly status: 'success'; readonly plan: ActivePlanEnvelope }
+export type GenerationResult = { readonly status: 'success'; readonly plan: CompletePlanEnvelope }
   | { readonly status: 'error'; readonly error: GenerationError } | { readonly status: 'cancelled' };
 export interface GenerationPort { generate(request: GenerationRequest, signal: AbortSignal): Promise<GenerationResult> }
 export type PlanValidation = { readonly status: 'valid'; readonly plan: ActivePlanEnvelope }
@@ -163,21 +172,41 @@ export function createPlanInputs(appliedSettings: AppliedSettings, catalog: Cata
   assertInputs(value);
   return value;
 }
-function assertInstances(instances: unknown, inputs: PlanInputs, allIds: Set<string>): asserts instances is readonly RecipeInstance[] {
-  if (!Array.isArray(instances) || instances.length !== inputs.dates.length * mealSlots.length) fail('INVALID_INSTANCE_COUNT');
+function coordinateIndex(dates: readonly string[], coordinate: Record<string, unknown>): number {
+  const day = dates.indexOf(coordinate.date as string), slot = mealSlots.indexOf(coordinate.slot as MealSlot);
+  return day < 0 || slot < 0 ? -1 : day * mealSlots.length + slot;
+}
+export function planCoordinates(dates: readonly string[]): readonly MealCoordinate[] {
+  return dates.flatMap(date => mealSlots.map(slot => ({ date, slot })));
+}
+function assertInstances(instances: unknown, inputs: PlanInputs, allIds: Set<string>, emptySlots?: readonly unknown[]): asserts instances is readonly RecipeInstance[] {
+  const size = inputs.dates.length * mealSlots.length;
+  if (!Array.isArray(instances) || instances.length + (emptySlots?.length ?? 0) !== size) fail('INVALID_INSTANCE_COUNT');
+  const occupied = new Set<number>();
   const recipes = new Map(inputs.catalog.recipes.map(recipe => [recipe.id, recipe]));
+  let previous = -1;
   for (let index = 0; index < instances.length; index++) {
     const instance: unknown = instances[index];
     if (!record(instance)) fail('INVALID_INSTANCE');
     keys(instance, 'id,date,slot,recipeId,catalogVersion,recipeSnapshot,selectedServings');
-    const date = inputs.dates[Math.floor(index / 4)], slot = mealSlots[index % 4];
-    if (!text(instance.id) || allIds.has(instance.id) || instance.date !== date || instance.slot !== slot) fail('INVALID_INSTANCE_IDENTITY');
+    const coordinate = coordinateIndex(inputs.dates, instance);
+    if (!text(instance.id) || allIds.has(instance.id) || coordinate <= previous) fail('INVALID_INSTANCE_IDENTITY');
+    previous = coordinate;
+    occupied.add(coordinate);
     allIds.add(instance.id);
     const recipe = typeof instance.recipeId === 'string' ? recipes.get(instance.recipeId) : undefined;
-    if (!recipe || !recipe.slots.includes(slot) || instance.catalogVersion !== inputs.catalogVersion || !sameSnapshot(recipe, instance.recipeSnapshot)) fail('INVALID_RECIPE_REFERENCE');
+    if (!recipe || !recipe.slots.includes(instance.slot as MealSlot) || instance.catalogVersion !== inputs.catalogVersion || !sameSnapshot(recipe, instance.recipeSnapshot)) fail('INVALID_RECIPE_REFERENCE');
     assertExact(instance.selectedServings);
     // Computational bound, not a new UI portion policy. Initial servings always equal the family size.
     if (compare(instance.selectedServings, decimal('1000')) > 0) fail('INVALID_SERVINGS');
+  }
+  previous = -1;
+  for (const empty of emptySlots ?? []) {
+    if (!record(empty)) fail('INVALID_EMPTY_SLOT');
+    keys(empty, 'date,slot');
+    const coordinate = coordinateIndex(inputs.dates, empty);
+    if (coordinate <= previous || occupied.has(coordinate)) fail('INVALID_EMPTY_SLOT');
+    previous = coordinate;
   }
 }
 export function createRecipeInstances(inputs: PlanInputs, recipeIds: readonly string[], idFactory: (date: string, slot: MealSlot) => string): readonly RecipeInstance[] {
@@ -221,21 +250,26 @@ export function validateActivePlanEnvelope(input: unknown): PlanValidation {
     const value = immutableSnapshot(decodeValues(immutableSnapshot(input)));
     if (!record(value)) fail('INVALID_PLAN');
     keys(value, 'schemaVersion,inputs,variants,activeVariantId');
-    if (value.schemaVersion !== PLAN_SCHEMA_VERSION || !text(value.activeVariantId) || !Array.isArray(value.variants) || value.variants.length < 1 || value.variants.length > 12) fail('INVALID_PLAN');
+    if ((value.schemaVersion !== PLAN_SCHEMA_VERSION && value.schemaVersion !== EDITED_PLAN_SCHEMA_VERSION) || !text(value.activeVariantId) || !Array.isArray(value.variants) || value.variants.length < 1 || value.variants.length > 12) fail('INVALID_PLAN');
     assertInputs(value.inputs);
     const variants = new Set<string>(), instances = new Set<string>();
     for (const variant of value.variants) {
       if (!record(variant) || !text(variant.id) || variants.has(variant.id)) fail('INVALID_VARIANT');
-      keys(variant, 'id,instances'); variants.add(variant.id);
-      assertInstances(variant.instances, value.inputs, instances);
+      const edited = value.schemaVersion === EDITED_PLAN_SCHEMA_VERSION;
+      keys(variant, edited ? 'id,instances,emptySlots' : 'id,instances');
+      if (edited && !Array.isArray(variant.emptySlots)) fail('INVALID_EMPTY_SLOT');
+      variants.add(variant.id);
+      assertInstances(variant.instances, value.inputs, instances, edited ? variant.emptySlots as unknown[] : undefined);
     }
     if (!variants.has(value.activeVariantId)) fail('INVALID_ACTIVE_VARIANT');
     return { status: 'valid', plan: value as unknown as ActivePlanEnvelope };
   } catch (error) { return invalidPlan(error); }
 }
-export function buildActivePlanEnvelope(inputs: PlanInputs, variants: readonly PlanVariant[], activeVariantId: string): ActivePlanEnvelope {
+export function buildActivePlanEnvelope(inputs: PlanInputs, variants: readonly PlanVariant[], activeVariantId: string): CompletePlanEnvelope {
   const result = validateActivePlanEnvelope({ schemaVersion: PLAN_SCHEMA_VERSION, inputs, variants, activeVariantId });
-  return result.status === 'valid' ? result.plan : fail(result.diagnostics[0].code);
+  if (result.status === 'invalid') return fail(result.diagnostics[0].code);
+  if (result.plan.schemaVersion !== PLAN_SCHEMA_VERSION) return fail('INVALID_PLAN');
+  return result.plan;
 }
 /** JSON-safe, detached boundary. Invalid envelopes never get a persistence payload. */
 export function encodePlanEnvelope(input: ActivePlanEnvelope): unknown {

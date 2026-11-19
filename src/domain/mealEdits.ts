@@ -1,4 +1,5 @@
 import type { MealSlot, Recipe } from './catalog';
+import { EDITED_PLAN_SCHEMA_VERSION, planCoordinates } from './plan';
 import type { ActivePlanEnvelope, PlanVariant, RecipeInstance } from './plan';
 import { projectPlan } from './planProjection';
 import type { InstanceProjection, PlanProjection } from './planProjection';
@@ -70,7 +71,25 @@ export function replaceMeal(plan: ActivePlanEnvelope, baseline: PlanProjection, 
   if (eligibility.status !== 'eligible') return { status: eligibility.status === 'incomplete' ? 'incomplete' : 'incompatible' };
   const next = projectReplacement(plan, current.variant, current.index, recipe);
   if (next.status !== 'ready') return next;
-  return { status: 'ready', plan: { ...plan, variants: plan.variants.map(row => row.id === current.variant.id ? next.variant : row) } };
+  const install = <T extends PlanVariant>(row: T): T => row.id === current.variant.id ? { ...row, instances: next.variant.instances } : row;
+  return { status: 'ready', plan: plan.schemaVersion === EDITED_PLAN_SCHEMA_VERSION
+    ? { ...plan, variants: plan.variants.map(install) }
+    : { ...plan, variants: plan.variants.map(install) } };
+}
+
+export function removeMeal(plan: ActivePlanEnvelope, baseline: PlanProjection, target: MealEditTarget): MealEditResult {
+  const current = resolveTarget(plan, baseline, target);
+  if (!current) return { status: 'stale' };
+  const remaining = current.variant.instances.filter((_, index) => index !== current.index);
+  const emptySlots = planCoordinates(plan.inputs.dates).filter(({ date, slot }) =>
+    !remaining.some(instance => instance.date === date && instance.slot === slot));
+  const variants = plan.schemaVersion === EDITED_PLAN_SCHEMA_VERSION ? plan.variants
+    : plan.variants.map(variant => ({ ...variant, emptySlots: [] }));
+  return {
+    status: 'ready',
+    plan: { ...plan, schemaVersion: EDITED_PLAN_SCHEMA_VERSION, variants: variants.map(variant =>
+      variant.id === current.variant.id ? { ...variant, instances: remaining, emptySlots } : variant) },
+  };
 }
 
 export async function listMealAlternatives(plan: ActivePlanEnvelope, baseline: PlanProjection, target: MealEditTarget, { signal, isCurrent, yieldControl = yieldMacroTask }: MealSearchOptions = {}): Promise<MealAlternativesResult> {

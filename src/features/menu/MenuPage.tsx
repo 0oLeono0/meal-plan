@@ -6,11 +6,12 @@ import { Button, ConfirmDialog } from '../../shared/ui';
 import { formatCount, formatDateOnly, formatNutrition, selectPlanPresentation } from '../../domain/presentation';
 import type { TargetComparison } from '../../domain/presentation';
 import { localDateOnly } from '../../domain/plan';
+import type { ActivePlanEnvelope, MealCoordinate } from '../../domain/plan';
 import type { Nutrition } from '../../domain/catalog';
 import type { MealEditTarget } from '../../domain/mealEdits';
 import { PlanSummary } from '../plan/PlanSummary';
 import { PlanLoading } from '../plan/PlanLoading';
-import { menuSearch, resolveMenuView } from '../../domain/menuView';
+import { menuDaySlots, menuSearch, resolveMenuView } from '../../domain/menuView';
 import type { MenuView } from '../../domain/menuView';
 import type { PlanProjection } from '../../domain/planProjection';
 import { MealCard, mealSlotNames } from './MealCard';
@@ -24,6 +25,7 @@ const subscribeDesktop = (notify: () => void) => {
 };
 // Ephemeral local navigation origin only; no saved menu data or totals are copied.
 let recipeOrigin: { variantId: string; instanceId: string } | null = null;
+const emptySlotId = ({ date, slot }: MealCoordinate) => `empty-slot-${date}-${slot}`;
 
 function ShoppingAction({ label }: { label: string }) {
   const bar = useRef<HTMLDivElement>(null);
@@ -45,10 +47,11 @@ function ShoppingAction({ label }: { label: string }) {
   return <div ref={bar} className="menu-shopping"><Link className="primary action-link" to="/shopping">Список покупок · {label}</Link></div>;
 }
 
-function MenuDays({ projection, catalogVersion, selected, onChange, days, today, editingDisabled, onReplace }: {
+function MenuDays({ projection, catalogVersion, selected, onChange, days, today, editingDisabled, onReplace, onRemove }: {
   projection: PlanProjection; catalogVersion: string; selected: MenuView; onChange(value: MenuView): void;
   days: ReturnType<typeof selectPlanPresentation>['days']; today: string; editingDisabled: boolean;
   onReplace?: (target: MealEditTarget, recipeName: string, trigger: HTMLElement) => void;
+  onRemove?: (target: MealEditTarget, trigger: HTMLElement) => void;
 }) {
   const desktop = useSyncExternalStore(subscribeDesktop, () => window.matchMedia(desktopQuery).matches);
   const grid = useRef<HTMLDivElement>(null);
@@ -93,7 +96,7 @@ function MenuDays({ projection, catalogVersion, selected, onChange, days, today,
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         const measurements = ['breakfast', 'lunch', 'dinner', 'snack'].map(slot => {
-          const heights = [...host.querySelectorAll<HTMLElement>(`[data-slot="${slot}"] .meal-card-link`)].map(item => item.getBoundingClientRect().height);
+          const heights = [...host.querySelectorAll<HTMLElement>(`[data-slot="${slot}"] .meal-card-link, [data-slot="${slot}"][data-empty-date]`)].map(item => item.getBoundingClientRect().height);
           return [`--${slot}-height`, `${Math.ceil(Math.max(0, ...heights))}px`];
         });
         const headers = [...host.querySelectorAll<HTMLElement>('.menu-day-title')].map(item => item.getBoundingClientRect().height);
@@ -102,7 +105,7 @@ function MenuDays({ projection, catalogVersion, selected, onChange, days, today,
       });
     };
     const observer = new ResizeObserver(measure);
-    host.querySelectorAll('.meal-card-link, .menu-day-title').forEach(element => observer.observe(element));
+    host.querySelectorAll('.meal-card-link, .menu-day-title, [data-empty-date]').forEach(element => observer.observe(element));
     measure();
     return () => { observer.disconnect(); cancelAnimationFrame(frame); };
   }, [desktop, projection]);
@@ -127,18 +130,24 @@ function MenuDays({ projection, catalogVersion, selected, onChange, days, today,
         event.target.scrollIntoView({ block: event.target === event.currentTarget ? 'start' : 'nearest' });
       }}>
         <header><h2 id={`day-title-${day.dateOnly}`} className="menu-day-title">{day.date}{day.dateOnly === today ? ' · Сегодня' : ''}</h2></header>
-        {projection.instances.filter(row => row.instance.date === day.dateOnly).map((row, index) => {
+        {menuDaySlots(day.dateOnly, projection.instances).map(({ slot, row }, index) => {
+          if (!row) return <div key={slot} id={emptySlotId({ date: day.dateOnly, slot })} data-empty-date={day.dateOnly} data-slot={slot} tabIndex={-1} className="meal-card rounded-[var(--radius-field)] border border-[var(--color-border)] p-2">
+            <h3 className={`meal-slot meal-slot-${slot}`}>{mealSlotNames[slot]}</h3>
+            <p className="hint">Место свободно</p>
+          </div>;
           const instance = row.instance, recipeName = instance.recipeSnapshot.name;
+          const target = { variantId: projection.variantId, date: instance.date, slot: instance.slot, instanceId: instance.id, recipeId: instance.recipeId };
           const expanded = openActions === instance.id && !editingDisabled;
           const actionsId = `actions-${instance.id}`;
-          const actions = onReplace && <div className="mt-2 flex flex-wrap items-center justify-end gap-2" onKeyDown={event => {
+          const actions = (onReplace || onRemove) && <div className="mt-2 flex flex-wrap items-center justify-end gap-2" onKeyDown={event => {
             if (event.key === 'Escape' && expanded) {
               event.preventDefault(); setOpenActions(null); event.currentTarget.querySelector('button')?.focus();
             }
           }}>
             <Button className="!px-2" aria-label={`Действия для блюда ${recipeName} · ${day.date} · ${mealSlotNames[instance.slot]}`} aria-expanded={expanded} aria-controls={actionsId} disabled={editingDisabled} onClick={() => setOpenActions(expanded ? null : instance.id)}>⋯</Button>
             <div id={actionsId} hidden={!expanded}>
-              <Button className="!px-2" aria-label="Заменить блюдо" onClick={event => onReplace({ variantId: projection.variantId, date: instance.date, slot: instance.slot, instanceId: instance.id, recipeId: instance.recipeId }, recipeName, event.currentTarget)}>Заменить</Button>
+              {onReplace && <Button className="!px-2" aria-label="Заменить блюдо" onClick={event => onReplace(target, recipeName, event.currentTarget)}>Заменить</Button>}
+              {onRemove && <Button className="!px-2 text-[var(--color-danger)]" onClick={event => onRemove(target, event.currentTarget)}>Убрать из меню</Button>}
             </div>
           </div>;
           return <MealCard key={instance.id} row={row} catalogVersion={catalogVersion} variantId={projection.variantId} view={selected} priority={index === 0 && (desktop ? day.dateOnly === days[0]?.dateOnly : day.dateOnly === selected.day)} actions={actions} onOpen={() => { recipeOrigin = { variantId: projection.variantId, instanceId: instance.id }; }} />;
@@ -158,12 +167,23 @@ function NutritionSummary({ values, target }: { values: ReturnType<typeof format
     </dd></div>;
   })}</dl>;
 }
-export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, onCancel, onAppend, onRetryGeneration, onRecreate, mealAlternatives }: { snapshot: GenerationSnapshot; onRetryLoad(): void; onSelectVariant?(id: string): void; onRetrySave?(): void; onCancel?(): void; onAppend?(): void; onRetryGeneration?(): void; onRecreate?(focusAnchor: string): void; mealAlternatives?: MealAlternativesActions }) {
+export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, onCancel, onAppend, onRetryGeneration, onRecreate, mealAlternatives, onRemove }: { snapshot: GenerationSnapshot; onRetryLoad(): void; onSelectVariant?(id: string): void; onRetrySave?(): void; onCancel?(): void; onAppend?(): void; onRetryGeneration?(): void; onRecreate?(focusAnchor: string): void; mealAlternatives?: MealAlternativesActions; onRemove?(target: MealEditTarget, expectedPlan: ActivePlanEnvelope): void }) {
   const [replacementTrigger, setReplacementTrigger] = useState<HTMLElement | null>(null);
   const [mealChoice, setMealChoice] = useState<{ target: MealEditTarget; recipeName: string; trigger: HTMLElement } | null>(null);
+  const [removal, setRemoval] = useState<{ target: MealEditTarget; trigger: HTMLElement; plan: ActivePlanEnvelope } | null>(null);
+  const removedFocus = useRef<MealEditTarget | null>(null);
   const [params, setParams] = useSearchParams();
   useEffect(() => {
     if (snapshot.status === 'succeeded' && snapshot.intent === 'replace') document.getElementById('menu-title')?.focus();
+  }, [snapshot.status, snapshot.intent]);
+  useEffect(() => {
+    if (!removedFocus.current || snapshot.intent !== 'edit') return;
+    if (snapshot.status === 'succeeded') {
+      const target = removedFocus.current;
+      removedFocus.current = null;
+      const empty = document.getElementById(emptySlotId(target));
+      (empty ?? document.getElementById('menu-title'))?.focus();
+    }
   }, [snapshot.status, snapshot.intent]);
   const bundle = snapshot.active;
   if (!bundle) {
@@ -216,11 +236,16 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
       <p className="hint">КБЖУ рассчитаны по составу продуктов и не являются медицинской рекомендацией</p>
       <p className="hint">Расчёт не подтверждает полноценность рациона.</p>
     </section>
-    <MenuDays projection={projection} catalogVersion={plan.inputs.catalogVersion} selected={selected} onChange={next => setParams(menuSearch(next))} days={view.days} today={today} editingDisabled={busy} onReplace={mealAlternatives ? (target, recipeName, trigger) => setMealChoice({ target, recipeName, trigger }) : undefined} />
+    <MenuDays projection={projection} catalogVersion={plan.inputs.catalogVersion} selected={selected} onChange={next => setParams(menuSearch(next))} days={view.days} today={today} editingDisabled={busy} onReplace={mealAlternatives ? (target, recipeName, trigger) => setMealChoice({ target, recipeName, trigger }) : undefined} onRemove={onRemove ? (target, trigger) => setRemoval({ target, trigger, plan }) : undefined} />
     {mealChoice && mealAlternatives && <MealAlternatives {...mealChoice} request={mealAlternatives.request} onClose={() => setMealChoice(null)} onChoose={(recipeId, revision) => {
       const link = mealChoice.trigger.closest('article')?.querySelector('a');
       setMealChoice(null); mealAlternatives.select(mealChoice.target, recipeId, revision);
       requestAnimationFrame(() => link?.isConnected && link.focus());
+    }} />}
+    {removal && <ConfirmDialog title="Убрать блюдо из меню?" description="Этот приём пищи останется пустым. Позже сюда можно добавить другое блюдо." cancelLabel="Оставить блюдо" confirmLabel="Убрать из меню" returnFocus={removal.trigger} fallbackFocusId="menu-title" onCancel={() => setRemoval(null)} onConfirm={() => {
+      setRemoval(null);
+      removedFocus.current = removal.target;
+      onRemove?.(removal.target, removal.plan);
     }} />}
     <ShoppingAction label={view.itemCount} />
     {replacementTrigger && <ConfirmDialog title="Создать новый набор меню?" description={`После успешного сохранения нового набора прежние ${formatCount(plan.variants.length, 'variant')} будут заменены. До этого текущее меню останется доступным`} cancelLabel="Оставить варианты" confirmLabel="Создать новый набор" returnFocus={replacementTrigger} fallbackFocusId="menu-title" onCancel={() => setReplacementTrigger(null)} onConfirm={() => {

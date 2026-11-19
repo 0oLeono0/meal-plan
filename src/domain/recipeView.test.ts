@@ -30,7 +30,7 @@ function fixture() {
   const variant = { id: 'v1', instances };
   const projected = projectPlan(inputs, variant);
   if (projected.status !== 'projected') throw new Error('Projection fixture');
-  const active: ActiveBundle = { plan: { schemaVersion: 1, inputs, variants: [variant], activeVariantId: variant.id }, projections: [projected.projection] };
+  const active = { plan: { schemaVersion: 1, inputs, variants: [variant], activeVariantId: variant.id }, projections: [projected.projection] } satisfies ActiveBundle;
   const request: RecipeRequest = { pathname: '/recipe/r200', search: '?variant=v1&instance=i0', active, loadStatus: 'loaded', catalog: { status: 'loaded', catalog } };
   return { request, active, catalog };
 }

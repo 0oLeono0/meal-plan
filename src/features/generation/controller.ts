@@ -1,12 +1,12 @@
 import { validateActiveBundle } from '../../adapters/activePlan';
 import type { ActiveBundle, ActivePlanPort, ActivePlanSaveResult } from '../../adapters/activePlan';
-import type { GenerationError, GenerationPort, PlanInputs } from '../../domain/plan';
-import { validatePlanInputs } from '../../domain/plan';
+import type { ActivePlanEnvelope, GenerationError, GenerationPort, PlanInputs } from '../../domain/plan';
+import { EDITED_PLAN_SCHEMA_VERSION, PLAN_SCHEMA_VERSION, validatePlanInputs } from '../../domain/plan';
 import { variantFingerprint } from '../../domain/generatePlan';
 import { immutableSnapshot, sameSnapshot } from '../../domain/appliedSettings';
 import { trustedCatalogs as defaultTrustedCatalogs } from '../../adapters/trustedCatalogs';
 import type { TrustedCatalogRegistry } from '../../adapters/trustedCatalogs';
-import { listMealAlternatives, replaceMeal } from '../../domain/mealEdits';
+import { listMealAlternatives, removeMeal as removeFromPlan, replaceMeal } from '../../domain/mealEdits';
 import type { MealAlternativesResult, MealEditTarget } from '../../domain/mealEdits';
 
 export interface GenerationOrigin { readonly returnRoute: string; readonly focusAnchor: string; readonly firstErroneousStep?: number }
@@ -179,7 +179,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
       if (result.status === 'cancelled') { cancel(); return; }
       if (result.status === 'error') { stopTimers(op); publish({ status: intent === 'append' && result.error.code === 'SEARCH_EXHAUSTED' ? 'no-new-result' : 'error', error: result.error }); return; }
       const candidate = validateActiveBundle(result.plan, trustedCatalogs);
-      if (candidate.status !== 'valid' || !sameSnapshot(result.plan.inputs, op.inputs)) {
+      if (candidate.status !== 'valid' || candidate.bundle.plan.schemaVersion !== PLAN_SCHEMA_VERSION || !sameSnapshot(result.plan.inputs, op.inputs)) {
         stopTimers(op); publish({ status: 'error', error: { code: 'GENERATION_DATA_INCOMPLETE', message: 'Получено несогласованное меню', diagnostics: candidate.status === 'invalid' ? candidate.diagnostics : [] } }); return;
       }
       if (intent === 'append') {
@@ -192,7 +192,10 @@ export function createGenerationController({ generation, activePlan, trustedCata
         let id = `append-${base.plan.variants.length + 1}`;
         while (ids.has(id)) id += '-new';
         const added = { ...variant, id, instances: variant.instances.map(row => ({ ...row, id: `${id}/${row.date}/${row.slot}` })) };
-        const merged = validateActiveBundle({ ...base.plan, variants: [...base.plan.variants, added], activeVariantId: id }, trustedCatalogs);
+        const nextPlan = base.plan.schemaVersion === EDITED_PLAN_SCHEMA_VERSION
+          ? { ...base.plan, variants: [...base.plan.variants, { ...added, emptySlots: [] }], activeVariantId: id }
+          : { ...base.plan, variants: [...base.plan.variants, added], activeVariantId: id };
+        const merged = validateActiveBundle(nextPlan, trustedCatalogs);
         if (merged.status !== 'valid') { stopTimers(op); publish({ status: 'error', error: failure('GENERATION_DATA_INCOMPLETE', 'Не удалось проверить новый вариант') }); return; }
         await save(op, merged.bundle);
       } else {
@@ -257,15 +260,15 @@ export function createGenerationController({ generation, activePlan, trustedCata
     if (!current()) return { status: 'stale' };
     return result.status === 'ready' ? { ...result, revision: atRevision } : result;
   }
-  async function editMeal(target: MealEditTarget, recipeId: string, expectedRevision: number, origin: GenerationOrigin) {
+  async function applyMealEdit(target: MealEditTarget, origin: GenerationOrigin, isExpected: (base: ActiveBundle) => boolean, edit: typeof removeFromPlan) {
     const base = snapshot.active;
     if (!base || disposed || snapshot.status === 'pending' || snapshot.status === 'saving') return;
     const projection = base.projections.find(row => row.variantId === target.variantId);
-    const next = expectedRevision === revision && snapshot.loadStatus === 'loaded' && projection
-      ? replaceMeal(base.plan, projection, target, recipeId) : { status: 'stale' as const };
+    const next = isExpected(base) && snapshot.loadStatus === 'loaded' && projection
+      ? edit(base.plan, projection, target) : { status: 'stale' as const };
     if (next.status !== 'ready') {
       const message = next.status === 'stale' ? 'Меню изменилось. Обновите его перед новой правкой'
-        : next.status === 'over-budget' ? 'Замена превышает бюджет покупок' : 'Не удалось применить замену блюда';
+        : next.status === 'over-budget' ? 'Изменение превышает бюджет покупок' : 'Не удалось изменить блюдо';
       invalidate(); publish({ intent: 'edit', status: 'error', error: failure('FAILED', message), candidate: null, saveError: null }); return;
     }
     const candidate = validateActiveBundle(next.plan, trustedCatalogs);
@@ -278,10 +281,17 @@ export function createGenerationController({ generation, activePlan, trustedCata
     publish({ requestId: op.id, startedAt: clock.now(), origin: op.origin, intent: 'edit' });
     await save(op, candidate.bundle);
   }
+  async function editMeal(target: MealEditTarget, recipeId: string, expectedRevision: number, origin: GenerationOrigin) {
+    await applyMealEdit(target, origin, () => expectedRevision === revision,
+      (plan, projection, target) => replaceMeal(plan, projection, target, recipeId));
+  }
+  async function removeMeal(target: MealEditTarget, expectedPlan: ActivePlanEnvelope, origin: GenerationOrigin) {
+    await applyMealEdit(target, origin, base => base.plan === expectedPlan, removeFromPlan);
+  }
   return {
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { if (!disposed) listeners.add(listener); return () => { listeners.delete(listener); }; },
-    load, retryLoad: load, start, cancel, retrySave, selectVariant, appendVariant, recreateSet, mealAlternatives, editMeal,
+    load, retryLoad: load, start, cancel, retrySave, selectVariant, appendVariant, recreateSet, mealAlternatives, editMeal, removeMeal,
     async retryGeneration() {
       if (!lastRequest || (snapshot.status !== 'error' && snapshot.status !== 'no-new-result')
         || (lastRequest.baseRevision !== undefined && lastRequest.baseRevision !== revision)) return;

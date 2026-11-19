@@ -3,8 +3,8 @@ import { createActivePlanAdapter, ACTIVE_PLAN_KEY } from '../../adapters/activeP
 import type { ActivePlanLoadResult, ActivePlanPort } from '../../adapters/activePlan';
 import { buildAppliedSettings } from '../../domain/appliedSettings';
 import type { Catalog } from '../../domain/catalog';
-import { buildActivePlanEnvelope, createPlanInputs, createRecipeInstances, mealSlots } from '../../domain/plan';
-import type { GenerationPort, GenerationResult } from '../../domain/plan';
+import { buildActivePlanEnvelope, createPlanInputs, createRecipeInstances, mealSlots, planCoordinates } from '../../domain/plan';
+import type { CompletePlanEnvelope, EditedPlanEnvelope, GenerationPort, GenerationResult } from '../../domain/plan';
 import { createDraft } from '../../domain/settings';
 import { decimal } from '../../domain/quantities';
 import { createGenerationController as productionController, visiblePlanSnapshot } from './controller';
@@ -36,6 +36,23 @@ function fixture(seed = 'one') {
 function deferred<T>() { let resolve!: (value: T) => void; let reject!: (reason: unknown) => void; const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; }
 const trustedCatalogs = createTrustedCatalogRegistry([fixture().inputs.catalog]);
 const createGenerationController = (options: GenerationControllerOptions) => productionController({ trustedCatalogs, ...options });
+
+it('phase04-remove rejects a valid edited envelope as a generation response and retains stored bytes', async () => {
+  const base = fixture('empty-response');
+  const initial = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(base.plan) });
+  let raw = initial;
+  const store = { getItem: () => raw, setItem: (_key: string, value: string) => { raw = value; } };
+  const partial: EditedPlanEnvelope = { ...base.plan, schemaVersion: 2, variants: base.plan.variants.map(row =>
+    ({ ...row, instances: [], emptySlots: planCoordinates(base.inputs.dates) })) };
+  const generation: GenerationPort = { async generate() { return { status: 'success', plan: partial as unknown as CompletePlanEnvelope }; } };
+  const controller = createGenerationController({ generation, activePlan: createActivePlanAdapter(() => store, trustedCatalogs) });
+  try {
+    await controller.load();
+    await controller.recreateSet(origin);
+    expect(controller.getSnapshot()).toMatchObject({ status: 'error', error: { code: 'GENERATION_DATA_INCOMPLETE' }, active: { plan: base.plan } });
+    expect(raw).toBe(initial);
+  } finally { controller.dispose(); }
+});
 
 it('phase04-edit previews one candidate, restores the confirmed ledger on refusal, and retries the same edit', async () => {
   const base = fixture('meal-edit');

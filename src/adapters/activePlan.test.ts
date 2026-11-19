@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { buildAppliedSettings } from '../domain/appliedSettings';
-import { buildActivePlanEnvelope, createPlanInputs, createRecipeInstances, encodePlanEnvelope, mealSlots } from '../domain/plan';
+import { buildActivePlanEnvelope, createPlanInputs, createRecipeInstances, encodePlanEnvelope, mealSlots, planCoordinates } from '../domain/plan';
 import type { Catalog } from '../domain/catalog';
-import type { ActivePlanEnvelope } from '../domain/plan';
+import type { ActivePlanEnvelope, EditedPlanEnvelope } from '../domain/plan';
 import { decimal } from '../domain/quantities';
 import { createDraft } from '../domain/settings';
 import { ACTIVE_PLAN_KEY, ACTIVE_PLAN_MAX_BYTES, createActivePlanAdapter, createActivePlanPresencePort, validateActiveBundle } from './activePlan';
@@ -31,6 +31,29 @@ function storage() {
 }
 const current = { isCurrent: () => true };
 const rawPlan = (plan = fixture()) => JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
+
+it('phase04-remove loads a deliberately empty menu with zero totals and preserves truncated schema1 bytes', async () => {
+  const original = fixture(), store = storage(), registry = createTrustedCatalogRegistry([original.inputs.catalog]);
+  const adapter = createActivePlanAdapter(() => store, registry);
+  const untouched = rawPlan(original);
+  store.map.set(ACTIVE_PLAN_KEY, untouched);
+  expect((await adapter.load()).status).toBe('loaded');
+  expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(untouched);
+  const edited: EditedPlanEnvelope = { ...original, schemaVersion: 2, variants: original.variants.map(row =>
+    ({ ...row, instances: [], emptySlots: planCoordinates(original.inputs.dates) })) };
+  expect((await adapter.save(edited, current)).status).toBe('saved');
+  const editedRaw = store.map.get(ACTIVE_PLAN_KEY);
+  const loaded = await adapter.load();
+  expect(loaded).toMatchObject({ status: 'loaded', bundle: { plan: edited, projections: [{ rows: [], instances: [], costs: { kopecks: { purchase: 0n } } }] } });
+  expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(editedRaw);
+  const incomplete = JSON.parse(untouched);
+  incomplete.plan.variants[0].instances.pop();
+  const truncated = JSON.stringify(incomplete);
+  store.map.set(ACTIVE_PLAN_KEY, truncated);
+  expect((await adapter.load()).status).toBe('corrupt');
+  expect((await adapter.save(edited, current)).status).toBe('blocked');
+  expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(truncated);
+});
 
 it('rejects oversized UTF-8 storage before parsing and preserves the original value', async () => {
   const store = storage();

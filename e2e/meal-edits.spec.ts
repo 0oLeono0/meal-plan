@@ -31,6 +31,82 @@ function othersAt(variant: PlanVariant, id: string) {
   return variant.instances.filter(row => row.id !== id);
 }
 
+async function withRepeatedRiceBreakfast(page: Page) {
+  await generateTwoDays(page);
+  // Keep the real saved inputs and reviewed catalogue. Pin both breakfasts to
+  // the same recipe so the isolation and arithmetic checks do not depend on the seed.
+  await page.evaluate(key => {
+    const saved = JSON.parse(localStorage.getItem(key)!);
+    const active = saved.plan.variants.find((row: PlanVariant) => row.id === saved.plan.activeVariantId);
+    const recipe = saved.plan.inputs.catalog.recipes.find((row: { id: string }) => row.id === 'rice-sweet-porridge');
+    active.instances = active.instances.map((row: PlanVariant['instances'][number]) =>
+      row.slot === 'breakfast' ? { ...row, recipeId: recipe.id, recipeSnapshot: recipe } : row);
+    localStorage.setItem(key, JSON.stringify(saved));
+  }, activeKey);
+  await page.goto('/menu?view=week');
+  await expect(page.getByRole('heading', { level: 1, name: 'Меню на 2 дня' })).toBeVisible();
+  return readMenu(page);
+}
+
+test('portions-cycle changes only one repeated recipe and keeps purchasing totals after reload', async ({ page }) => {
+  test.setTimeout(65_000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  const before = await withRepeatedRiceBreakfast(page);
+  const [first, second] = before.variant.instances.filter(row => row.slot === 'breakfast');
+  expect(first.recipeId).toBe(second.recipeId);
+  const card = page.locator(`[data-instance-id="${first.id}"]`);
+  const firstDay = page.locator(`section[data-date="${first.date}"] .menu-day-totals`);
+  const secondDay = page.locator(`section[data-date="${second.date}"] .menu-day-totals`);
+  const dayCalories = async () => Number((await firstDay.locator('details dd').first().textContent())?.replace(/[^0-9]/g, ''));
+  const baseCalories = await dayCalories();
+  const secondTotals = await secondDay.innerText();
+  const menuBudget = await page.getByRole('region', { name: 'Бюджет меню' }).innerText();
+  await card.getByRole('link').click();
+  const recipeUrl = page.url();
+  const facts = page.getByRole('region', { name: 'На одну порцию' }).locator('dd');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Рисовая каша на воде');
+  await expect(facts).toHaveText(['297 ккал', '5,3 г', '0,5 г', '66,0 г', /≈ 5,77/]);
+  const portions = page.getByRole('group', { name: 'Порции для семьи' });
+  await expect(portions.getByRole('button', { name: /^×1/ })).toHaveAttribute('aria-pressed', 'true');
+
+  // 150 g rice per two portions; 69.7493827160494 RUB/kg.
+  for (const [label, count, rice, price] of [['×2', '4', '300', '20,92'], ['×0,5', '1', '75', '5,23'], ['×1', '2', '150', '10,46']]) {
+    const button = portions.getByRole('button', { name: new RegExp(`^${label}`) });
+    await button.click();
+    await expect(button).toHaveAttribute('aria-pressed', 'true');
+    await expect(button).toBeFocused();
+    await expect(page.getByRole('status').filter({ hasText: 'Изменения сохранены' })).toBeVisible();
+    await expect(page.getByText(`Порций для семьи: ${count}`, { exact: true })).toBeVisible();
+    await expect(page.getByText(new RegExp(`^${rice} г · ≈ ${price}`))).toBeVisible();
+    await expect(facts).toHaveText(['297 ккал', '5,3 г', '0,5 г', '66,0 г', /≈ 5,77/]);
+    expect(page.url()).toBe(recipeUrl);
+    const after = await readMenu(page);
+    expect(after.variant.instances.find(row => row.id === first.id)?.selectedServings).toEqual({ numerator: count, denominator: '1' });
+    expect(othersAt(after.variant, first.id)).toEqual(othersAt(before.variant, first.id));
+    expect(after.plan.variants.filter(row => row.id !== before.variant.id)).toEqual(before.plan.variants.filter(row => row.id !== before.variant.id));
+  }
+  // Leave a non-default multiplier persisted to verify affected quantities on reload.
+  await portions.getByRole('button', { name: /^×2/ }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Изменения сохранены' })).toBeVisible();
+  const edited = await readMenu(page);
+  await page.reload();
+  await expect(portions.getByRole('button', { name: /^×2/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByText(/^300 г · ≈ 20,92/)).toBeVisible();
+  expect((await readMenu(page)).raw).toBe(edited.raw);
+  await page.getByRole('link', { name: 'К меню', exact: true }).click();
+  expect(await dayCalories() - baseCalories).toBeCloseTo(594, -1);
+  await expect(secondDay).toHaveText(secondTotals, { useInnerText: true });
+  const updatedBudget = await page.getByRole('region', { name: 'Бюджет меню' }).innerText();
+  expect(updatedBudget).not.toBe(menuBudget);
+  await page.getByRole('link', { name: /^Список покупок ·/ }).click();
+  await expect(page.getByRole('region', { name: 'Бюджет меню' })).toHaveText(updatedBudget, { useInnerText: true });
+  const riceSources = page.locator('article[data-product-id="rice"] details li');
+  for (const [instance, rice] of [[first, '300'], [second, '150']] as const) {
+    const row = riceSources.filter({ hasText: `${formatDate(instance.date)} · Завтрак · Рисовая каша на воде · ${rice} г` });
+    await expect(row).toHaveCount(1);
+  }
+});
+
 test('tracer replaces a generated lunch and keeps recipe and shopping after reload', async ({ page }) => {
   test.setTimeout(65_000);
   await page.setViewportSize({ width: 390, height: 844 });

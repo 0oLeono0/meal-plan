@@ -287,7 +287,11 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
     <Route path="/" element={presence.status === 'valid' ? <Navigate replace to="/menu" /> : <WelcomePage brand={brand} onStart={() => navigate('/plan/new')} onQuickStart={() => start(true)} quickStartBasis={basis} />} />
     <Route path="/plan/new" element={<Wizard draft={draft} onChange={change} recovery={recovery} saved={saved} onReset={resetDraft} onStart={anchor => start(false, anchor)} launchErrors={launchErrors?.status === 'invalid' ? launchErrors.errors : undefined} editingNext={!!operation.lastApplied && !sameSnapshot(draft, operation.lastApplied.raw)} />} />
     <Route path="/plan/generating" element={<GenerationPage snapshot={operation} requestedSettings={launch.current?.settings} catalog={catalog} catalogError={catalogError} draftSaved={saved} onCancel={cancel} onRetry={() => void retryGeneration()} onSettings={settings} onRetrySave={() => void controller.retrySave()} onRetryLoad={() => void controller.retryLoad()} />} />
-    <Route path="/menu" element={<MenuPage snapshot={visible} mealAlternatives={{ request: controller.mealAlternatives, select: (target, recipeId, revision) => void controller.editMeal(target, recipeId, revision, { returnRoute: '/menu', focusAnchor: 'menu-title' }) }}
+    <Route path="/menu" element={<MenuPage snapshot={visible} mealAlternatives={{ request: controller.mealAlternatives, select: (target, recipeId, revision) => {
+      const origin = { returnRoute: '/menu', focusAnchor: 'menu-title' };
+      if ('kind' in target) void controller.addMeal(target, recipeId, revision, origin);
+      else void controller.editMeal(target, recipeId, revision, origin);
+    } }}
       onRemove={(target, expectedPlan) => void controller.removeMeal(target, expectedPlan, { returnRoute: '/menu', focusAnchor: 'menu-title' })}
       onRetryLoad={() => void controller.retryLoad()} onSelectVariant={id => void controller.selectVariant(id, { returnRoute: '/menu', focusAnchor: 'variants' })} onRetrySave={() => void controller.retrySave()} onCancel={controller.cancel} onAppend={() => void controller.appendVariant({ returnRoute: '/menu', focusAnchor: 'append-variant' })} onRetryGeneration={() => void controller.retryGeneration()} onRecreate={focusAnchor => void controller.recreateSet({ returnRoute: '/menu', focusAnchor })} />} />
     <Route path="/shopping" element={<ShoppingPage snapshot={visible} onRetryLoad={() => void controller.retryLoad()} />} />

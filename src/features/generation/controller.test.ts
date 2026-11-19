@@ -54,6 +54,59 @@ it('phase04-remove rejects a valid edited envelope as a generation response and 
   } finally { controller.dispose(); }
 });
 
+it('phase04-add append deduplicates exclusions, rejects duplicates, and preserves all manual variants', async () => {
+  const base = fixture('manual');
+  const instances = (id: string, portions = '1') => base.plan.variants[0].instances.map(row => ({ ...row, id: `${id}/${row.slot}`, selectedServings: decimal(portions) }));
+  const manual: EditedPlanEnvelope = { ...base.plan, schemaVersion: 2, activeVariantId: 'manual-a', variants: [
+    ...['manual-a', 'manual-b'].map(id => ({ id, instances: instances(id).slice(1), emptySlots: planCoordinates(base.inputs.dates).slice(0, 1) })),
+    { id: 'complete', instances: instances('complete'), emptySlots: [] },
+  ] };
+  const initial = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(manual) });
+  let raw = initial;
+  const store = { getItem: () => raw, setItem: (_key: string, value: string) => { raw = value; } };
+  let duplicate = true;
+  const generate = vi.fn<GenerationPort['generate']>(async request => ({ status: 'success', plan: buildActivePlanEnvelope(request.inputs,
+    [{ id: 'generated', instances: instances('generated', duplicate ? '1' : '1.5') }], 'generated') }));
+  const controller = createGenerationController({ generation: { generate }, activePlan: createActivePlanAdapter(() => store, trustedCatalogs) });
+  try {
+    await controller.load();
+    await controller.appendVariant(origin);
+    expect(generate.mock.calls[0][0].excludedFingerprints).toEqual([variantFingerprint(manual.variants[0]), variantFingerprint(manual.variants[2])]);
+    expect(controller.getSnapshot()).toMatchObject({ status: 'error', active: { plan: manual } });
+    expect(raw).toBe(initial);
+    duplicate = false;
+    await controller.appendVariant(origin);
+    const active = controller.getSnapshot().active?.plan;
+    expect(controller.getSnapshot().status).toBe('succeeded');
+    expect(active?.schemaVersion).toBe(2);
+    expect(active?.variants.slice(0, -1)).toEqual(manual.variants);
+    expect(active?.variants[manual.variants.length]).toMatchObject({ id: 'append-4', emptySlots: [] });
+    expect(await createActivePlanAdapter(() => store, trustedCatalogs).load()).toMatchObject({ status: 'loaded', bundle: { plan: active } });
+  } finally { controller.dispose(); }
+});
+
+it('phase04-add refuses an older empty-slot selector after the position is filled', async () => {
+  const base = fixture('refill');
+  const edited: EditedPlanEnvelope = { ...base.plan, schemaVersion: 2, variants: [{
+    ...base.plan.variants[0], instances: base.plan.variants[0].instances.slice(1), emptySlots: planCoordinates(base.inputs.dates).slice(0, 1),
+  }] };
+  let raw = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(edited) });
+  const store = { getItem: () => raw, setItem: (_key: string, value: string) => { raw = value; } };
+  const controller = createGenerationController({ generation: { async generate() { throw new Error('Manual edits do not generate'); } }, activePlan: createActivePlanAdapter(() => store, trustedCatalogs) });
+  try {
+    await controller.load();
+    const target = { kind: 'empty' as const, ...edited.variants[0].emptySlots[0], variantId: edited.activeVariantId };
+    const lookedUp = await controller.mealAlternatives(target, new AbortController().signal);
+    if (lookedUp.status !== 'ready') throw new Error('Missing choices');
+    await controller.addMeal(target, 'r', lookedUp.revision, origin);
+    const confirmed = raw;
+    expect(controller.getSnapshot().status).toBe('succeeded');
+    await controller.addMeal(target, 'r', lookedUp.revision, origin);
+    expect(controller.getSnapshot()).toMatchObject({ status: 'error', error: { message: 'Меню изменилось. Обновите его перед новой правкой' } });
+    expect(raw).toBe(confirmed);
+  } finally { controller.dispose(); }
+});
+
 it('phase04-edit previews one candidate, restores the confirmed ledger on refusal, and retries the same edit', async () => {
   const base = fixture('meal-edit');
   const currentRecipe = base.inputs.catalog.recipes[0], replacement = { ...currentRecipe, id: 'alternative', name: 'Второе блюдо' };

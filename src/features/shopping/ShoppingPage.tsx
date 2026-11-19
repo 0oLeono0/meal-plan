@@ -37,7 +37,9 @@ export function ShoppingPage({ snapshot, onRetryLoad }: { snapshot: GenerationSn
     <p className="tabular-nums">{view.itemCount} · ≈ {view.costs.purchase}</p>
     <Link className="action-link" to="/menu">К меню</Link>
     <PlanSummary bundle={bundle} projection={projection} />
-    {view.purchases.length === 0 && <section className="card"><h2>Всё необходимое уже есть дома</h2><p>Покупать ничего не нужно: требуемые количества покрыты запасами</p></section>}
+    {projection.instances.length === 0
+      ? <section className="card"><h2>В меню пока нет блюд</h2><p>Добавьте блюда в меню, чтобы получить список покупок</p></section>
+      : view.purchases.length === 0 && <section className="card"><h2>Всё необходимое уже есть дома</h2><p>Покупать ничего не нужно: требуемые количества покрыты запасами</p></section>}
     {groups.map(group => <section className="card" key={group.category} data-category={group.category} aria-label={group.category}>
       <h2>{group.category}</h2>
       {group.rows.map(row => <article className="border-b border-[var(--color-border)] py-4 min-w-0" key={JSON.stringify([row.productId, row.profileId])} data-product-id={row.productId} data-profile-id={row.profileId}>

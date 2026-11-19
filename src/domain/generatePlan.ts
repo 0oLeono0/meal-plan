@@ -1,7 +1,7 @@
 import { nutrientKeys } from './catalog';
-import type { CatalogDiagnostic, Recipe } from './catalog';
+import type { CatalogDiagnostic, MealSlot, Recipe } from './catalog';
 import { buildActivePlanEnvelope, mealSlots, validatePlanInputs } from './plan';
-import type { BudgetEvidence, GenerationErrorCode, GenerationResult, GenerationSelectionOptions, PlanInputs, PlanVariant } from './plan';
+import type { BudgetEvidence, EditedPlanVariant, GenerationErrorCode, GenerationResult, GenerationSelectionOptions, PlanInputs, PlanVariant } from './plan';
 import { projectPlan } from './planProjection';
 import { matchesPantryFood } from './pantry';
 import type { PlanProjection } from './planProjection';
@@ -21,11 +21,13 @@ export const SEARCH_LIMITS = Object.freeze({ beamWidth: 32, maxEvaluations: 512,
 interface Candidate { readonly recipe: Recipe; readonly ingredientCost: Rational }
 interface Ranked { readonly ids: readonly string[]; readonly projection: PlanProjection; readonly variant: PlanVariant; readonly score: readonly Rational[]; readonly tie: number; readonly key: string }
 /** Semantic identity excludes IDs, titles, seed and array order. */
-export function variantFingerprint(variant: PlanVariant): string {
-  return JSON.stringify(variant.instances.map(instance => {
+export function variantFingerprint(variant: PlanVariant | EditedPlanVariant): string {
+  const coordinates: ([string, MealSlot, string, string, string] | [string, MealSlot, null])[] = variant.instances.map(instance => {
     const servings = rational(instance.selectedServings.numerator, instance.selectedServings.denominator);
     return [instance.date, instance.slot, instance.recipeId, String(servings.numerator), String(servings.denominator)];
-  }).sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : mealSlots.indexOf(a[1] as typeof mealSlots[number]) - mealSlots.indexOf(b[1] as typeof mealSlots[number])));
+  });
+  if ('emptySlots' in variant) for (const empty of variant.emptySlots) coordinates.push([empty.date, empty.slot, null]);
+  return JSON.stringify(coordinates.sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : mealSlots.indexOf(a[1]) - mealSlots.indexOf(b[1])));
 }
 const zero = () => decimal('0');
 const diagnostic = (code: string, path: string, message = code): CatalogDiagnostic => ({ code, path, message });

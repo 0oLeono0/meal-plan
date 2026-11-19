@@ -4,6 +4,7 @@ import { buildActivePlanEnvelope, createPlanInputs, createRecipeInstances, encod
 import type { Catalog } from '../domain/catalog';
 import type { ActivePlanEnvelope, EditedPlanEnvelope } from '../domain/plan';
 import { decimal } from '../domain/quantities';
+import { addMeal, removeMeal } from '../domain/mealEdits';
 import { createDraft } from '../domain/settings';
 import { ACTIVE_PLAN_KEY, ACTIVE_PLAN_MAX_BYTES, createActivePlanAdapter, createActivePlanPresencePort, validateActiveBundle } from './activePlan';
 import { bundledCatalog } from '../data/catalog';
@@ -88,14 +89,18 @@ it.each([['historical52', legacyRaw], ['issued56', release1Raw], ['issued68', re
     }
   });
 
-it('saves and reloads a real current seven-day twelve-variant envelope within unchanged byte ceiling', async () => {
+function currentMaxPlan() {
   const applied = buildAppliedSettings({ ...createDraft(), budget: '10000' });
   if (applied.status !== 'applied') throw new Error('Invalid settings');
   const inputs = createPlanInputs(applied.settings, bundledCatalog, { seed: 'cap12-source-release' });
   const recipeIds = inputs.dates.flatMap(() => ['familiar-omelet-tomato-bread', 'familiar-chicken-rice-carrot', 'familiar-lentil-cabbage-tomato', 'familiar-yogurt-apple']);
   const variants = Array.from({ length: 12 }, (_, index) => ({ id: `current-${index}`, instances: createRecipeInstances(inputs, recipeIds, (date, slot) => `current-${index}/${date}/${slot}`)
     .map(row => ({ ...row, selectedServings: decimal(((index + 5) / 10).toFixed(1)) })) }));
-  const plan = buildActivePlanEnvelope(inputs, variants, variants[11].id);
+  return buildActivePlanEnvelope(inputs, variants, variants[11].id);
+}
+
+it('saves and reloads a real current seven-day twelve-variant envelope within unchanged byte ceiling', async () => {
+  const plan = currentMaxPlan();
   const store = storage(), adapter = createActivePlanAdapter(() => store);
   await adapter.load();
   expect((await adapter.save(plan, current)).status).toBe('saved');
@@ -108,6 +113,41 @@ it('saves and reloads a real current seven-day twelve-variant envelope within un
   if (loaded.status === 'loaded') expect(loaded.bundle.plan).toEqual(plan);
   expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(bytes);
 });
+
+it.each([['historical52', legacyRaw], ['issued56', release1Raw], ['issued68', release2Raw], ['issued75', release3Raw], ['current82-cap12', null]])(
+  'phase04-add persists edits for %s without changing the trusted inputs, order or UTF-8 limit', async (_, sourceBytes) => {
+    const raw = sourceBytes ?? rawPlan(currentMaxPlan());
+    const store = storage(); store.map.set(ACTIVE_PLAN_KEY, raw);
+    const adapter = createActivePlanAdapter(() => store);
+    const initial = await adapter.load();
+    if (initial.status !== 'loaded') throw new Error('Expected versioned plan');
+    const plan = initial.bundle.plan;
+    const variant = plan.variants.find(variant => variant.id === plan.activeVariantId)!;
+    const baseline = initial.bundle.projections.find(projection => projection.variantId === variant.id)!;
+    const first = variant.instances[0];
+    const coordinate = { date: first.date, slot: first.slot, variantId: plan.activeVariantId };
+    expect(plan.schemaVersion).toBe(1);
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+    const removed = removeMeal(plan, baseline, { ...coordinate, instanceId: first.id, recipeId: first.recipeId });
+    if (removed.status !== 'ready') throw new Error('Expected removal');
+    const savedEmpty = await adapter.save(removed.plan, current);
+    if (savedEmpty.status !== 'saved') throw new Error('Expected saved removal');
+    const edited = await adapter.load();
+    if (edited.status !== 'loaded') throw new Error('Expected reloaded removal');
+    expect(edited.bundle.plan).toEqual(removed.plan);
+    const projection = edited.bundle.projections.find(row => row.variantId === variant.id)!;
+    const added = addMeal(edited.bundle.plan, projection, { ...coordinate, kind: 'empty' }, first.recipeId, `added/${plan.inputs.catalogVersion}`);
+    if (added.status !== 'ready') throw new Error('Expected refill');
+    expect((await adapter.save(added.plan, current)).status).toBe('saved');
+    const afterRaw = store.map.get(ACTIVE_PLAN_KEY)!;
+    const loaded = await createActivePlanAdapter(() => store).load();
+    if (loaded.status !== 'loaded') throw new Error('Expected edited plan to reload');
+    expect(loaded.bundle.plan).toEqual(added.plan);
+    expect(loaded.bundle.plan.inputs).toEqual(plan.inputs);
+    expect(loaded.bundle.plan.variants.map(row => row.id)).toEqual(plan.variants.map(row => row.id));
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(afterRaw);
+    expect(new TextEncoder().encode(afterRaw).byteLength).toBeLessThan(ACTIVE_PLAN_MAX_BYTES);
+  }, 25_000);
 
 describe('Phase2 legacy and all-alternative persistence', () => {
   // Real producer1789eea, captured before production changes on2026-11-04.

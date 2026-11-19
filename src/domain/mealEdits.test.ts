@@ -1,8 +1,9 @@
 import { expect, it } from 'vitest';
 import { buildAppliedSettings } from './appliedSettings';
 import type { Catalog, FoodProfile, Recipe } from './catalog';
-import { listMealAlternatives, replaceMeal } from './mealEdits';
-import type { MealEditTarget } from './mealEdits';
+import { addMeal, freeMealId, listMealAlternatives, removeMeal, replaceMeal } from './mealEdits';
+import type { EmptyMealTarget, MealEditTarget } from './mealEdits';
+import { variantFingerprint } from './generatePlan';
 import { buildActivePlanEnvelope, createPlanInputs, createRecipeInstances, mealSlots } from './plan';
 import { projectPlan } from './planProjection';
 import { decimal } from './quantities';
@@ -63,6 +64,44 @@ it('uses the whole-period purchase delta and keeps the exact budget boundary', a
   for (const rejected of ['snack-only', 'late', 'excluded']) expect(replaceMeal(plan, baseline, target, rejected)).toEqual({ status: 'incompatible' });
   expect(replaceMeal(plan, baseline, target, 'unverified')).toEqual({ status: 'incomplete' });
   expect(replaceMeal(plan, baseline, { ...target, recipeId: 'changed-after-panel-open' }, 'swap')).toEqual({ status: 'stale' });
+});
+
+it('phase04-add starts with zero meal calories, preserves family portions, and rejects a stale empty target', async () => {
+  const { plan, baseline, target } = fixture();
+  const empty: EmptyMealTarget = { kind: 'empty', slot: target.slot, date: target.date, variantId: target.variantId };
+  const removed = removeMeal(plan, baseline, target);
+  if (removed.status !== 'ready') throw new Error('Expected removal');
+  const variant = removed.plan.variants[0];
+  const projected = projectPlan(plan.inputs, variant);
+  if (projected.status !== 'projected') throw new Error('Expected partial projection');
+  // Three meals need 375g rice, less 200g stock, so add 25g oats at 2 RUB/g and 2 kcal/g to 175 RUB.
+  const before = projected.projection;
+  const alternatives = await listMealAlternatives(removed.plan, before, empty);
+  if (alternatives.status !== 'ready') throw new Error('Expected list for an empty position');
+  expect(alternatives.options[0]).toMatchObject({ recipeId: 'swap', purchaseDelta: decimal('50'), purchaseDeltaKopecks: 5000n, familyCalorieDelta: decimal('50') });
+  expect(alternatives.options.map(row => row.recipeId)).toEqual(['swap', 'baseline', 'exact']);
+  expect(addMeal(removed.plan, before, empty, 'over', freeMealId(removed.plan, 'over'))).toEqual({ status: 'over-budget' });
+  for (const wrong of ['late', 'excluded', 'snack-only']) expect(addMeal(removed.plan, before, empty, wrong, 'not-used')).toEqual({ status: 'incompatible' });
+  expect(addMeal(removed.plan, before, empty, 'unverified', 'not-used')).toEqual({ status: 'incomplete' });
+  const id = freeMealId(removed.plan, 'first');
+  const added = addMeal(removed.plan, before, empty, 'baseline', id);
+  if (added.status !== 'ready') throw new Error('Expected refill');
+  expect(added.plan).toMatchObject({ schemaVersion: 2, variants: [{ emptySlots: [] }] });
+  expect(added.plan.variants[0].instances[1]).toMatchObject({ id, slot: 'lunch', selectedServings: decimal('2'), recipeId: 'baseline' });
+  expect(added.plan.variants[0].instances[1].id).not.toBe(target.instanceId);
+  expect(variantFingerprint(added.plan.variants[0])).toBe(variantFingerprint(plan.variants[0]));
+  expect(JSON.parse(variantFingerprint(variant))[1]).toEqual([target.date, 'lunch', null]);
+  expect(freeMealId(added.plan, 'first')).not.toBe(id);
+  expect(await listMealAlternatives(added.plan, before, empty)).toEqual({ status: 'stale' });
+  expect(addMeal(added.plan, before, empty, 'baseline', 'unused')).toEqual({ status: 'stale' });
+  const nextProjection = projectPlan(plan.inputs, added.plan.variants[0]);
+  if (nextProjection.status !== 'projected') throw new Error('Expected refill projection');
+  expect(removeMeal(added.plan, nextProjection.projection, target)).toEqual({ status: 'stale' });
+  const removedAgain = removeMeal(added.plan, nextProjection.projection, { ...target, instanceId: id });
+  if (removedAgain.status !== 'ready') throw new Error('Expected a second removal');
+  const addedAgain = addMeal(removedAgain.plan, before, empty, 'baseline', freeMealId(removedAgain.plan, 'second'));
+  if (addedAgain.status !== 'ready') throw new Error('Expected a second refill');
+  expect(addedAgain.plan.variants[0].instances[1].id).not.toBe(id);
 });
 
 it.each([0, 1, 2, 7])('returns only the supported count for %i ties in deterministic order', async count => {

@@ -6,8 +6,9 @@ import { variantFingerprint } from '../../domain/generatePlan';
 import { immutableSnapshot, sameSnapshot } from '../../domain/appliedSettings';
 import { trustedCatalogs as defaultTrustedCatalogs } from '../../adapters/trustedCatalogs';
 import type { TrustedCatalogRegistry } from '../../adapters/trustedCatalogs';
-import { listMealAlternatives, removeMeal as removeFromPlan, replaceMeal } from '../../domain/mealEdits';
-import type { MealAlternativesResult, MealEditTarget } from '../../domain/mealEdits';
+import { addMeal as addToPlan, freeMealId, listMealAlternatives, removeMeal as removeFromPlan, replaceMeal } from '../../domain/mealEdits';
+import type { EmptyMealTarget, MealAlternativesResult, MealEditTarget, MealSelectionTarget } from '../../domain/mealEdits';
+import type { PlanProjection } from '../../domain/planProjection';
 
 export interface GenerationOrigin { readonly returnRoute: string; readonly focusAnchor: string; readonly firstErroneousStep?: number }
 export interface GenerationSnapshot {
@@ -172,7 +173,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
     if (!owned(op)) return;
     armTimeout(op); rotate(op);
     try {
-      const excludedFingerprints = base?.plan.variants.map(variantFingerprint) ?? [];
+      const excludedFingerprints = [...new Set(base?.plan.variants.map(variantFingerprint) ?? [])];
       const result = await wait(generation.generate({ requestId: op.id, inputs: op.inputs, targetCount: intent === 'append' ? 1 : 3,
         ...(intent === 'append' ? { excludedFingerprints } : {}) }, op.abort.signal), op);
       if (!owned(op) || result === cancelled || rejectExpired(op)) return;
@@ -189,8 +190,9 @@ export function createGenerationController({ generation, activePlan, trustedCata
         }
         // Search IDs are local to its result. Give only the new alternative a free namespace.
         const ids = new Set(base.plan.variants.map(row => row.id));
+        const instanceIds = new Set(base.plan.variants.flatMap(row => row.instances.map(instance => instance.id)));
         let id = `append-${base.plan.variants.length + 1}`;
-        while (ids.has(id)) id += '-new';
+        while (ids.has(id) || variant.instances.some(row => instanceIds.has(`${id}/${row.date}/${row.slot}`))) id += '-new';
         const added = { ...variant, id, instances: variant.instances.map(row => ({ ...row, id: `${id}/${row.date}/${row.slot}` })) };
         const nextPlan = base.plan.schemaVersion === EDITED_PLAN_SCHEMA_VERSION
           ? { ...base.plan, variants: [...base.plan.variants, { ...added, emptySlots: [] }], activeVariantId: id }
@@ -245,7 +247,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
     publish({ requestId: op.id, startedAt: clock.now(), origin: op.origin, intent: 'select' });
     await save(op, candidate.bundle);
   }
-  async function mealAlternatives(target: MealEditTarget, signal: AbortSignal): Promise<MealAlternativesRequest> {
+  async function mealAlternatives(target: MealSelectionTarget, signal: AbortSignal): Promise<MealAlternativesRequest> {
     const base = snapshot.active, atRevision = revision, atLoad = loadSequence;
     const current = () => !disposed && snapshot.loadStatus === 'loaded' && snapshot.active === base && revision === atRevision
       && loadSequence === atLoad && snapshot.status !== 'pending' && snapshot.status !== 'saving';
@@ -260,7 +262,8 @@ export function createGenerationController({ generation, activePlan, trustedCata
     if (!current()) return { status: 'stale' };
     return result.status === 'ready' ? { ...result, revision: atRevision } : result;
   }
-  async function applyMealEdit(target: MealEditTarget, origin: GenerationOrigin, isExpected: (base: ActiveBundle) => boolean, edit: typeof removeFromPlan) {
+  async function applyMealEdit<T extends MealSelectionTarget>(target: T, origin: GenerationOrigin, isExpected: (base: ActiveBundle) => boolean,
+    edit: (plan: ActivePlanEnvelope, projection: PlanProjection, target: T) => ReturnType<typeof replaceMeal>) {
     const base = snapshot.active;
     if (!base || disposed || snapshot.status === 'pending' || snapshot.status === 'saving') return;
     const projection = base.projections.find(row => row.variantId === target.variantId);
@@ -288,10 +291,20 @@ export function createGenerationController({ generation, activePlan, trustedCata
   async function removeMeal(target: MealEditTarget, expectedPlan: ActivePlanEnvelope, origin: GenerationOrigin) {
     await applyMealEdit(target, origin, base => base.plan === expectedPlan, removeFromPlan);
   }
+  async function addMeal(target: EmptyMealTarget, recipeId: string, expectedRevision: number, origin: GenerationOrigin) {
+    await applyMealEdit(target, origin, () => expectedRevision === revision, (plan, projection, target) => {
+      let seed: string;
+      try {
+        const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16));
+        seed = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+      } catch { return { status: 'incomplete' }; }
+      return addToPlan(plan, projection, target, recipeId, freeMealId(plan, seed));
+    });
+  }
   return {
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { if (!disposed) listeners.add(listener); return () => { listeners.delete(listener); }; },
-    load, retryLoad: load, start, cancel, retrySave, selectVariant, appendVariant, recreateSet, mealAlternatives, editMeal, removeMeal,
+    load, retryLoad: load, start, cancel, retrySave, selectVariant, appendVariant, recreateSet, mealAlternatives, editMeal, removeMeal, addMeal,
     async retryGeneration() {
       if (!lastRequest || (snapshot.status !== 'error' && snapshot.status !== 'no-new-result')
         || (lastRequest.baseRevision !== undefined && lastRequest.baseRevision !== revision)) return;

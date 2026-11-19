@@ -1,19 +1,22 @@
-import type { MealSlot, Recipe } from './catalog';
-import { EDITED_PLAN_SCHEMA_VERSION, planCoordinates } from './plan';
-import type { ActivePlanEnvelope, PlanVariant, RecipeInstance } from './plan';
+import type { Recipe } from './catalog';
+import { EDITED_PLAN_SCHEMA_VERSION, mealSlots, planCoordinates } from './plan';
+import type { ActivePlanEnvelope, MealCoordinate, PlanVariant, RecipeInstance } from './plan';
 import { projectPlan } from './planProjection';
 import type { InstanceProjection, PlanProjection } from './planProjection';
 import { createRecipeEligibility } from './recipeEligibility';
-import { compare, subtract } from './quantities';
+import { compare, decimal, subtract } from './quantities';
 import type { Rational } from './quantities';
 
-export interface MealEditTarget {
+export interface MealEditTarget extends MealCoordinate {
   readonly variantId: string;
-  readonly date: string;
-  readonly slot: MealSlot;
   readonly instanceId: string;
   readonly recipeId: string;
 }
+export interface EmptyMealTarget extends MealCoordinate {
+  readonly variantId: string;
+  readonly kind: 'empty';
+}
+export type MealSelectionTarget = MealEditTarget | EmptyMealTarget;
 
 export interface MealAlternative {
   readonly recipeId: string;
@@ -49,17 +52,44 @@ function resolveTarget(plan: ActivePlanEnvelope, baseline: PlanProjection, targe
 function matchesTarget(instance: RecipeInstance, target: MealEditTarget) {
   return instance.id === target.instanceId && instance.recipeId === target.recipeId && instance.date === target.date && instance.slot === target.slot;
 }
+function matchesCoordinate(left: MealCoordinate, right: MealCoordinate) {
+  return left.date === right.date && left.slot === right.slot;
+}
+function slotOrder(left: MealCoordinate, right: MealCoordinate) {
+  return left.date < right.date ? -1 : left.date > right.date ? 1 : mealSlots.indexOf(left.slot) - mealSlots.indexOf(right.slot);
+}
+function resolveSelection(plan: ActivePlanEnvelope, baseline: PlanProjection, target: MealSelectionTarget) {
+  if (!('kind' in target)) return resolveTarget(plan, baseline, target);
+  if (plan.schemaVersion !== EDITED_PLAN_SCHEMA_VERSION || target.variantId !== plan.activeVariantId || target.variantId !== baseline.variantId) return null;
+  const variant = plan.variants.find(row => row.id === target.variantId);
+  if (!variant?.emptySlots.some(slot => matchesCoordinate(slot, target)) || variant.instances.some(row => matchesCoordinate(row, target))) return null;
+  const insertion = variant.instances.findIndex(row => slotOrder(row, target) > 0);
+  return { variant, row: null, index: insertion < 0 ? variant.instances.length : insertion };
+}
+export function freeMealId(plan: ActivePlanEnvelope, seed: string): string {
+  const ids = new Set(plan.variants.flatMap(row => row.instances.map(instance => instance.id)));
+  let id = `added/${seed}`;
+  for (let suffix = 1; ids.has(id); suffix++) id = `added/${seed}/${suffix}`;
+  return id;
+}
 
 type ReplacementProjection = { status: 'ready'; variant: PlanVariant; projection: PlanProjection; meal: InstanceProjection }
   | { status: 'over-budget' | 'incomplete' };
 
-function projectReplacement(plan: ActivePlanEnvelope, variant: PlanVariant, index: number, recipe: Recipe): ReplacementProjection {
-  const next = { ...variant, instances: variant.instances.map((instance, at) => at === index ? { ...instance, recipeId: recipe.id, recipeSnapshot: recipe } : instance) };
+function projectSelection(plan: ActivePlanEnvelope, variant: PlanVariant, index: number, recipe: Recipe, extra?: RecipeInstance): ReplacementProjection {
+  const instances = [...variant.instances];
+  const selected = extra ?? { ...instances[index], recipeId: recipe.id, recipeSnapshot: recipe };
+  instances.splice(index, extra ? 0 : 1, selected);
+  const next = { ...variant, instances };
   const result = projectPlan(plan.inputs, next);
   if (result.status === 'invalid') return { status: 'incomplete' };
   if (!result.projection.budget.check.accepted) return { status: 'over-budget' };
-  const meal = result.projection.instances.find(row => row.instance.id === variant.instances[index].id);
+  const meal = result.projection.instances.find(row => row.instance.id === selected.id);
   return meal ? { status: 'ready', variant: next, projection: result.projection, meal } : { status: 'incomplete' };
+}
+function newInstance(plan: ActivePlanEnvelope, target: EmptyMealTarget, recipe: Recipe, id: string): RecipeInstance {
+  return { id, date: target.date, slot: target.slot, recipeId: recipe.id, recipeSnapshot: recipe, catalogVersion: plan.inputs.catalogVersion,
+    selectedServings: decimal(String(plan.inputs.appliedSettings.people)) };
 }
 
 export function replaceMeal(plan: ActivePlanEnvelope, baseline: PlanProjection, target: MealEditTarget, recipeId: string): MealEditResult {
@@ -69,12 +99,28 @@ export function replaceMeal(plan: ActivePlanEnvelope, baseline: PlanProjection, 
   if (!recipe || recipe.id === target.recipeId || !recipe.slots.includes(target.slot)) return { status: 'incompatible' };
   const eligibility = createRecipeEligibility(plan.inputs)(recipe);
   if (eligibility.status !== 'eligible') return { status: eligibility.status === 'incomplete' ? 'incomplete' : 'incompatible' };
-  const next = projectReplacement(plan, current.variant, current.index, recipe);
+  const next = projectSelection(plan, current.variant, current.index, recipe);
   if (next.status !== 'ready') return next;
   const install = <T extends PlanVariant>(row: T): T => row.id === current.variant.id ? { ...row, instances: next.variant.instances } : row;
   return { status: 'ready', plan: plan.schemaVersion === EDITED_PLAN_SCHEMA_VERSION
     ? { ...plan, variants: plan.variants.map(install) }
     : { ...plan, variants: plan.variants.map(install) } };
+}
+
+export function addMeal(plan: ActivePlanEnvelope, baseline: PlanProjection, target: EmptyMealTarget, recipeId: string, newId: string): MealEditResult {
+  const current = resolveSelection(plan, baseline, target);
+  if (!current || plan.schemaVersion !== EDITED_PLAN_SCHEMA_VERSION) return { status: 'stale' };
+  const recipe = plan.inputs.catalog.recipes.find(row => row.id === recipeId);
+  if (!recipe?.slots.includes(target.slot) || plan.variants.some(row => row.instances.some(instance => instance.id === newId))) return { status: 'incompatible' };
+  const eligibility = createRecipeEligibility(plan.inputs)(recipe);
+  if (eligibility.status !== 'eligible') return { status: eligibility.status === 'incomplete' ? 'incomplete' : 'incompatible' };
+  const next = projectSelection(plan, current.variant, current.index, recipe, newInstance(plan, target, recipe, newId));
+  if (next.status !== 'ready') return next;
+  return {
+    status: 'ready',
+    plan: { ...plan, variants: plan.variants.map(row => row.id === current.variant.id
+      ? { ...row, instances: next.variant.instances, emptySlots: row.emptySlots.filter(slot => !matchesCoordinate(slot, target)) } : row) },
+  };
 }
 
 export function removeMeal(plan: ActivePlanEnvelope, baseline: PlanProjection, target: MealEditTarget): MealEditResult {
@@ -92,20 +138,22 @@ export function removeMeal(plan: ActivePlanEnvelope, baseline: PlanProjection, t
   };
 }
 
-export async function listMealAlternatives(plan: ActivePlanEnvelope, baseline: PlanProjection, target: MealEditTarget, { signal, isCurrent, yieldControl = yieldMacroTask }: MealSearchOptions = {}): Promise<MealAlternativesResult> {
+export async function listMealAlternatives(plan: ActivePlanEnvelope, baseline: PlanProjection, target: MealSelectionTarget, { signal, isCurrent, yieldControl = yieldMacroTask }: MealSearchOptions = {}): Promise<MealAlternativesResult> {
   function interrupted(): 'cancelled' | 'stale' | null {
     return signal?.aborted ? 'cancelled' : isCurrent && !isCurrent() ? 'stale' : null;
   }
   const initial = interrupted();
   if (initial) return { status: initial };
-  const current = resolveTarget(plan, baseline, target);
+  const current = resolveSelection(plan, baseline, target);
   if (!current) return { status: 'stale' };
+  const emptyTarget = 'kind' in target ? target : null;
+  const previewId = emptyTarget ? freeMealId(plan, 'preview') : null;
   const evaluate = createRecipeEligibility(plan.inputs);
   const admitted: MealAlternative[] = [];
   let overBudget = false, incomplete = false;
   let attempted = 0;
   for (const recipe of plan.inputs.catalog.recipes) {
-    if (recipe.id === target.recipeId || !recipe.slots.includes(target.slot)) continue;
+    if ((!('kind' in target) && recipe.id === target.recipeId) || !recipe.slots.includes(target.slot)) continue;
     if (attempted > 0 && attempted % alternativesBatchSize === 0) {
       await yieldControl();
       const stopped = interrupted();
@@ -115,7 +163,8 @@ export async function listMealAlternatives(plan: ActivePlanEnvelope, baseline: P
     const eligibility = evaluate(recipe);
     if (eligibility.status === 'rejected') continue;
     if (eligibility.status === 'incomplete') { incomplete = true; continue; }
-    const candidate = projectReplacement(plan, current.variant, current.index, recipe);
+    const extra = emptyTarget && previewId ? newInstance(plan, emptyTarget, recipe, previewId) : undefined;
+    const candidate = projectSelection(plan, current.variant, current.index, recipe, extra);
     if (candidate.status !== 'ready') {
       overBudget ||= candidate.status === 'over-budget';
       incomplete ||= candidate.status === 'incomplete';
@@ -125,7 +174,7 @@ export async function listMealAlternatives(plan: ActivePlanEnvelope, baseline: P
       recipeId: recipe.id, name: recipe.name, cookingMinutes: recipe.cookingMinutes,
       purchaseDelta: subtract(candidate.projection.costs.exact.purchase, baseline.costs.exact.purchase),
       purchaseDeltaKopecks: candidate.projection.costs.kopecks.purchase - baseline.costs.kopecks.purchase,
-      familyCalorieDelta: subtract(candidate.meal.familyNutrition.calories, current.row.familyNutrition.calories),
+      familyCalorieDelta: current.row ? subtract(candidate.meal.familyNutrition.calories, current.row.familyNutrition.calories) : candidate.meal.familyNutrition.calories,
     });
   }
   const stopped = interrupted();

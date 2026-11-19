@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { buildAppliedSettings } from './appliedSettings';
 import type { Catalog, FoodProfile, Recipe } from './catalog';
-import { addMeal, freeMealId, listMealAlternatives, removeMeal, replaceMeal } from './mealEdits';
+import { addMeal, changeMealServings, freeMealId, listMealAlternatives, removeMeal, replaceMeal } from './mealEdits';
 import type { EmptyMealTarget, MealEditTarget } from './mealEdits';
 import { variantFingerprint } from './generatePlan';
 import { buildActivePlanEnvelope, createPlanInputs, createRecipeInstances, mealSlots } from './plan';
@@ -27,16 +27,19 @@ const swap = recipe('swap', '25', 'oats');
 const defaultAlternatives = [exact, over, swap, recipe('late', '25', 'rice', { cookingMinutes: 35 }),
   recipe('snack-only', '25', 'rice', { slots: ['snack'] }), recipe('excluded', '25', 'milk'), recipe('unverified', '25', 'unknown')];
 
-function fixture(alternatives: readonly Recipe[] = defaultAlternatives) {
+function fixture(alternatives: readonly Recipe[] = defaultAlternatives, options: { stock?: string; splitRounding?: boolean; people?: string } = {}) {
+  const twoRoundedRows = { ...recipe('baseline', '90.001'), ingredients: [
+    recipe('baseline', '90.001').ingredients[0], recipe('baseline', '9.999', 'oats').ingredients[0],
+  ] };
   const catalog: Catalog = {
     version: 'synthetic-meal-edits',
-    foods: [food('rice', '1', '100'), food('oats', '2', '200'), food('milk', '1', '80'), { ...food('unknown', '1', '100'), safety: { status: 'unknown', reason: 'Тест без сведений о безопасности' } }],
-    recipes: [recipe('baseline', '125'), ...alternatives],
+    foods: [food('rice', '1', '100'), food('oats', options.splitRounding ? '1' : '2', '200'), food('milk', '1', '80'), { ...food('unknown', '1', '100'), safety: { status: 'unknown', reason: 'Тест без сведений о безопасности' } }],
+    recipes: [options.splitRounding ? twoRoundedRows : recipe('baseline', '125'), ...alternatives],
   };
-  const settings = buildAppliedSettings({ ...createDraft(), days: '1', people: '2', budget: '500', cookingTime: '30', restrictions: ['gluten-free'], exclusionIds: ['milk'] });
+  const settings = buildAppliedSettings({ ...createDraft(), days: '1', people: options.people ?? '2', budget: '500', cookingTime: '30', restrictions: ['gluten-free'], exclusionIds: ['milk'] });
   if (settings.status !== 'applied') throw new Error('Invalid synthetic settings');
-  const inputs = createPlanInputs(settings.settings, catalog, { seed: 'meal-edits', now: () => new Date(2026, 10, 19), pantrySnapshot: [
-    { productId: 'rice', expiresSoon: false, quantity: { status: 'known', value: { amount: decimal('200'), unit: 'g' } } },
+  const inputs = createPlanInputs(settings.settings, catalog, { seed: 'meal-edits', now: () => new Date(2026, 10, 19), pantrySnapshot: options.splitRounding ? [] : [
+    { productId: 'rice', expiresSoon: false, quantity: { status: 'known', value: { amount: decimal(options.stock ?? '200'), unit: 'g' } } },
   ] });
   const variant = { id: 'active', instances: createRecipeInstances(inputs, ['baseline', 'baseline', 'baseline', 'baseline'], (_date, slot) => slot) };
   const plan = buildActivePlanEnvelope(inputs, [variant], variant.id);
@@ -46,6 +49,40 @@ function fixture(alternatives: readonly Recipe[] = defaultAlternatives) {
   const target: MealEditTarget = { variantId: variant.id, date: inputs.dates[0], slot: 'lunch', instanceId: 'lunch', recipeId: 'baseline' };
   return { plan, baseline, target };
 }
+
+it('tests exact and independently rounded whole-period budget limits for portion changes', () => {
+  // Four 125g meals, one doubled = 625g. A pantry of 125g gives exactly 500 RUB.
+  const same = fixture([], { stock: '125' });
+  const changed = changeMealServings(same.plan, same.baseline, same.target, '2');
+  if (changed.status !== 'ready') throw new Error('Expected exact budget equality');
+  const check = projectPlan(changed.plan.inputs, changed.plan.variants[0]);
+  expect(check).toMatchObject({ status: 'projected', projection: { costs: { exact: { purchase: decimal('500') }, kopecks: { purchase: 50000n } } } });
+  const fraction = fixture([], { stock: '124.999' });
+  expect(changeMealServings(fraction.plan, fraction.baseline, fraction.target, '2')).toEqual({ status: 'over-budget' });
+
+  // Exact total 450.005 + 49.995 = 500. Half-up rows give 450.01 + 50 = 500.01.
+  const rounded = fixture([], { splitRounding: true });
+  expect(changeMealServings(rounded.plan, rounded.baseline, rounded.target, '2')).toEqual({ status: 'over-budget' });
+  expect(changeMealServings(same.plan, same.baseline, { ...same.target, instanceId: 'stale' }, '2')).toEqual({ status: 'stale' });
+  expect(changeMealServings(same.plan, same.baseline, same.target, '0' as '1')).toEqual({ status: 'incompatible' });
+});
+
+it('uses an absolute odd-family scale and reallocates the shared pantry only once', () => {
+  const { plan, baseline, target } = fixture([], { people: '3', stock: '300' });
+  // Four meals at 187.5g each; change breakfast alone to 93.75g and use 300g pantry.
+  const breakfast = { ...target, slot: 'breakfast' as const, instanceId: 'breakfast' };
+  const changed = changeMealServings(plan, baseline, breakfast, '0.5');
+  if (changed.status !== 'ready') throw new Error('Expected half the original family size');
+  expect(changed.plan.variants[0].instances[0].selectedServings).toEqual(decimal('1.5'));
+  expect(changed.plan.variants[0].instances.slice(1)).toEqual(plan.variants[0].instances.slice(1));
+  const check = projectPlan(changed.plan.inputs, changed.plan.variants[0]);
+  if (check.status !== 'projected') throw new Error('Expected shared pantry projection');
+  expect(check.projection.instances.map(row => row.ingredients[0].covered.amount))
+    .toEqual(['93.75', '187.5', '18.75', '0'].map(decimal));
+  expect(check.projection.costs.exact.purchase).toEqual(decimal('356.25'));
+  const current = changeMealServings(changed.plan, check.projection, breakfast, '0.5');
+  expect(current).toEqual({ status: 'unchanged' });
+});
 
 it('uses the whole-period purchase delta and keeps the exact budget boundary', async () => {
   const { plan, baseline, target } = fixture();

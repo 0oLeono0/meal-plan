@@ -42,6 +42,18 @@ function viewed(request = fixture().request) {
 }
 
 describe('recipe basis and shared ledger', () => {
+  it('keeps historical contextual servings separate from the three selectable multipliers', () => {
+    const { request, active } = fixture();
+    const original = active.plan.variants[0];
+    const changed = { ...original, instances: [{ ...original.instances[0], selectedServings: decimal('2.5') }, ...original.instances.slice(1)] };
+    const projected = projectPlan(active.plan.inputs, changed);
+    if (projected.status !== 'projected') throw new Error('Historical serving projection');
+    const historic: ActiveBundle = { ...active, plan: { ...active.plan, variants: [changed] }, projections: [projected.projection] };
+    expect(viewed({ ...request, active: historic })).toMatchObject({ status: 'context', servings: decimal('2.5'), servingsLabel: '2,5 порции', portionMultiplier: null });
+    expect(viewed(request)).toMatchObject({ status: 'context', portionMultiplier: '1' });
+    expect(viewed({ ...request, search: '' })).not.toHaveProperty('portionMultiplier');
+  });
+
   it('current82 contextual four portions preserve independent source facts and exact pantry allocation', () => {
     const applied = buildAppliedSettings({ ...createDraft(), people: '4', days: '1' });
     if (applied.status !== 'applied') throw new Error('Four-person settings');

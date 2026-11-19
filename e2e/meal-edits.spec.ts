@@ -107,6 +107,83 @@ test('portions-cycle changes only one repeated recipe and keeps purchasing total
   }
 });
 
+test('portions-guards preserves an edited envelope and refuses an unaffordable scale without writing', async ({ page }) => {
+  test.setTimeout(65_000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await generateTwoDays(page);
+  const target = await page.evaluate(key => {
+    const saved = JSON.parse(localStorage.getItem(key)!);
+    const plan = saved.plan;
+    const active = plan.variants.find((row: PlanVariant) => row.id === plan.activeVariantId);
+    const lunch = active.instances.find((row: PlanVariant['instances'][number]) => row.slot === 'lunch');
+    const cod = plan.inputs.catalog.recipes.find((row: { id: string }) => row.id === 'familiar-cod-rice-soup');
+    const settings = plan.inputs.appliedSettings;
+    settings.people = 3;
+    settings.raw.people = '3';
+    settings.raw.budget = '500';
+    settings.budget.limit = { numerator: '500', denominator: '1' };
+    settings.raw.cookingTime = 'any';
+    settings.cookingMinutes = null;
+    // A single serving of the reviewed cod soup at 500 RUB uses an intentionally
+    // off-scale saved quantity. 1.5 servings fit, while 6 portions do not.
+    plan.schemaVersion = 2;
+    plan.variants = [{ ...active,
+      emptySlots: active.instances.filter((row: PlanVariant['instances'][number]) => row !== lunch)
+        .map(({ date, slot }: PlanVariant['instances'][number]) => ({ date, slot })),
+      instances: [{ ...lunch, recipeId: cod.id, recipeSnapshot: cod, selectedServings: { numerator: '1', denominator: '1' } }],
+    }];
+    localStorage.setItem(key, JSON.stringify(saved));
+    return { instance: lunch.id, variant: active.id, recipe: cod.id };
+  }, activeKey);
+  await page.addInitScript(key => {
+    const set = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (entry, value) {
+      if (this === localStorage && entry === key) {
+        set.call(sessionStorage, 'portion-write-count', String(Number(sessionStorage.getItem('portion-write-count') ?? 0) + 1));
+      }
+      set.call(this, entry, value);
+    };
+  }, activeKey);
+  const query = new URLSearchParams({ instance: target.instance, variant: target.variant });
+  const route = `/recipe/${target.recipe}?${query}`;
+  await page.goto(route);
+  const writes = () => page.evaluate(() => Number(sessionStorage.getItem('portion-write-count') ?? 0));
+  const portions = page.getByRole('group', { name: 'Порции для семьи' });
+  const half = portions.getByRole('button', { name: /^×0,5/ });
+  const double = portions.getByRole('button', { name: /^×2/ });
+  await expect(page.getByText('Порций для семьи: 1', { exact: true })).toBeVisible();
+  await expect(portions.getByRole('button', { pressed: false })).toHaveCount(3);
+  const before = await readMenu(page);
+  expect(await writes()).toBe(0);
+  await half.click();
+  await expect(page.getByRole('status').filter({ hasText: 'Изменения сохранены' })).toBeVisible();
+  await expect(half).toHaveAttribute('aria-pressed', 'true');
+  const changed = await readMenu(page);
+  expect(changed.variant.instances[0].selectedServings).toEqual({ numerator: '3', denominator: '2' });
+  expect(changed.plan.schemaVersion).toBe(2);
+  expect(changed.variant).toMatchObject({ emptySlots: 'emptySlots' in before.variant ? before.variant.emptySlots : [] });
+  expect(await writes()).toBe(1);
+
+  await half.click();
+  expect(await writes()).toBe(1);
+  await expect(page.getByText('Порций для семьи: 1,5', { exact: true })).toBeVisible();
+  await double.click();
+  await expect(page.getByRole('alert')).toContainText('Эти порции превышают бюджет покупок. Выберите меньше порций');
+  await expect(half).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByText(/^210 г · ≈/)).toBeVisible();
+  expect((await readMenu(page)).raw).toBe(changed.raw);
+  expect(await writes()).toBe(1);
+
+  await page.goto(`/recipe/${target.recipe}`);
+  await expect(page.getByText('Исходный рецепт · 2 порции', { exact: true })).toBeVisible();
+  await expect(portions).toHaveCount(0);
+  query.set('instance', target.instance + '/absent');
+  await page.goto(`/recipe/${target.recipe}?${query}`);
+  await expect(page.getByRole('link', { name: 'К актуальному меню' })).toBeVisible();
+  await expect(portions).toHaveCount(0);
+  expect(await writes()).toBe(1);
+});
+
 test('tracer replaces a generated lunch and keeps recipe and shopping after reload', async ({ page }) => {
   test.setTimeout(65_000);
   await page.setViewportSize({ width: 390, height: 844 });

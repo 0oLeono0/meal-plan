@@ -151,6 +151,44 @@ it('phase04-edit previews one candidate, restores the confirmed ledger on refusa
   } finally { controller.dispose(); }
 });
 
+it('phase04-portions guards the saved snapshot and rolls back an unconfirmed scale together with its calculations', async () => {
+  const { inputs, plan } = fixture('portion-edit');
+  const registry = createTrustedCatalogRegistry([inputs.catalog]);
+  const initial = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
+  let raw = initial, writes = 0, attempt = deferred<'error' | 'write'>();
+  const store = { getItem: () => raw, setItem: (_key: string, value: string) => { raw = value; writes++; } };
+  const adapter = createActivePlanAdapter(() => store, registry);
+  const port: ActivePlanPort = { load: adapter.load, async save(candidate, guard) {
+    return await attempt.promise === 'write' ? adapter.save(candidate, guard) : { status: 'error' };
+  } };
+  const controller = productionController({ generation: { async generate() { throw new Error('Portion editing must not generate a menu'); } }, activePlan: port, trustedCatalogs: registry });
+  const targetRow = plan.variants[0].instances[0];
+  const target = { variantId: plan.activeVariantId, instanceId: targetRow.id, date: targetRow.date, slot: targetRow.slot, recipeId: targetRow.recipeId };
+  try {
+    await controller.load();
+    const old = controller.getSnapshot().active!.plan;
+    const pending = controller.changePortions(target, '2', old, origin);
+    expect(visiblePlanSnapshot(controller.getSnapshot()).active?.projections[0].costs.exact.purchase).toEqual(decimal('500'));
+    expect(controller.getSnapshot().active?.projections[0].costs.exact.purchase).toEqual(decimal('400'));
+    expect(raw).toBe(initial);
+    attempt.resolve('error'); await pending;
+    expect(writes).toBe(0);
+    expect(controller.getSnapshot().status).toBe('memory-only');
+    expect(visiblePlanSnapshot(controller.getSnapshot()).active?.projections[0].costs.exact.purchase).toEqual(decimal('400'));
+    attempt = deferred();
+    const retry = controller.retrySave();
+    attempt.resolve('write'); await retry;
+    const saved = controller.getSnapshot().active!.plan;
+    expect(saved.variants[0].instances[0].selectedServings).toEqual(decimal('2'));
+    expect(writes).toBe(1);
+    await controller.changePortions(target, '2', saved, origin);
+    expect(writes).toBe(1);
+    await controller.changePortions(target, '1', old, origin);
+    expect(controller.getSnapshot()).toMatchObject({ status: 'error', error: { message: 'Меню изменилось. Обновите его перед новой правкой' } });
+    expect(writes).toBe(1);
+  } finally { controller.dispose(); }
+});
+
 it.each([
   ['historical52', legacyRaw], ['issued56', release1Raw], ['issued68', release2Raw], ['issued75', release3Raw], ['current82', null],
 ])('all-release continuation %s keeps exact inputs through load select append recreate and reload', async (_, recordedRaw) => {

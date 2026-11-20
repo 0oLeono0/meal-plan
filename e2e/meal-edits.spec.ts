@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import type { ActivePlanEnvelope, PlanVariant } from '../src/domain/plan';
+import { count, mountGeneration, preserved, release } from './generation-fixtures';
 import { generateRealPlan, openSyntheticPlan } from './plan-fixtures';
 
 const activeKey = 'mealplan:guest:active-plan:v1';
@@ -30,6 +31,67 @@ async function generateTwoDays(page: Page) {
 function othersAt(variant: PlanVariant, id: string) {
   return variant.instances.filter(row => row.id !== id);
 }
+
+test('recipe-replace preserves the contextual route until save and never redirects from shopping', async ({ page }) => {
+  test.setTimeout(65_000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await generateTwoDays(page);
+  const generated = await readMenu(page);
+  const target = generated.variant.instances.find(row => row.slot === 'lunch')!;
+  const params = new URLSearchParams({ variant: generated.variant.id, instance: target.id, view: 'week', day: target.date });
+  const route = `/recipe/${target.recipeId}?${params}`;
+  await page.goto(route);
+  await page.getByRole('button', { name: /^×0,5/ }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Изменения сохранены' })).toBeVisible();
+  await expect(page.getByText('Порций для семьи: 1', { exact: true })).toBeVisible();
+  const before = await readMenu(page);
+  await mountGeneration(page, { route, deferSave: true });
+  const title = page.getByRole('heading', { level: 1 });
+  await expect(title).toHaveText(target.recipeSnapshot.name);
+  const recipeUrl = page.url();
+
+  async function pickAlternative() {
+    await page.getByRole('button', { name: 'Заменить в меню', exact: true }).click();
+    const sheet = page.getByRole('dialog', { name: 'Заменить блюдо' });
+    const option = sheet.getByRole('button', { name: /Покупки за период/ }).first();
+    await expect(option).toBeVisible();
+    const name = (await option.locator('span').first().textContent())!;
+    await option.click();
+    return name;
+  }
+
+  const chosen = await pickAlternative();
+  await expect.poll(() => count(page, 'save-calls')).toBe(1);
+  await expect(title).toHaveText(chosen);
+  await expect(page.getByRole('status').filter({ hasText: 'Сохраняем изменения меню' })).toHaveCount(1);
+  await expect(page.getByRole('status').filter({ hasText: 'Изменения сохранены' })).toHaveCount(0);
+  await expect(page.getByText('Порций для семьи: 1', { exact: true })).toBeVisible();
+  expect(page.url()).toBe(recipeUrl);
+  await preserved(page, before.raw);
+  await release(page, 'save-1');
+  await expect.poll(() => page.url()).not.toBe(recipeUrl);
+  await expect(title).toHaveText(chosen);
+  await expect(title).toBeFocused();
+  const saved = await readMenu(page);
+  const edited = saved.variant.instances.find(row => row.id === target.id)!;
+  expect(edited.recipeSnapshot.name).toBe(chosen);
+  expect(edited.selectedServings).toEqual({ numerator: '1', denominator: '1' });
+  expect(othersAt(saved.variant, target.id)).toEqual(othersAt(before.variant, target.id));
+  expect(new URL(page.url()).pathname).toBe(`/recipe/${edited.recipeId}`);
+  expect(new URL(page.url()).searchParams.toString()).toBe(params.toString());
+  await expect(page.getByRole('link', { name: 'К меню', exact: true })).toHaveAttribute('href', `/menu?view=week&day=${target.date}`);
+
+  const next = await pickAlternative();
+  await expect.poll(() => count(page, 'save-calls')).toBe(2);
+  await expect(title).toHaveText(next);
+  await page.getByRole('link', { name: 'Покупки', exact: true }).click();
+  await expect(page).toHaveURL(/\/shopping$/);
+  await expect(page.getByRole('status').filter({ hasText: 'Сохраняем изменения меню' })).toHaveCount(1);
+  await expect(page.locator('details li').filter({ hasText: next }).first()).toBeAttached();
+  await release(page, 'save-2');
+  await expect(page.getByRole('status').filter({ hasText: 'Изменения сохранены' })).toBeVisible();
+  await expect(page).toHaveURL(/\/shopping$/);
+});
 
 async function withRepeatedRiceBreakfast(page: Page) {
   await generateTwoDays(page);

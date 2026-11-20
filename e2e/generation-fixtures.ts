@@ -22,7 +22,7 @@ interface Options {
  */
 export async function mountGeneration(page: Page, options: Options = {}) {
   await page.goto('/plan/new');
-  await expect(page.getByLabel('Число людей', { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Шаг [1-4] из 4$/)).toBeVisible();
   await page.evaluate(async options => {
     const urls = performance.getEntriesByType('resource').map(row => row.name);
     const reactUrl = urls.find(url => /\/react\.js\?/.test(url));

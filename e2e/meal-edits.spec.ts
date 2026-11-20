@@ -452,6 +452,118 @@ for (const count of [0, 1]) test(`alternatives show ${count} actual choices and 
   expect((await readMenu(page)).raw).toBe(before);
 });
 
+test('keyboard-responsive selects a weekly replacement and keeps the dialog usable at five widths', async ({ page, browserName }, testInfo) => {
+  test.setTimeout(70_000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await generateRealPlan(page);
+  const { plan, variant } = await readMenu(page);
+  expect(plan.inputs.catalog.recipes).toHaveLength(82);
+  const lunch = variant.instances.find(row => row.slot === 'lunch')!;
+  const card = page.locator(`[data-instance-id="${lunch.id}"]`);
+  const tools = card.getByRole('button', { name: /^Действия для блюда/ });
+  const trigger = card.getByRole('button', { name: 'Заменить блюдо', exact: true });
+  const dialog = page.getByRole('dialog', { name: 'Заменить блюдо' });
+  const close = dialog.getByRole('button', { name: 'Закрыть подбор' });
+  const choices = dialog.getByRole('button').filter({ hasText: 'Покупки за период' });
+
+  for (const width of [360, 390, 430, 768, 1280]) {
+    const height = width < 768 ? 460 : 740;
+    await page.setViewportSize({ width, height });
+    const entireWeek = page.getByRole('button', { name: 'Вся неделя', exact: true });
+    if (await entireWeek.isVisible() && await entireWeek.getAttribute('aria-pressed') === 'false') await entireWeek.click();
+    await tools.focus();
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Tab');
+    await expect(trigger).toBeFocused();
+    const started = Date.now();
+    await page.keyboard.press('Enter');
+    await expect(close).toBeFocused();
+    await expect(choices.last()).toBeVisible();
+    if (width === 390) testInfo.annotations.push({ type: 'actual-panel-ms', description: `${Date.now() - started} ms (${browserName}, 390 × ${height}, 82 recipes, 7 days)` });
+    expect(await choices.count()).toBeGreaterThanOrEqual(3);
+    expect(await choices.count()).toBeLessThanOrEqual(5);
+    const panel = (await dialog.boundingBox())!;
+    const crossesPage = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
+    expect(crossesPage).toBe(false);
+    expect(panel.x).toBeGreaterThanOrEqual(0);
+    expect(panel.x + panel.width).toBeLessThanOrEqual(width);
+    expect(panel.y + panel.height).toBeLessThanOrEqual(height);
+    if (width < 768) expect(panel.y + panel.height).toBeCloseTo(height, 0);
+    else {
+      expect(panel.width).toBe(560);
+      expect(panel.x + panel.width / 2).toBeCloseTo(width / 2, 0);
+      expect(panel.y + panel.height / 2).toBeCloseTo(height / 2, 0);
+    }
+    await page.keyboard.press('Shift+Tab');
+    await expect(choices.last()).toBeFocused();
+    await expect(choices.last()).toBeInViewport({ ratio: 0.9 });
+    await expect(close).toBeInViewport({ ratio: 0.9 });
+    if (browserName === 'chromium' && [360, 768, 1280].includes(width)) {
+      await dialog.screenshot({ path: `.tmp/phase04-05/screenshots/alternatives-${width}.png` });
+    }
+    await page.keyboard.press('Tab');
+    await expect(close).toBeFocused();
+    if (width !== 1280) {
+      await page.keyboard.press('Escape');
+      await expect(dialog).toHaveCount(0);
+      await expect(trigger).toBeFocused();
+      await page.keyboard.press('Escape');
+      await expect(tools).toBeFocused();
+    }
+  }
+
+  await page.keyboard.press('Shift+Tab');
+  await expect(choices.last()).toBeFocused();
+  const replacement = await choices.last().locator('span').first().innerText();
+  await page.keyboard.press('Enter');
+  await expect(dialog).toHaveCount(0);
+  await expect(card.getByRole('link')).toBeFocused();
+  await expect(card.getByRole('link')).toContainText(replacement);
+  const total = await page.getByRole('region', { name: 'Бюджет меню' }).innerText();
+  const purchases = page.getByRole('link', { name: /^Список покупок ·/ });
+  await purchases.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Список покупок', exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Бюджет меню' })).toHaveText(total, { useInnerText: true });
+  const sources = await page.locator('article[data-product-id] details li').allTextContents();
+  expect(sources.some(row => row.includes(` · Обед · ${replacement} ·`))).toBe(true);
+});
+
+test('keyboard-responsive wraps long text and keeps controls visible at an effective 200% reflow width', async ({ page, browserName }) => {
+  await page.setViewportSize({ width: 360, height: 420 });
+  await openSyntheticPlan(page, { long: true, split: 'one' });
+  const breakfast = page.locator('article[data-slot="breakfast"]');
+  await breakfast.getByRole('button', { name: /^Действия для блюда/ }).click();
+  await breakfast.getByRole('button', { name: 'Заменить блюдо', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Заменить блюдо' });
+  const close = dialog.getByRole('button', { name: 'Закрыть подбор' });
+  const alternative = dialog.getByRole('button').filter({ hasText: 'Покупки за период' });
+  await expect(alternative).toHaveCount(1);
+  await expect(dialog.getByRole('status')).toHaveText('Найден 1 подходящий вариант');
+  await expect(alternative).toContainText('ОченьДлинноеБлюдо');
+  await expect(alternative.locator('img')).toHaveCount(0);
+
+  // Half the reference viewport dimensions exercises desktop browser-zoom reflow at 200%.
+  // This does not set browser chrome zoom or depend on OS accessibility settings.
+  for (const viewport of [{ width: 360, height: 420 }, { width: 640, height: 420 }]) {
+    await page.setViewportSize(viewport);
+    await expect(close).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expect(alternative).toBeFocused();
+    await expect(alternative).toBeInViewport();
+    await expect(close).toBeInViewport({ ratio: 0.9 });
+    const widths = await dialog.evaluate(element => ({ sheet: element.scrollWidth, inner: element.clientWidth, page: document.documentElement.scrollWidth, viewport: innerWidth }));
+    expect(widths.sheet).toBe(widths.inner);
+    expect(widths.page).toBe(widths.viewport);
+    if (browserName === 'chromium') await dialog.screenshot({ path: `.tmp/phase04-05/screenshots/long-alternative-${viewport.width}.png` });
+    await page.keyboard.press('Tab');
+  }
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(breakfast.getByRole('button', { name: 'Заменить блюдо', exact: true })).toBeFocused();
+});
+
 test('remove-slot confirms a generated meal removal and restores its empty slot after reload', async ({ page }) => {
   test.setTimeout(65_000);
   await page.setViewportSize({ width: 390, height: 844 });

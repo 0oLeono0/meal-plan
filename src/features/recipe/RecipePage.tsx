@@ -114,8 +114,9 @@ export function RecipePage({ snapshot, catalog, onRetry, onChangePortions, onRet
             aria-pressed={view.portionMultiplier === multiplier}
             aria-disabled={busy}
             className="aria-pressed:!text-[var(--color-text)] aria-disabled:opacity-60"
-            onClick={() => {
+            onClick={event => {
               if (busy) return;
+              event.currentTarget.focus();
               onChangePortions({ variantId: plan.activeVariantId, date: context.date, slot: context.slot, instanceId: context.id, recipeId: context.recipeId },
                 multiplier, plan, route);
             }}>{label}</Button>;

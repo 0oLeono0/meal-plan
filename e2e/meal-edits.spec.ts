@@ -94,7 +94,9 @@ test('portions-cycle changes only one repeated recipe and keeps purchasing total
   await expect(page.getByText(/^300 г · ≈ 20,92/)).toBeVisible();
   expect((await readMenu(page)).raw).toBe(edited.raw);
   await page.getByRole('link', { name: 'К меню', exact: true }).click();
-  expect(await dayCalories() - baseCalories).toBeCloseTo(594, -1);
+  // The exact meal delta is 593.94 kcal. The rounded day totals can differ
+  // by either 593 or 594 depending on the other meals' fractional calories.
+  expect([593, 594]).toContain(await dayCalories() - baseCalories);
   await expect(secondDay).toHaveText(secondTotals, { useInnerText: true });
   const updatedBudget = await page.getByRole('region', { name: 'Бюджет меню' }).innerText();
   expect(updatedBudget).not.toBe(menuBudget);

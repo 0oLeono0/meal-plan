@@ -38,7 +38,7 @@ export interface MealAlternative {
 }
 
 type Unavailable = 'stale' | 'incompatible' | 'over-budget' | 'incomplete';
-type MealEditResult = { status: 'ready'; plan: ActivePlanEnvelope } | { status: Unavailable };
+type MealEditResult = { status: 'ready'; plan: ActivePlanEnvelope } | { status: Unavailable | 'unchanged' };
 export type MealAlternativesResult = { status: 'ready'; options: readonly MealAlternative[]; overBudget: boolean; incomplete: boolean }
   | { status: 'stale' | 'cancelled' };
 
@@ -113,7 +113,9 @@ export function changeMealServings(plan: ActivePlanEnvelope, baseline: PlanProje
   if (!current) return { status: 'stale' };
   if (!mealPortionMultipliers.includes(multiplier)) return { status: 'incompatible' };
   const selectedServings = familyServings(plan.inputs.appliedSettings.people, multiplier);
-  const next = projectInstance(plan, current.variant, current.index, { ...current.row.instance, selectedServings });
+  const instance = current.variant.instances[current.index];
+  if (compare(instance.selectedServings, selectedServings) === 0) return { status: 'unchanged' };
+  const next = projectInstance(plan, current.variant, current.index, { ...instance, selectedServings });
   return next.status === 'ready' ? installInstances(plan, next.variant) : next;
 }
 function newInstance(plan: ActivePlanEnvelope, target: EmptyMealTarget, recipe: Recipe, id: string): RecipeInstance {

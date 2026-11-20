@@ -270,6 +270,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
     const projection = base.projections.find(row => row.variantId === target.variantId);
     const next = isExpected(base) && snapshot.loadStatus === 'loaded' && projection
       ? edit(base.plan, projection, target) : { status: 'stale' as const };
+    if (next.status === 'unchanged') return;
     if (next.status !== 'ready') {
       const message = next.status === 'stale' ? 'Меню изменилось. Обновите его перед новой правкой'
         : next.status === 'over-budget' ? budgetMessage : 'Не удалось изменить блюдо';

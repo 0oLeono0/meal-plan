@@ -1,4 +1,6 @@
 import type { ActiveBundle } from '../adapters/activePlan';
+import { selectedPortionMultiplier } from './mealEdits';
+import type { MealPortionMultiplier } from './mealEdits';
 import type { Catalog, CatalogLoadResult, FoodProfile, Nutrition, Recipe, UnknownFact } from './catalog';
 import { evaluateIngredient, nutrientKeys } from './catalog';
 import { calendarDates } from './plan';
@@ -77,6 +79,7 @@ export interface RecipeView {
   readonly ingredients: readonly RecipeIngredientView[]; readonly perPortionNutrition: NutritionFact;
   readonly perPortionCost: Rational | null;
   readonly servingsLabel: string; readonly ingredientBasis: string;
+  readonly portionMultiplier?: MealPortionMultiplier | null;
 }
 function servingLabel(value: Rational, afterNa: boolean): string {
   const last = value.numerator % 10n, lastTwo = value.numerator % 100n;
@@ -125,6 +128,7 @@ export function projectRecipeView(request: RecipeRequest): RecipeView | Failure 
     const perPortionNutrition: NutritionFact = ingredients.every(row => row.perPortionNutrition.status === 'known') ? { status: 'known', value: totals } : unknownNutrition();
     const perPortionCost = ingredients.every(row => row.familyCost !== null) ? divide(ingredients.reduce((sum, row) => add(sum, row.familyCost!), decimal('0')), servings) : null;
     return { status: resolved.status, recipe, catalogVersion: catalog.version, servings, returnTo: resolved.returnTo, instance: resolved.instance, ingredients, perPortionNutrition, perPortionCost,
-      servingsLabel: servingLabel(servings, false), ingredientBasis: `Ингредиенты на ${servingLabel(servings, true)}` };
+      servingsLabel: servingLabel(servings, false), ingredientBasis: `Ингредиенты на ${servingLabel(servings, true)}`,
+      ...(resolved.active ? { portionMultiplier: selectedPortionMultiplier(resolved.active.plan.inputs.appliedSettings.people, servings) } : {}) };
   } catch { return incomplete(); }
 }

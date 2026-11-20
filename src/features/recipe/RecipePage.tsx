@@ -3,7 +3,7 @@ import { RecipeImage } from '../../shared/RecipeImage';
 import { CalculationNote } from '../../shared/CalculationNote';
 import { Link, useLocation } from 'react-router';
 import type { CatalogLoadResult } from '../../domain/catalog';
-import { mealPortionMultipliers, selectedPortionMultiplier } from '../../domain/mealEdits';
+import { mealPortionMultipliers } from '../../domain/mealEdits';
 import type { MealEditTarget, MealPortionMultiplier } from '../../domain/mealEdits';
 import type { ActivePlanEnvelope } from '../../domain/plan';
 import type { GenerationSnapshot } from '../generation/controller';
@@ -74,7 +74,6 @@ export function RecipePage({ snapshot, catalog, onRetry, onChangePortions, onRet
   const route = pathname + search;
   const busy = snapshot.status === 'saving' || snapshot.status === 'pending';
   const portionEdit = snapshot.intent === 'edit' && snapshot.origin?.focusAnchor === 'recipe-portions' && snapshot.origin.returnRoute === route;
-  const selected = plan && context ? selectedPortionMultiplier(plan.inputs.appliedSettings.people, view.servings) : null;
   return <section className="plan-read-model [overflow-wrap:anywhere] max-w-[960px] mx-auto" data-instance-id={view.instance?.id}>
     <Link className="action-link" to={view.returnTo}>К меню</Link>
     <div className="recipe-hero grid md:grid-cols-2 gap-6 items-start">
@@ -82,7 +81,7 @@ export function RecipePage({ snapshot, catalog, onRetry, onChangePortions, onRet
     <header className="min-w-0">
     <h1 ref={heading} tabIndex={-1}>{view.recipe.name}</h1>
     {view.instance && <p>{formatDateOnly(view.instance.date)} · {slotNames[view.instance.slot]}</p>}
-    <p>{view.status === 'context' ? `Порций для семьи: ${formatExact(view.servings)}` : `Исходный рецепт · ${view.servingsLabel}`}</p>
+    <p>{view.status === 'context' ? `Порций для семьи: ${ruNumber(view.servings)}` : `Исходный рецепт · ${view.servingsLabel}`}</p>
     <p>{view.ingredientBasis}. КБЖУ и цена — на одну порцию</p>
     <p>Время приготовления: {view.recipe.cookingMinutes} мин</p>
     {plan && context && <>
@@ -91,9 +90,9 @@ export function RecipePage({ snapshot, catalog, onRetry, onChangePortions, onRet
           const label = `×${multiplier.replace('.', ',')}`;
           return <Button key={multiplier}
             aria-label={`${label} от исходных порций для семьи`}
-            aria-pressed={selected === multiplier}
+            aria-pressed={view.portionMultiplier === multiplier}
             aria-disabled={busy}
-            className="aria-pressed:bg-[var(--color-selected)] aria-pressed:text-[var(--color-text)] aria-disabled:opacity-60"
+            className="aria-pressed:!text-[var(--color-text)] aria-disabled:opacity-60"
             onClick={() => {
               if (busy) return;
               onChangePortions({ variantId: plan.activeVariantId, date: context.date, slot: context.slot, instanceId: context.id, recipeId: context.recipeId },

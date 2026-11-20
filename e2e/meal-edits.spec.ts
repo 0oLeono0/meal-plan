@@ -465,6 +465,15 @@ test('keyboard-responsive selects a weekly replacement and keeps the dialog usab
   const dialog = page.getByRole('dialog', { name: 'Заменить блюдо' });
   const close = dialog.getByRole('button', { name: 'Закрыть подбор' });
   const choices = dialog.getByRole('button').filter({ hasText: 'Покупки за период' });
+  await page.evaluate(() => {
+    const observer = new MutationObserver(() => {
+      if (document.querySelector('[role="dialog"] [role="status"]')?.textContent === 'Подбираем блюда…') {
+        performance.mark('meal-alternatives-pending');
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  });
 
   for (const width of [360, 390, 430, 768, 1280]) {
     const height = width < 768 ? 460 : 740;
@@ -479,6 +488,7 @@ test('keyboard-responsive selects a weekly replacement and keeps the dialog usab
     await page.keyboard.press('Enter');
     await expect(close).toBeFocused();
     await expect(choices.last()).toBeVisible();
+    if (width === 360) expect(await page.evaluate(() => performance.getEntriesByName('meal-alternatives-pending').length)).toBe(1);
     if (width === 390) testInfo.annotations.push({ type: 'actual-panel-ms', description: `${Date.now() - started} ms (${browserName}, 390 × ${height}, 82 recipes, 7 days)` });
     expect(await choices.count()).toBeGreaterThanOrEqual(3);
     expect(await choices.count()).toBeLessThanOrEqual(5);
@@ -551,6 +561,9 @@ test('keyboard-responsive wraps long text and keeps controls visible at an effec
     await page.keyboard.press('Shift+Tab');
     await expect(alternative).toBeFocused();
     await expect(alternative).toBeInViewport();
+    const deltas = alternative.getByText(/Покупки за период/);
+    await deltas.scrollIntoViewIfNeeded();
+    await expect(deltas).toBeInViewport({ ratio: 0.9 });
     await expect(close).toBeInViewport({ ratio: 0.9 });
     const widths = await dialog.evaluate(element => ({ sheet: element.scrollWidth, inner: element.clientWidth, page: document.documentElement.scrollWidth, viewport: innerWidth }));
     expect(widths.sheet).toBe(widths.inner);

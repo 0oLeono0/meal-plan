@@ -32,6 +32,16 @@ function othersAt(variant: PlanVariant, id: string) {
   return variant.instances.filter(row => row.id !== id);
 }
 
+async function pickRecipeAlternative(page: Page) {
+  await page.getByRole('button', { name: 'Заменить в меню', exact: true }).click();
+  const sheet = page.getByRole('dialog', { name: 'Заменить блюдо' });
+  const option = sheet.getByRole('button', { name: /Покупки за период/ }).first();
+  await expect(option).toBeVisible();
+  const name = (await option.locator('span').first().textContent())!;
+  await option.click();
+  return name;
+}
+
 test('recipe-replace preserves the contextual route until save and never redirects from shopping', async ({ page }) => {
   test.setTimeout(65_000);
   await page.setViewportSize({ width: 390, height: 844 });
@@ -50,17 +60,7 @@ test('recipe-replace preserves the contextual route until save and never redirec
   await expect(title).toHaveText(target.recipeSnapshot.name);
   const recipeUrl = page.url();
 
-  async function pickAlternative() {
-    await page.getByRole('button', { name: 'Заменить в меню', exact: true }).click();
-    const sheet = page.getByRole('dialog', { name: 'Заменить блюдо' });
-    const option = sheet.getByRole('button', { name: /Покупки за период/ }).first();
-    await expect(option).toBeVisible();
-    const name = (await option.locator('span').first().textContent())!;
-    await option.click();
-    return name;
-  }
-
-  const chosen = await pickAlternative();
+  const chosen = await pickRecipeAlternative(page);
   await expect.poll(() => count(page, 'save-calls')).toBe(1);
   await expect(title).toHaveText(chosen);
   await expect(page.getByRole('status').filter({ hasText: 'Сохраняем изменения меню' })).toHaveCount(1);
@@ -81,7 +81,7 @@ test('recipe-replace preserves the contextual route until save and never redirec
   expect(new URL(page.url()).searchParams.toString()).toBe(params.toString());
   await expect(page.getByRole('link', { name: 'К меню', exact: true })).toHaveAttribute('href', `/menu?view=week&day=${target.date}`);
 
-  const next = await pickAlternative();
+  const next = await pickRecipeAlternative(page);
   await expect.poll(() => count(page, 'save-calls')).toBe(2);
   await expect(title).toHaveText(next);
   await page.getByRole('link', { name: 'Покупки', exact: true }).click();
@@ -91,6 +91,109 @@ test('recipe-replace preserves the contextual route until save and never redirec
   await release(page, 'save-2');
   await expect(page.getByRole('status').filter({ hasText: 'Изменения сохранены' })).toBeVisible();
   await expect(page).toHaveURL(/\/shopping$/);
+});
+
+test('rollback restores the recipe and its focus, then retries and announces the confirmed recipe once', async ({ page }) => {
+  test.setTimeout(65_000);
+  await generateTwoDays(page);
+  const before = await readMenu(page);
+  const target = before.variant.instances.find(row => row.slot === 'lunch')!;
+  const params = new URLSearchParams({ variant: before.variant.id, instance: target.id, view: 'week', day: target.date });
+  await mountGeneration(page, { route: `/recipe/${target.recipeId}?${params}`, deferSave: true, failWrite: true });
+  const title = page.getByRole('heading', { level: 1 });
+  await expect(title).toHaveText(target.recipeSnapshot.name);
+  const price = page.getByRole('region', { name: 'На одну порцию' }).locator('dd');
+  const initialFacts = await price.allTextContents();
+  const route = page.url();
+  const chosen = await pickRecipeAlternative(page);
+  await expect.poll(() => count(page, 'save-calls')).toBe(1);
+  await expect(title).toHaveText(chosen);
+  await preserved(page, before.raw);
+  await release(page, 'save-1');
+  await expect(page.getByRole('alert')).toContainText('Восстановлено прежнее меню');
+  await expect(title).toHaveText(target.recipeSnapshot.name);
+  await expect(price).toHaveText(initialFacts);
+  await expect(page.getByRole('button', { name: 'Заменить в меню' })).toBeFocused();
+  await expect(page).toHaveURL(route);
+  await preserved(page, before.raw);
+
+  await page.evaluate(() => sessionStorage.setItem('allow-write', 'yes'));
+  await page.getByRole('button', { name: 'Повторить сохранение', exact: true }).click();
+  await expect.poll(() => count(page, 'save-calls')).toBe(2);
+  await expect(title).toHaveText(chosen);
+  await release(page, 'save-2');
+  await expect.poll(() => page.url()).not.toBe(route);
+  await expect(title).toHaveText(chosen);
+  await expect(title).toBeFocused();
+  await expect(page.getByRole('status').filter({ hasText: 'Изменения сохранены' })).toHaveCount(1);
+  expect(await count(page, 'final-writes')).toBe(1);
+  const saved = await readMenu(page);
+  expect(saved.variant.instances.find(row => row.id === target.id)?.recipeSnapshot.name).toBe(chosen);
+  await page.reload();
+  await expect(title).toHaveText(chosen);
+  await preserved(page, saved.raw);
+});
+
+test('rollback shows identical optimistic totals on menu and shopping and restores both after failure', async ({ page }) => {
+  test.setTimeout(65_000);
+  await generateTwoDays(page);
+  const before = await readMenu(page);
+  const target = before.variant.instances.find(row => row.slot === 'lunch')!;
+  const budget = page.getByRole('region', { name: 'Бюджет меню' });
+  const confirmedBudget = await budget.innerText();
+  const params = new URLSearchParams({ variant: before.variant.id, instance: target.id, view: 'week', day: target.date });
+  await mountGeneration(page, { route: `/recipe/${target.recipeId}?${params}`, deferSave: true, failWrite: true });
+  const chosen = await pickRecipeAlternative(page);
+  await expect.poll(() => count(page, 'save-calls')).toBe(1);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(chosen);
+  await page.getByRole('link', { name: 'К меню', exact: true }).click();
+  const menuCard = page.locator(`[data-instance-id="${target.id}"]`);
+  await expect(menuCard).toContainText(chosen);
+  const previewBudget = await budget.innerText();
+  await page.getByRole('link', { name: /^Список покупок ·/ }).click();
+  await expect(page).toHaveURL(/\/shopping$/);
+  await expect(budget).toHaveText(previewBudget, { useInnerText: true });
+  await expect(page.getByRole('status').filter({ hasText: 'Сохраняем изменения меню' })).toHaveCount(1);
+  await expect(page.getByRole('status').filter({ hasText: 'Изменения сохранены' })).toHaveCount(0);
+  await expect(page.locator('details li').filter({ hasText: chosen }).first()).toBeAttached();
+  await release(page, 'save-1');
+  await expect(page.getByRole('alert')).toContainText('Восстановлено прежнее меню');
+  await expect(page).toHaveURL(/\/shopping$/);
+  await expect(budget).toHaveText(confirmedBudget, { useInnerText: true });
+  await preserved(page, before.raw);
+  await page.getByRole('link', { name: 'К меню', exact: true }).click();
+  await expect(menuCard).toContainText(target.recipeSnapshot.name);
+  await expect(budget).toHaveText(confirmedBudget, { useInnerText: true });
+});
+
+test('rollback reports another tab’s raw change and requires refresh before another edit', async ({ page, context }) => {
+  test.setTimeout(65_000);
+  await generateTwoDays(page);
+  const before = await readMenu(page);
+  const target = before.variant.instances.find(row => row.slot === 'lunch')!;
+  const params = new URLSearchParams({ variant: before.variant.id, instance: target.id, view: 'week', day: target.date });
+  await mountGeneration(page, { route: `/recipe/${target.recipeId}?${params}`, deferSave: true });
+  const title = page.getByRole('heading', { level: 1 });
+  const chosen = await pickRecipeAlternative(page);
+  await expect.poll(() => count(page, 'save-calls')).toBe(1);
+  await expect(title).toHaveText(chosen);
+  const external = ' ' + before.raw;
+  const other = await context.newPage();
+  await other.goto('/menu');
+  await other.evaluate(({ key, external }) => localStorage.setItem(key, external), { key: activeKey, external });
+  await other.close();
+  await release(page, 'save-1');
+  await expect(page.getByRole('alert')).toContainText('Меню изменилось');
+  await expect(title).toHaveText(target.recipeSnapshot.name);
+  await expect(page.getByRole('button', { name: 'Повторить сохранение' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Заменить в меню', exact: true })).toBeDisabled();
+  await preserved(page, external);
+  await page.getByRole('button', { name: 'Обновить меню', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Заменить в меню', exact: true })).toBeEnabled();
+  await expect(title).toHaveText(target.recipeSnapshot.name);
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  expect(await count(page, 'save-calls')).toBe(1);
+  await preserved(page, external);
 });
 
 async function withRepeatedRiceBreakfast(page: Page) {

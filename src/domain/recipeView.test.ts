@@ -9,7 +9,7 @@ import { projectPlan } from './planProjection';
 import { decimal, rational, roundHalfUp } from './quantities';
 import { formatNutrition } from './presentation';
 import { createDraft } from './settings';
-import { projectRecipeView, resolveRecipeContext } from './recipeView';
+import { projectRecipeView, recipeReplacementPath, resolveRecipeContext } from './recipeView';
 import type { RecipeRequest } from './recipeView';
 import { bundledCatalog } from '../data/catalog';
 import { formatExact } from './quantities';
@@ -42,6 +42,22 @@ function viewed(request = fixture().request) {
 }
 
 describe('recipe basis and shared ledger', () => {
+  it('phase04-edit preview accepts only the replacement recipe at the original exact coordinates', () => {
+    const { request, active } = fixture();
+    const [before, other] = active.plan.variants[0].instances;
+    const target = { variantId: active.plan.activeVariantId, instanceId: before.id, date: before.date, slot: before.slot, recipeId: before.recipeId };
+    const variant = { id: target.variantId, instances: [{ ...before, recipeId: other.recipeId, recipeSnapshot: other.recipeSnapshot }, other] };
+    const projected = projectPlan(active.plan.inputs, variant);
+    if (projected.status !== 'projected') throw new Error('Preview projection');
+    const preview = { ...request, active: { plan: { ...active.plan, variants: [variant] }, projections: [projected.projection] } };
+    expect(resolveRecipeContext(preview).status).toBe('stale');
+    expect(recipeReplacementPath(preview, target, other.recipeId)).toBe('/recipe/r300');
+    expect(recipeReplacementPath(preview, { ...target, slot: other.slot }, other.recipeId)).toBeNull();
+    expect(recipeReplacementPath({ ...preview, search: '?variant=v1&instance=i1' }, target, other.recipeId)).toBeNull();
+    expect(recipeReplacementPath({ ...preview, search: '?variant=v1&instance=i0&instance=i1' }, target, other.recipeId)).toBeNull();
+    expect(recipeReplacementPath({ ...preview, pathname: '/recipe/r300' }, target, other.recipeId)).toBeNull();
+    expect(recipeReplacementPath(request, target, other.recipeId)).toBeNull();
+  });
   it('keeps historical contextual servings separate from the three selectable multipliers', () => {
     const { request, active } = fixture();
     const original = active.plan.variants[0];

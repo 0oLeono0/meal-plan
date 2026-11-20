@@ -189,6 +189,90 @@ it('phase04-portions guards the saved snapshot and rolls back an unconfirmed sca
   } finally { controller.dispose(); }
 });
 
+function delayedEdit(seed: string, clock?: GenerationControllerOptions['clock']) {
+  const { inputs, plan } = fixture(seed);
+  const registry = createTrustedCatalogRegistry([inputs.catalog]);
+  const initial = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
+  let raw: string | null = initial, denyRead = false;
+  const entered = deferred<void>(), finish = deferred<void>();
+  const setItem = vi.fn((_key: string, value: string) => { raw = value; });
+  const adapter = createActivePlanAdapter(() => ({ getItem() {
+    if (denyRead) throw new Error('Blocked read');
+    return raw;
+  }, setItem }), registry);
+  const save = vi.fn<ActivePlanPort['save']>(async (...args) => {
+    entered.resolve(); await finish.promise;
+    return adapter.save(...args);
+  });
+  const controller = productionController({ generation: { async generate() { throw new Error('Editing does not generate'); } },
+    activePlan: { load: adapter.load, save }, trustedCatalogs: registry, clock });
+  const instance = plan.variants[0].instances[0];
+  const target = { variantId: plan.activeVariantId, instanceId: instance.id, recipeId: instance.recipeId, date: instance.date, slot: instance.slot };
+  return { controller, target, plan, initial, entered, finish, save, setItem, read: () => raw,
+    update(next: string | null, unreadable = false) { raw = next; denyRead = unreadable; } };
+}
+
+it.each(['loaded', 'missing', 'corrupt', 'error'] as const)('phase04-edit refresh to %s retires the pending write and retry', async status => {
+  const test = delayedEdit('edit-refresh');
+  const { controller } = test;
+  const newPlan = fixture('another-base').plan;
+  const outside = status === 'loaded' ? JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(newPlan) })
+    : status === 'missing' ? null : status === 'corrupt' ? '{bad-data' : test.initial;
+  try {
+    await controller.load();
+    const pending = controller.changePortions(test.target, '2', controller.getSnapshot().active!.plan, origin);
+    await test.entered.promise;
+    test.update(outside, status === 'error');
+    await controller.retryLoad();
+    const afterRead = controller.getSnapshot();
+    test.finish.resolve(); await pending;
+    await controller.retrySave();
+    expect(afterRead).toMatchObject({ status: 'idle', loadStatus: status, candidate: null });
+    expect(controller.getSnapshot()).toMatchObject({ status: 'idle', loadStatus: status, candidate: null });
+    expect(controller.getSnapshot().active?.plan).toEqual(status === 'loaded' ? newPlan : test.plan);
+    expect(test.save).toHaveBeenCalledTimes(1);
+    expect(test.setItem).not.toHaveBeenCalled();
+    expect(test.read()).toBe(outside);
+  } finally { controller.dispose(); test.finish.resolve(); }
+});
+
+it('phase04-edit detects new raw bytes, refuses duplicate and blocked retries, and reloads without writing', async () => {
+  const test = delayedEdit('edit-conflict'), { controller } = test;
+  const outside = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(fixture('new-tab-plan').plan) });
+  try {
+    await controller.load();
+    const base = controller.getSnapshot().active!.plan;
+    const pending = controller.changePortions(test.target, '2', base, origin);
+    await test.entered.promise;
+    await controller.changePortions(test.target, '0.5', base, origin);
+    test.update(outside); test.finish.resolve(); await pending;
+    expect(controller.getSnapshot()).toMatchObject({ status: 'memory-only', saveError: 'blocked', active: { plan: base } });
+    await controller.retrySave();
+    await controller.changePortions(test.target, '0.5', base, origin);
+    expect(test.save).toHaveBeenCalledTimes(1);
+    await controller.retryLoad();
+    expect(controller.getSnapshot()).toMatchObject({ status: 'idle', candidate: null, active: { plan: { activeVariantId: 'new-tab-plan' } } });
+    expect(test.read()).toBe(outside);
+    expect(test.setItem).not.toHaveBeenCalled();
+  } finally { controller.dispose(); test.finish.resolve(); }
+});
+
+it('phase04-edit a late completion after its deadline cannot write or leave preview totals', async () => {
+  let time = 0;
+  const test = delayedEdit('edit-timeout', { now: () => time }), { controller } = test;
+  try {
+    await controller.load();
+    const pending = controller.changePortions(test.target, '2', controller.getSnapshot().active!.plan, origin);
+    await test.entered.promise;
+    time = 30_001;
+    test.finish.resolve(); await pending;
+    expect(controller.getSnapshot()).toMatchObject({ status: 'error', error: { code: 'TIMEOUT' }, candidate: null });
+    expect(visiblePlanSnapshot(controller.getSnapshot()).active?.plan).toEqual(test.plan);
+    expect(test.setItem).not.toHaveBeenCalled();
+    expect(test.read()).toBe(test.initial);
+  } finally { controller.dispose(); test.finish.resolve(); }
+});
+
 it.each([
   ['historical52', legacyRaw], ['issued56', release1Raw], ['issued68', release2Raw], ['issued75', release3Raw], ['current82', null],
 ])('all-release continuation %s keeps exact inputs through load select append recreate and reload', async (_, recordedRaw) => {

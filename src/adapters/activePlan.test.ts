@@ -353,7 +353,7 @@ describe('validated active persistence', () => {
     store.map.set(ACTIVE_PLAN_KEY, '{}'); expect(await presence.load()).toEqual({ status: 'error' });
     store.map.set(ACTIVE_PLAN_KEY, rawPlan()); expect(await presence.load()).toEqual({ status: 'valid', planId: 'v' });
   });
-  it('does not overwrite concurrent changed bytes and needs a successful inspection to recover', async () => {
+  it('phase04-edit does not overwrite concurrent changed bytes and needs a successful inspection to recover', async () => {
     const store = storage(), port = createSyntheticAdapter(() => store); await port.load();
     store.map.set(ACTIVE_PLAN_KEY, 'foreign');
     expect((await port.save(fixture(), current)).status).toBe('blocked');

@@ -452,6 +452,24 @@ for (const count of [0, 1]) test(`alternatives show ${count} actual choices and 
   expect((await readMenu(page)).raw).toBe(before);
 });
 
+test('review-focus takes the menu heading when the originating day becomes hidden', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 740 });
+  await openSyntheticPlan(page, { days: 2 });
+  const day = page.locator('.menu-day').nth(1);
+  const card = day.locator('article[data-slot="lunch"]');
+  await card.getByRole('button', { name: /^Действия для блюда/ }).click();
+  const trigger = card.getByRole('button', { name: 'Заменить блюдо', exact: true, includeHidden: true });
+  await trigger.click();
+  const dialog = page.getByRole('dialog', { name: 'Заменить блюдо' });
+  await expect(dialog.getByRole('button', { name: 'Закрыть подбор' })).toBeFocused();
+  await page.setViewportSize({ width: 360, height: 740 });
+  await expect(day).toHaveAttribute('hidden', '');
+  await expect(trigger).toHaveCount(1);
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(page.locator('#menu-title')).toBeFocused();
+});
+
 test('keyboard-responsive selects a weekly replacement and keeps the dialog usable at five widths', async ({ page, browserName }, testInfo) => {
   test.setTimeout(70_000);
   await page.setViewportSize({ width: 390, height: 844 });

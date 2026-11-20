@@ -56,8 +56,10 @@ export function useModalFocus(overlay: RefObject<HTMLElement | null>, initialFoc
       document.removeEventListener('focusin', focusin);
       previous.forEach(([element, value]) => value === null ? element.removeAttribute('aria-hidden') : element.setAttribute('aria-hidden', value));
       document.body.style.overflow = overflow;
-      if (initiator?.isConnected) initiator.focus();
-      else if (fallback.current) document.getElementById(fallback.current)?.focus();
+      if (initiator?.isConnected && initiator.getClientRects().length) initiator.focus();
+      if (fallback.current && (!initiator || document.activeElement !== initiator)) {
+        document.getElementById(fallback.current)?.focus();
+      }
     };
   }, [overlay, initialFocus]);
 }

@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { RecipeImage } from '../../shared/RecipeImage';
 import { CalculationNote } from '../../shared/CalculationNote';
-import { Link, useLocation } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import type { CatalogLoadResult } from '../../domain/catalog';
 import { mealPortionMultipliers } from '../../domain/mealEdits';
 import type { MealEditTarget, MealPortionMultiplier } from '../../domain/mealEdits';
 import type { ActivePlanEnvelope } from '../../domain/plan';
 import type { GenerationSnapshot } from '../generation/controller';
-import { projectRecipeView } from '../../domain/recipeView';
+import { projectRecipeView, recipeReplacementPath } from '../../domain/recipeView';
 import type { NutritionFact, RecipeView } from '../../domain/recipeView';
 import { formatCurrency, formatDateOnly, formatNutrition, formatQuantity } from '../../domain/presentation';
 import { add, compare, decimal, divide, formatExact, roundHalfUp, type Rational } from '../../domain/quantities';
 import { Button, Status } from '../../shared/ui';
+import { MealAlternatives, type MealAlternativesActions } from '../menu/MealAlternatives';
 import { PlanLoading } from '../plan/PlanLoading';
 
 const notices = {
@@ -49,17 +50,33 @@ function NutritionValues({ fact }: { fact: NutritionFact }) {
   const values = fact.status === 'known' ? formatNutrition(fact.value) : null;
   return <>{(['calories', 'protein', 'fat', 'carbohydrates'] as const).map((key, index) => <div key={key} className="min-w-0"><dt>{['Калории', 'Белки', 'Жиры', 'Углеводы'][index]}</dt><dd className="tabular-nums">{values ? `${values[key]} ${key === 'calories' ? 'ккал' : 'г'}` : 'Нет подтверждённых данных'}</dd></div>)}</>;
 }
-export function RecipePage({ snapshot, catalog, onRetry, onChangePortions, onRetrySave }: {
+export function RecipePage({ snapshot, catalog, onRetry, onChangePortions, onRetrySave, requestAlternatives, onReplaceMeal }: {
   snapshot: GenerationSnapshot;
   catalog: CatalogLoadResult | null;
   onRetry(source: 'plan' | 'catalog'): Promise<unknown>;
   onChangePortions(target: MealEditTarget, multiplier: MealPortionMultiplier, expectedPlan: ActivePlanEnvelope, returnRoute: string): void;
   onRetrySave(): void;
+  requestAlternatives: MealAlternativesActions['request'];
+  onReplaceMeal(target: MealEditTarget, recipeId: string, revision: number, returnRoute: string, locationKey: string): void;
 }) {
-  const { pathname, search } = useLocation();
+  const location = useLocation();
+  const { pathname, search, hash, key } = location;
+  const navigate = useNavigate();
   const [retrying, setRetrying] = useState(false);
+  const [choice, setChoice] = useState<{ location: typeof location; target: MealEditTarget; recipeName: string; trigger: HTMLElement } | null>(null);
+  // This binding belongs to the initiating visit and is lost on unmount or navigation.
+  const [replacementVisit, setReplacementVisit] = useState<typeof location | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
-  const view = useMemo(() => projectRecipeView({ pathname, search, active: snapshot.active, loadStatus: snapshot.loadStatus, catalog }), [pathname, search, snapshot.active, snapshot.loadStatus, catalog]);
+  const route = pathname + search;
+  const replacement = snapshot.origin?.recipeReplacement;
+  const sourceVisit = replacementVisit === location && replacement?.locationKey === key && snapshot.origin?.returnRoute === route + hash;
+  const replacementPath = sourceVisit && replacement && snapshot.intent === 'edit' && snapshot.requestId && (snapshot.status === 'saving' || snapshot.status === 'succeeded')
+    ? recipeReplacementPath({ pathname, search, active: snapshot.active, loadStatus: snapshot.loadStatus, catalog }, replacement.target, replacement.recipeId) : null;
+  const effectivePath = replacementPath ?? pathname;
+  const view = useMemo(() => projectRecipeView({ pathname: effectivePath, search, active: snapshot.active, loadStatus: snapshot.loadStatus, catalog }), [effectivePath, search, snapshot.active, snapshot.loadStatus, catalog]);
+  useEffect(() => {
+    if (replacementPath && snapshot.status === 'succeeded') navigate({ pathname: replacementPath, search, hash }, { replace: true });
+  }, [replacementPath, search, hash, snapshot.status, navigate]);
   useEffect(() => { if (!retrying) heading.current?.focus(); }, [pathname, search, view.status, retrying]);
   if (view.status === 'pending' || retrying) return <PlanLoading kind="recipe" />;
   if (view.status !== 'direct' && view.status !== 'context') return <section className="[overflow-wrap:anywhere]">
@@ -71,9 +88,9 @@ export function RecipePage({ snapshot, catalog, onRetry, onChangePortions, onRet
   const cookingGuidance = scaled ? scaledCookingGuidance(view) : null;
   const plan = snapshot.active?.plan;
   const context = view.instance;
-  const route = pathname + search;
   const busy = snapshot.status === 'saving' || snapshot.status === 'pending';
   const portionEdit = snapshot.intent === 'edit' && snapshot.origin?.focusAnchor === 'recipe-portions' && snapshot.origin.returnRoute === route;
+  const editingHere = portionEdit || sourceVisit;
   return <section className="plan-read-model [overflow-wrap:anywhere] max-w-[960px] mx-auto" data-instance-id={view.instance?.id}>
     <Link className="action-link" to={view.returnTo}>К меню</Link>
     <div className="recipe-hero grid md:grid-cols-2 gap-6 items-start">
@@ -100,10 +117,15 @@ export function RecipePage({ snapshot, catalog, onRetry, onChangePortions, onRet
             }}>{label}</Button>;
         })}
       </div>
-      {portionEdit && snapshot.status === 'saving' && <Status>Сохраняем изменения меню…</Status>}
-      {portionEdit && snapshot.status === 'succeeded' && <Status>Изменения сохранены</Status>}
-      {portionEdit && snapshot.status === 'error' && <p className="field-error" role="alert">{snapshot.error?.message}</p>}
-      {portionEdit && snapshot.status === 'memory-only' && <div role="alert">
+      <Button id="recipe-replace" aria-disabled={busy} onClick={event => {
+        if (busy) return;
+        const target = { variantId: plan.activeVariantId, date: context.date, slot: context.slot, instanceId: context.id, recipeId: context.recipeId };
+        setChoice({ location, target, recipeName: view.recipe.name, trigger: event.currentTarget });
+      }}>Заменить в меню</Button>
+      {editingHere && snapshot.status === 'saving' && <Status>Сохраняем изменения меню…</Status>}
+      {editingHere && snapshot.status === 'succeeded' && <Status>Изменения сохранены</Status>}
+      {editingHere && snapshot.status === 'error' && <p className="field-error" role="alert">{snapshot.error?.message}</p>}
+      {editingHere && snapshot.status === 'memory-only' && <div role="alert">
         <p>{snapshot.saveError === 'blocked' ? 'Меню изменилось. Обновите его перед новой правкой' : 'Не удалось сохранить изменения. Восстановлено прежнее меню'}</p>
         {snapshot.saveError === 'blocked'
           ? <Button onClick={() => { void onRetry('plan'); }}>Обновить меню</Button>
@@ -111,6 +133,11 @@ export function RecipePage({ snapshot, catalog, onRetry, onChangePortions, onRet
       </div>}
     </>}
     </header></div>
+    {choice?.location === location && <MealAlternatives {...choice} request={requestAlternatives} onClose={() => setChoice(null)} onChoose={(recipeId, revision) => {
+      setChoice(null);
+      setReplacementVisit(location);
+      onReplaceMeal(choice.target, recipeId, revision, route + hash, key);
+    }} />}
     <section className="card" aria-label="На одну порцию"><h2>На одну порцию</h2><dl className="grid grid-cols-2 sm:grid-cols-4 gap-4"><NutritionValues fact={view.perPortionNutrition} /><div className="col-span-2 sm:col-span-4"><dt>Цена</dt><dd>{view.perPortionCost === null ? 'Нет подтверждённых данных' : `≈ ${formatCurrency(roundHalfUp(view.perPortionCost, 2))}`}</dd></div></dl></section>
     <CalculationNote />
     <details className="card"><summary className="min-h-[44px] py-2 cursor-pointer">Состав — КБЖУ каждого ингредиента на одну порцию</summary><ul className="space-y-4">{view.ingredients.map(row => <li key={row.index}><h3>{row.food.name}</h3><dl className="grid grid-cols-2 sm:grid-cols-4 gap-4"><NutritionValues fact={row.perPortionNutrition} /></dl></li>)}</ul></details>

@@ -10,7 +10,12 @@ import { addMeal as addToPlan, changeMealServings, freeMealId, listMealAlternati
 import type { EmptyMealTarget, MealAlternativesResult, MealEditTarget, MealPortionMultiplier, MealSelectionTarget } from '../../domain/mealEdits';
 import type { PlanProjection } from '../../domain/planProjection';
 
-export interface GenerationOrigin { readonly returnRoute: string; readonly focusAnchor: string; readonly firstErroneousStep?: number }
+export interface GenerationOrigin {
+  readonly returnRoute: string;
+  readonly focusAnchor: string;
+  readonly firstErroneousStep?: number;
+  readonly recipeReplacement?: { readonly locationKey: string; readonly target: MealEditTarget; readonly recipeId: string };
+}
 export interface GenerationSnapshot {
   readonly status: 'idle' | 'pending' | 'error' | 'saving' | 'memory-only' | 'succeeded' | 'no-new-result';
   readonly intent?: 'append' | 'replace' | 'select' | 'edit';

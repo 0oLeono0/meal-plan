@@ -1,6 +1,6 @@
 import type { ActiveBundle } from '../adapters/activePlan';
 import { selectedPortionMultiplier } from './mealEdits';
-import type { MealPortionMultiplier } from './mealEdits';
+import type { MealEditTarget, MealPortionMultiplier } from './mealEdits';
 import type { Catalog, CatalogLoadResult, FoodProfile, Nutrition, Recipe, UnknownFact } from './catalog';
 import { evaluateIngredient, nutrientKeys } from './catalog';
 import { calendarDates } from './plan';
@@ -20,6 +20,7 @@ type Failure = { readonly status: 'pending' | 'error' | 'incomplete' | 'stale' |
 type Resolved = { readonly status: 'direct' | 'context'; readonly recipe: Recipe; readonly catalog: Catalog;
   readonly servings: Rational; readonly returnTo: string; readonly instance?: RecipeInstance; readonly active?: ActiveBundle };
 const validId = (value: string) => value.length > 0 && value.length <= 256 && value.trim().length > 0 && !/[\u0000-\u001f\u007f]/.test(value);
+const recipePath = /^\/recipe(?:\/([^/]*))?\/?$/;
 
 /** Validate the raw URL before URLSearchParams' forgiving percent decoder can hide malformed input.
  * No navigation, selection, persistence or fallback to a different instance occurs here. */
@@ -27,7 +28,7 @@ export function resolveRecipeContext(request: RecipeRequest): Resolved | Failure
   const invalid = (): Failure => ({ status: 'stale', returnTo: '/menu' });
   try {
     if (request.pathname.length > 3100 || request.search.length > 8192) return invalid();
-    const match = /^\/recipe(?:\/([^/]*))?\/?$/.exec(request.pathname);
+    const match = recipePath.exec(request.pathname);
     if (!match) return invalid();
     const id = decodeURIComponent(match[1] ?? '');
     decodeURIComponent(request.search.replace(/\+/g, ' '));
@@ -65,6 +66,18 @@ export function resolveRecipeContext(request: RecipeRequest): Resolved | Failure
     return recipe ? { status: 'direct', recipe, catalog: request.catalog.catalog, servings: recipe.baseServings, returnTo }
       : { status: 'notfound', returnTo };
   } catch { return invalid(); }
+}
+
+/** Temporarily resolve the original URL against the precise meal changed by a trusted edit. */
+export function recipeReplacementPath(request: RecipeRequest, target: MealEditTarget, recipeId: string): string | null {
+  try {
+    if (request.pathname.length > 3100 || decodeURIComponent(recipePath.exec(request.pathname)?.[1] ?? '') !== target.recipeId
+      || recipeId === target.recipeId || request.active?.plan.activeVariantId !== target.variantId) return null;
+    const pathname = `/recipe/${encodeURIComponent(recipeId)}`;
+    const resolved = resolveRecipeContext({ ...request, pathname });
+    const instance = resolved.status === 'context' ? resolved.instance : undefined;
+    return instance && instance.id === target.instanceId && instance.date === target.date && instance.slot === target.slot ? pathname : null;
+  } catch { return null; }
 }
 
 export type NutritionFact = { readonly status: 'known'; readonly value: Nutrition } | UnknownFact;

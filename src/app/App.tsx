@@ -300,6 +300,9 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
       onRetry={source => source === 'plan' ? controller.retryLoad() : reloadCatalog()}
       onChangePortions={(target, multiplier, expectedPlan, returnRoute) =>
         void controller.changePortions(target, multiplier, expectedPlan, { returnRoute, focusAnchor: 'recipe-portions' })}
+      requestAlternatives={controller.mealAlternatives}
+      onReplaceMeal={(target, recipeId, revision, returnRoute, locationKey) =>
+        void controller.editMeal(target, recipeId, revision, { returnRoute, focusAnchor: 'recipe-replace', recipeReplacement: { locationKey, target, recipeId } })}
       onRetrySave={() => void controller.retrySave()} />} />
     <Route path="*" element={<RouteStatePage title="Страница не найдена" description="Проверьте адрес или начните с главной страницы." to="/" action="На главную" />} />
   </Routes>{launchConfirmation && <ConfirmDialog title="Составить меню с новыми настройками?" description={`После успешного сохранения новое меню заменит прежний набор вариантов.${saved ? ' Черновик настроек сохранится' : ''}`} cancelLabel="Оставить варианты" confirmLabel="Составить меню" returnFocus={launchConfirmation.trigger} fallbackFocusId="wizard-title" onCancel={() => setLaunchConfirmation(null)} onConfirm={() => {

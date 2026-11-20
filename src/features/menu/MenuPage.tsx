@@ -16,6 +16,7 @@ import type { MenuView } from '../../domain/menuView';
 import type { PlanProjection } from '../../domain/planProjection';
 import { MealCard, mealSlotNames } from './MealCard';
 import { MealAlternatives, type MealAlternativesActions } from './MealAlternatives';
+import { mealEditingUnavailable } from '../generation/controller';
 
 const labels = { calories: 'Калории', protein: 'Белки', fat: 'Жиры', carbohydrates: 'Углеводы' } as const;
 const desktopQuery = '(min-width: 1280px)';
@@ -180,7 +181,7 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
   useEffect(() => {
     const target = editedFocus.current;
     if (!target || snapshot.status === 'saving') return;
-    if (snapshot.intent !== 'edit') { editedFocus.current = null; return; }
+    if (snapshot.intent !== 'edit' || snapshot.status === 'idle') { editedFocus.current = null; return; }
     if (!['succeeded', 'error', 'memory-only'].includes(snapshot.status)) return;
     if (snapshot.status !== 'memory-only') editedFocus.current = null;
     const day = document.getElementById(`day-panel-${target.date}`);
@@ -201,30 +202,31 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
   const saving = snapshot.status === 'saving';
   const editing = snapshot.intent === 'edit';
   const busy = saving || snapshot.status === 'pending';
+  const editingDisabled = mealEditingUnavailable(snapshot);
   const view = selectPlanPresentation(projection, settings.target);
   const today = localDateOnly(new Date());
   const selected = resolveMenuView(params.toString(), plan.inputs.dates, today);
   return <section data-plan-id={plan.activeVariantId} className="plan-read-model menu-page [overflow-wrap:anywhere]">
     <h1 id="menu-title" tabIndex={-1}>{view.days.length === 7 ? 'Меню на неделю' : `Меню на ${view.period}`}</h1>
     <p>{formatDateOnly(plan.inputs.dates[0])} — {formatDateOnly(plan.inputs.dates[plan.inputs.dates.length - 1])} · На {view.people}</p>
-    {!(saving && editing) && <p className="hint">Меню сохранено на этом устройстве</p>}
+    {!(saving && editing) && snapshot.loadStatus === 'loaded' && <p className="hint">Меню сохранено на этом устройстве</p>}
     <section id="variants" tabIndex={-1} className="card" aria-label="Варианты меню" aria-busy={busy}>
       <h2>Вариант {activeIndex + 1} из {plan.variants.length}</h2>
       {snapshot.initialSearchCount === null && plan.variants.length === 1 && <p>В сохранённом наборе 1 вариант</p>}
       {snapshot.initialSearchCount !== null && snapshot.initialSearchCount < 3 && <p>Найдено {snapshot.initialSearchCount} из 3 вариантов. Поиск ограничен; другие допустимые меню могут существовать.</p>}
       <p className="hint">Покупки для той же семьи на весь период. Запасы учитываются в каждом варианте отдельно.</p>
       <div className="flex gap-2">
-        <Button aria-label="Предыдущий вариант" disabled={busy || activeIndex === 0} onClick={() => onSelectVariant?.(plan.variants[activeIndex - 1].id)}><span aria-hidden="true">←</span></Button>
-        <Button aria-label="Следующий вариант" disabled={busy || activeIndex === plan.variants.length - 1} onClick={() => onSelectVariant?.(plan.variants[activeIndex + 1].id)}><span aria-hidden="true">→</span></Button>
+        <Button aria-label="Предыдущий вариант" disabled={editingDisabled || activeIndex === 0} onClick={() => onSelectVariant?.(plan.variants[activeIndex - 1].id)}><span aria-hidden="true">←</span></Button>
+        <Button aria-label="Следующий вариант" disabled={editingDisabled || activeIndex === plan.variants.length - 1} onClick={() => onSelectVariant?.(plan.variants[activeIndex + 1].id)}><span aria-hidden="true">→</span></Button>
       </div>
       <ul className="grid gap-2 p-0 list-none">{plan.variants.map((variant, index) => {
         const costs = selectPlanPresentation(bundle.projections.find(row => row.variantId === variant.id)!, settings.target).costs;
         const selected = variant.id === plan.activeVariantId;
-        return <li key={variant.id}><Button className="w-full text-left" aria-pressed={selected} disabled={busy} onClick={() => onSelectVariant?.(variant.id)}>Вариант {index + 1} · Купить: ≈ {costs.purchase}{selected ? ' · Выбран' : ''}</Button>{saving && snapshot.intent === 'select' && snapshot.candidate?.plan.activeVariantId === variant.id && <p role="status">Сохраняем выбор… Предыдущее меню остаётся активным</p>}</li>;
+        return <li key={variant.id}><Button className="w-full text-left" aria-pressed={selected} disabled={editingDisabled} onClick={() => onSelectVariant?.(variant.id)}>Вариант {index + 1} · Купить: ≈ {costs.purchase}{selected ? ' · Выбран' : ''}</Button>{saving && snapshot.intent === 'select' && snapshot.candidate?.plan.activeVariantId === variant.id && <p role="status">Сохраняем выбор… Предыдущее меню остаётся активным</p>}</li>;
       })}</ul>
-      <Button id="append-variant" disabled={busy || snapshot.status === 'memory-only' || plan.variants.length >= 12} onClick={onAppend}>Пересобрать</Button>
-      {plan.variants.length >= 12 && <div><p>В наборе 12 вариантов — это предел хранения на этом устройстве. Чтобы продолжить подбор, создайте новый набор</p><Button id="create-new-set" disabled={busy} onClick={event => setReplacementTrigger(event.currentTarget)}>Создать новый набор</Button></div>}
-      <details><summary className="min-h-[44px] py-2">Действия с меню</summary><div className="grid gap-2"><Button id="recreate-set" disabled={busy} onClick={event => setReplacementTrigger(event.currentTarget)}>Составить заново</Button><Link className="action-link" to="/plan/new">Изменить настройки</Link></div></details>
+      <Button id="append-variant" disabled={editingDisabled || snapshot.status === 'memory-only' || plan.variants.length >= 12} onClick={onAppend}>Пересобрать</Button>
+      {plan.variants.length >= 12 && <div><p>В наборе 12 вариантов — это предел хранения на этом устройстве. Чтобы продолжить подбор, создайте новый набор</p><Button id="create-new-set" disabled={editingDisabled} onClick={event => setReplacementTrigger(event.currentTarget)}>Создать новый набор</Button></div>}
+      <details><summary className="min-h-[44px] py-2">Действия с меню</summary><div className="grid gap-2"><Button id="recreate-set" disabled={editingDisabled} onClick={event => setReplacementTrigger(event.currentTarget)}>Составить заново</Button><Link className="action-link" to="/plan/new">Изменить настройки</Link></div></details>
       {snapshot.status === 'pending' && <div><progress aria-label={snapshot.intent === 'replace' ? 'Подбор нового набора' : 'Подбор нового варианта'} /><p role="status">{snapshot.intent === 'replace' ? 'Подбираем новый набор…' : 'Ищем новый вариант…'} Используем применённые настройки и даты этого меню. Прежнее меню остаётся доступным</p><Button onClick={onCancel}>Отменить подбор</Button></div>}
       {saving && !editing && <div>{snapshot.intent !== 'select' && <p role="status">{snapshot.intent === 'append' ? 'Сохраняем новый вариант…' : 'Сохраняем новый набор…'} Предыдущее меню остаётся активным</p>}<Button onClick={onCancel}>Отмена</Button></div>}
       {snapshot.status === 'succeeded' && !editing && <p role="status">{snapshot.intent === 'append' ? `Новый вариант добавлен и выбран. В наборе ${formatCount(plan.variants.length, 'variant')}` : `Выбран вариант ${activeIndex + 1} из ${plan.variants.length}. Меню и список покупок обновлены`}</p>}
@@ -239,7 +241,7 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
       <p className="hint">КБЖУ рассчитаны по составу продуктов и не являются медицинской рекомендацией</p>
       <p className="hint">Расчёт не подтверждает полноценность рациона.</p>
     </section>
-    <MenuDays projection={projection} catalogVersion={plan.inputs.catalogVersion} selected={selected} onChange={next => setParams(menuSearch(next))} days={view.days} today={today} editingDisabled={busy} onReplace={mealAlternatives ? (target, recipeName, trigger) => setMealChoice({ target, recipeName, trigger }) : undefined} onRemove={onRemove ? (target, trigger) => setRemoval({ target, trigger, plan }) : undefined} onAdd={mealAlternatives ? (target, trigger) => setMealChoice({ target, trigger }) : undefined} />
+    <MenuDays projection={projection} catalogVersion={plan.inputs.catalogVersion} selected={selected} onChange={next => setParams(menuSearch(next))} days={view.days} today={today} editingDisabled={editingDisabled} onReplace={mealAlternatives ? (target, recipeName, trigger) => setMealChoice({ target, recipeName, trigger }) : undefined} onRemove={onRemove ? (target, trigger) => setRemoval({ target, trigger, plan }) : undefined} onAdd={mealAlternatives ? (target, trigger) => setMealChoice({ target, trigger }) : undefined} />
     {mealChoice && mealAlternatives && <MealAlternatives {...mealChoice} request={mealAlternatives.request} onClose={() => setMealChoice(null)} onChoose={(recipeId, revision) => {
       editedFocus.current = mealChoice.target;
       setMealChoice(null); mealAlternatives.select(mealChoice.target, recipeId, revision);

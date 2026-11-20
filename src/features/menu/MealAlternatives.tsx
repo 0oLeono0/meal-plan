@@ -23,8 +23,8 @@ function signedCalories(amount: bigint) {
   return `${amount === 0n ? '' : amount < 0n ? '−' : '+'}${amount < 0n ? -amount : amount} ккал`;
 }
 
-export function MealAlternatives({ target, recipeName, trigger, request, onChoose, onClose }: {
-  target: MealSelectionTarget; recipeName?: string; trigger: HTMLElement | null; request: MealAlternativesActions['request'];
+export function MealAlternatives({ target, recipeName, trigger, fallbackFocusId = 'menu-title', request, onChoose, onClose }: {
+  target: MealSelectionTarget; recipeName?: string; trigger: HTMLElement | null; fallbackFocusId?: string; request: MealAlternativesActions['request'];
   onChoose(recipeId: string, revision: number): void; onClose(): void;
 }) {
   const id = useId();
@@ -34,7 +34,7 @@ export function MealAlternatives({ target, recipeName, trigger, request, onChoos
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<PanelState>({ status: 'pending' });
   const isAddition = 'kind' in target;
-  useModalFocus(overlay, close, onClose, trigger, 'menu-title');
+  useModalFocus(overlay, close, onClose, trigger, fallbackFocusId);
   useEffect(() => {
     const abort = new AbortController();
     void request(target, abort.signal).then(result => {

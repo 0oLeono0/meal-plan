@@ -196,6 +196,27 @@ test('rollback reports another tab’s raw change and requires refresh before an
   await preserved(page, external);
 });
 
+test('recipe-replace cannot redirect a later visit to the same address', async ({ page }) => {
+  test.setTimeout(65_000);
+  await generateTwoDays(page);
+  const before = await readMenu(page);
+  const target = before.variant.instances.find(row => row.slot === 'lunch')!;
+  const params = new URLSearchParams({ variant: before.variant.id, instance: target.id, view: 'week', day: target.date });
+  await mountGeneration(page, { route: `/recipe/${target.recipeId}?${params}`, deferSave: true });
+  const route = page.url();
+  const chosen = await pickRecipeAlternative(page);
+  await expect.poll(() => count(page, 'save-calls')).toBe(1);
+  await page.getByRole('link', { name: 'Покупки', exact: true }).click();
+  await expect(page).toHaveURL(/\/shopping$/);
+  await page.goBack();
+  await expect(page).toHaveURL(route);
+  await release(page, 'save-1');
+  await expect.poll(() => count(page, 'final-writes')).toBe(1);
+  await expect(page.getByRole('link', { name: 'К актуальному меню' })).toBeVisible();
+  await expect(page).toHaveURL(route);
+  expect((await readMenu(page)).variant.instances.find(row => row.id === target.id)?.recipeSnapshot.name).toBe(chosen);
+});
+
 async function withRepeatedRiceBreakfast(page: Page) {
   await generateTwoDays(page);
   // Keep the real saved inputs and reviewed catalogue. Pin both breakfasts to
@@ -344,10 +365,12 @@ test('portions-guards preserves an edited envelope and refuses an unaffordable s
   await page.goto(`/recipe/${target.recipe}`);
   await expect(page.getByText('Исходный рецепт · 2 порции', { exact: true })).toBeVisible();
   await expect(portions).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Заменить в меню', exact: true })).toHaveCount(0);
   query.set('instance', target.instance + '/absent');
   await page.goto(`/recipe/${target.recipe}?${query}`);
   await expect(page.getByRole('link', { name: 'К актуальному меню' })).toBeVisible();
   await expect(portions).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Заменить в меню', exact: true })).toHaveCount(0);
   expect(await writes()).toBe(1);
 });
 

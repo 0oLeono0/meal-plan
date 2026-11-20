@@ -274,8 +274,13 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
   const basis = operation.lastApplied ? 'Используем последние применённые настройки' : sameSnapshot(draft, createDraft())
     ? '2 человека · 7 дней · 3 000 ₽ · до 30 минут · среднее разнообразие · без ограничений' : 'Используем настройки из черновика';
   const visible = visiblePlanSnapshot(operation);
-  const editFeedback = operation.intent === 'edit' && ['/menu', '/shopping'].includes(pathname);
-  return <>{editFeedback && <div className="plan-read-model" aria-label="Изменение меню">
+  const planOverview = pathname === '/menu' || pathname === '/shopping';
+  const editFeedback = operation.intent === 'edit' && planOverview;
+  const retainedAfterRead = planOverview && operation.active && ['missing', 'corrupt', 'error'].includes(operation.loadStatus);
+  return <>{retainedAfterRead && <div className="plan-read-model" role="alert">
+    <p>{operation.loadStatus === 'missing' ? 'Сохранённое меню отсутствует. Показан последний загруженный вариант' : 'Не удалось прочитать сохранённое меню. Показан последний загруженный вариант'}</p>
+    <Button onClick={() => void controller.retryLoad()}>Обновить меню</Button>
+  </div>}{editFeedback && <div className="plan-read-model" aria-label="Изменение меню">
     {operation.status === 'saving' && <Status>Сохраняем изменения меню…</Status>}
     {operation.status === 'succeeded' && <Status>Изменения сохранены</Status>}
     {operation.status === 'memory-only' && <div role="alert" className="notice">

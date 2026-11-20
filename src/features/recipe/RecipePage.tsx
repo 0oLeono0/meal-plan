@@ -6,6 +6,7 @@ import type { CatalogLoadResult } from '../../domain/catalog';
 import { mealPortionMultipliers } from '../../domain/mealEdits';
 import type { MealEditTarget, MealPortionMultiplier } from '../../domain/mealEdits';
 import type { ActivePlanEnvelope } from '../../domain/plan';
+import { mealEditingUnavailable } from '../generation/controller';
 import type { GenerationSnapshot } from '../generation/controller';
 import { projectRecipeView, recipeReplacementPath } from '../../domain/recipeView';
 import type { NutritionFact, RecipeView } from '../../domain/recipeView';
@@ -88,15 +89,18 @@ export function RecipePage({ snapshot, catalog, onRetry, onChangePortions, onRet
   const cookingGuidance = scaled ? scaledCookingGuidance(view) : null;
   const plan = snapshot.active?.plan;
   const context = view.instance;
-  const busy = snapshot.status === 'saving' || snapshot.status === 'pending';
+  const busy = mealEditingUnavailable(snapshot);
   const portionEdit = snapshot.intent === 'edit' && snapshot.origin?.focusAnchor === 'recipe-portions' && snapshot.origin.returnRoute === route;
-  const editingHere = portionEdit || sourceVisit;
+  const replacementSavedHere = replacement && replacement.target.variantId === plan?.activeVariantId
+    && replacement.target.instanceId === context?.id && replacement.recipeId === context.recipeId;
+  const editingHere = snapshot.intent === 'edit' && (portionEdit || sourceVisit || (snapshot.status === 'succeeded' && replacementSavedHere)
+    || snapshot.status === 'saving' || snapshot.status === 'memory-only');
   return <section className="plan-read-model [overflow-wrap:anywhere] max-w-[960px] mx-auto" data-instance-id={view.instance?.id}>
     <Link className="action-link" to={view.returnTo}>К меню</Link>
     <div className="recipe-hero grid md:grid-cols-2 gap-6 items-start">
     <RecipeImage catalogVersion={view.catalogVersion} recipeId={view.recipe.id} name={view.recipe.name} priority />
     <header className="min-w-0">
-    <h1 ref={heading} tabIndex={-1}>{view.recipe.name}</h1>
+    <h1 id="recipe-title" ref={heading} tabIndex={-1}>{view.recipe.name}</h1>
     {view.instance && <p>{formatDateOnly(view.instance.date)} · {slotNames[view.instance.slot]}</p>}
     <p>{view.status === 'context' ? `Порций для семьи: ${ruNumber(view.servings)}` : `Исходный рецепт · ${view.servingsLabel}`}</p>
     <p>{view.ingredientBasis}. КБЖУ и цена — на одну порцию</p>
@@ -122,6 +126,10 @@ export function RecipePage({ snapshot, catalog, onRetry, onChangePortions, onRet
         const target = { variantId: plan.activeVariantId, date: context.date, slot: context.slot, instanceId: context.id, recipeId: context.recipeId };
         setChoice({ location, target, recipeName: view.recipe.name, trigger: event.currentTarget });
       }}>Заменить в меню</Button>
+      {snapshot.loadStatus === 'missing' && <div role="alert">
+        <p>Сохранённое меню отсутствует. Для правок откройте актуальное меню или составьте новое</p>
+        <Button onClick={() => { void onRetry('plan'); }}>Обновить меню</Button>
+      </div>}
       {editingHere && snapshot.status === 'saving' && <Status>Сохраняем изменения меню…</Status>}
       {editingHere && snapshot.status === 'succeeded' && <Status>Изменения сохранены</Status>}
       {editingHere && snapshot.status === 'error' && <p className="field-error" role="alert">{snapshot.error?.message}</p>}
@@ -133,7 +141,7 @@ export function RecipePage({ snapshot, catalog, onRetry, onChangePortions, onRet
       </div>}
     </>}
     </header></div>
-    {choice?.location === location && <MealAlternatives {...choice} request={requestAlternatives} onClose={() => setChoice(null)} onChoose={(recipeId, revision) => {
+    {choice?.location === location && <MealAlternatives {...choice} fallbackFocusId="recipe-title" request={requestAlternatives} onClose={() => setChoice(null)} onChoose={(recipeId, revision) => {
       setChoice(null);
       setReplacementVisit(location);
       onReplaceMeal(choice.target, recipeId, revision, route + hash, key);

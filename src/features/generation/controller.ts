@@ -39,6 +39,10 @@ export function visiblePlanSnapshot(snapshot: GenerationSnapshot): GenerationSna
   return snapshot.intent === 'edit' && snapshot.status === 'saving' && snapshot.candidate
     ? { ...snapshot, active: snapshot.candidate } : snapshot;
 }
+export function mealEditingUnavailable(snapshot: GenerationSnapshot): boolean {
+  return snapshot.loadStatus !== 'loaded' || snapshot.status === 'saving' || snapshot.status === 'pending'
+    || (snapshot.intent === 'edit' && snapshot.saveError === 'blocked');
+}
 export interface GenerationScheduler { setTimeout(callback: () => void, milliseconds: number): unknown; clearTimeout(handle: unknown): void }
 export interface GenerationControllerOptions {
   readonly generation: GenerationPort; readonly activePlan: ActivePlanPort;
@@ -109,8 +113,15 @@ export function createGenerationController({ generation, activePlan, trustedCata
   };
   async function load() {
     if (disposed) return;
+    const refreshingEdit = snapshot.intent === 'edit';
+    if (refreshingEdit) {
+      // A new storage inspection must not give an old edit a fresh write lease,
+      // even if it returns missing or cannot read the new bytes.
+      invalidate(); writeAllowed = false; revision++;
+    }
     const token = ++loadSequence, atRevision = revision;
-    publish({ loadStatus: 'pending', ...(snapshot.active ? {} : { presence: { status: 'pending' } }) });
+    publish({ loadStatus: 'pending', ...(snapshot.active ? {} : { presence: { status: 'pending' } }),
+      ...(refreshingEdit ? { status: 'idle' as const, origin: null, candidate: null, requestId: null, error: null, saveError: null } : {}) });
     try {
       const result = await activePlan.load();
       if (disposed || token !== loadSequence || atRevision !== revision) return;
@@ -217,12 +228,13 @@ export function createGenerationController({ generation, activePlan, trustedCata
   async function start(rawInputs: PlanInputs, origin: GenerationOrigin) { await run(rawInputs, origin, 'replace', snapshot.active ?? undefined, snapshot.active ? revision : undefined); }
   async function appendVariant(origin: GenerationOrigin) {
     const base = snapshot.active;
-    if (disposed || !base || base.plan.variants.length >= 12 || snapshot.status === 'pending' || snapshot.status === 'saving' || snapshot.status === 'memory-only') return;
+    if (disposed || !base || base.plan.variants.length >= 12 || snapshot.status === 'pending' || snapshot.status === 'saving' || snapshot.status === 'memory-only'
+      || (snapshot.intent === 'edit' && mealEditingUnavailable(snapshot))) return;
     await run(base.plan.inputs, origin, 'append', base, revision);
   }
   async function recreateSet(origin: GenerationOrigin) {
     const base = snapshot.active;
-    if (disposed || !base) return;
+    if (disposed || !base || (snapshot.intent === 'edit' && mealEditingUnavailable(snapshot))) return;
     await run(base.plan.inputs, origin, 'replace', base, revision);
   }
   function cancel() {
@@ -232,6 +244,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
   async function retrySave() {
     const candidate = snapshot.candidate, previous = operation;
     if (disposed || snapshot.status !== 'memory-only' || !candidate || !previous) return;
+    if (previous.intent === 'edit' && (snapshot.saveError !== 'error' || snapshot.loadStatus !== 'loaded')) return;
     invalidate();
     if (previous.baseRevision !== undefined && previous.baseRevision !== revision) return;
     const op: Operation = { id: String(++sequence), abort: new AbortController(), inputs: previous.inputs, origin: previous.origin, deadline: clock.now() + 30_000, baseRevision: previous.baseRevision, initialSearchCount: previous.initialSearchCount, intent: previous.intent, base: previous.base };
@@ -241,7 +254,8 @@ export function createGenerationController({ generation, activePlan, trustedCata
   }
   async function selectVariant(variantId: string, origin: GenerationOrigin) {
     const active = snapshot.active;
-    if (disposed || !active || (snapshot.status === 'saving' && snapshot.intent === 'edit') || variantId === active.plan.activeVariantId || !active.plan.variants.some(variant => variant.id === variantId)) return;
+    if (disposed || !active || (snapshot.intent === 'edit' && mealEditingUnavailable(snapshot))
+      || variantId === active.plan.activeVariantId || !active.plan.variants.some(variant => variant.id === variantId)) return;
     invalidate();
     const candidate = validateActiveBundle({ ...active.plan, activeVariantId: variantId }, trustedCatalogs);
     if (candidate.status !== 'valid') {
@@ -254,8 +268,7 @@ export function createGenerationController({ generation, activePlan, trustedCata
   }
   async function mealAlternatives(target: MealSelectionTarget, signal: AbortSignal): Promise<MealAlternativesRequest> {
     const base = snapshot.active, atRevision = revision, atLoad = loadSequence;
-    const current = () => !disposed && snapshot.loadStatus === 'loaded' && snapshot.active === base && revision === atRevision
-      && loadSequence === atLoad && snapshot.status !== 'pending' && snapshot.status !== 'saving';
+    const current = () => !disposed && !mealEditingUnavailable(snapshot) && snapshot.active === base && revision === atRevision && loadSequence === atLoad;
     const projection = base?.projections.find(row => row.variantId === target.variantId);
     if (!base || !projection || !current()) return { status: 'stale' };
     // Let the panel render its loading state before the first projection.
@@ -271,9 +284,9 @@ export function createGenerationController({ generation, activePlan, trustedCata
     edit: (plan: ActivePlanEnvelope, projection: PlanProjection, target: T) => ReturnType<typeof replaceMeal>,
     budgetMessage = 'Изменение превышает бюджет покупок') {
     const base = snapshot.active;
-    if (!base || disposed || snapshot.status === 'pending' || snapshot.status === 'saving') return;
+    if (!base || disposed || mealEditingUnavailable(snapshot)) return;
     const projection = base.projections.find(row => row.variantId === target.variantId);
-    const next = isExpected(base) && snapshot.loadStatus === 'loaded' && projection
+    const next = isExpected(base) && projection
       ? edit(base.plan, projection, target) : { status: 'stale' as const };
     if (next.status === 'unchanged') return;
     if (next.status !== 'ready') {

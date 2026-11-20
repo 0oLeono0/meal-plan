@@ -273,6 +273,33 @@ it('phase04-edit a late completion after its deadline cannot write or leave prev
   } finally { controller.dispose(); test.finish.resolve(); }
 });
 
+it('phase04-edit confirms a real write that crossed the deadline inside setItem', async () => {
+  const { plan } = fixture('edit-committed-at-deadline');
+  const initial = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
+  let raw = initial, time = 0;
+  const storage = {
+    getItem: () => raw,
+    setItem: vi.fn((_key: string, value: string) => {
+      raw = value;
+      time = 30_001;
+    }),
+  };
+  const adapter = createActivePlanAdapter(() => storage, trustedCatalogs);
+  const controller = createGenerationController({ generation: { generate: vi.fn() }, activePlan: adapter, clock: { now: () => time } });
+  try {
+    await controller.load();
+    const instance = plan.variants[0].instances[0];
+    const target = { variantId: plan.activeVariantId, instanceId: instance.id, recipeId: instance.recipeId, date: instance.date, slot: instance.slot };
+    await controller.changePortions(target, '2', controller.getSnapshot().active!.plan, origin);
+    expect(storage.setItem).toHaveBeenCalledTimes(1);
+    expect(raw).not.toBe(initial);
+    const snapshot = visiblePlanSnapshot(controller.getSnapshot());
+    expect(snapshot).toMatchObject({ status: 'succeeded', error: null, candidate: null });
+    expect(snapshot.active?.plan.variants[0].instances[0].selectedServings).toEqual(decimal('2'));
+    await expect(createActivePlanAdapter(() => storage, trustedCatalogs).load()).resolves.toEqual({ status: 'loaded', bundle: snapshot.active });
+  } finally { controller.dispose(); }
+});
+
 it.each([
   ['historical52', legacyRaw], ['issued56', release1Raw], ['issued68', release2Raw], ['issued75', release3Raw], ['current82', null],
 ])('all-release continuation %s keeps exact inputs through load select append recreate and reload', async (_, recordedRaw) => {

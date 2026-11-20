@@ -160,7 +160,9 @@ export function createGenerationController({ generation, activePlan, trustedCata
     writes = queued.catch(() => undefined);
     let result: ActivePlanSaveResult | typeof cancelled;
     try { result = await wait(queued, op); } catch { result = { status: 'error' }; }
-    if (!owned(op) || result === cancelled || rejectExpired(op)) return;
+    if (!owned(op) || result === cancelled) return;
+    // A guarded write can cross the deadline inside setItem and still be durable.
+    if (result.status !== 'saved' && rejectExpired(op)) return;
     stopTimers(op);
     if (result.status === 'saved') {
       revision++; writeAllowed = true;

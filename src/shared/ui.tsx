@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode, type RefObject } from 'react';
 
 export function Button({ variant = 'secondary', className = '', type = 'button', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'danger' }) {
   return <button type={type} className={`${variant} ${className}`.trim()} {...props} />;
@@ -17,21 +17,13 @@ export function Status({ children }: { children: ReactNode }) {
   return <p role="status">{children}</p>;
 }
 
-// Custom modal avoids requiring dialog.showModal/inert, absent in Safari 15.0.
-export function ConfirmDialog({ title, description, cancelLabel = 'Отмена', confirmLabel, returnFocus, fallbackFocusId, onCancel, onConfirm }: {
-  title: string; description: string; cancelLabel?: string; confirmLabel: string;
-  returnFocus?: HTMLElement | null;
-  fallbackFocusId?: string;
-  onCancel(): void; onConfirm(): void;
-}) {
-  const id = useId();
-  const overlay = useRef<HTMLDivElement>(null);
-  const cancel = useRef<HTMLButtonElement>(null);
+// Uses focus trapping and aria-hidden for Safari 15.0, which lacks showModal/inert.
+export function useModalFocus(overlay: RefObject<HTMLElement | null>, initialFocus: RefObject<HTMLElement | null>, onDismiss: () => void, returnFocus?: HTMLElement | null, fallbackFocusId?: string) {
   // Pointer activation need not focus its trigger in WebKit.
   const trigger = useRef(returnFocus);
   const fallback = useRef(fallbackFocusId);
-  const handlers = useRef({ onCancel, onConfirm });
-  useEffect(() => { handlers.current = { onCancel, onConfirm }; }, [onCancel, onConfirm]);
+  const dismiss = useRef(onDismiss);
+  useEffect(() => { dismiss.current = onDismiss; }, [onDismiss]);
   useEffect(() => {
     const initiator = trigger.current ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
     const node = overlay.current;
@@ -41,12 +33,12 @@ export function ConfirmDialog({ title, description, cancelLabel = 'Отмена'
     siblings.forEach(element => element.setAttribute('aria-hidden', 'true'));
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    cancel.current?.focus();
+    initialFocus.current?.focus();
     function focusables() {
       return Array.from(node!.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], input:not(:disabled), [tabindex="0"]'));
     }
     function keydown(event: KeyboardEvent) {
-      if (event.key === 'Escape') { event.preventDefault(); handlers.current.onCancel(); }
+      if (event.key === 'Escape') { event.preventDefault(); dismiss.current(); }
       if (event.key !== 'Tab') return;
       const controls = focusables();
       const first = controls[0];
@@ -55,7 +47,7 @@ export function ConfirmDialog({ title, description, cancelLabel = 'Отмена'
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
     }
     function focusin(event: FocusEvent) {
-      if (event.target instanceof Node && !node!.contains(event.target)) cancel.current?.focus();
+      if (event.target instanceof Node && !node!.contains(event.target)) initialFocus.current?.focus();
     }
     document.addEventListener('keydown', keydown, true);
     document.addEventListener('focusin', focusin);
@@ -64,10 +56,24 @@ export function ConfirmDialog({ title, description, cancelLabel = 'Отмена'
       document.removeEventListener('focusin', focusin);
       previous.forEach(([element, value]) => value === null ? element.removeAttribute('aria-hidden') : element.setAttribute('aria-hidden', value));
       document.body.style.overflow = overflow;
-      if (initiator?.isConnected) initiator.focus();
-      else if (fallback.current) document.getElementById(fallback.current)?.focus();
+      if (initiator?.isConnected && initiator.getClientRects().length) initiator.focus();
+      if (fallback.current && (!initiator || document.activeElement !== initiator)) {
+        document.getElementById(fallback.current)?.focus();
+      }
     };
-  }, []);
+  }, [overlay, initialFocus]);
+}
+
+export function ConfirmDialog({ title, description, cancelLabel = 'Отмена', confirmLabel, returnFocus, fallbackFocusId, onCancel, onConfirm }: {
+  title: string; description: string; cancelLabel?: string; confirmLabel: string;
+  returnFocus?: HTMLElement | null;
+  fallbackFocusId?: string;
+  onCancel(): void; onConfirm(): void;
+}) {
+  const id = useId();
+  const overlay = useRef<HTMLDivElement>(null);
+  const cancel = useRef<HTMLButtonElement>(null);
+  useModalFocus(overlay, cancel, onCancel, returnFocus, fallbackFocusId);
   return <div className="dialog-overlay" ref={overlay}>
     <section className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} aria-describedby={`${id}-description`}>
       <h2 id={`${id}-title`}>{title}</h2>

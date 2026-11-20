@@ -1,6 +1,6 @@
 import { parseManualTarget } from './nutritionTarget';
 import { parseBudget } from './budget';
-import { productNames } from '../adapters/products';
+import { pantryProductNames, productNames } from '../adapters/products';
 
 export type Step = 1 | 2 | 3 | 4;
 export type Goal = 'maintain' | 'lose' | 'gain';
@@ -109,7 +109,7 @@ export function parseHomeQuantity(raw: string): { status: 'unknown' } | { status
   return /^\d+(?:[.,]\d+)?$/.test(text) && Number.isFinite(value) && value > 0 ? { status: 'known', value } : { status: 'invalid' };
 }
 export function validateHomeRow(row: HomeDraftRow): StepErrors {
-  const product = productNames.find(product => product.id === row.productId);
+  const product = pantryProductNames.find(product => product.id === row.productId);
   if (!product) return { [`quantity-${row.productId}`]: 'Продукт отсутствует в справочнике. Удалите строку и выберите продукт заново' };
   const quantity = parseHomeQuantity(row.quantity);
   if (quantity.status === 'invalid') return { [`quantity-${row.productId}`]: 'Введите количество больше 0 или оставьте поле пустым' };

@@ -1,0 +1,198 @@
+import { test, expect } from '@playwright/test';
+// @ts-expect-error Playwright runs in Node; no @types/node package is installed in this project.
+import { execFileSync as nodeExec } from 'node:child_process';
+const execFileSync: (command: string, args: string[]) => unknown = nodeExec;
+
+test('sample 404 preserves geometry and uses one accessible fallback', async ({ page }) => {
+  let requests = 0;
+  await page.route('**/recipes/rice-sweet-porridge.png', route => { requests++; return route.fulfill({ status: 404, body: '' }); });
+  await page.goto('/recipe/rice-sweet-porridge');
+  const fallback = page.getByRole('img', { name: 'Фото недоступно' });
+  await expect(fallback).toBeVisible();
+  const box = await fallback.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.width / box!.height).toBeCloseTo(4 / 3, 2);
+  await expect(page.getByRole('heading', { name: 'Рисовая каша на воде', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'К меню', exact: true })).toBeVisible();
+  await expect(page.locator('img[src="/recipes/rice-sweet-porridge.png"]')).toHaveCount(0);
+  expect(requests).toBe(1);
+});
+
+test('sample decodes a local generated recipe illustration', async ({ page }) => {
+  const external: string[] = [];
+  page.on('request', request => { if (request.resourceType() === 'image' && !request.url().startsWith('http://127.0.0.1:4173/')) external.push(request.url()); });
+  await page.goto('/recipe/rice-sweet-porridge');
+  const image = page.locator('img[src="/recipes/rice-sweet-porridge.png"]');
+  await expect(image).toBeVisible();
+  await expect.poll(() => image.evaluate((node: HTMLImageElement) => node.naturalWidth > 0 && node.naturalWidth * 3 === node.naturalHeight * 4)).toBe(true);
+  await expect(page.getByText('Фотоиллюстрация создана с помощью ИИ; внешний вид блюда может отличаться')).toBeVisible();
+  expect(external).toEqual([]);
+});
+
+// Static expected production groups; absent images fail rather than skip.
+const groups: Record<string, readonly string[]> = {
+  "batch-01-01": [
+    "millet-sweet-porridge",
+    "semolina-smooth",
+    "buckwheat-carrot-breakfast",
+    "rice-carrot-porridge"
+  ],
+  "batch-01-02": [
+    "millet-carrot-mash",
+    "semolina-carrot",
+    "buckwheat-tomato-breakfast",
+    "flour-dry-flatbread"
+  ],
+  "batch-01-03": [
+    "carrot-water-pancakes",
+    "potato-rice-breakfast",
+    "rice-millet-mix",
+    "potato-carrot-soup"
+  ],
+  "batch-02-01": [
+    "cabbage-rice-soup",
+    "beet-potato-soup",
+    "tomato-rice-soup",
+    "buckwheat-potato-soup"
+  ],
+  "batch-02-02": [
+    "millet-cabbage-soup",
+    "potato-dumpling-soup",
+    "carrot-semolina-soup",
+    "beet-rice-pot"
+  ],
+  "batch-02-03": [
+    "buckwheat-tomato-stew",
+    "millet-potato-stew",
+    "cabbage-potato-braise",
+    "carrot-potato-puree"
+  ],
+  "batch-03-01": [
+    "cabbage-buckwheat-pot",
+    "rice-cabbage-pan",
+    "millet-beet-pot",
+    "potato-tomato-braise"
+  ],
+  "batch-03-02": [
+    "beet-cabbage-braise",
+    "potato-flour-cakes",
+    "cabbage-flour-pancakes",
+    "carrot-semolina-cutlets"
+  ],
+  "batch-03-03": [
+    "beet-flour-pancakes",
+    "buckwheat-potato-mash",
+    "rice-carrot-dinner",
+    "millet-tomato-dinner"
+  ],
+  "batch-04-01": [
+    "tomato-carrot-dumplings",
+    "cabbage-carrot-salad",
+    "tomato-cabbage-salad",
+    "carrot-tomato-salad"
+  ],
+  "batch-04-02": [
+    "beet-carrot-raw-salad",
+    "carrot-sweet-ribbons",
+    "cabbage-beet-salad",
+    "tomato-carrot-cabbage-salad"
+  ],
+  "batch-04-03": [
+    "carrot-semolina-pudding",
+    "rice-sweet-snack",
+    "semolina-small-flatbread",
+    "warm-tomato-carrot"
+  ],
+  "batch-05-01": [
+    "beet-sweet-warm",
+    "potato-cabbage-mash",
+    "beet-tomato-rice"
+  ],
+  "full-media": [
+    "rice-sweet-porridge",
+    "millet-sweet-porridge",
+    "semolina-smooth",
+    "buckwheat-carrot-breakfast",
+    "rice-carrot-porridge",
+    "millet-carrot-mash",
+    "semolina-carrot",
+    "buckwheat-tomato-breakfast",
+    "flour-dry-flatbread",
+    "carrot-water-pancakes",
+    "potato-rice-breakfast",
+    "rice-millet-mix",
+    "potato-carrot-soup",
+    "cabbage-rice-soup",
+    "beet-potato-soup",
+    "tomato-rice-soup",
+    "buckwheat-potato-soup",
+    "millet-cabbage-soup",
+    "potato-dumpling-soup",
+    "carrot-semolina-soup",
+    "beet-rice-pot",
+    "buckwheat-tomato-stew",
+    "millet-potato-stew",
+    "cabbage-potato-braise",
+    "carrot-potato-puree",
+    "cabbage-buckwheat-pot",
+    "rice-cabbage-pan",
+    "millet-beet-pot",
+    "potato-tomato-braise",
+    "beet-cabbage-braise",
+    "potato-flour-cakes",
+    "cabbage-flour-pancakes",
+    "carrot-semolina-cutlets",
+    "beet-flour-pancakes",
+    "buckwheat-potato-mash",
+    "rice-carrot-dinner",
+    "millet-tomato-dinner",
+    "tomato-carrot-dumplings",
+    "cabbage-carrot-salad",
+    "tomato-cabbage-salad",
+    "carrot-tomato-salad",
+    "beet-carrot-raw-salad",
+    "carrot-sweet-ribbons",
+    "cabbage-beet-salad",
+    "tomato-carrot-cabbage-salad",
+    "carrot-semolina-pudding",
+    "rice-sweet-snack",
+    "semolina-small-flatbread",
+    "warm-tomato-carrot",
+    "beet-sweet-warm",
+    "potato-cabbage-mash",
+    "beet-tomato-rice"
+  ]
+};
+for (const [name, ids] of Object.entries(groups)) test(name, async ({ page, context }, testInfo) => {
+  test.setTimeout(180_000);
+  const batch = name.match(/^batch-(\d+)/)?.[1];
+  execFileSync('node', ['scripts/check-recipe-media.mjs', '--ledger', batch ? `docs/data/recipe-media-batches/${batch}.json` : 'docs/data/recipe-media.json', ...(batch ? ['--ids', ids.join(',')] : ['--all'])]);
+  const external: string[] = [];
+  const imageRequests = new Set<string>();
+  const timings: { id: string; localRouteDecodeMs: number; width: number; height: number }[] = [];
+  // Offline here means external resources unavailable while the local app server stays running.
+  // Full browser-network offline/cold reload is a separate unsupported dev-cache scenario.
+  await context.route(url => url.origin !== 'http://127.0.0.1:4173', route => route.abort());
+  page.on('request', request => {
+    if (!request.url().startsWith('http://127.0.0.1:4173/')) external.push(request.url());
+    if (request.resourceType() === 'image') imageRequests.add(request.url());
+  });
+  for (const id of ids) {
+    const started = Date.now();
+    await page.goto('/recipe/' + id);
+    const image = page.locator(`img[src="/recipes/${id}.png"]`);
+    await expect(image).toBeVisible();
+    await expect.poll(() => image.evaluate((node: HTMLImageElement) => node.naturalWidth > 0 && node.naturalWidth * 3 === node.naturalHeight * 4)).toBe(true);
+    const dimensions = await image.evaluate(async (node: HTMLImageElement) => { await node.decode(); return { width: node.naturalWidth, height: node.naturalHeight }; });
+    timings.push({ id, localRouteDecodeMs: Date.now() - started, ...dimensions });
+    await expect(page.getByRole('img', { name: 'Фото недоступно' })).toHaveCount(0);
+    await expect(image).toHaveAttribute('loading', 'eager');
+    await expect(image).not.toHaveAttribute('alt', '');
+  }
+  if (name === 'full-media') {
+    expect(imageRequests.size).toBe(52);
+    await testInfo.attach('full-media-observed-metrics', { body: JSON.stringify({ localHeroesDecoded: 52, externalResourcesBlocked: true, uniqueImageRequests: imageRequests.size, timings }, null, 2), contentType: 'application/json' });
+    console.log('full-media observed:', JSON.stringify({ localHeroesDecoded: 52, externalResourcesBlocked: true, uniqueImageRequests: imageRequests.size, minRouteDecodeMs: Math.min(...timings.map(t => t.localRouteDecodeMs)), maxRouteDecodeMs: Math.max(...timings.map(t => t.localRouteDecodeMs)), totalRouteDecodeMs: timings.reduce((n, t) => n + t.localRouteDecodeMs, 0) }));
+  }
+  expect(external).toEqual([]);
+});

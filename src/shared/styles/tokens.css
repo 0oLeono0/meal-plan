@@ -58,7 +58,7 @@ body { margin: 0; min-width: 0; }
 .app-shell h2 { font-size: var(--text-heading); margin: 0 0 var(--space-md); }
 .app-shell p { margin: 0 0 var(--space-md); overflow-wrap: anywhere; }
 .app-shell a { color: inherit; text-underline-offset: var(--space-xs); touch-action: manipulation; }
-.app-shell :is(a, button, input, select, textarea, h1) { scroll-margin: var(--space-md) 0 calc(var(--nav-height) + var(--space-md)); }
+.app-shell :is(a, button, input, select, textarea, summary, h1) { scroll-margin: var(--space-md) 0 calc(var(--nav-height) + var(--space-md)); }
 .app-shell :is(button, input, select, textarea) {
   font: inherit;
   font-size: var(--text-body);
@@ -144,6 +144,95 @@ body { margin: 0; min-width: 0; }
   .app-nav { top: 0; right: auto; bottom: 0; width: var(--sidebar-width); grid-template-columns: minmax(0, 1fr); align-content: start; padding: var(--space-lg) var(--space-md); border-top: 0; border-right: 1px solid var(--color-border); overflow-y: auto; }
   .app-shell .app-nav a, .app-shell .app-nav button { flex-direction: row; justify-content: flex-start; padding: var(--space-sm) var(--space-md); font-size: var(--text-body); gap: var(--space-sm); }
   .app-shell:not(.fullscreen) main { max-width: 960px; padding: var(--space-xl); padding-bottom: var(--space-2xl); }
-  .app-shell :is(a, button, input, select, textarea, h1) { scroll-margin-bottom: var(--space-md); }
+  .app-shell :is(a, button, input, select, textarea, summary, h1) { scroll-margin-bottom: var(--space-md); }
 }
 @media (prefers-reduced-motion: reduce) { .app-shell :is(*, button), .app-shell *::before, .app-shell *::after { transition: none; animation: none; scroll-behavior: auto; } }
+
+/* Phase 2 read models: do not reset the existing wizard heading rhythm. */
+.app-shell .plan-read-model h3 {
+  font-size: var(--text-body);
+  font-weight: 600;
+  line-height: 1.5;
+  margin: var(--space-md) 0 var(--space-sm);
+  overflow-wrap: anywhere;
+}
+.app-shell .plan-costs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-xs);
+  margin: var(--space-md) 0;
+}
+.app-shell .plan-costs dd { margin: 0 0 var(--space-sm); }
+.app-shell .generation-progress {
+  height: var(--space-sm);
+  margin: var(--space-lg) 0;
+  background: var(--color-disabled);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.app-shell .generation-progress span {
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: inherit;
+  animation: generation-indeterminate 1.6s ease-in-out infinite alternate;
+}
+@keyframes generation-indeterminate { from { transform: translateX(0); } to { transform: translateX(150%); } }
+.app-shell .plan-loading-skeleton { display: grid; gap: var(--space-md); margin: var(--space-lg) 0; }
+.app-shell .plan-loading-skeleton > div {
+  height: var(--space-3xl);
+  background: var(--color-disabled);
+  border-radius: var(--radius-field);
+}
+@media (prefers-reduced-motion: reduce) { .app-shell .generation-progress span { animation: none; } }
+
+/* Saved menu: semantic date-first DOM, independent menu/nav breakpoints. */
+.recipe-hero > figure { margin: 0; }
+.recipe-hero img { height: auto; }
+.menu-mode { display: flex; gap: var(--space-sm); margin: var(--space-md) 0; }
+.menu-mode button { flex: 1; }
+.app-shell [aria-pressed=true], .app-shell [role=tab][aria-selected=true] { background: var(--color-selected); color: var(--color-accent); }
+.menu-day-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-sm); margin: var(--space-md) 0; }
+.app-shell .menu-day-tabs button { padding: var(--space-sm) var(--space-xs); font-size: var(--text-label); }
+.menu-day-tabs span { display: block; }
+.menu-desktop-label { display: none; }
+.menu-days, .menu-day, .meal-card, .meal-card-content { min-width: 0; }
+.meal-card { margin-bottom: var(--space-md); }
+.meal-card-link { display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: start; gap: var(--space-md); padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-field); text-decoration: none; min-height: var(--target-size); overflow-wrap: anywhere; }
+.meal-card-link:hover { background: var(--color-selected); }
+.meal-card-link:active { background: var(--color-disabled); }
+.meal-card-link figure { margin: 0; width: 100%; }
+.meal-card-link :is(img, [role=img]) { display: block; border-radius: var(--radius-field); aspect-ratio: 4/3; }
+.meal-card-link img { height: auto; }
+.meal-card-link [role=img] { display: flex; font-size: var(--text-label); text-align: center; }
+.meal-card-link [role=img] svg { max-height: 24px; }
+.app-shell .meal-card-link p { margin: var(--space-sm) 0 0; }
+.app-shell .meal-card-link h3 { margin: 0; font-size: var(--text-label); }
+.meal-card-name { font-weight: 600; text-decoration: underline; }
+.meal-slot { display: inline-block; border-radius: var(--radius-pill); padding: var(--space-xs) var(--space-sm); border: 1px solid var(--color-border); background: var(--color-selected); }
+.meal-slot-lunch { background: var(--color-canvas); }
+.meal-slot-dinner { background: var(--color-disabled); }
+.meal-slot-snack { background: var(--color-surface); }
+.stock-badge { color: var(--color-accent); font-weight: 600; }
+.menu-day[hidden] { display: none; }
+@media (min-width: 1280px) {
+  .app-shell:not(.fullscreen) main.menu-main { max-width: 1600px; }
+  .menu-mobile-controls { display: none; }
+  .menu-desktop-label { display: block; font-weight: 600; }
+  .menu-days { display: grid; grid-template-columns: repeat(var(--day-count), minmax(0, 1fr)); align-items: start; gap: var(--space-sm); margin: var(--space-lg) 0; }
+  .app-shell .menu-day { display: grid; grid-template-rows: var(--day-heading-height, auto) var(--breakfast-height, auto) var(--lunch-height, auto) var(--dinner-height, auto) var(--snack-height, auto) auto; gap: var(--space-md); padding: var(--space-sm); margin: 0; }
+  .app-shell .menu-day-title { font-size: var(--text-body); margin: 0; }
+  .meal-card { margin: 0; }
+  .meal-card-link { grid-template-columns: minmax(0, 1fr); gap: var(--space-sm); padding: var(--space-sm); }
+  .menu-day-totals dl { grid-template-columns: minmax(0, 1fr); }
+}
+.app-shell main.menu-main { --menu-nav-height: var(--nav-height); padding-bottom: calc(var(--shopping-height, 0px) + var(--menu-nav-height) + var(--space-md)); }
+.menu-shopping { position: fixed; z-index: 9; bottom: var(--menu-nav-height); left: 0; right: 0; max-width: 640px; margin: 0 auto; padding: var(--space-md); background: var(--color-surface); border-top: 1px solid var(--color-border); }
+.app-shell .menu-main :is(a, button, input, select, textarea, summary, h1, [role=tabpanel]) { scroll-margin-bottom: calc(var(--shopping-height, 0px) + var(--menu-nav-height) + var(--space-md)); }
+.menu-shopping[data-in-flow=true] { position: static; margin-top: var(--space-md); }
+@media (max-height: 499px) { .menu-shopping { position: static; } }
+@media (min-width: 1200px) {
+  .app-shell main.menu-main { --menu-nav-height: 0px; }
+  .menu-shopping { left: var(--sidebar-width); max-width: 1600px; }
+}

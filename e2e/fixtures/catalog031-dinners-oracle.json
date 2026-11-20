@@ -1,0 +1,129 @@
+[
+  {
+    "id": "familiar-pollock-yogurt-buckwheat",
+    "grams": {
+      "pollock": 320,
+      "buckwheat": 140,
+      "yogurt": 160,
+      "carrot": 200,
+      "oil": 10,
+      "salt": 3
+    },
+    "nutrition": [
+      "995.6",
+      "78.778",
+      "22.098",
+      "131.546"
+    ],
+    "cost": "382.2116138271604874"
+  },
+  {
+    "id": "familiar-pork-potato-cabbage",
+    "grams": {
+      "pork": 300,
+      "potato": 360,
+      "cabbage": 300,
+      "onion": 80,
+      "oil": 12,
+      "salt": 3
+    },
+    "nutrition": [
+      "817.28",
+      "74.95",
+      "19.214",
+      "87.836"
+    ],
+    "cost": "215.7142283333333334"
+  },
+  {
+    "id": "familiar-lazy-cabbage-rolls",
+    "grams": {
+      "beef-mince": 280,
+      "rice": 120,
+      "cabbage": 320,
+      "tomato": 240,
+      "onion": 80,
+      "oil": 10,
+      "salt": 3
+    },
+    "nutrition": [
+      "1174.4",
+      "71.644",
+      "39.672",
+      "131.308"
+    ],
+    "cost": "304.7181792592592614"
+  },
+  {
+    "id": "familiar-turkey-pasta-tomato",
+    "grams": {
+      "turkey": 300,
+      "pasta": 160,
+      "tomato": 280,
+      "carrot": 160,
+      "oil": 12,
+      "salt": 3
+    },
+    "nutrition": [
+      "1157.68",
+      "94.836",
+      "22.35",
+      "145.692"
+    ],
+    "cost": "378.3979866666666614"
+  },
+  {
+    "id": "familiar-chickpea-tomato-rice",
+    "grams": {
+      "chickpea-canned": 320,
+      "rice": 140,
+      "tomato": 300,
+      "onion": 80,
+      "oil": 14,
+      "salt": 3
+    },
+    "nutrition": [
+      "1165.56",
+      "36.062",
+      "24.468",
+      "203.168"
+    ],
+    "cost": "325.9223669135802494"
+  },
+  {
+    "id": "familiar-bean-potato-stew",
+    "grams": {
+      "bean-canned": 320,
+      "potato": 360,
+      "carrot": 160,
+      "onion": 80,
+      "oil": 12,
+      "salt": 3
+    },
+    "nutrition": [
+      "877.68",
+      "35.284",
+      "16.148",
+      "154.532"
+    ],
+    "cost": "155.2283866666666614"
+  },
+  {
+    "id": "familiar-potato-tomato-frittata",
+    "grams": {
+      "egg": 240,
+      "potato": 360,
+      "tomato": 240,
+      "onion": 60,
+      "oil": 12,
+      "salt": 3
+    },
+    "nutrition": [
+      "793.68",
+      "40.296",
+      "35.688",
+      "79.632"
+    ],
+    "cost": "133.7478533333333334"
+  }
+]

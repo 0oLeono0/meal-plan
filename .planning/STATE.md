@@ -2,46 +2,47 @@
 gsd_state_version: "1.0"
 milestone: v1.0
 milestone_name: P0 MVP
-current_phase: 2
-current_phase_name: Первый допустимый план и рассчитанные покупки
+current_phase: 4
+current_phase_name: Изменение блюд и порций
 current_plan: Not started
 status: planning
-stopped_at: Phase 1 complete, ready to plan Phase 2
-last_updated: "2026-10-27T14:09:25.881135+00:00"
-last_activity: 2026-10-27
-last_activity_desc: Phase 1 complete, transitioned to Phase 2
-state_head: 654333e2a6693fe575926aa8a735d41a6ca1d475
+stopped_at: "Фаза 4: редактирование проверено, далее итоговая проверка трёх движков."
+last_updated: "2026-11-20T07:29:49.179Z"
+last_activity: 2026-11-18
+last_activity_desc: Phase 03.1 complete, transitioned to Phase 4
+state_head: 8bf3b32559ab6e3ccae6185753b041c24c033dad
 progress:
-  total_phases: 7
-  completed_phases: 1
-  total_plans: 8
-  completed_plans: 8
-  percent: 14
+  total_phases: 8
+  completed_phases: 4
+  total_plans: 43
+  completed_plans: 42
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-10-27)
+See: .planning/PROJECT.md (updated 2026-11-18)
 
 **Core value:** Допустимое меню с прозрачным бюджетом и согласованные покупки с количественным учётом домашних запасов.
-**Current focus:** Phase 2 — Первый допустимый план и рассчитанные покупки. Phase 1 завершена: 8/8 планов, VERIFICATION passed, пользовательская UAT 9/9. Следующий шаг — собрать контекст Phase 2; её код ещё не начат.
+**Current focus:** Фаза 4 — изменение блюд и порций
 
 ## Current Position
 
-Phase: 2 — Первый допустимый план и рассчитанные покупки
+Phase: 4 — Изменение блюд и порций
 Current Plan: Not started
-Total Plans in Phase: 0 (Phase 2 not planned)
+Total Plans in Phase: TBD
 Status: Ready to plan
-Last activity: 2026-10-27 — Phase 1 complete, transitioned to Phase 2
+Last activity: 2026-11-18 — Phase 03.1 complete, transitioned to Phase 4
 
-Progress: [█░░░░░░░░░] 1/7 фаз завершена (14%); Phase 1: 8/8 планов, UAT 9/9; Phase 2 ещё не спланирована.
+Last Activity Description: Phase 03.1 complete, transitioned to Phase 4
+
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
+- Total execution plans completed: 18; Phase1 и Phase2 приняты
 - Historical active durations for first 7 plans: 76 min (10.9 min/plan).
 - Plan 01-08 recorded wall window: 877 min, including overnight usage-limit interruption; exact active duration unknown and excluded from active-time averages.
 
@@ -50,10 +51,13 @@ Progress: [█░░░░░░░░░] 1/7 фаз завершена (14%); 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 | 8 | - | - |
+| 2 | 10 | - | - |
+| 03 | 12 | - | - |
+| 03.1 | 8 | - | - |
 
 **Recent Trend:**
-- Last plan: 01-08, 2/2 tasks; 877 min recorded wall window including interruption, active duration unknown.
-- Trend: Phase 1 принята после независимой проверки и 9 пользовательских результатов; Phase 2 готова к обсуждению.
+- Last plan: 02-10; Phase2 выполнена 10/10 и принята после пользовательской UAT 6/6.
+- Trend: Phase1 и Phase2 приняты; Phase3 готова к обсуждению и планированию.
 
 **Per-Plan Metrics:**
 
@@ -67,6 +71,33 @@ Progress: [█░░░░░░░░░] 1/7 фаз завершена (14%); 
 | Phase 01 P07 | 5min | 2 tasks | 18 files |
 | Phase 01 P06 | 12 min | 2 tasks | 8 files |
 | Phase 01 P08 | 877min | 2 tasks | 8 files |
+| Phase 02 P01 | 6min | 2 tasks | 6 files |
+| Phase 02 P02 | 8min | 2 tasks | 4 files |
+| Phase 02 P03 | 10min | 2 tasks | 4 files |
+| Phase 02 P04 | 12min | 2 tasks | 4 files |
+| Phase 02 P05 | 10min | 2 tasks | 4 files |
+| Phase 02 P06 | 463min wall; active unknown | 2 tasks | 9 files |
+| Phase 02 P07 | 13min observed; initial reads not timed | 2 tasks | 8 files |
+| Phase 02 P08 | 10min observed; initial reads not timed | 2 tasks | 7 files |
+| Phase 02 P09 | 18min observed; initial reads not separately timed | 3 tasks | 8 files |
+| Phase 02 P10 | 1379min observed wall through assessment; active unknown | 3 tasks | 15 range files including metadata/assessment |
+| Phase 03 P01 | 1398min observed wall; active unknown due to usage-limit interruption | 3 tasks | 11 files |
+| Phase 03 P02 | 25 min observed; initial reads not timed | 3 tasks | 10 files |
+| Phase 03 P03 | 1324min observed wall; active unknown due to overnight interruption | 3 tasks | 9 files |
+| Phase 03 P04 | 12min observed | 2 tasks | 9 files |
+| Phase 03 P07 | 1300min wall; active unknown; resumed8min | 3 tasks | 16 files |
+| Phase 03 P08 | 12min observed; initial reads not timed | 3 tasks | 16 files |
+| Phase 03 P10 | 28min observed wall; initial reads untimed; interruption included | 2 tasks | 10 files |
+| Phase 03 P09 | 18min observed; initial reads not separately timed | 3 tasks | 17 files |
+| Phase 03 P11 | 1194min wall; active unknown; resumed27min | 3 tasks | 10 files |
+| Phase 03 P12 | 1510min wall; active unknown; resumed25min | 2 tasks | 18 files |
+| Phase 03.1 P01 | 30min | 3 tasks | 23 files |
+| Phase 03.1 P02 | 19min | 2 tasks | 19 files |
+| Phase 03.1 P03 | 1166min wall; interruption included; active unknown | 2 tasks | 11 files |
+| Phase 03.1 P04 | 18min | 2 tasks | 18 files |
+| Phase 03.1 P05 | 21min observed; initial reads unrecorded | 2 tasks | 7 files |
+| Phase 03.1 P06 | 4days wall;22min resumed observed; active unknown | 2 tasks | 15 files |
+| Phase 03.1 P07 | 27min observed; initial reads untimed | 2 tasks | 25 files |
 
 ## Accumulated Context
 
@@ -79,18 +110,62 @@ Progress: [█░░░░░░░░░] 1/7 фаз завершена (14%); 
 - Точный бюджет ≥500 — источник истины; slider — отдельная проекция, а не скрытое ограничение суммы.
 - Products — стабильные names-only IDs и raw количества; H9 принимает добавление выбором результата без отдельной кнопки.
 - Автоматизированные результаты и пользовательские pass H1–H9 записаны раздельно; весь P0 ещё не завершён.
+- [Phase 02]: Exact source decimals use normalized BigInt rationals and bounded string JSON codec; unknown price/safety remain explicit in the USDA tracer.
+- [Phase 02]: Applied settings use exact raw strings and detached snapshots; local date-only plan instances and canonical generation contracts are validated independently of later price/safety projection.
+- [Phase 02]: Whole-period projection spends pantry once and preserves exact nutrients; canonical period/day product rows and exact/displayed budget checks serve shared presentation.
+- [Phase 02]: Bounded deterministic search uses explicit safety evidence and shared pantry-budget projection; incomplete search never proves impossibility. Local generation yields macrotasks and enforces cancellation/30s timeout.
+- [Phase 02]: Validated active snapshots use recomputed projections and final guarded serialized writes; memory-only retry never repeats search; active revision advances only upon installation.
+- [Phase 02]: Source-gated twelve-profile plant-based corpus has52 original recipes and real28-slot default proof; nutrition adequacy is not claimed. Source scopes and unknown safety remain explicit.
+- [Phase 02]: Real source-gated wizard and quick start promote only a whole guarded saved active plan; editable draft stays independent, skip retains constraints and stock.
+- [Phase 02]: Menu and shopping share one saved projection and PlanSummary; missing rows retain dated instance sources, pantry coverage is whole-period once, unknown categories use Map fallback.
+- [Phase 02]: Phase1 invariants remain asserted through real submit; native summary shares navigation scroll margins and actual sequential Tab recovery is verified. Synthetic operation and data ports remain test-only.
+- [Phase 02]: Orchestrator auto-mode approved only continuing independent phase checks after plain-HTML WebKit reproduction (45777d6). Two failed native linkTab cases remain manual-unverified; no user pass or phase completion.
+- [Phase 03]: Retain semantic top3 in one bounded search; output exclusions preserve transitions and hard gates
+- [Phase 03]: Selection and shortage cardinality publish only after saved acknowledgement; reloading its base cancels selection ownership
+- [Phase 03]: Append preserves exact saved inputs and prior identities; only saved acknowledgement installs its merged candidate
+- [Phase 03]: Reuse independently validated immutable bundles in frozen controller snapshots; metadata remains bounded without widening trust limits at cap12
+- [Phase 03]: Recipe routes require exact active triple; canonical ingredient allocation feeds recipe and aggregate shopping without double stock subtraction
+- [Phase 03]: Cap12 validates full envelope and reuses only detached deeply frozen plan/projections without widening trust limits
+- [Phase 03]: Local recipe media stays outside factual catalog and persisted snapshots; original sample hash verified, fresh included-tool rice illustration records actual invocation; remaining51assets pending.
+- [Phase 03]: Preserve ten accepted images across usage interruption; generate only the two missing outputs; batch03 complete12 and total37/52, shared requirements pending
+- [Phase 03]: Exact source ingredients and final textures govern batch04 generation and visual acceptance;12new native images,total49/52,previous37preserved;shared requirements pending
+- [Phase 03]: Validated URL day/mode and exact instance projection drive semantic actual-date menu/cards;1280grid independent from1200nav;baseline cancellationfocus remains WINDOWS23 for03-11
+- [Phase 03]: Current52 actualPNG/provenance and noexternal52localhero decode verified; fullnetworkoffline no-cache unsupported; Phase03.1 requires separate catalog-aware gate
+- [Phase 03]: Route-bound cancellation focus and keyboard-only panel scroll preserve native pointer links; real quota recovery24/24, seed15/15, recipes23/24 with WindowsWebKitTab limitation; next03-12 and shared requirements Pending
+- [Phase 03]: Preserve acknowledged succeeded navigation and stable initiator focus; explicit keyboard scroll uses existing sticky margins with pointer guard.
+- [Phase 03]: Retain initial960 failure report separately from scoped60pass; nativeWebKit15/16/24/25 and human26 remain open; shared requirements and phase acceptance pending.
+- [Phase 03.1]: Решение пользователя10.11.2026 допускает явно размеченные ориентировочные цены и КБЖУ с обоснованным базисом. Если нужна география новых оценок, целевой город Санкт-Петербург. Источники сохраняются в данных, UI показывает краткую сноску и Как считаем.
+- [Phase 03.1]: 03.1-01 shipped current56/20 alongside immutable historical52/12; generation dispatch uses compiled release ports and bounded mixed starts, CAT acceptance remains pending.
+- [Phase 03.1]: 03.1-02 ships current68/26 alongside immutable issued56 and historical52; label-derived tvorog and separate drained legume IDs preserve sourced basis and pantry units.
+- [Phase 03.1]: Current75 preserves issued52/56/68 snapshots. Fish95percent assumption affects estimated edible price only, raw nutrition uses weighed thawed deboned flesh.
+- [Phase 03.1]: Final82 preserves issued75 bytes and source facts while52/56/68/75 remain trusted and version-dispatched
+- [Phase 03.1]: Raw lean pork USDA168249 uses explicit600RUB/kg estimate from SPb549RUB/kg observation; reviewed D2/D3 durations35/45min
+- [Phase 03.1]: Existing current82 bounded search verified by seven-seed independent mixed-week matrix; preserve production implementation and hard limits
+- [Phase 03.1]: Media source-version and support versions are separate. Historical aggregate provenance is pinned and all five compiled release manifests resolve local assets.
+- [Phase 03.1]: All30new native illustrations and82physicalPNG pass actual hashes, exact5release audits and Chromium decode; preserve52historical assets and first10accepted outputs.
 
 ### Pending Todos
 
-Следующий шаг — `$gsd-discuss-phase 2`: источники каталога Q-14, база бюджета Q-04, роль nutrition targets Q-03 и округление Q-16 должны получить проверяемый контракт до генератора. Phase 1 закрыта, NEXT-10 остаётся P1.
+Собрать контекст Phase3 и подготовить планы сравнения вариантов и просмотра рецептов. Приёмка Phase2 завершена: пользовательские ответы pass на H1–H6, открытых замечаний нет. Исторические Windows WebKit сбои остаются в QA как ограничения автоматизации.
 
 ### Blockers/Concerns
 
 - Phase 1: implementation/review fixes и пользовательская UAT 9/9 завершены; отдельная ручная проверка логики CR-01 также закрыта независимым verifier. Q-03 о будущих формулах/роли целей не закрыт.
 - Build: upstream react-router MODULE_LEVEL_DIRECTIVE warning; сборка прошла, предупреждение зарегистрировано в WINDOWS.md.
-- Phase 2–4: базы бюджета/КБЖУ/порций, варианты/отказы, Q-14 о данных и Q-16 об округлении остаются воротами.
+- Phase2–4: source/corpus gate Q-14 пройден для ограниченной версии2026-10-28-1; интегрированные меню/покупки, варианты/отказы и QA остаются воротами.
 - Phase 5–7: C-03 (pantry), Q-09/Q-12 (ручные покупки/категории), Q-13 (PDF), Q-17 (QA) не закрыты.
-- 10–15 mock-рецептов не доказывают целевой каталог 50+ или разнообразие; источники/права ещё не подтверждены. Safari 15 принят по пользовательскому H2; это не подменяется автоматическим WebKit.
+
+-52 авторских рецепта содержательно проверены, кухонная/медицинская оценка не заявлена. Цены имеют разные явные scopes, права ограничены фактическим цитированием; неизвестные gluten/lactose/halal исключают запросы. Safari15 принят поH2; это не подменяется автоматическим WebKit.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 261110-m4g | Понятная сноска примерных цен и КБЖУ в меню, покупках и рецептах. Поправка CAT-02 для оценок с обоснованным базисом. | 2026-11-10 | 90dccec | [261110-m4g-ponyatnye-poyasneniya-primernyh-tsen-i-k](./quick/261110-m4g-ponyatnye-poyasneniya-primernyh-tsen-i-k/) |
+
+### Roadmap Evolution
+
+- Phase 03.1 inserted after Phase 3: Обязательное расширение каталога привычных блюд до приёмки MVP; пользователь подтвердил07.11.2026 (URGENT)
 
 ## Deferred Items
 
@@ -101,6 +176,6 @@ Progress: [█░░░░░░░░░] 1/7 фаз завершена (14%); 
 
 ## Session Continuity
 
-Last session: 2026-10-27T14:09:25.881135+00:00
-Stopped at: Phase 1 complete, ready to plan Phase 2
-Resume file: None
+Last session: 2026-11-20T07:29:45.662Z
+Stopped at: Фаза 4: редактирование проверено, далее итоговая проверка трёх движков.
+Resume file: .planning/phases/04-izmenenie-blyud-i-portsiy/04-05-PLAN.md

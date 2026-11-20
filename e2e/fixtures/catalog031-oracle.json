@@ -1,0 +1,281 @@
+{
+  "derivation": "Python Decimal arithmetic from original USDA rows, historical price strings and explicit phase031 representative estimates. No production imports. Edible inputs, base 2 servings. Displayed costs sum independently half-up rounded aggregated product rows, per existing projection contract.",
+  "recipeIds": [
+    "familiar-omelet-tomato-bread",
+    "familiar-chicken-rice-carrot",
+    "familiar-lentil-cabbage-tomato",
+    "familiar-yogurt-apple"
+  ],
+  "meals": [
+    {
+      "id": "familiar-omelet-tomato-bread",
+      "perPortionNutrition": [
+        "356.4",
+        "20.91",
+        "16.81",
+        "30.236"
+      ],
+      "familyNutrition": [
+        "712.8",
+        "41.82",
+        "33.62",
+        "60.472"
+      ],
+      "ingredientCost": "134.6516355555555556"
+    },
+    {
+      "id": "familiar-chicken-rice-carrot",
+      "perPortionNutrition": [
+        "554.38",
+        "40.111",
+        "11.672",
+        "69.281"
+      ],
+      "familyNutrition": [
+        "1108.76",
+        "80.222",
+        "23.344",
+        "138.562"
+      ],
+      "ingredientCost": "211.0730335802469094"
+    },
+    {
+      "id": "familiar-lentil-cabbage-tomato",
+      "perPortionNutrition": [
+        "367.44",
+        "20.281",
+        "7.182",
+        "59.716"
+      ],
+      "familyNutrition": [
+        "734.88",
+        "40.562",
+        "14.364",
+        "119.432"
+      ],
+      "ingredientCost": "139.5617033333333334"
+    },
+    {
+      "id": "familiar-yogurt-apple",
+      "perPortionNutrition": [
+        "143.5",
+        "5.465",
+        "5.045",
+        "20.80"
+      ],
+      "familyNutrition": [
+        "287",
+        "10.93",
+        "10.09",
+        "41.60"
+      ],
+      "ingredientCost": "216"
+    }
+  ],
+  "personDayNutrition": [
+    "1421.72",
+    "86.767",
+    "40.709",
+    "180.033"
+  ],
+  "familyNutrition": [
+    "2843.44",
+    "173.534",
+    "81.418",
+    "360.066"
+  ],
+  "requiredGrams": {
+    "egg": 200,
+    "tomato": 500,
+    "bread": 120,
+    "oil": 36,
+    "salt": 8,
+    "chicken": 300,
+    "rice": 140,
+    "carrot": 200,
+    "onion": 160,
+    "lentil": 140,
+    "cabbage": 200,
+    "yogurt": 300,
+    "apple": 200
+  },
+  "costs": {
+    "ingredient": "701.2863724691357984",
+    "covered": "122.0",
+    "purchase": "579.2863724691357984"
+  },
+  "kopecks": {
+    "ingredient": 70128,
+    "covered": 12200,
+    "purchase": 57928
+  },
+  "weeklyWitness": {
+    "derivation": "Independent Python Decimal sum of weighed edible ingredient grams and acquired price strings, no production calculation imports. Seven B1/L1/D7/S1 days, lunch day2 L5 and day3 L7. Two people. No pantry.",
+    "recipeIds": [
+      "familiar-omelet-tomato-bread",
+      "familiar-chicken-rice-carrot",
+      "familiar-lentil-cabbage-tomato",
+      "familiar-yogurt-apple",
+      "familiar-omelet-tomato-bread",
+      "familiar-pollock-potato-carrot",
+      "familiar-lentil-cabbage-tomato",
+      "familiar-yogurt-apple",
+      "familiar-omelet-tomato-bread",
+      "familiar-beef-pasta-tomato",
+      "familiar-lentil-cabbage-tomato",
+      "familiar-yogurt-apple",
+      "familiar-omelet-tomato-bread",
+      "familiar-chicken-rice-carrot",
+      "familiar-lentil-cabbage-tomato",
+      "familiar-yogurt-apple",
+      "familiar-omelet-tomato-bread",
+      "familiar-chicken-rice-carrot",
+      "familiar-lentil-cabbage-tomato",
+      "familiar-yogurt-apple",
+      "familiar-omelet-tomato-bread",
+      "familiar-chicken-rice-carrot",
+      "familiar-lentil-cabbage-tomato",
+      "familiar-yogurt-apple",
+      "familiar-omelet-tomato-bread",
+      "familiar-chicken-rice-carrot",
+      "familiar-lentil-cabbage-tomato",
+      "familiar-yogurt-apple"
+    ],
+    "requiredGrams": {
+      "egg": "1400",
+      "tomato": "3800",
+      "bread": "840",
+      "oil": "246",
+      "salt": "56",
+      "chicken": "1500",
+      "rice": "700",
+      "carrot": "1200",
+      "onion": "1100",
+      "lentil": "980",
+      "cabbage": "1400",
+      "yogurt": "2100",
+      "apple": "1400",
+      "pollock": "320",
+      "potato": "400",
+      "beef-mince": "280",
+      "pasta": "160"
+    },
+    "ingredientRub": "5117.0601134567900968",
+    "budgetRub": "6000"
+  },
+  "historicalSearchBaseline": {
+    "version": "mealplan-2026-10-28-1",
+    "seed": "real-default-proof",
+    "fingerprints": [
+      "[[\"2026-10-28\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-10-28\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-10-28\",\"dinner\",\"cabbage-flour-pancakes\",\"2\",\"1\"],[\"2026-10-28\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"],[\"2026-10-29\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-10-29\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-10-29\",\"dinner\",\"potato-flour-cakes\",\"2\",\"1\"],[\"2026-10-29\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"],[\"2026-10-30\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-10-30\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-10-30\",\"dinner\",\"cabbage-flour-pancakes\",\"2\",\"1\"],[\"2026-10-30\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"],[\"2026-10-31\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-10-31\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-10-31\",\"dinner\",\"potato-flour-cakes\",\"2\",\"1\"],[\"2026-10-31\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"],[\"2026-11-01\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-11-01\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-11-01\",\"dinner\",\"cabbage-flour-pancakes\",\"2\",\"1\"],[\"2026-11-01\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"],[\"2026-11-02\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-11-02\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-11-02\",\"dinner\",\"cabbage-flour-pancakes\",\"2\",\"1\"],[\"2026-11-02\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"],[\"2026-11-03\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-11-03\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-11-03\",\"dinner\",\"cabbage-flour-pancakes\",\"2\",\"1\"],[\"2026-11-03\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"]]",
+      "[[\"2026-10-28\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-10-28\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-10-28\",\"dinner\",\"cabbage-flour-pancakes\",\"2\",\"1\"],[\"2026-10-28\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"],[\"2026-10-29\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-10-29\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-10-29\",\"dinner\",\"cabbage-flour-pancakes\",\"2\",\"1\"],[\"2026-10-29\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"],[\"2026-10-30\",\"breakfast\",\"millet-sweet-porridge\",\"2\",\"1\"],[\"2026-10-30\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-10-30\",\"dinner\",\"cabbage-flour-pancakes\",\"2\",\"1\"],[\"2026-10-30\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"],[\"2026-10-31\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-10-31\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-10-31\",\"dinner\",\"potato-flour-cakes\",\"2\",\"1\"],[\"2026-10-31\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"],[\"2026-11-01\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-11-01\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-11-01\",\"dinner\",\"cabbage-flour-pancakes\",\"2\",\"1\"],[\"2026-11-01\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"],[\"2026-11-02\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-11-02\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-11-02\",\"dinner\",\"cabbage-flour-pancakes\",\"2\",\"1\"],[\"2026-11-02\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"],[\"2026-11-03\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-11-03\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-11-03\",\"dinner\",\"cabbage-flour-pancakes\",\"2\",\"1\"],[\"2026-11-03\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"]]",
+      "[[\"2026-10-28\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-10-28\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-10-28\",\"dinner\",\"cabbage-flour-pancakes\",\"2\",\"1\"],[\"2026-10-28\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"],[\"2026-10-29\",\"breakfast\",\"millet-sweet-porridge\",\"2\",\"1\"],[\"2026-10-29\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-10-29\",\"dinner\",\"cabbage-flour-pancakes\",\"2\",\"1\"],[\"2026-10-29\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"],[\"2026-10-30\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-10-30\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-10-30\",\"dinner\",\"cabbage-flour-pancakes\",\"2\",\"1\"],[\"2026-10-30\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"],[\"2026-10-31\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-10-31\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-10-31\",\"dinner\",\"potato-flour-cakes\",\"2\",\"1\"],[\"2026-10-31\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"],[\"2026-11-01\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-11-01\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-11-01\",\"dinner\",\"cabbage-flour-pancakes\",\"2\",\"1\"],[\"2026-11-01\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"],[\"2026-11-02\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-11-02\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-11-02\",\"dinner\",\"cabbage-flour-pancakes\",\"2\",\"1\"],[\"2026-11-02\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"],[\"2026-11-03\",\"breakfast\",\"semolina-smooth\",\"2\",\"1\"],[\"2026-11-03\",\"lunch\",\"cabbage-rice-soup\",\"2\",\"1\"],[\"2026-11-03\",\"dinner\",\"cabbage-flour-pancakes\",\"2\",\"1\"],[\"2026-11-03\",\"snack\",\"rice-sweet-snack\",\"2\",\"1\"]]"
+    ],
+    "progress": {
+      "transitions": 621,
+      "evaluatedCandidates": 512
+    },
+    "elapsedMs": 3384.2999999998137,
+    "derivation": "Recorded unchanged historical52 search path at a569e65 before any production edit in03.1-05. Fixed real-default-proof seed and2026-10-28 date. Semantic fingerprints exclude opaque IDs."
+  },
+  "fourPortionCase": {
+    "derivation": "Independent Python Decimal over original source price strings and literal recipe grams. Double base2 ingredients and nutrition, subtract chicken200g once. Half-up each aggregate product row before summing display kopecks. No production imports.",
+    "servings": "4",
+    "familyNutrition": [
+      "5686.88",
+      "347.068",
+      "162.836",
+      "720.132"
+    ],
+    "costs": {
+      "ingredient": "1402.5727449382715968",
+      "covered": "122.0000000000000",
+      "purchase": "1280.5727449382715968"
+    },
+    "kopecks": {
+      "ingredient": 140257,
+      "covered": 12200,
+      "purchase": 128057
+    },
+    "rows": [
+      {
+        "id": "egg",
+        "required": "400",
+        "covered": "0",
+        "purchase": "400"
+      },
+      {
+        "id": "tomato",
+        "required": "1000",
+        "covered": "0",
+        "purchase": "1000"
+      },
+      {
+        "id": "bread",
+        "required": "240",
+        "covered": "0",
+        "purchase": "240"
+      },
+      {
+        "id": "oil",
+        "required": "72",
+        "covered": "0",
+        "purchase": "72"
+      },
+      {
+        "id": "salt",
+        "required": "16",
+        "covered": "0",
+        "purchase": "16"
+      },
+      {
+        "id": "chicken",
+        "required": "600",
+        "covered": "200",
+        "purchase": "400"
+      },
+      {
+        "id": "rice",
+        "required": "280",
+        "covered": "0",
+        "purchase": "280"
+      },
+      {
+        "id": "carrot",
+        "required": "400",
+        "covered": "0",
+        "purchase": "400"
+      },
+      {
+        "id": "onion",
+        "required": "320",
+        "covered": "0",
+        "purchase": "320"
+      },
+      {
+        "id": "lentil",
+        "required": "280",
+        "covered": "0",
+        "purchase": "280"
+      },
+      {
+        "id": "cabbage",
+        "required": "400",
+        "covered": "0",
+        "purchase": "400"
+      },
+      {
+        "id": "yogurt",
+        "required": "600",
+        "covered": "0",
+        "purchase": "600"
+      },
+      {
+        "id": "apple",
+        "required": "400",
+        "covered": "0",
+        "purchase": "400"
+      }
+    ]
+  }
+}

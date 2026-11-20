@@ -1,0 +1,317 @@
+{
+  "version": "mealplan-safety-2026-10-28-1",
+  "records": [
+    {
+      "productId": "potato",
+      "profileId": "usda-170026-raw",
+      "fdcId": "170026",
+      "originalEvidence": "{\"food\":{\"fdc_id\":\"170026\",\"data_type\":\"sr_legacy_food\",\"description\":\"Potatoes, flesh and skin, raw\",\"food_category_id\":\"11\",\"publication_date\":\"2019-04-01\"},\"category\":{\"id\":\"11\",\"code\":\"1100\",\"description\":\"Vegetables and Vegetable Products\"}}",
+      "evidenceSha256": "b09b943ee335aec5a8d9bb11686ca823099783ba43e62b4a788c4a883b0909fb",
+      "url": "https://fdc.nal.usda.gov/food-details/170026/nutrients",
+      "accessedAt": "2026-10-28",
+      "license": "CC0-1.0",
+      "facts": [
+        {
+          "key": "no-fish",
+          "suitable": true
+        },
+        {
+          "key": "vegetarian",
+          "suitable": true
+        }
+      ],
+      "unknown": [
+        "halal",
+        "gluten-free",
+        "lactose-free"
+      ],
+      "rationale": "Классификация основана на исходной однокомпонентной растительной пищевой записи и USDA category, а не на названии готового блюда. Не проверяет загрязнение/следы, упаковку, добавки конкретной марки, аллергенную маркировку или процесс halal. Для этих требований нет разрешающего evidence."
+    },
+    {
+      "productId": "tomato",
+      "profileId": "usda-170457-raw",
+      "fdcId": "170457",
+      "originalEvidence": "{\"food\":{\"fdc_id\":\"170457\",\"data_type\":\"sr_legacy_food\",\"description\":\"Tomatoes, red, ripe, raw, year round average\",\"food_category_id\":\"11\",\"publication_date\":\"2019-04-01\"},\"category\":{\"id\":\"11\",\"code\":\"1100\",\"description\":\"Vegetables and Vegetable Products\"}}",
+      "evidenceSha256": "5382c7c8f4bc5d0588e08ced1a893a5b016fb47e0e4cc3b5e0c6aa338bb4e920",
+      "url": "https://fdc.nal.usda.gov/food-details/170457/nutrients",
+      "accessedAt": "2026-10-28",
+      "license": "CC0-1.0",
+      "facts": [
+        {
+          "key": "no-fish",
+          "suitable": true
+        },
+        {
+          "key": "vegetarian",
+          "suitable": true
+        }
+      ],
+      "unknown": [
+        "halal",
+        "gluten-free",
+        "lactose-free"
+      ],
+      "rationale": "Классификация основана на исходной однокомпонентной растительной пищевой записи и USDA category, а не на названии готового блюда. Не проверяет загрязнение/следы, упаковку, добавки конкретной марки, аллергенную маркировку или процесс halal. Для этих требований нет разрешающего evidence."
+    },
+    {
+      "productId": "carrot",
+      "profileId": "usda-170393-raw",
+      "fdcId": "170393",
+      "originalEvidence": "{\"food\":{\"fdc_id\":\"170393\",\"data_type\":\"sr_legacy_food\",\"description\":\"Carrots, raw\",\"food_category_id\":\"11\",\"publication_date\":\"2019-04-01\"},\"category\":{\"id\":\"11\",\"code\":\"1100\",\"description\":\"Vegetables and Vegetable Products\"}}",
+      "evidenceSha256": "35ce9fe225a054f6dc35474d8668d3492d9a1d01bff4aa35d849f606eaaa7ec9",
+      "url": "https://fdc.nal.usda.gov/food-details/170393/nutrients",
+      "accessedAt": "2026-10-28",
+      "license": "CC0-1.0",
+      "facts": [
+        {
+          "key": "no-fish",
+          "suitable": true
+        },
+        {
+          "key": "vegetarian",
+          "suitable": true
+        }
+      ],
+      "unknown": [
+        "halal",
+        "gluten-free",
+        "lactose-free"
+      ],
+      "rationale": "Классификация основана на исходной однокомпонентной растительной пищевой записи и USDA category, а не на названии готового блюда. Не проверяет загрязнение/следы, упаковку, добавки конкретной марки, аллергенную маркировку или процесс halal. Для этих требований нет разрешающего evidence."
+    },
+    {
+      "productId": "cabbage",
+      "profileId": "usda-169975-raw",
+      "fdcId": "169975",
+      "originalEvidence": "{\"food\":{\"fdc_id\":\"169975\",\"data_type\":\"sr_legacy_food\",\"description\":\"Cabbage, raw\",\"food_category_id\":\"11\",\"publication_date\":\"2019-04-01\"},\"category\":{\"id\":\"11\",\"code\":\"1100\",\"description\":\"Vegetables and Vegetable Products\"}}",
+      "evidenceSha256": "32c7a82b9fc617e904448f88f28b3afe6254b255d3fbe259e56ebc98146361f1",
+      "url": "https://fdc.nal.usda.gov/food-details/169975/nutrients",
+      "accessedAt": "2026-10-28",
+      "license": "CC0-1.0",
+      "facts": [
+        {
+          "key": "no-fish",
+          "suitable": true
+        },
+        {
+          "key": "vegetarian",
+          "suitable": true
+        }
+      ],
+      "unknown": [
+        "halal",
+        "gluten-free",
+        "lactose-free"
+      ],
+      "rationale": "Классификация основана на исходной однокомпонентной растительной пищевой записи и USDA category, а не на названии готового блюда. Не проверяет загрязнение/следы, упаковку, добавки конкретной марки, аллергенную маркировку или процесс halal. Для этих требований нет разрешающего evidence."
+    },
+    {
+      "productId": "beet",
+      "profileId": "usda-169145-raw",
+      "fdcId": "169145",
+      "originalEvidence": "{\"food\":{\"fdc_id\":\"169145\",\"data_type\":\"sr_legacy_food\",\"description\":\"Beets, raw\",\"food_category_id\":\"11\",\"publication_date\":\"2019-04-01\"},\"category\":{\"id\":\"11\",\"code\":\"1100\",\"description\":\"Vegetables and Vegetable Products\"}}",
+      "evidenceSha256": "9706330487e9a35000db0575129b00c5835ed5e330500bc6869572e56c69e150",
+      "url": "https://fdc.nal.usda.gov/food-details/169145/nutrients",
+      "accessedAt": "2026-10-28",
+      "license": "CC0-1.0",
+      "facts": [
+        {
+          "key": "no-fish",
+          "suitable": true
+        },
+        {
+          "key": "vegetarian",
+          "suitable": true
+        }
+      ],
+      "unknown": [
+        "halal",
+        "gluten-free",
+        "lactose-free"
+      ],
+      "rationale": "Классификация основана на исходной однокомпонентной растительной пищевой записи и USDA category, а не на названии готового блюда. Не проверяет загрязнение/следы, упаковку, добавки конкретной марки, аллергенную маркировку или процесс halal. Для этих требований нет разрешающего evidence."
+    },
+    {
+      "productId": "rice",
+      "profileId": "usda-169756-raw",
+      "fdcId": "169756",
+      "originalEvidence": "{\"food\":{\"fdc_id\":\"169756\",\"data_type\":\"sr_legacy_food\",\"description\":\"Rice, white, long-grain, regular, raw, unenriched\",\"food_category_id\":\"20\",\"publication_date\":\"2019-04-01\"},\"category\":{\"id\":\"20\",\"code\":\"2000\",\"description\":\"Cereal Grains and Pasta\"}}",
+      "evidenceSha256": "008fa82a3c937a0f7336f7abd9b530836f3ead28f9c0fe2af0d5ff657a7587a6",
+      "url": "https://fdc.nal.usda.gov/food-details/169756/nutrients",
+      "accessedAt": "2026-10-28",
+      "license": "CC0-1.0",
+      "facts": [
+        {
+          "key": "no-fish",
+          "suitable": true
+        },
+        {
+          "key": "vegetarian",
+          "suitable": true
+        }
+      ],
+      "unknown": [
+        "halal",
+        "gluten-free",
+        "lactose-free"
+      ],
+      "rationale": "Классификация основана на исходной однокомпонентной растительной пищевой записи и USDA category, а не на названии готового блюда. Не проверяет загрязнение/следы, упаковку, добавки конкретной марки, аллергенную маркировку или процесс halal. Для этих требований нет разрешающего evidence."
+    },
+    {
+      "productId": "buckwheat",
+      "profileId": "usda-170685-raw",
+      "fdcId": "170685",
+      "originalEvidence": "{\"food\":{\"fdc_id\":\"170685\",\"data_type\":\"sr_legacy_food\",\"description\":\"Buckwheat groats, roasted, dry\",\"food_category_id\":\"20\",\"publication_date\":\"2019-04-01\"},\"category\":{\"id\":\"20\",\"code\":\"2000\",\"description\":\"Cereal Grains and Pasta\"}}",
+      "evidenceSha256": "daa340a7dad5a34dc4a6b1a1dd9c8745d96e26a6a328b55de18f1f1b9c9ccc27",
+      "url": "https://fdc.nal.usda.gov/food-details/170685/nutrients",
+      "accessedAt": "2026-10-28",
+      "license": "CC0-1.0",
+      "facts": [
+        {
+          "key": "no-fish",
+          "suitable": true
+        },
+        {
+          "key": "vegetarian",
+          "suitable": true
+        }
+      ],
+      "unknown": [
+        "halal",
+        "gluten-free",
+        "lactose-free"
+      ],
+      "rationale": "Классификация основана на исходной однокомпонентной растительной пищевой записи и USDA category, а не на названии готового блюда. Не проверяет загрязнение/следы, упаковку, добавки конкретной марки, аллергенную маркировку или процесс halal. Для этих требований нет разрешающего evidence."
+    },
+    {
+      "productId": "millet",
+      "profileId": "usda-169702-raw",
+      "fdcId": "169702",
+      "originalEvidence": "{\"food\":{\"fdc_id\":\"169702\",\"data_type\":\"sr_legacy_food\",\"description\":\"Millet, raw\",\"food_category_id\":\"20\",\"publication_date\":\"2019-04-01\"},\"category\":{\"id\":\"20\",\"code\":\"2000\",\"description\":\"Cereal Grains and Pasta\"}}",
+      "evidenceSha256": "128f1a86757acd47cccc0c271e579188794a320e9c46f0663ccb8c1ce0a86448",
+      "url": "https://fdc.nal.usda.gov/food-details/169702/nutrients",
+      "accessedAt": "2026-10-28",
+      "license": "CC0-1.0",
+      "facts": [
+        {
+          "key": "no-fish",
+          "suitable": true
+        },
+        {
+          "key": "vegetarian",
+          "suitable": true
+        }
+      ],
+      "unknown": [
+        "halal",
+        "gluten-free",
+        "lactose-free"
+      ],
+      "rationale": "Классификация основана на исходной однокомпонентной растительной пищевой записи и USDA category, а не на названии готового блюда. Не проверяет загрязнение/следы, упаковку, добавки конкретной марки, аллергенную маркировку или процесс halal. Для этих требований нет разрешающего evidence."
+    },
+    {
+      "productId": "semolina",
+      "profileId": "usda-168933-raw",
+      "fdcId": "168933",
+      "originalEvidence": "{\"food\":{\"fdc_id\":\"168933\",\"data_type\":\"sr_legacy_food\",\"description\":\"Semolina, unenriched\",\"food_category_id\":\"20\",\"publication_date\":\"2019-04-01\"},\"category\":{\"id\":\"20\",\"code\":\"2000\",\"description\":\"Cereal Grains and Pasta\"}}",
+      "evidenceSha256": "7738b79b906cfcda7ab2c6f03137f53f33e3fc7fe808d9490ee464bf31acfd67",
+      "url": "https://fdc.nal.usda.gov/food-details/168933/nutrients",
+      "accessedAt": "2026-10-28",
+      "license": "CC0-1.0",
+      "facts": [
+        {
+          "key": "no-fish",
+          "suitable": true
+        },
+        {
+          "key": "vegetarian",
+          "suitable": true
+        }
+      ],
+      "unknown": [
+        "halal",
+        "gluten-free",
+        "lactose-free"
+      ],
+      "rationale": "Классификация основана на исходной однокомпонентной растительной пищевой записи и USDA category, а не на названии готового блюда. Не проверяет загрязнение/следы, упаковку, добавки конкретной марки, аллергенную маркировку или процесс halal. Для этих требований нет разрешающего evidence."
+    },
+    {
+      "productId": "flour",
+      "profileId": "usda-169761-raw",
+      "fdcId": "169761",
+      "originalEvidence": "{\"food\":{\"fdc_id\":\"169761\",\"data_type\":\"sr_legacy_food\",\"description\":\"Wheat flour, white, all-purpose, unenriched\",\"food_category_id\":\"20\",\"publication_date\":\"2019-04-01\"},\"category\":{\"id\":\"20\",\"code\":\"2000\",\"description\":\"Cereal Grains and Pasta\"}}",
+      "evidenceSha256": "995d272cefa82dc480d4531b745b61557dd1b2c4127594cfb223b24b5093eccb",
+      "url": "https://fdc.nal.usda.gov/food-details/169761/nutrients",
+      "accessedAt": "2026-10-28",
+      "license": "CC0-1.0",
+      "facts": [
+        {
+          "key": "no-fish",
+          "suitable": true
+        },
+        {
+          "key": "vegetarian",
+          "suitable": true
+        }
+      ],
+      "unknown": [
+        "halal",
+        "gluten-free",
+        "lactose-free"
+      ],
+      "rationale": "Классификация основана на исходной однокомпонентной растительной пищевой записи и USDA category, а не на названии готового блюда. Не проверяет загрязнение/следы, упаковку, добавки конкретной марки, аллергенную маркировку или процесс halal. Для этих требований нет разрешающего evidence."
+    },
+    {
+      "productId": "sugar",
+      "profileId": "usda-169655-raw",
+      "fdcId": "169655",
+      "originalEvidence": "{\"food\":{\"fdc_id\":\"169655\",\"data_type\":\"sr_legacy_food\",\"description\":\"Sugars, granulated\",\"food_category_id\":\"19\",\"publication_date\":\"2019-04-01\"},\"category\":{\"id\":\"19\",\"code\":\"1900\",\"description\":\"Sweets\"}}",
+      "evidenceSha256": "cf55790a8e57c53e371d340e3598c66aeec1b53ef2cb77cefd5cffca6e206e1b",
+      "url": "https://fdc.nal.usda.gov/food-details/169655/nutrients",
+      "accessedAt": "2026-10-28",
+      "license": "CC0-1.0",
+      "facts": [
+        {
+          "key": "no-fish",
+          "suitable": true
+        },
+        {
+          "key": "vegetarian",
+          "suitable": true
+        }
+      ],
+      "unknown": [
+        "halal",
+        "gluten-free",
+        "lactose-free"
+      ],
+      "rationale": "Классификация основана на исходной однокомпонентной растительной пищевой записи и USDA category, а не на названии готового блюда. Не проверяет загрязнение/следы, упаковку, добавки конкретной марки, аллергенную маркировку или процесс halal. Для этих требований нет разрешающего evidence."
+    },
+    {
+      "productId": "salt",
+      "profileId": "usda-173468-raw",
+      "fdcId": "173468",
+      "originalEvidence": "{\"food\":{\"fdc_id\":\"173468\",\"data_type\":\"sr_legacy_food\",\"description\":\"Salt, table\",\"food_category_id\":\"2\",\"publication_date\":\"2019-04-01\"},\"category\":{\"id\":\"2\",\"code\":\"0200\",\"description\":\"Spices and Herbs\"}}",
+      "evidenceSha256": "6caa47f844384a7ab8c8f77234d149b6e926130813fd401ed3450e28f4cff6d2",
+      "url": "https://fdc.nal.usda.gov/food-details/173468/nutrients",
+      "accessedAt": "2026-10-28",
+      "license": "CC0-1.0",
+      "facts": [
+        {
+          "key": "no-fish",
+          "suitable": true
+        },
+        {
+          "key": "vegetarian",
+          "suitable": true
+        }
+      ],
+      "unknown": [
+        "halal",
+        "gluten-free",
+        "lactose-free"
+      ],
+      "rationale": "Классификация основана на исходной однокомпонентной растительной пищевой записи и USDA category, а не на названии готового блюда. Не проверяет загрязнение/следы, упаковку, добавки конкретной марки, аллергенную маркировку или процесс halal. Для этих требований нет разрешающего evidence."
+    }
+  ]
+}

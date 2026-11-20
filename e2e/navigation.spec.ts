@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test';
+import { mountAppFixture } from './fixtures';
+import { generateRealPlan, syntheticEnvelope } from './plan-fixtures';
 
 test('all guest sections are reachable without a plan and preserve browser history', async ({ page }) => {
   await page.goto('/menu');
@@ -23,10 +25,10 @@ test('deep routes and neighboring paths have truthful distinct states on reload'
   for (const [path, title, exit] of [
     ['/menu', 'Меню пока нет', 'Составить меню'],
     ['/shopping', 'Сначала составьте меню', 'Составить меню'],
-    ['/recipe/unknown', 'Такого рецепта нет', 'Вернуться к меню'],
-    ['/plan/generating', 'Генерация не запущена', 'К настройкам'],
+    ['/recipe/unknown', 'Такого рецепта нет', 'К меню'],
+    ['/plan/generating', 'Генерация прервана или не запущена', 'К настройкам'],
     ['/menus', 'Страница не найдена', 'На главную'],
-    ['/recipe', 'Страница не найдена', 'На главную'],
+    ['/recipe', 'Такого рецепта нет', 'К меню'],
   ]) {
     await page.goto(path);
     await page.reload();
@@ -132,6 +134,57 @@ test('shared type scale lets navigation labels grow with the user text size', as
   const after = await label.evaluate(element => parseFloat(getComputedStyle(element).fontSize));
   expect(after).toBe(before * 2);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+for (const presence of [{ status: 'absent' }, { status: 'error' }, { status: 'valid', planId: '' }, { status: 'valid', planId: 42 }, null]) {
+  test(`injected presence ${JSON.stringify(presence)} never fabricates a plan or redirects`, async ({ page }) => {
+    await mountAppFixture(page, { presence, route: '/' });
+    await expect(page.getByRole('heading', { name: 'Меню с учётом ваших привычек' })).toBeFocused();
+    await expect(page).toHaveURL('/');
+    expect(await page.evaluate(() => localStorage.getItem('sentinel'))).toBe('keep');
+    expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'))).toBeNull();
+    if (presence?.status === 'error') await expect(page.getByText('Не удалось проверить наличие меню. Настройки доступны.')).toBeVisible();
+  });
+}
+
+test('injected pending gates restore while legacy valid presence only proves redirect contract', async ({ page }) => {
+  await mountAppFixture(page, { presence: { status: 'pending' }, route: '/' });
+  await expect(page.getByRole('status')).toHaveText('Восстанавливаем настройки…');
+  await expect(page.getByRole('heading', { name: 'Меню с учётом ваших привычек' })).toHaveCount(0);
+  await mountAppFixture(page, { presence: { status: 'valid', planId: 'legacy-presence' }, route: '/' });
+  await expect(page).toHaveURL('/menu');
+  await expect(page.getByRole('heading', { name: 'Меню пока нет' })).toBeFocused();
+  await expect(page.locator('[data-plan-id]')).toHaveCount(0);
+});
+
+test('production active producer restores real saved plan from root with h1 and skip focus', async ({ page }) => {
+  await generateRealPlan(page);
+  const id = await page.locator('[data-plan-id]').getAttribute('data-plan-id');
+  await page.goto('/');
+  await expect(page).toHaveURL('/menu');
+  await expect(page.getByRole('heading', { name: 'Меню на неделю' })).toBeFocused();
+  await expect(page.locator('[data-plan-id]')).toHaveAttribute('data-plan-id', id!);
+  await page.getByRole('link', { name: 'К содержимому' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('main')).toBeFocused();
+  await page.getByRole('navigation').getByRole('link', { name: 'Покупки' }).click();
+  await expect(page.getByRole('heading', { name: 'Список покупок' })).toBeFocused();
+});
+
+test('malformed full active envelope never becomes valid presence and remains untouched', async ({ page }) => {
+  await page.goto('/plan/new');
+  await expect(page.getByLabel('Число людей', { exact: true })).toBeVisible();
+  const plan = await page.evaluate(syntheticEnvelope, {});
+  const corrupted = JSON.parse(JSON.stringify(plan)) as { variants: { instances: unknown[] }[] };
+  corrupted.variants[0].instances.pop();
+  const raw = JSON.stringify({ schemaVersion: 1, plan: corrupted });
+  await mountAppFixture(page, { activeRaw: raw, route: '/' });
+  await expect(page.getByRole('heading', { name: 'Меню с учётом ваших привычек' })).toBeVisible();
+  await expect(page).toHaveURL('/');
+  await page.getByRole('navigation').getByRole('link', { name: 'Меню', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Сохранённое меню повреждено или несовместимо с текущей версией' })).toBeFocused();
+  expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:active-plan:v1'))).toBe(raw);
+  expect(await page.evaluate(() => localStorage.getItem('sentinel'))).toBe('keep');
 });
 
 for (const width of [360, 390, 430, 768, 1280]) {

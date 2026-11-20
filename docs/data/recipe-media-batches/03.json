@@ -1,0 +1,254 @@
+[
+  {
+    "recipeId": "cabbage-buckwheat-pot",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/cabbage-buckwheat-pot.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b0ab-aa9d-78b2-a2b1-9031544ac14b/exec-3e4ac50e-5e95-4d63-97b1-80b6fed1e9c7.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan cabbage-buckwheat-pot, Гречка с капустой в сотейнике. Native PNG landscape exactly 4:3. Recipe for two portions: buckwheat150g, cabbage350g, carrot140g, salt3g. Wash cabbage, finely shred leaves and grate edible core; wash carrot retaining edible skin and coarsely grate. Steam vegetables covered with100ml water5min, add rinsed buckwheat, salt and320ml water. Simmer covered18min, rest3min, mix and divide into two. Show one finished portion: distinct cooked brown buckwheat grains mixed with soft pale cabbage ribbons and coarse orange carrot shreds, moist absorbed-water texture, no soup. Plain ceramic bowl, neutral table, soft daylight. Only listed ingredients. No oil, butter, onion, tomato, meat, herbs, garnish, sauce, dairy, toppings, text, logo or watermark. Generated culinary illustration, no actual cooked-dish evidence claim.",
+    "generatedAt": "2026-11-06T11:44:24.233Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:45:02.692Z",
+      "notes": "Просмотрен native output: цельные зёрна гречки, мягкие светлые капустные полоски и крупно натёртая морковь; без лишних ингредиентов и супового отвара."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2466109,
+    "sha256": "f07bb1b1d7d0d582ef39ca9e9362d101755027268828fb943efdb5ab6ed3cce9"
+  },
+  {
+    "recipeId": "rice-cabbage-pan",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/rice-cabbage-pan.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b0ab-aa9d-78b2-a2b1-9031544ac14b/exec-330f05c9-3f8d-4de7-893e-35a48848bd33.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan rice-cabbage-pan, Рис с капустой и томатами. Native PNG landscape exactly 4:3. Recipe two portions: rice160g, cabbage300g, tomato250g, salt3g, hot water430ml. Wash cabbage, thinly slice leaves and finely grate edible core. Dice washed tomatoes with skin. Put rinsed rice, cabbage and salt in wide pan with430ml hot water, cook covered15min. Mix in all tomatoes and their juice and simmer10min, rest3min, stir and divide. Show one finished portion: softened pale cabbage ribbons intermingled with cooked rice and softened red tomato cubes with skins, moist absorbed tomato juices, not soup. Plain ceramic plate, neutral tabletop, soft daylight. Only listed ingredients; no oil, butter, onion, carrot, meat, herbs, garnish, cream, toppings, sauce, text, brand or watermark. Generated culinary illustration, no actual cooked-dish evidence claim.",
+    "generatedAt": "2026-11-06T11:45:27.563Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:46:01.793Z",
+      "notes": "Просмотрено: мягкие капустные ленты, рис и размягчённые томаты с кожицей; влажная несуповая текстура, лишних добавок не видно."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2342364,
+    "sha256": "26b4f793a06b5ffa245790c43ee45b29d117d4b71024878c2f1f8d6cc080e40a"
+  },
+  {
+    "recipeId": "millet-beet-pot",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/millet-beet-pot.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b0ab-aa9d-78b2-a2b1-9031544ac14b/exec-67d13558-0fa3-4e5d-be06-bf0831be6f3f.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan millet-beet-pot, Пшено с тёртой свёклой. Native PNG landscape exactly 4:3. Recipe two portions: millet150g, beet300g, carrot100g, salt3g, hot water500ml. Rinse millet, scald with boiling water and drain. Wash beet and carrot retaining edible skins and grate finely. Combine millet, grated beet, grated carrot and salt with500ml hot water, bring to gentle boil, cook covered24min stirring occasionally. Loosen the finished thick porridge and serve two portions. Show one cooked portion: small recognizable millet grains deeply tinted beet-red mixed with fine cooked beet and carrot shreds, thick soft moist porridge, not soup. Plain ceramic bowl on neutral table, soft daylight. Only listed ingredients. No rice, onion, oil, butter, dairy, cream, herbs, green garnish, sauce, toppings, text, brand, watermark. Generated culinary illustration, no actual cooked-dish evidence claim.",
+    "generatedAt": "2026-11-06T11:46:18.436Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:46:56.147Z",
+      "notes": "Просмотрено: мелкие округлые зёрна пшена, свекольно-красная густая каша с тёртой свёклой и морковью, без зелени и неучтённых добавок."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2557935,
+    "sha256": "85569e2907e14eac6230ac3ef9790df7279b16c1d88e5ca4a3cc68162785396a"
+  },
+  {
+    "recipeId": "potato-tomato-braise",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/potato-tomato-braise.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b0ab-aa9d-78b2-a2b1-9031544ac14b/exec-9eca5b94-c2d9-4321-8a7e-fd478d62719b.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan potato-tomato-braise, Картофель, тушённый с томатами. Native PNG landscape exactly 4:3. Recipe two portions: potato600g, tomato300g, carrot100g, salt3g, water250ml. Wash sound potatoes and carrots retaining edible skins, cut into small cubes; cut tomatoes separately preserving juice. Braise potato and carrot covered with salt and250ml water18min. Add all tomato pieces and their juice, stir and cook8min until potato is soft, divide all into two portions. Show one finished portion of small soft potato cubes with flecks of edible skin, small orange carrot cubes and softened red tomato pieces in their moist thin cooking juices, a vegetable braise not soup. Plain ceramic shallow bowl, neutral table, soft daylight. Only listed ingredients. No onion, garlic, herbs, parsley, oil, butter, meat, cream, sauce, garnish, toppings, text, logo, watermark. Generated culinary illustration, no actual cooked-dish evidence claim.",
+    "generatedAt": "2026-11-06T11:47:05.494Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:47:41.081Z",
+      "notes": "Просмотрено: мягкие картофельные кубики с кожицей, морковные кубики и размягчённые томаты в небольшом количестве сока; зелени, масла и других добавок не видно."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2458948,
+    "sha256": "312bdff6131edd4ca6fe69cb1cdb9f002cc718ef050008a75d1535de521dc184"
+  },
+  {
+    "recipeId": "beet-cabbage-braise",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/beet-cabbage-braise.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b0ab-aa9d-78b2-a2b1-9031544ac14b/exec-ca2e0220-fc16-411a-9812-5bbd9cce2013.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan beet-cabbage-braise, Тушёная капуста со свёклой. Native PNG landscape exactly 4:3. Recipe two portions: cabbage450g, beet300g, tomato180g, salt3g, water300ml. Wash cabbage and thinly shred leaves, finely grate edible core. Wash beet keeping edible skin, finely grate. Combine cabbage, beet, salt and300ml water in saute pan, braise covered18min stirring twice. Add washed tomatoes chopped with skins, simmer8min until vegetables soft, divide two portions. Show one finished portion of soft fine cabbage ribbons stained burgundy by finely grated beet, with some cooked tomato pieces and slight vegetable juice; a braise, not soup. Plain neutral ceramic plate, neutral tabletop, soft daylight. Only listed ingredients; no carrot, onion, oil, butter, meat, cream, herbs, garnish, sauce, toppings, text, logo, watermark. Generated culinary illustration, not actual cooked evidence.",
+    "generatedAt": "2026-11-06T11:48:27.006Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:49:01.237Z",
+      "notes": "Просмотрено: мягкая тонкая капуста, тёртая свёкла, бордовый цвет и кусочки тушёных томатов; без бульона, зелени и других добавок."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2601715,
+    "sha256": "8ce41ab158fa05dbbd55d73255fda9401db8a1a9efc2c3cf01f6c23a69ca5e65"
+  },
+  {
+    "recipeId": "potato-flour-cakes",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/potato-flour-cakes.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b0ab-aa9d-78b2-a2b1-9031544ac14b/exec-fdd8b095-a4f0-40b3-8f6c-7d2417ea8b2f.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan potato-flour-cakes, Картофельные лепёшки без масла. Native PNG landscape exactly 4:3. Recipe two portions: potato400g, wheat flour130g, salt3g, NO added water or oil. Wash potatoes keeping edible skin, grate very finely, do not squeeze juice; mix all wet potato with flour and salt. Heat dry nonstick pan moderately; spread eight thin flat cakes. Cook covered6min each side until potato soft and middle cooked. Serve exactly FOUR thin potato-flour cakes as ONE portion on a plain ceramic plate. Show four distinct modest irregular round flat cakes, pale beige potato-flour surface with tiny potato skin specks and light dry-pan toasted patches, cooked soft interior, no oily crust. Neutral tabletop, soft daylight. Only listed ingredients. No egg, onion, oil, butter, sour cream, dairy, herbs, garnish, sauce, toppings, vegetables on side, text, logo or watermark. Generated culinary illustration, not actual cooked evidence.",
+    "generatedAt": "2026-11-06T11:49:10.187Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:49:46.597Z",
+      "notes": "Просмотрено: ровно четыре тонкие картофельные лепёшки, мелкие вкрапления кожицы и сухой румянец; нет масла, сметаны, зелени и гарнира."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2585644,
+    "sha256": "63a2b7e0e7c77289b2b910ebb52f7825353fab32a603b00a0930ab510d1cb69b"
+  },
+  {
+    "recipeId": "cabbage-flour-pancakes",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/cabbage-flour-pancakes.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b0ab-aa9d-78b2-a2b1-9031544ac14b/exec-a0ee19cd-256d-4a49-ba7f-bdbcbad363c2.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan cabbage-flour-pancakes, Капустные оладьи на воде. Native PNG landscape exactly 4:3. Recipe two portions: cabbage300g, wheat flour170g, salt3g, water150ml. Wash cabbage, chop leaves very finely and grate edible core. Massage all with salt until juice appears. Add flour and150ml water, mix thoroughly. Spread small thin pancakes on dry nonstick pan. Cook covered on moderate heat7min each side until centers cooked. Divide all pancakes into two portions. Show one finished portion of several small thin pale cabbage-flour pancakes, fine light cabbage visible embedded in cooked flour batter, soft cooked centers and light dry toasted patches. Plain ceramic plate, neutral table, soft daylight. Only listed ingredients. No egg, onion, oil, butter, sour cream, dairy, carrot, herbs, green garnish, sauce, toppings, side salad, text, brand, watermark. Generated culinary illustration, not actual cooked evidence.",
+    "generatedAt": "2026-11-06T11:50:03.973Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:50:38.858Z",
+      "notes": "Просмотрено: тонкие светлые капустные оладьи с мелкой капустой в тесте и сухими поджаренными участками; без сметаны, зелени и гарнира."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2461278,
+    "sha256": "ad3e90cbf0307af64c5644cf854016e4b723372ec8c4694e02efbe58b730b96d"
+  },
+  {
+    "recipeId": "carrot-semolina-cutlets",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/carrot-semolina-cutlets.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b0ab-aa9d-78b2-a2b1-9031544ac14b/exec-fef4a60e-6268-4116-8ab6-7c9cbb4c6266.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan carrot-semolina-cutlets, Морковные биточки с манкой. Native PNG landscape exactly 4:3. Recipe two portions: carrot400g, semolina110g, salt2g, water180ml. Wash carrot keeping edible skin and finely grate. Simmer grated carrot with180ml water and salt10min stirring. Add semolina, stir over low heat3min, cool3min, form six THIN patties. Warm on DRY nonstick pan covered4min each side. Serve exactly THREE small thin carrot-semolina patties as ONE portion. Show three separate orange flattened round patties with fine cooked carrot texture bound by semolina, subtly dry toasted patches, soft cooked interior, no breadcrumb coating or oily crust. Plain ceramic plate, neutral table, soft daylight. Only listed ingredients. No egg, flour, breadcrumbs, oil, butter, onion, dairy, sour cream, herbs, garnish, sauce, toppings, side vegetables, text, logo, watermark. Generated culinary illustration, not actual cooked evidence.",
+    "generatedAt": "2026-11-06T11:50:48.219Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:51:23.261Z",
+      "notes": "Просмотрено: ровно три тонких оранжевых морковно-манных биточка, видна тёртая морковь и сухой румянец, нет панировки, соуса и зелени."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2499063,
+    "sha256": "0d13ec808217b10e23c4b48473acc895ea034f884d3fe5c9098f11d90a1145d5"
+  },
+  {
+    "recipeId": "beet-flour-pancakes",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/beet-flour-pancakes.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b0ab-aa9d-78b2-a2b1-9031544ac14b/exec-33afc844-2d4e-4d6d-b756-8e789041eb4e.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan beet-flour-pancakes, Свекольные оладьи. Native PNG landscape exactly 4:3. Recipe two portions: beet300g, wheat flour160g, salt2g, water130ml. Scrub beet clean retaining edible skin, grate very finely. Mix all beet with flour, salt and130ml water. Spread batter into six THIN pancakes on DRY nonstick pan. Reduce heat, cover, bake7min then turn and bake7min until middle cooked. Divide equally into two portions: show exactly THREE thin beet-flour pancakes on one plain ceramic plate. Deep reddish purple cooked beet batter with fine shreds and modest dry-pan browned patches, flattened soft cooked centers, no oily crust. Neutral tabletop, soft daylight. Only listed ingredients. No egg, oil, butter, onion, garlic, cream, dairy, sour cream, herbs, garnish, sauce, toppings, side salad, text, brand, watermark. Generated culinary illustration, not actual cooked evidence.",
+    "generatedAt": "2026-11-06T11:51:59.331Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:52:34.032Z",
+      "notes": "Просмотрено: три тонких свекольно-мучных оладьи насыщенного красного цвета, мелкая свёкла и сухой румянец; без сметаны, зелени и других добавок."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2866446,
+    "sha256": "b171816c6240d13cdd3f9d1551d8aaa5c5c3367dda299ec0fb35a49fc0873cdf"
+  },
+  {
+    "recipeId": "buckwheat-potato-mash",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/buckwheat-potato-mash.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b0ab-aa9d-78b2-a2b1-9031544ac14b/exec-090445f7-6bcf-45bc-8acb-24da4fb5386f.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan buckwheat-potato-mash, Размятая гречка с картофелем. Native PNG landscape exactly 4:3. Recipe two portions: buckwheat120g, potato400g, salt3g, water520ml. Wash sound potatoes retaining edible skin and dice about1cm; sort and rinse buckwheat. Combine potato and grain in pan with salt and520ml water, cook covered on low23min. Mash PART of cooked potato with masher keeping whole buckwheat grains; mix with remaining liquid, serve two portions. Show one finished portion of rustic pale partly mashed potato with a few soft small potato pieces and flecks of skin, generously studded with distinct whole cooked brown buckwheat grains. Thick soft moist mash, NOT pure buckwheat and NOT smooth cream. Plain ceramic bowl, neutral tabletop, soft daylight. Only listed ingredients. No milk, cream, butter, oil, onion, carrot, herbs, green garnish, meat, sauce, toppings, text, logo, watermark. Generated culinary illustration, not actual cooked evidence.",
+    "generatedAt": "2026-11-06T11:52:44.110Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-06 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-06T11:53:20.788Z",
+      "notes": "Просмотрено: картофель размят частично, сохранены кусочки с кожицей и целые узнаваемые гречневые зёрна; густая влажная текстура без сливок, масла, зелени."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2364472,
+    "sha256": "02993b9dc4b845a205e68bc8e3bc6068171a4af86d573d7126b3fdf2af9bea13"
+  },
+  {
+    "recipeId": "rice-carrot-dinner",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/rice-carrot-dinner.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b551-7054-73a3-bf1f-5a60649bc5d8/exec-5044b25f-0678-401e-a345-a4c23d6c5667.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan rice-carrot-dinner, Рис с морковными полосками. Create native PNG landscape exactly 4:3. Recipe for two portions: rice180g, carrot300g, salt3g, water480ml. Wash carrots retaining edible skin, cut into thin SHORT matchstick strips. Rinse rice and drain in sieve. Place carrots, rice and salt in saucepan, add480ml boiling water. Cook covered on lowest heat22minutes. Turn off and leave covered3minutes. Gently fluff rice together with carrot using fork and divide equally. Show ONE finished portion: fluffy cooked white rice mixed throughout with plentiful soft thin short orange carrot matchsticks, distinct moist grains, no broth. Plain neutral ceramic plate, neutral tabletop, soft daylight, centered three-quarter overhead food view. Only the listed ingredients. No oil, butter, onion, peas, herbs, green garnish, pepper, spices, sauce, toppings, side vegetables, text, brand or watermark. Generated culinary illustration, not evidence of an actual cooked meal.",
+    "generatedAt": "2026-11-07T09:23:40.359Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T09:24:13.321Z",
+      "notes": "Просмотрен native output: одна порция белого риса с короткой тонкой морковной соломкой, различимые влажные зёрна, без бульона, зелени и посторонних добавок."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2399062,
+    "sha256": "79a48559a068ae0b94a427ebae50ebe8cdef473b460ff8fcc02b25ef08958f3d"
+  },
+  {
+    "recipeId": "millet-tomato-dinner",
+    "catalogVersion": "mealplan-2026-10-28-1",
+    "path": "/recipes/millet-tomato-dinner.png",
+    "originalArtifact": "C:/Users/Lyonya/.codex/generated_images/01a1b551-7054-73a3-bf1f-5a60649bc5d8/exec-ca9623f5-51d7-4a37-a8e8-f755f0fbff0d.png",
+    "prompt": "Use case: photorealistic-natural. MealPlan millet-tomato-dinner, Пшено с томатами. Create native PNG landscape exactly 4:3. Recipe two portions: millet160g, tomato350g, salt3g, water420ml. Rinse millet and scald with boiling water then drain. Wash tomatoes and chop into small pieces retaining skins. Cook millet with salt in420ml water covered over low heat15minutes. Stir in tomatoes with all their juice. Cook another10minutes, stirring from bottom as needed. Rest3minutes and divide equally between two plates. Show ONE finished portion: soft moist cooked golden-yellow millet with many small softened red tomato pieces and bits of tomato skin mixed throughout, some warm reddish tomato juices absorbed into grains. Recognizable very small round millet grains, thick cohesive but grainy texture, no standing broth. Plain neutral ceramic shallow bowl, neutral tabletop, soft daylight, centered three-quarter overhead food view. Only listed ingredients. No rice, couscous, quinoa, butter, oil, onion, garlic, herbs, green garnish, cheese, cream, pepper, spices, sauce, toppings, side salad, text, logo or watermark. Generated culinary illustration, not evidence of an actual cooked meal.",
+    "generatedAt": "2026-11-07T09:24:33.829Z",
+    "provider": "OpenAI built-in image_gen",
+    "generated": true,
+    "termsUrl": "https://openai.com/policies/row-terms-of-use/",
+    "effectiveDate": "2026-11-07 (invocation date; terms revision not asserted)",
+    "visualReview": {
+      "status": "accepted",
+      "reviewedAt": "2026-11-07T09:25:15.314Z",
+      "notes": "Просмотрен native output: одна порция мягкого пшена с мелкими круглыми зёрнами и размягчёнными томатами с кожицей; густая влажная текстура, без бульона, зелени и иных добавок."
+    },
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2531671,
+    "sha256": "02ad96cb09c4a7007879f88ecf67f999e596ecd4024d5b653fe2eb6c486ad82e"
+  }
+]

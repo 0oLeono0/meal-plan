@@ -1,0 +1,1865 @@
+{
+  "phase": "03",
+  "status": "planned-not-executed",
+  "story": "**As a** гость, **I want to** сравнивать варианты меню, сохранять предыдущие при пересборке и изучать рецепты из согласованного состояния приложения, **so that** я могу выбрать подходящее меню и понимать его состав, стоимость и покупки без потери предыдущего результата.",
+  "estimateCalibration": {
+    "factor": 1,
+    "sample_count": 0,
+    "confidence": "low"
+  },
+  "plans": [
+    {
+      "id": "03-01",
+      "wave": 1,
+      "depends_on": [],
+      "requirements": [
+        "DATA-04",
+        "GEN-06",
+        "MENU-03"
+      ],
+      "files_modified": [
+        "src/domain/generatePlan.ts",
+        "src/features/generation/controller.ts",
+        "src/features/menu/MenuPage.tsx",
+        "src/app/App.tsx",
+        "e2e/phase03-variants.spec.ts",
+        "src/domain/plan.ts",
+        "src/domain/plan.test.ts",
+        "src/domain/generatePlan.test.ts",
+        "src/test/fixtures/phase02-active-plan-v1.json",
+        "src/adapters/activePlan.test.ts",
+        "src/features/generation/controller.test.ts"
+      ],
+      "artifacts": [
+        {
+          "path": "src/domain/generatePlan.ts",
+          "provides": "variantFingerprint; retained unique top-K; target/exclusion options; namespaced new IDs"
+        },
+        {
+          "path": "src/features/generation/controller.ts",
+          "provides": "guarded selectVariant operation and current revision owner"
+        },
+        {
+          "path": "e2e/phase03-variants.spec.ts",
+          "provides": "real generation/select/shopping/reload acceptance"
+        },
+        {
+          "path": "src/test/fixtures/phase02-active-plan-v1.json",
+          "provides": "immutable actual legacy encoded envelope fixture"
+        }
+      ],
+      "key_links": [
+        {
+          "from": "src/domain/generatePlan.ts",
+          "to": "src/domain/plan.ts",
+          "via": "validatePlanInputs/buildActivePlanEnvelope preserving exact snapshots"
+        },
+        {
+          "from": "src/features/menu/MenuPage.tsx",
+          "to": "src/features/generation/controller.ts",
+          "via": "onSelectVariant; requested selection stays pending before ack"
+        },
+        {
+          "from": "src/adapters/activePlan.ts",
+          "to": "src/features/shopping/ShoppingPage.tsx",
+          "via": "one installed ActiveBundle/projections keyed activeVariantId"
+        }
+      ],
+      "threats": [
+        {
+          "id": "T-03-01",
+          "category": "Tampering",
+          "component": "plan validator / active-plan snapshot",
+          "severity": "high",
+          "mitigation": "03-01-02/03: validate every variant, trusted equality, exact projection; legacy/tampered-inactive tests."
+        },
+        {
+          "id": "T-03-02",
+          "category": "Tampering",
+          "component": "selectVariant",
+          "severity": "high",
+          "mitigation": "03-01-01/03: owned op+base revision, serialize save, guard before setItem; ack-only install and old bytes oracle."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "03-01-01",
+          "plan": "03-01",
+          "wave": 1,
+          "type": "tracer",
+          "requirements": [
+            "DATA-04",
+            "GEN-06",
+            "MENU-03"
+          ],
+          "files": [
+            "src/domain/generatePlan.ts",
+            "src/features/generation/controller.ts",
+            "src/features/menu/MenuPage.tsx",
+            "src/app/App.tsx",
+            "e2e/phase03-variants.spec.ts"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-variants.spec.ts --project=chromium --workers=1",
+          "threats": [
+            "T-03-01",
+            "T-03-02",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-01-02",
+          "plan": "03-01",
+          "wave": 1,
+          "type": "auto",
+          "requirements": [
+            "DATA-04",
+            "GEN-06",
+            "MENU-03"
+          ],
+          "files": [
+            "src/domain/plan.ts",
+            "src/domain/plan.test.ts",
+            "src/domain/generatePlan.ts",
+            "src/domain/generatePlan.test.ts"
+          ],
+          "verify": "npm run test:unit -- --run src/domain/plan.test.ts src/domain/generatePlan.test.ts",
+          "threats": [
+            "T-03-01",
+            "T-03-02",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-01-03",
+          "plan": "03-01",
+          "wave": 1,
+          "type": "auto",
+          "requirements": [
+            "DATA-04",
+            "GEN-06",
+            "MENU-03"
+          ],
+          "files": [
+            "src/test/fixtures/phase02-active-plan-v1.json",
+            "src/adapters/activePlan.test.ts",
+            "src/features/generation/controller.test.ts"
+          ],
+          "verify": "npm run test:unit -- --run src/adapters/activePlan.test.ts src/features/generation/controller.test.ts",
+          "threats": [
+            "T-03-01",
+            "T-03-02",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "03-02",
+      "wave": 2,
+      "depends_on": [
+        "03-01"
+      ],
+      "requirements": [
+        "GEN-07",
+        "DATA-04",
+        "GEN-06"
+      ],
+      "files_modified": [
+        "src/adapters/generation.ts",
+        "src/features/generation/controller.ts",
+        "src/features/menu/MenuPage.tsx",
+        "e2e/phase03-append.spec.ts",
+        "src/app/App.tsx",
+        "src/adapters/generation.test.ts",
+        "src/features/generation/controller.test.ts"
+      ],
+      "artifacts": [
+        {
+          "path": "src/adapters/generation.ts",
+          "provides": "explicit validated request target/exclusions, shared deadline"
+        },
+        {
+          "path": "src/features/generation/controller.ts",
+          "provides": "appendVariant, recreateSet with base-revision operation intent"
+        },
+        {
+          "path": "e2e/phase03-append.spec.ts",
+          "provides": "actual append, recreate, cap, changed-draft confirmation"
+        }
+      ],
+      "key_links": [
+        {
+          "from": "src/features/menu/MenuPage.tsx",
+          "to": "src/features/generation/controller.ts",
+          "via": "append/recreate intent through single owner"
+        },
+        {
+          "from": "src/adapters/generation.ts",
+          "to": "src/domain/generatePlan.ts",
+          "via": "targetCount1 and excluded saved fingerprints"
+        },
+        {
+          "from": "src/app/App.tsx",
+          "to": "src/shared/ui.tsx",
+          "via": "ConfirmDialog before destructive replacement start"
+        }
+      ],
+      "threats": [
+        {
+          "id": "T-03-03",
+          "category": "Tampering",
+          "component": "append/recreate operation",
+          "severity": "high",
+          "mitigation": "03-02-01/03: preserve saved inputs, validate exclusions/output, base revision+guard, late/cancel tests."
+        },
+        {
+          "id": "T-03-04",
+          "category": "Denial of service",
+          "component": "generation request",
+          "severity": "medium",
+          "mitigation": "target≤3/exclusions≤12, cap12, one30s timer and abort cleanup; 29999/30000/30001ms tests."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "03-02-01",
+          "plan": "03-02",
+          "wave": 2,
+          "type": "tracer",
+          "requirements": [
+            "GEN-07",
+            "DATA-04",
+            "GEN-06"
+          ],
+          "files": [
+            "src/adapters/generation.ts",
+            "src/features/generation/controller.ts",
+            "src/features/menu/MenuPage.tsx",
+            "e2e/phase03-append.spec.ts"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-append.spec.ts --project=chromium --workers=1",
+          "threats": [
+            "T-03-03",
+            "T-03-04",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-02-02",
+          "plan": "03-02",
+          "wave": 2,
+          "type": "auto",
+          "requirements": [
+            "GEN-07",
+            "DATA-04",
+            "GEN-06"
+          ],
+          "files": [
+            "src/features/menu/MenuPage.tsx",
+            "src/features/generation/controller.ts",
+            "src/app/App.tsx",
+            "e2e/phase03-append.spec.ts"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-append.spec.ts --project=chromium --workers=1",
+          "threats": [
+            "T-03-03",
+            "T-03-04",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-02-03",
+          "plan": "03-02",
+          "wave": 2,
+          "type": "auto",
+          "requirements": [
+            "GEN-07",
+            "DATA-04",
+            "GEN-06"
+          ],
+          "files": [
+            "src/adapters/generation.test.ts",
+            "src/features/generation/controller.test.ts"
+          ],
+          "verify": "npm run test:unit -- --run src/adapters/generation.test.ts src/features/generation/controller.test.ts",
+          "threats": [
+            "T-03-03",
+            "T-03-04",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "03-03",
+      "wave": 3,
+      "depends_on": [
+        "03-02"
+      ],
+      "requirements": [
+        "DATA-04",
+        "REC-01",
+        "REC-02",
+        "REC-04",
+        "MENU-03"
+      ],
+      "files_modified": [
+        "src/domain/recipeView.ts",
+        "src/features/recipe/RecipePage.tsx",
+        "src/app/App.tsx",
+        "e2e/phase03-recipes.spec.ts",
+        "src/domain/planProjection.ts",
+        "src/domain/planProjection.test.ts",
+        "src/domain/recipeView.test.ts"
+      ],
+      "artifacts": [
+        {
+          "path": "src/domain/recipeView.ts",
+          "provides": "resolveRecipeContext, projectRecipeView: direct/context/stale/notfound/error/incomplete tagged union"
+        },
+        {
+          "path": "src/domain/planProjection.ts",
+          "provides": "per-instance ingredient allocation with shared product remainder"
+        },
+        {
+          "path": "src/features/recipe/RecipePage.tsx",
+          "provides": "routed recipe details, basis-labelled4metrics, ingredients, composition, numbered steps"
+        },
+        {
+          "path": "src/domain/recipeView.test.ts",
+          "provides": "independent exact numeric/context oracles"
+        },
+        {
+          "path": "e2e/phase03-recipes.spec.ts",
+          "provides": "actual direct/context/unknown/stale route flows"
+        }
+      ],
+      "key_links": [
+        {
+          "from": "src/app/App.tsx",
+          "to": "src/features/recipe/RecipePage.tsx",
+          "via": "/recipe/:id passes same controller saved snapshot plus catalog load state"
+        },
+        {
+          "from": "src/domain/recipeView.ts",
+          "to": "src/domain/planProjection.ts",
+          "via": "same active instance ingredient allocation; no second stock subtraction"
+        },
+        {
+          "from": "src/features/recipe/RecipePage.tsx",
+          "to": "src/domain/recipeView.ts",
+          "via": "derived read model; no arithmetic or duplicate active state in JSX"
+        }
+      ],
+      "threats": [
+        {
+          "id": "T-03-05",
+          "category": "Spoofing",
+          "component": "resolveRecipeContext",
+          "severity": "high",
+          "mitigation": "03-03-01/03: bounded coherent active triple, safe menu return; malformed/stale/nonactive browser/unit tests."
+        },
+        {
+          "id": "T-03-06",
+          "category": "Tampering",
+          "component": "recipe/stock projection",
+          "severity": "high",
+          "mitigation": "03-03-02: one canonical product ledger, exact4metric composition, independent500−200 oracle; invalid mandatory facts error."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "03-03-01",
+          "plan": "03-03",
+          "wave": 3,
+          "type": "tracer",
+          "requirements": [
+            "DATA-04",
+            "REC-01",
+            "REC-02",
+            "REC-04",
+            "MENU-03"
+          ],
+          "files": [
+            "src/domain/recipeView.ts",
+            "src/features/recipe/RecipePage.tsx",
+            "src/app/App.tsx",
+            "e2e/phase03-recipes.spec.ts"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-recipes.spec.ts --project=chromium --workers=1",
+          "threats": [
+            "T-03-05",
+            "T-03-06",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-03-02",
+          "plan": "03-03",
+          "wave": 3,
+          "type": "auto",
+          "requirements": [
+            "DATA-04",
+            "REC-01",
+            "REC-02",
+            "REC-04",
+            "MENU-03"
+          ],
+          "files": [
+            "src/domain/planProjection.ts",
+            "src/domain/planProjection.test.ts",
+            "src/domain/recipeView.ts",
+            "src/domain/recipeView.test.ts",
+            "src/features/recipe/RecipePage.tsx"
+          ],
+          "verify": "npm run test:unit -- --run src/domain/planProjection.test.ts src/domain/recipeView.test.ts",
+          "threats": [
+            "T-03-05",
+            "T-03-06",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-03-03",
+          "plan": "03-03",
+          "wave": 3,
+          "type": "auto",
+          "requirements": [
+            "DATA-04",
+            "REC-01",
+            "REC-02",
+            "REC-04",
+            "MENU-03"
+          ],
+          "files": [
+            "src/domain/recipeView.test.ts",
+            "src/features/recipe/RecipePage.tsx",
+            "e2e/phase03-recipes.spec.ts"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-recipes.spec.ts --project=chromium --workers=1",
+          "threats": [
+            "T-03-05",
+            "T-03-06",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "03-04",
+      "wave": 4,
+      "depends_on": [
+        "03-03"
+      ],
+      "requirements": [
+        "MENU-03",
+        "REC-01",
+        "DATA-04"
+      ],
+      "files_modified": [
+        "public/recipes/rice-sweet-porridge.png",
+        "src/data/recipeMedia.ts",
+        "docs/data/recipe-media.json",
+        "src/features/recipe/RecipePage.tsx",
+        "e2e/phase03-media.spec.ts",
+        "src/shared/RecipeImage.tsx",
+        "src/data/recipeMedia.test.ts",
+        "scripts/check-recipe-media.mjs",
+        "docs/data/recipe-media.md"
+      ],
+      "artifacts": [
+        {
+          "path": "public/recipes/rice-sweet-porridge.png",
+          "provides": "actual4:3 included-tool illustration with truthful original or regenerated invocation evidence"
+        },
+        {
+          "path": "src/data/recipeMedia.ts",
+          "provides": "readonly52 recipeId/catalogVersion local path mapping"
+        },
+        {
+          "path": "src/shared/RecipeImage.tsx",
+          "provides": "4:3 intrinsic image, eager/lazy and one-shot accessible fallback"
+        },
+        {
+          "path": "docs/data/recipe-media.json",
+          "provides": "original sample provenance; final aggregate assembled in03-09"
+        },
+        {
+          "path": "scripts/check-recipe-media.mjs",
+          "provides": "stdlib PNG/header/hash/local path/provenance auditor"
+        },
+        {
+          "path": "e2e/phase03-media.spec.ts",
+          "provides": "sample/batch-group and full offline browser image gates"
+        },
+        {
+          "path": "src/data/recipeMedia.test.ts",
+          "provides": "mapping/external-path/trust-separation tests"
+        },
+        {
+          "path": "docs/data/recipe-media.md",
+          "provides": "production/disclosure/resumable review instructions"
+        }
+      ],
+      "key_links": [
+        {
+          "from": "src/features/recipe/RecipePage.tsx",
+          "to": "src/data/recipeMedia.ts",
+          "via": "catalogVersion+recipeId, compiled local src only"
+        },
+        {
+          "from": "public/recipes/rice-sweet-porridge.png",
+          "to": "docs/data/recipe-media.json",
+          "via": "original sample SHA25626007bd43e3b5611b576c982aec375f5eba95bbee8c40c16a64cfd8caae4aad5 retained as evidence; used output hash matches actual provenance"
+        },
+        {
+          "from": "src/shared/RecipeImage.tsx",
+          "to": "e2e/phase03-media.spec.ts",
+          "via": "actual image decoding,4:3 geometry,404 one-shot fallback"
+        }
+      ],
+      "threats": [
+        {
+          "id": "T-03-07",
+          "category": "Information disclosure",
+          "component": "recipe media URLs",
+          "severity": "medium",
+          "mitigation": "03-04-01/02: compiled local-only src, no hotlinks/credentials, no remote requests in browser gate."
+        },
+        {
+          "id": "T-03-08",
+          "category": "Tampering",
+          "component": "media provenance/path",
+          "severity": "high",
+          "mitigation": "Original artifact+exact prompt/hash/dimensions/visual review, contained paths, reject mismatches; factual catalog unchanged."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "03-04-01",
+          "plan": "03-04",
+          "wave": 4,
+          "type": "tracer",
+          "requirements": [
+            "MENU-03",
+            "REC-01",
+            "DATA-04"
+          ],
+          "files": [
+            "public/recipes/rice-sweet-porridge.png",
+            "src/data/recipeMedia.ts",
+            "docs/data/recipe-media.json",
+            "src/features/recipe/RecipePage.tsx",
+            "e2e/phase03-media.spec.ts"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-media.spec.ts --grep sample --project=chromium --workers=1",
+          "threats": [
+            "T-03-07",
+            "T-03-08",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-04-02",
+          "plan": "03-04",
+          "wave": 4,
+          "type": "auto",
+          "requirements": [
+            "MENU-03",
+            "REC-01",
+            "DATA-04"
+          ],
+          "files": [
+            "src/shared/RecipeImage.tsx",
+            "src/features/recipe/RecipePage.tsx",
+            "src/data/recipeMedia.test.ts",
+            "scripts/check-recipe-media.mjs",
+            "docs/data/recipe-media.md"
+          ],
+          "verify": "npm run test:unit -- --run src/data/recipeMedia.test.ts",
+          "threats": [
+            "T-03-07",
+            "T-03-08",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "03-05",
+      "wave": 5,
+      "depends_on": [
+        "03-04"
+      ],
+      "requirements": [
+        "MENU-03",
+        "REC-01"
+      ],
+      "files_modified": [
+        "public/recipes/millet-sweet-porridge.png",
+        "public/recipes/semolina-smooth.png",
+        "public/recipes/buckwheat-carrot-breakfast.png",
+        "public/recipes/rice-carrot-porridge.png",
+        "docs/data/recipe-media-batches/01.json",
+        "public/recipes/millet-carrot-mash.png",
+        "public/recipes/semolina-carrot.png",
+        "public/recipes/buckwheat-tomato-breakfast.png",
+        "public/recipes/flour-dry-flatbread.png",
+        "public/recipes/carrot-water-pancakes.png",
+        "public/recipes/potato-rice-breakfast.png",
+        "public/recipes/rice-millet-mix.png",
+        "public/recipes/potato-carrot-soup.png"
+      ],
+      "artifacts": [
+        {
+          "path": "public/recipes/millet-sweet-porridge.png",
+          "provides": "actual original4:3 illustration for millet-sweet-porridge"
+        },
+        {
+          "path": "public/recipes/semolina-smooth.png",
+          "provides": "actual original4:3 illustration for semolina-smooth"
+        },
+        {
+          "path": "public/recipes/buckwheat-carrot-breakfast.png",
+          "provides": "actual original4:3 illustration for buckwheat-carrot-breakfast"
+        },
+        {
+          "path": "public/recipes/rice-carrot-porridge.png",
+          "provides": "actual original4:3 illustration for rice-carrot-porridge"
+        },
+        {
+          "path": "public/recipes/millet-carrot-mash.png",
+          "provides": "actual original4:3 illustration for millet-carrot-mash"
+        },
+        {
+          "path": "public/recipes/semolina-carrot.png",
+          "provides": "actual original4:3 illustration for semolina-carrot"
+        },
+        {
+          "path": "public/recipes/buckwheat-tomato-breakfast.png",
+          "provides": "actual original4:3 illustration for buckwheat-tomato-breakfast"
+        },
+        {
+          "path": "public/recipes/flour-dry-flatbread.png",
+          "provides": "actual original4:3 illustration for flour-dry-flatbread"
+        },
+        {
+          "path": "public/recipes/carrot-water-pancakes.png",
+          "provides": "actual original4:3 illustration for carrot-water-pancakes"
+        },
+        {
+          "path": "public/recipes/potato-rice-breakfast.png",
+          "provides": "actual original4:3 illustration for potato-rice-breakfast"
+        },
+        {
+          "path": "public/recipes/rice-millet-mix.png",
+          "provides": "actual original4:3 illustration for rice-millet-mix"
+        },
+        {
+          "path": "public/recipes/potato-carrot-soup.png",
+          "provides": "actual original4:3 illustration for potato-carrot-soup"
+        },
+        {
+          "path": "docs/data/recipe-media-batches/01.json",
+          "provides": "12 exact prompts/artifacts/timestamps/terms/dimensions/hashes/visual decisions"
+        }
+      ],
+      "key_links": [
+        {
+          "from": "docs/data/recipe-media-batches/01.json",
+          "to": "src/data/recipeMedia.ts",
+          "via": "exact same catalogVersion+recipeId+local path"
+        },
+        {
+          "from": "e2e/phase03-media.spec.ts",
+          "to": "public/recipes/millet-sweet-porridge.png",
+          "via": "static expected batch-01 group IDs, actual recipe hero decode"
+        }
+      ],
+      "threats": [
+        {
+          "id": "T-03-09",
+          "category": "Tampering",
+          "component": "media batch01",
+          "severity": "high",
+          "mitigation": "Все3 tasks: exact source recipe prompts, per-output visual review/header/hash/contained local path; browser groups batch-01-01..03."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "03-05-01",
+          "plan": "03-05",
+          "wave": 5,
+          "type": "tracer",
+          "requirements": [
+            "MENU-03",
+            "REC-01"
+          ],
+          "files": [
+            "public/recipes/millet-sweet-porridge.png",
+            "public/recipes/semolina-smooth.png",
+            "public/recipes/buckwheat-carrot-breakfast.png",
+            "public/recipes/rice-carrot-porridge.png",
+            "docs/data/recipe-media-batches/01.json"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-01-01 --project=chromium --workers=1",
+          "threats": [
+            "T-03-09",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-05-02",
+          "plan": "03-05",
+          "wave": 5,
+          "type": "auto",
+          "requirements": [
+            "MENU-03",
+            "REC-01"
+          ],
+          "files": [
+            "public/recipes/millet-carrot-mash.png",
+            "public/recipes/semolina-carrot.png",
+            "public/recipes/buckwheat-tomato-breakfast.png",
+            "public/recipes/flour-dry-flatbread.png",
+            "docs/data/recipe-media-batches/01.json"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-01-02 --project=chromium --workers=1",
+          "threats": [
+            "T-03-09",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-05-03",
+          "plan": "03-05",
+          "wave": 5,
+          "type": "auto",
+          "requirements": [
+            "MENU-03",
+            "REC-01"
+          ],
+          "files": [
+            "public/recipes/carrot-water-pancakes.png",
+            "public/recipes/potato-rice-breakfast.png",
+            "public/recipes/rice-millet-mix.png",
+            "public/recipes/potato-carrot-soup.png",
+            "docs/data/recipe-media-batches/01.json"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-01-03 --project=chromium --workers=1",
+          "threats": [
+            "T-03-09",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "03-06",
+      "wave": 5,
+      "depends_on": [
+        "03-04"
+      ],
+      "requirements": [
+        "MENU-03",
+        "REC-01"
+      ],
+      "files_modified": [
+        "public/recipes/cabbage-rice-soup.png",
+        "public/recipes/beet-potato-soup.png",
+        "public/recipes/tomato-rice-soup.png",
+        "public/recipes/buckwheat-potato-soup.png",
+        "docs/data/recipe-media-batches/02.json",
+        "public/recipes/millet-cabbage-soup.png",
+        "public/recipes/potato-dumpling-soup.png",
+        "public/recipes/carrot-semolina-soup.png",
+        "public/recipes/beet-rice-pot.png",
+        "public/recipes/buckwheat-tomato-stew.png",
+        "public/recipes/millet-potato-stew.png",
+        "public/recipes/cabbage-potato-braise.png",
+        "public/recipes/carrot-potato-puree.png"
+      ],
+      "artifacts": [
+        {
+          "path": "public/recipes/cabbage-rice-soup.png",
+          "provides": "actual original4:3 illustration for cabbage-rice-soup"
+        },
+        {
+          "path": "public/recipes/beet-potato-soup.png",
+          "provides": "actual original4:3 illustration for beet-potato-soup"
+        },
+        {
+          "path": "public/recipes/tomato-rice-soup.png",
+          "provides": "actual original4:3 illustration for tomato-rice-soup"
+        },
+        {
+          "path": "public/recipes/buckwheat-potato-soup.png",
+          "provides": "actual original4:3 illustration for buckwheat-potato-soup"
+        },
+        {
+          "path": "public/recipes/millet-cabbage-soup.png",
+          "provides": "actual original4:3 illustration for millet-cabbage-soup"
+        },
+        {
+          "path": "public/recipes/potato-dumpling-soup.png",
+          "provides": "actual original4:3 illustration for potato-dumpling-soup"
+        },
+        {
+          "path": "public/recipes/carrot-semolina-soup.png",
+          "provides": "actual original4:3 illustration for carrot-semolina-soup"
+        },
+        {
+          "path": "public/recipes/beet-rice-pot.png",
+          "provides": "actual original4:3 illustration for beet-rice-pot"
+        },
+        {
+          "path": "public/recipes/buckwheat-tomato-stew.png",
+          "provides": "actual original4:3 illustration for buckwheat-tomato-stew"
+        },
+        {
+          "path": "public/recipes/millet-potato-stew.png",
+          "provides": "actual original4:3 illustration for millet-potato-stew"
+        },
+        {
+          "path": "public/recipes/cabbage-potato-braise.png",
+          "provides": "actual original4:3 illustration for cabbage-potato-braise"
+        },
+        {
+          "path": "public/recipes/carrot-potato-puree.png",
+          "provides": "actual original4:3 illustration for carrot-potato-puree"
+        },
+        {
+          "path": "docs/data/recipe-media-batches/02.json",
+          "provides": "12 exact prompts/artifacts/timestamps/terms/dimensions/hashes/visual decisions"
+        }
+      ],
+      "key_links": [
+        {
+          "from": "docs/data/recipe-media-batches/02.json",
+          "to": "src/data/recipeMedia.ts",
+          "via": "exact same catalogVersion+recipeId+local path"
+        },
+        {
+          "from": "e2e/phase03-media.spec.ts",
+          "to": "public/recipes/cabbage-rice-soup.png",
+          "via": "static expected batch-02 group IDs, actual recipe hero decode"
+        }
+      ],
+      "threats": [
+        {
+          "id": "T-03-10",
+          "category": "Tampering",
+          "component": "media batch02",
+          "severity": "high",
+          "mitigation": "Все3 tasks: exact source recipe prompts, per-output visual review/header/hash/contained local path; browser groups batch-02-01..03."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "03-06-01",
+          "plan": "03-06",
+          "wave": 5,
+          "type": "tracer",
+          "requirements": [
+            "MENU-03",
+            "REC-01"
+          ],
+          "files": [
+            "public/recipes/cabbage-rice-soup.png",
+            "public/recipes/beet-potato-soup.png",
+            "public/recipes/tomato-rice-soup.png",
+            "public/recipes/buckwheat-potato-soup.png",
+            "docs/data/recipe-media-batches/02.json"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-02-01 --project=chromium --workers=1",
+          "threats": [
+            "T-03-10",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-06-02",
+          "plan": "03-06",
+          "wave": 5,
+          "type": "auto",
+          "requirements": [
+            "MENU-03",
+            "REC-01"
+          ],
+          "files": [
+            "public/recipes/millet-cabbage-soup.png",
+            "public/recipes/potato-dumpling-soup.png",
+            "public/recipes/carrot-semolina-soup.png",
+            "public/recipes/beet-rice-pot.png",
+            "docs/data/recipe-media-batches/02.json"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-02-02 --project=chromium --workers=1",
+          "threats": [
+            "T-03-10",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-06-03",
+          "plan": "03-06",
+          "wave": 5,
+          "type": "auto",
+          "requirements": [
+            "MENU-03",
+            "REC-01"
+          ],
+          "files": [
+            "public/recipes/buckwheat-tomato-stew.png",
+            "public/recipes/millet-potato-stew.png",
+            "public/recipes/cabbage-potato-braise.png",
+            "public/recipes/carrot-potato-puree.png",
+            "docs/data/recipe-media-batches/02.json"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-02-03 --project=chromium --workers=1",
+          "threats": [
+            "T-03-10",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "03-07",
+      "wave": 5,
+      "depends_on": [
+        "03-04"
+      ],
+      "requirements": [
+        "MENU-03",
+        "REC-01"
+      ],
+      "files_modified": [
+        "public/recipes/cabbage-buckwheat-pot.png",
+        "public/recipes/rice-cabbage-pan.png",
+        "public/recipes/millet-beet-pot.png",
+        "public/recipes/potato-tomato-braise.png",
+        "docs/data/recipe-media-batches/03.json",
+        "public/recipes/beet-cabbage-braise.png",
+        "public/recipes/potato-flour-cakes.png",
+        "public/recipes/cabbage-flour-pancakes.png",
+        "public/recipes/carrot-semolina-cutlets.png",
+        "public/recipes/beet-flour-pancakes.png",
+        "public/recipes/buckwheat-potato-mash.png",
+        "public/recipes/rice-carrot-dinner.png",
+        "public/recipes/millet-tomato-dinner.png"
+      ],
+      "artifacts": [
+        {
+          "path": "public/recipes/cabbage-buckwheat-pot.png",
+          "provides": "actual original4:3 illustration for cabbage-buckwheat-pot"
+        },
+        {
+          "path": "public/recipes/rice-cabbage-pan.png",
+          "provides": "actual original4:3 illustration for rice-cabbage-pan"
+        },
+        {
+          "path": "public/recipes/millet-beet-pot.png",
+          "provides": "actual original4:3 illustration for millet-beet-pot"
+        },
+        {
+          "path": "public/recipes/potato-tomato-braise.png",
+          "provides": "actual original4:3 illustration for potato-tomato-braise"
+        },
+        {
+          "path": "public/recipes/beet-cabbage-braise.png",
+          "provides": "actual original4:3 illustration for beet-cabbage-braise"
+        },
+        {
+          "path": "public/recipes/potato-flour-cakes.png",
+          "provides": "actual original4:3 illustration for potato-flour-cakes"
+        },
+        {
+          "path": "public/recipes/cabbage-flour-pancakes.png",
+          "provides": "actual original4:3 illustration for cabbage-flour-pancakes"
+        },
+        {
+          "path": "public/recipes/carrot-semolina-cutlets.png",
+          "provides": "actual original4:3 illustration for carrot-semolina-cutlets"
+        },
+        {
+          "path": "public/recipes/beet-flour-pancakes.png",
+          "provides": "actual original4:3 illustration for beet-flour-pancakes"
+        },
+        {
+          "path": "public/recipes/buckwheat-potato-mash.png",
+          "provides": "actual original4:3 illustration for buckwheat-potato-mash"
+        },
+        {
+          "path": "public/recipes/rice-carrot-dinner.png",
+          "provides": "actual original4:3 illustration for rice-carrot-dinner"
+        },
+        {
+          "path": "public/recipes/millet-tomato-dinner.png",
+          "provides": "actual original4:3 illustration for millet-tomato-dinner"
+        },
+        {
+          "path": "docs/data/recipe-media-batches/03.json",
+          "provides": "12 exact prompts/artifacts/timestamps/terms/dimensions/hashes/visual decisions"
+        }
+      ],
+      "key_links": [
+        {
+          "from": "docs/data/recipe-media-batches/03.json",
+          "to": "src/data/recipeMedia.ts",
+          "via": "exact same catalogVersion+recipeId+local path"
+        },
+        {
+          "from": "e2e/phase03-media.spec.ts",
+          "to": "public/recipes/cabbage-buckwheat-pot.png",
+          "via": "static expected batch-03 group IDs, actual recipe hero decode"
+        }
+      ],
+      "threats": [
+        {
+          "id": "T-03-11",
+          "category": "Tampering",
+          "component": "media batch03",
+          "severity": "high",
+          "mitigation": "Все3 tasks: exact source recipe prompts, per-output visual review/header/hash/contained local path; browser groups batch-03-01..03."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "03-07-01",
+          "plan": "03-07",
+          "wave": 5,
+          "type": "tracer",
+          "requirements": [
+            "MENU-03",
+            "REC-01"
+          ],
+          "files": [
+            "public/recipes/cabbage-buckwheat-pot.png",
+            "public/recipes/rice-cabbage-pan.png",
+            "public/recipes/millet-beet-pot.png",
+            "public/recipes/potato-tomato-braise.png",
+            "docs/data/recipe-media-batches/03.json"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-03-01 --project=chromium --workers=1",
+          "threats": [
+            "T-03-11",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-07-02",
+          "plan": "03-07",
+          "wave": 5,
+          "type": "auto",
+          "requirements": [
+            "MENU-03",
+            "REC-01"
+          ],
+          "files": [
+            "public/recipes/beet-cabbage-braise.png",
+            "public/recipes/potato-flour-cakes.png",
+            "public/recipes/cabbage-flour-pancakes.png",
+            "public/recipes/carrot-semolina-cutlets.png",
+            "docs/data/recipe-media-batches/03.json"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-03-02 --project=chromium --workers=1",
+          "threats": [
+            "T-03-11",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-07-03",
+          "plan": "03-07",
+          "wave": 5,
+          "type": "auto",
+          "requirements": [
+            "MENU-03",
+            "REC-01"
+          ],
+          "files": [
+            "public/recipes/beet-flour-pancakes.png",
+            "public/recipes/buckwheat-potato-mash.png",
+            "public/recipes/rice-carrot-dinner.png",
+            "public/recipes/millet-tomato-dinner.png",
+            "docs/data/recipe-media-batches/03.json"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-03-03 --project=chromium --workers=1",
+          "threats": [
+            "T-03-11",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "03-08",
+      "wave": 5,
+      "depends_on": [
+        "03-04"
+      ],
+      "requirements": [
+        "MENU-03",
+        "REC-01"
+      ],
+      "files_modified": [
+        "public/recipes/tomato-carrot-dumplings.png",
+        "public/recipes/cabbage-carrot-salad.png",
+        "public/recipes/tomato-cabbage-salad.png",
+        "public/recipes/carrot-tomato-salad.png",
+        "docs/data/recipe-media-batches/04.json",
+        "public/recipes/beet-carrot-raw-salad.png",
+        "public/recipes/carrot-sweet-ribbons.png",
+        "public/recipes/cabbage-beet-salad.png",
+        "public/recipes/tomato-carrot-cabbage-salad.png",
+        "public/recipes/carrot-semolina-pudding.png",
+        "public/recipes/rice-sweet-snack.png",
+        "public/recipes/semolina-small-flatbread.png",
+        "public/recipes/warm-tomato-carrot.png"
+      ],
+      "artifacts": [
+        {
+          "path": "public/recipes/tomato-carrot-dumplings.png",
+          "provides": "actual original4:3 illustration for tomato-carrot-dumplings"
+        },
+        {
+          "path": "public/recipes/cabbage-carrot-salad.png",
+          "provides": "actual original4:3 illustration for cabbage-carrot-salad"
+        },
+        {
+          "path": "public/recipes/tomato-cabbage-salad.png",
+          "provides": "actual original4:3 illustration for tomato-cabbage-salad"
+        },
+        {
+          "path": "public/recipes/carrot-tomato-salad.png",
+          "provides": "actual original4:3 illustration for carrot-tomato-salad"
+        },
+        {
+          "path": "public/recipes/beet-carrot-raw-salad.png",
+          "provides": "actual original4:3 illustration for beet-carrot-raw-salad"
+        },
+        {
+          "path": "public/recipes/carrot-sweet-ribbons.png",
+          "provides": "actual original4:3 illustration for carrot-sweet-ribbons"
+        },
+        {
+          "path": "public/recipes/cabbage-beet-salad.png",
+          "provides": "actual original4:3 illustration for cabbage-beet-salad"
+        },
+        {
+          "path": "public/recipes/tomato-carrot-cabbage-salad.png",
+          "provides": "actual original4:3 illustration for tomato-carrot-cabbage-salad"
+        },
+        {
+          "path": "public/recipes/carrot-semolina-pudding.png",
+          "provides": "actual original4:3 illustration for carrot-semolina-pudding"
+        },
+        {
+          "path": "public/recipes/rice-sweet-snack.png",
+          "provides": "actual original4:3 illustration for rice-sweet-snack"
+        },
+        {
+          "path": "public/recipes/semolina-small-flatbread.png",
+          "provides": "actual original4:3 illustration for semolina-small-flatbread"
+        },
+        {
+          "path": "public/recipes/warm-tomato-carrot.png",
+          "provides": "actual original4:3 illustration for warm-tomato-carrot"
+        },
+        {
+          "path": "docs/data/recipe-media-batches/04.json",
+          "provides": "12 exact prompts/artifacts/timestamps/terms/dimensions/hashes/visual decisions"
+        }
+      ],
+      "key_links": [
+        {
+          "from": "docs/data/recipe-media-batches/04.json",
+          "to": "src/data/recipeMedia.ts",
+          "via": "exact same catalogVersion+recipeId+local path"
+        },
+        {
+          "from": "e2e/phase03-media.spec.ts",
+          "to": "public/recipes/tomato-carrot-dumplings.png",
+          "via": "static expected batch-04 group IDs, actual recipe hero decode"
+        }
+      ],
+      "threats": [
+        {
+          "id": "T-03-12",
+          "category": "Tampering",
+          "component": "media batch04",
+          "severity": "high",
+          "mitigation": "Все3 tasks: exact source recipe prompts, per-output visual review/header/hash/contained local path; browser groups batch-04-01..03."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "03-08-01",
+          "plan": "03-08",
+          "wave": 5,
+          "type": "tracer",
+          "requirements": [
+            "MENU-03",
+            "REC-01"
+          ],
+          "files": [
+            "public/recipes/tomato-carrot-dumplings.png",
+            "public/recipes/cabbage-carrot-salad.png",
+            "public/recipes/tomato-cabbage-salad.png",
+            "public/recipes/carrot-tomato-salad.png",
+            "docs/data/recipe-media-batches/04.json"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-04-01 --project=chromium --workers=1",
+          "threats": [
+            "T-03-12",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-08-02",
+          "plan": "03-08",
+          "wave": 5,
+          "type": "auto",
+          "requirements": [
+            "MENU-03",
+            "REC-01"
+          ],
+          "files": [
+            "public/recipes/beet-carrot-raw-salad.png",
+            "public/recipes/carrot-sweet-ribbons.png",
+            "public/recipes/cabbage-beet-salad.png",
+            "public/recipes/tomato-carrot-cabbage-salad.png",
+            "docs/data/recipe-media-batches/04.json"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-04-02 --project=chromium --workers=1",
+          "threats": [
+            "T-03-12",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-08-03",
+          "plan": "03-08",
+          "wave": 5,
+          "type": "auto",
+          "requirements": [
+            "MENU-03",
+            "REC-01"
+          ],
+          "files": [
+            "public/recipes/carrot-semolina-pudding.png",
+            "public/recipes/rice-sweet-snack.png",
+            "public/recipes/semolina-small-flatbread.png",
+            "public/recipes/warm-tomato-carrot.png",
+            "docs/data/recipe-media-batches/04.json"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-04-03 --project=chromium --workers=1",
+          "threats": [
+            "T-03-12",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "03-09",
+      "wave": 6,
+      "depends_on": [
+        "03-05",
+        "03-06",
+        "03-07",
+        "03-08"
+      ],
+      "requirements": [
+        "MENU-03",
+        "REC-01",
+        "DATA-04"
+      ],
+      "files_modified": [
+        "public/recipes/beet-sweet-warm.png",
+        "public/recipes/potato-cabbage-mash.png",
+        "public/recipes/beet-tomato-rice.png",
+        "docs/data/recipe-media-batches/05.json",
+        "docs/data/recipe-media.json",
+        "src/data/recipeMedia.ts",
+        "src/data/recipeMedia.test.ts",
+        "e2e/phase03-media.spec.ts",
+        "docs/qa/phase03-media-review.md",
+        "docs/qa/phase03-media-contact-sheet.html",
+        "docs/data/recipe-media.md"
+      ],
+      "artifacts": [
+        {
+          "path": "public/recipes/beet-sweet-warm.png",
+          "provides": "actual unique final-batch illustration"
+        },
+        {
+          "path": "public/recipes/potato-cabbage-mash.png",
+          "provides": "actual unique final-batch illustration"
+        },
+        {
+          "path": "public/recipes/beet-tomato-rice.png",
+          "provides": "actual unique final-batch illustration"
+        },
+        {
+          "path": "docs/data/recipe-media-batches/05.json",
+          "provides": "3 final original output records"
+        },
+        {
+          "path": "docs/data/recipe-media.json",
+          "provides": "complete52-entry aggregate provenance"
+        },
+        {
+          "path": "docs/qa/phase03-media-review.md",
+          "provides": "52 per-recipe visual verdicts and image performance/offline evidence"
+        },
+        {
+          "path": "docs/qa/phase03-media-contact-sheet.html",
+          "provides": "local labelled52-image review sheet"
+        }
+      ],
+      "key_links": [
+        {
+          "from": "docs/data/recipe-media.json",
+          "to": "src/data/recipeMedia.ts",
+          "via": "exact52 mapping and actual dimensions/hashes"
+        },
+        {
+          "from": "e2e/phase03-media.spec.ts",
+          "to": "public/recipes/",
+          "via": "full-media offline recipe hero decoding; never fallback"
+        }
+      ],
+      "threats": [
+        {
+          "id": "T-03-13",
+          "category": "Tampering",
+          "component": "52-media aggregate",
+          "severity": "high",
+          "mitigation": "03-09-02/03: exact key sets/unique hashes/actual IHDR and original records; all52 visual+offline browser proof."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "03-09-01",
+          "plan": "03-09",
+          "wave": 6,
+          "type": "tracer",
+          "requirements": [
+            "MENU-03",
+            "REC-01",
+            "DATA-04"
+          ],
+          "files": [
+            "public/recipes/beet-sweet-warm.png",
+            "public/recipes/potato-cabbage-mash.png",
+            "public/recipes/beet-tomato-rice.png",
+            "docs/data/recipe-media-batches/05.json"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-media.spec.ts --grep batch-05-01 --project=chromium --workers=1",
+          "threats": [
+            "T-03-13",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-09-02",
+          "plan": "03-09",
+          "wave": 6,
+          "type": "auto",
+          "requirements": [
+            "MENU-03",
+            "REC-01",
+            "DATA-04"
+          ],
+          "files": [
+            "docs/data/recipe-media.json",
+            "src/data/recipeMedia.ts",
+            "src/data/recipeMedia.test.ts",
+            "e2e/phase03-media.spec.ts"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-media.spec.ts --grep full-media --project=chromium --workers=1",
+          "threats": [
+            "T-03-13",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-09-03",
+          "plan": "03-09",
+          "wave": 6,
+          "type": "auto",
+          "requirements": [
+            "MENU-03",
+            "REC-01",
+            "DATA-04"
+          ],
+          "files": [
+            "docs/qa/phase03-media-review.md",
+            "docs/qa/phase03-media-contact-sheet.html",
+            "docs/data/recipe-media.md"
+          ],
+          "verify": "node scripts/check-recipe-media.mjs --all",
+          "threats": [
+            "T-03-13",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "03-10",
+      "wave": 5,
+      "depends_on": [
+        "03-03",
+        "03-04"
+      ],
+      "requirements": [
+        "MENU-02",
+        "MENU-03",
+        "DATA-04",
+        "REC-01"
+      ],
+      "files_modified": [
+        "src/domain/menuView.ts",
+        "src/features/menu/MealCard.tsx",
+        "src/features/menu/MenuPage.tsx",
+        "src/shared/styles/tokens.css",
+        "e2e/phase03-presentation.spec.ts",
+        "src/domain/menuView.test.ts",
+        "src/domain/presentation.ts",
+        "src/domain/presentation.test.ts"
+      ],
+      "artifacts": [
+        {
+          "path": "src/domain/menuView.ts",
+          "provides": "validated view/day query, actual-date default/clamp and safe return state"
+        },
+        {
+          "path": "src/domain/menuView.test.ts",
+          "provides": "1..7/date/DST/same-period selection fixtures"
+        },
+        {
+          "path": "src/features/menu/MealCard.tsx",
+          "provides": "single accessible instance Link with RecipeImage and shared projection facts"
+        },
+        {
+          "path": "e2e/phase03-presentation.spec.ts",
+          "provides": "actual responsive day/week/card/return/geometry tests"
+        }
+      ],
+      "key_links": [
+        {
+          "from": "src/features/menu/MenuPage.tsx",
+          "to": "src/domain/menuView.ts",
+          "via": "validated query and active saved period, no persisted view duplication"
+        },
+        {
+          "from": "src/features/menu/MealCard.tsx",
+          "to": "src/features/recipe/RecipePage.tsx",
+          "via": "/recipe/:id?variant=…&instance=…&view=…&day=… plus local focus origin"
+        },
+        {
+          "from": "src/features/menu/MealCard.tsx",
+          "to": "src/domain/planProjection.ts",
+          "via": "perPortion price/nutrition and instance ingredient covered>0"
+        }
+      ],
+      "threats": [
+        {
+          "id": "T-03-14",
+          "category": "Tampering",
+          "component": "menu/card identity",
+          "severity": "high",
+          "mitigation": "03-10-01: active triple+validated return query, no copied aggregate pantry state; real repeated-instance browser checks."
+        },
+        {
+          "id": "T-03-15",
+          "category": "Information disclosure",
+          "component": "media/text presentation",
+          "severity": "medium",
+          "mitigation": "Compiled local RecipeImage, React text, no external src or raw HTML; full labels and safe return."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "03-10-01",
+          "plan": "03-10",
+          "wave": 5,
+          "type": "tracer",
+          "requirements": [
+            "MENU-02",
+            "MENU-03",
+            "DATA-04",
+            "REC-01"
+          ],
+          "files": [
+            "src/domain/menuView.ts",
+            "src/features/menu/MealCard.tsx",
+            "src/features/menu/MenuPage.tsx",
+            "src/shared/styles/tokens.css",
+            "e2e/phase03-presentation.spec.ts"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-presentation.spec.ts --project=chromium --workers=1",
+          "threats": [
+            "T-03-14",
+            "T-03-15",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-10-02",
+          "plan": "03-10",
+          "wave": 5,
+          "type": "auto",
+          "requirements": [
+            "MENU-02",
+            "MENU-03",
+            "DATA-04",
+            "REC-01"
+          ],
+          "files": [
+            "src/domain/menuView.test.ts",
+            "src/domain/presentation.ts",
+            "src/domain/presentation.test.ts",
+            "src/features/menu/MenuPage.tsx",
+            "e2e/phase03-presentation.spec.ts"
+          ],
+          "verify": "npm run test:unit -- --run src/domain/menuView.test.ts src/domain/presentation.test.ts",
+          "threats": [
+            "T-03-14",
+            "T-03-15",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "03-11",
+      "wave": 7,
+      "depends_on": [
+        "03-02",
+        "03-03",
+        "03-09",
+        "03-10"
+      ],
+      "requirements": [
+        "DATA-04",
+        "GEN-06",
+        "GEN-07",
+        "MENU-02",
+        "MENU-03",
+        "REC-01",
+        "REC-02",
+        "REC-04"
+      ],
+      "files_modified": [
+        "src/features/generation/controller.ts",
+        "src/features/menu/MenuPage.tsx",
+        "src/features/generation/GenerationPage.tsx",
+        "src/app/App.tsx",
+        "e2e/phase03-recovery.spec.ts",
+        "src/features/recipe/RecipePage.tsx",
+        "src/features/plan/PlanLoading.tsx",
+        "e2e/phase03-recipes.spec.ts",
+        "src/shared/styles/tokens.css",
+        "src/shared/ui.tsx",
+        "e2e/phase03-presentation.spec.ts",
+        "docs/qa/phase03-accessibility.md"
+      ],
+      "artifacts": [
+        {
+          "path": "e2e/phase03-recovery.spec.ts",
+          "provides": "real adapter save failure/retry/cancel/late response/reload flows"
+        },
+        {
+          "path": "src/features/plan/PlanLoading.tsx",
+          "provides": "recipe loading/busy/skeleton variant"
+        },
+        {
+          "path": "docs/qa/phase03-accessibility.md",
+          "provides": "actual keyboard/responsive/native limitations evidence"
+        }
+      ],
+      "key_links": [
+        {
+          "from": "src/features/menu/MenuPage.tsx",
+          "to": "src/features/generation/controller.ts",
+          "via": "operation intent/candidate/saveError/current snapshot only"
+        },
+        {
+          "from": "src/app/App.tsx",
+          "to": "src/features/menu/MealCard.tsx",
+          "via": "validated in-app return focus origin and presentation query"
+        },
+        {
+          "from": "src/shared/ui.tsx",
+          "to": "e2e/phase03-presentation.spec.ts",
+          "via": "real Tab/Enter/Space/Escape and geometric clearances"
+        }
+      ],
+      "threats": [
+        {
+          "id": "T-03-16",
+          "category": "Tampering",
+          "component": "recovery operations",
+          "severity": "high",
+          "mitigation": "03-11-01: actual adapter old bytes/quota/late-save oracles, retry saves same candidate, no late redirect."
+        },
+        {
+          "id": "T-03-17",
+          "category": "Spoofing",
+          "component": "return/focus context",
+          "severity": "medium",
+          "mitigation": "03-11-02/03: construct /menu enum/date, bound origin anchor; stale falls back h1; real keyboard route tests."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "03-11-01",
+          "plan": "03-11",
+          "wave": 7,
+          "type": "tracer",
+          "requirements": [
+            "DATA-04",
+            "GEN-06",
+            "GEN-07",
+            "MENU-02",
+            "MENU-03",
+            "REC-01",
+            "REC-02",
+            "REC-04"
+          ],
+          "files": [
+            "src/features/generation/controller.ts",
+            "src/features/menu/MenuPage.tsx",
+            "src/features/generation/GenerationPage.tsx",
+            "src/app/App.tsx",
+            "e2e/phase03-recovery.spec.ts"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-recovery.spec.ts --project=chromium --workers=1",
+          "threats": [
+            "T-03-16",
+            "T-03-17",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-11-02",
+          "plan": "03-11",
+          "wave": 7,
+          "type": "auto",
+          "requirements": [
+            "DATA-04",
+            "GEN-06",
+            "GEN-07",
+            "MENU-02",
+            "MENU-03",
+            "REC-01",
+            "REC-02",
+            "REC-04"
+          ],
+          "files": [
+            "src/features/recipe/RecipePage.tsx",
+            "src/features/plan/PlanLoading.tsx",
+            "src/app/App.tsx",
+            "e2e/phase03-recipes.spec.ts"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-recipes.spec.ts --project=chromium --workers=1",
+          "threats": [
+            "T-03-16",
+            "T-03-17",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-11-03",
+          "plan": "03-11",
+          "wave": 7,
+          "type": "auto",
+          "requirements": [
+            "DATA-04",
+            "GEN-06",
+            "GEN-07",
+            "MENU-02",
+            "MENU-03",
+            "REC-01",
+            "REC-02",
+            "REC-04"
+          ],
+          "files": [
+            "src/app/App.tsx",
+            "src/shared/styles/tokens.css",
+            "src/shared/ui.tsx",
+            "e2e/phase03-presentation.spec.ts",
+            "docs/qa/phase03-accessibility.md"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-presentation.spec.ts --workers=1",
+          "threats": [
+            "T-03-16",
+            "T-03-17",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "03-12",
+      "wave": 8,
+      "depends_on": [
+        "03-11"
+      ],
+      "requirements": [
+        "DATA-04",
+        "GEN-06",
+        "GEN-07",
+        "MENU-02",
+        "MENU-03",
+        "REC-01",
+        "REC-02",
+        "REC-04"
+      ],
+      "files_modified": [
+        "e2e/phase03-acceptance.spec.ts",
+        "e2e/phase03-variants.spec.ts",
+        "e2e/phase03-append.spec.ts",
+        "e2e/phase03-recipes.spec.ts",
+        "docs/qa/phase03-final-validation.md",
+        "docs/qa/phase03-security.md",
+        ".planning/phases/03-sravnenie-variantov-i-prosmotr-retseptov/03-VALIDATION.md"
+      ],
+      "artifacts": [
+        {
+          "path": "e2e/phase03-acceptance.spec.ts",
+          "provides": "one complete real multi-screen acceptance flow and numeric consistency assertions"
+        },
+        {
+          "path": "docs/qa/phase03-final-validation.md",
+          "provides": "actual commands/results/timings/browser matrix and limitations"
+        },
+        {
+          "path": "docs/qa/phase03-security.md",
+          "provides": "phase-unique STRIDE mitigation evidence at ASVS5 level1"
+        },
+        {
+          "path": ".planning/phases/03-sravnenie-variantov-i-prosmotr-retseptov/03-VALIDATION.md",
+          "provides": "actual per-task status/evidence without fabricated Nyquist pass"
+        }
+      ],
+      "key_links": [
+        {
+          "from": "e2e/phase03-acceptance.spec.ts",
+          "to": "src/app/App.tsx",
+          "via": "real production ports, current shared controller bundle"
+        },
+        {
+          "from": "docs/qa/phase03-final-validation.md",
+          "to": ".planning/phases/03-sravnenie-variantov-i-prosmotr-retseptov/03-SOURCE-AUDIT.md",
+          "via": "exact requirement/decision/edge/UI and task evidence cross-reference"
+        }
+      ],
+      "threats": [
+        {
+          "id": "T-03-18",
+          "category": "Repudiation",
+          "component": "phase verification evidence",
+          "severity": "medium",
+          "mitigation": "03-12-01/02: actual command/exit/time/screenshots and independent numeric oracles; no fabricated human/native passes."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "03-12-01",
+          "plan": "03-12",
+          "wave": 8,
+          "type": "tracer",
+          "requirements": [
+            "DATA-04",
+            "GEN-06",
+            "GEN-07",
+            "MENU-02",
+            "MENU-03",
+            "REC-01",
+            "REC-02",
+            "REC-04"
+          ],
+          "files": [
+            "e2e/phase03-acceptance.spec.ts",
+            "e2e/phase03-variants.spec.ts",
+            "e2e/phase03-append.spec.ts",
+            "e2e/phase03-recipes.spec.ts",
+            "docs/qa/phase03-final-validation.md"
+          ],
+          "verify": "npm run test:e2e -- e2e/phase03-acceptance.spec.ts --workers=1",
+          "threats": [
+            "T-03-18",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "03-12-02",
+          "plan": "03-12",
+          "wave": 8,
+          "type": "auto",
+          "requirements": [
+            "DATA-04",
+            "GEN-06",
+            "GEN-07",
+            "MENU-02",
+            "MENU-03",
+            "REC-01",
+            "REC-02",
+            "REC-04"
+          ],
+          "files": [
+            "docs/qa/phase03-final-validation.md",
+            "docs/qa/phase03-security.md",
+            ".planning/phases/03-sravnenie-variantov-i-prosmotr-retseptov/03-VALIDATION.md"
+          ],
+          "verify": "npm run test:unit -- --run",
+          "threats": [
+            "T-03-18",
+            "T-03-SC"
+          ],
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "edges": 46,
+  "uiPairs": 52,
+  "mediaFiles": 52
+}
+

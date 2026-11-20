@@ -70,3 +70,11 @@ No unmapped Threat Flags were found in the eight SUMMARY files. Device, accessib
 **T-01-11 correction/extension:** WR-02 не менял разрешённый объём удаления, но обнаружил потерю доступной точки продолжения после explicit reset. `8cd5872` добавляет heading fallback только при удалённом инициаторе; существующий возврат к живому инициатору сохранён. `storage.spec.ts` проверяет успешный reset с первого шага, cancellation/failed-reset focus и сохранность foreign keys во всех трёх браузерах. WR-01 (`a82e308`) отдельно восстанавливает post-commit focus первой ошибки в свёрнутой норме; semantics/nutrition facts не менялись.
 
 Проверки выполнены **в основном checkout**, `workflow.use_worktrees=false`: 134 unit passed, typecheck/lint/build exit 0. Связанный browser run — **185 passed / 1 Firefox context teardown error**, не 186 green; изолированный повтор teardown error также failed. Все регрессии указанных угроз/замечаний прошли; инфраструктурная причина ошибки ещё не установлена. Evidence и точные команды — `01-REVIEW-FIXES.md`, `docs/qa/phase01.md`, `.tmp/phase01-qa/review-related-186.xml`. Это addendum исполнителя с новым evidence, **не повторный независимый security audit** и не завершение приёмки Phase 1. Независимый review логики CR-01 и ранее указанные human gates остаются.
+
+## Security Audit 2026-10-30
+
+| Metric | Count |
+|---|---|
+| Threats found | 13 |
+| Closed | 13 |
+| Open | 0 |

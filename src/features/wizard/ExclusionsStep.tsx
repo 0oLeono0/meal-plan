@@ -8,6 +8,7 @@ export function ExclusionsStep({ draft, onChange, disabled = false, productPort,
   const focusTag = (id: string) => requestAnimationFrame(() => document.getElementById(`exclusion-${id}`)?.focus());
   return <>
     <p>Отметьте ограничения и продукты, которые не хотите видеть в меню.</p>
+    <p className="hint">Без рыбы — исключаем также морепродукты</p>
     <fieldset id="restrictions" tabIndex={-1} className="card border-0 min-w-0" disabled={disabled}><legend>Ограничения питания</legend>
       <div className="grid gap-2">{dietaryRestrictions.map(({ id: value, label }) => <label key={value} className="flex items-center gap-2 min-h-[44px] m-0">
         <input type="checkbox" className="!w-6 shrink-0 accent-[var(--color-accent)]" checked={draft.restrictions.includes(value)}

@@ -1,0 +1,374 @@
+import { describe, expect, it, vi } from 'vitest';
+import { buildAppliedSettings } from '../domain/appliedSettings';
+import { buildActivePlanEnvelope, createPlanInputs, createRecipeInstances, encodePlanEnvelope, mealSlots, planCoordinates } from '../domain/plan';
+import type { Catalog } from '../domain/catalog';
+import type { ActivePlanEnvelope, EditedPlanEnvelope } from '../domain/plan';
+import { decimal } from '../domain/quantities';
+import { addMeal, removeMeal } from '../domain/mealEdits';
+import { createDraft } from '../domain/settings';
+import { ACTIVE_PLAN_KEY, ACTIVE_PLAN_MAX_BYTES, createActivePlanAdapter, createActivePlanPresencePort, validateActiveBundle } from './activePlan';
+import { bundledCatalog } from '../data/catalog';
+import { createTrustedCatalogRegistry } from './trustedCatalogs';
+import legacyRaw from '../test/fixtures/phase02-active-plan-v1.json?raw';
+import release1Raw from '../test/fixtures/phase031-release1-active-plan.json?raw';
+import release2Raw from '../test/fixtures/phase031-release2-active-plan.json?raw';
+import release3Raw from '../test/fixtures/phase031-release3-active-plan.json?raw';
+
+// Synthetic test data, never a production catalog or factual food claim.
+function fixture(change = {}): ActivePlanEnvelope {
+  const source = { sourceId: 'synthetic', recordId: 'test', release: 'v1', license: 'CC0-1.0', url: 'https://example.org/test' };
+  const catalog: Catalog = { version: 'test-v1', foods: [{ productId: 'rice', profileId: 'raw', name: 'test', identity: 'test', state: 'raw', category: 'test',
+    nutrition: { status: 'known', reference: { amount: '100', unit: 'g', basis: 'edible' }, values: { calories: '120', protein: '10', fat: '4', carbohydrates: '11' }, source },
+    price: { status: 'known', amount: '1', currency: 'RUB', reference: { amount: '1', unit: 'g', basis: 'edible' }, source, region: 'test', observedAt: '2026-10-28', estimate: true },
+    safety: { status: 'known', facts: [{ kind: 'restriction', key: 'no-gluten', suitable: true, evidence: [source] }] }, conversions: [] }], recipes: [{ id: 'r', name: 'test', baseServings: decimal('1'), ingredients: [{ productId: 'rice', profileId: 'raw', quantity: { amount: decimal('100'), unit: 'g' } }], slots: mealSlots, cookingMinutes: 15, steps: ['test'], source }] };
+  const applied = buildAppliedSettings({ ...createDraft(), days: '1', people: '1', budget: '1000', ...change });
+  if (applied.status !== 'applied') throw new Error('fixture');
+  const inputs = createPlanInputs(applied.settings, catalog, { seed: 'test', now: () => new Date(2026, 9, 28) });
+  return buildActivePlanEnvelope(inputs, [{ id: 'v', instances: createRecipeInstances(inputs, ['r', 'r', 'r', 'r'], (date, slot) => `${date}-${slot}`) }], 'v');
+}
+function storage() {
+  const map = new Map<string, string>([['sentinel', 'safe'], ['mealplan:guest:draft:v1', 'draft'], ['pantry', 'stock']]);
+  return { map, getItem: (key: string) => map.get(key) ?? null, setItem: (key: string, value: string) => { map.set(key, value); } };
+}
+const current = { isCurrent: () => true };
+const rawPlan = (plan = fixture()) => JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
+
+it('phase04-remove loads a deliberately empty menu with zero totals and preserves truncated schema1 bytes', async () => {
+  const original = fixture(), store = storage(), registry = createTrustedCatalogRegistry([original.inputs.catalog]);
+  const adapter = createActivePlanAdapter(() => store, registry);
+  const untouched = rawPlan(original);
+  store.map.set(ACTIVE_PLAN_KEY, untouched);
+  expect((await adapter.load()).status).toBe('loaded');
+  expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(untouched);
+  const edited: EditedPlanEnvelope = { ...original, schemaVersion: 2, variants: original.variants.map(row =>
+    ({ ...row, instances: [], emptySlots: planCoordinates(original.inputs.dates) })) };
+  expect((await adapter.save(edited, current)).status).toBe('saved');
+  const editedRaw = store.map.get(ACTIVE_PLAN_KEY);
+  const loaded = await adapter.load();
+  expect(loaded).toMatchObject({ status: 'loaded', bundle: { plan: edited, projections: [{ rows: [], instances: [], costs: { kopecks: { purchase: 0n } } }] } });
+  expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(editedRaw);
+  const incomplete = JSON.parse(untouched);
+  incomplete.plan.variants[0].instances.pop();
+  const truncated = JSON.stringify(incomplete);
+  store.map.set(ACTIVE_PLAN_KEY, truncated);
+  expect((await adapter.load()).status).toBe('corrupt');
+  expect((await adapter.save(edited, current)).status).toBe('blocked');
+  expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(truncated);
+});
+
+it('rejects oversized UTF-8 storage before parsing and preserves the original value', async () => {
+  const store = storage();
+  const raw = JSON.stringify({ padding: 'я'.repeat(ACTIVE_PLAN_MAX_BYTES / 2) });
+  expect(raw.length).toBeLessThan(ACTIVE_PLAN_MAX_BYTES);
+  expect(new TextEncoder().encode(raw).byteLength).toBeGreaterThan(ACTIVE_PLAN_MAX_BYTES);
+  store.map.set(ACTIVE_PLAN_KEY, raw);
+  const parse = vi.spyOn(JSON, 'parse');
+  try {
+    expect(await createActivePlanAdapter(() => store).load()).toEqual({ status: 'corrupt' });
+    expect(parse.mock.calls.length).toBe(0);
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+  } finally {
+    parse.mockRestore();
+  }
+});
+
+it.each([['historical52', legacyRaw], ['issued56', release1Raw], ['issued68', release2Raw], ['issued75', release3Raw]])(
+  'preserves %s unsupported and tampered persisted bytes with typed diagnostics', async (_, originalRaw) => {
+    for (const mutation of ['unknown-version', 'unused-source', 'inactive-recipe'] as const) {
+      const encoded = JSON.parse(originalRaw);
+      if (mutation === 'unknown-version') encoded.plan.inputs.catalogVersion = 'unsupported-release';
+      if (mutation === 'unused-source') encoded.plan.inputs.catalog.foods.at(-1).nutrition.source.recordId = 'forged-source';
+      if (mutation === 'inactive-recipe') encoded.plan.variants.at(-1).instances[0].recipeSnapshot.steps = ['forged'];
+      const raw = JSON.stringify(encoded), store = storage(); store.map.set(ACTIVE_PLAN_KEY, raw);
+      const write = vi.fn(store.setItem), adapter = createActivePlanAdapter(() => ({ ...store, setItem: write }));
+      const loaded = await adapter.load(); expect(loaded.status).toBe('corrupt');
+      if (loaded.status === 'corrupt') expect(loaded.diagnostics?.length).toBeGreaterThan(0);
+      expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+      expect((await adapter.save(fixture(), current)).status).toBe('blocked');
+      expect(write).not.toHaveBeenCalled(); expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+    }
+  });
+
+function currentMaxPlan() {
+  const applied = buildAppliedSettings({ ...createDraft(), budget: '10000' });
+  if (applied.status !== 'applied') throw new Error('Invalid settings');
+  const inputs = createPlanInputs(applied.settings, bundledCatalog, { seed: 'cap12-source-release' });
+  const recipeIds = inputs.dates.flatMap(() => ['familiar-omelet-tomato-bread', 'familiar-chicken-rice-carrot', 'familiar-lentil-cabbage-tomato', 'familiar-yogurt-apple']);
+  const variants = Array.from({ length: 12 }, (_, index) => ({ id: `current-${index}`, instances: createRecipeInstances(inputs, recipeIds, (date, slot) => `current-${index}/${date}/${slot}`)
+    .map(row => ({ ...row, selectedServings: decimal(((index + 5) / 10).toFixed(1)) })) }));
+  return buildActivePlanEnvelope(inputs, variants, variants[11].id);
+}
+
+it('saves and reloads a real current seven-day twelve-variant envelope within unchanged byte ceiling', async () => {
+  const plan = currentMaxPlan();
+  const store = storage(), adapter = createActivePlanAdapter(() => store);
+  await adapter.load();
+  expect((await adapter.save(plan, current)).status).toBe('saved');
+  const bytes = store.map.get(ACTIVE_PLAN_KEY)!;
+  const size = new TextEncoder().encode(bytes).length;
+  expect(size).toBeLessThan(ACTIVE_PLAN_MAX_BYTES);
+  console.info('CURRENT_CAP12_UTF8_BYTES', size);
+  const loaded = await createActivePlanAdapter(() => store).load();
+  expect(loaded.status).toBe('loaded');
+  if (loaded.status === 'loaded') expect(loaded.bundle.plan).toEqual(plan);
+  expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(bytes);
+});
+
+it.each([['historical52', legacyRaw], ['issued56', release1Raw], ['issued68', release2Raw], ['issued75', release3Raw], ['current82-cap12', null]])(
+  'phase04-add persists edits for %s without changing the trusted inputs, order or UTF-8 limit', async (_, sourceBytes) => {
+    const raw = sourceBytes ?? rawPlan(currentMaxPlan());
+    const store = storage(); store.map.set(ACTIVE_PLAN_KEY, raw);
+    const adapter = createActivePlanAdapter(() => store);
+    const initial = await adapter.load();
+    if (initial.status !== 'loaded') throw new Error('Expected versioned plan');
+    const plan = initial.bundle.plan;
+    const variant = plan.variants.find(variant => variant.id === plan.activeVariantId)!;
+    const baseline = initial.bundle.projections.find(projection => projection.variantId === variant.id)!;
+    const first = variant.instances[0];
+    const coordinate = { date: first.date, slot: first.slot, variantId: plan.activeVariantId };
+    expect(plan.schemaVersion).toBe(1);
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+    const removed = removeMeal(plan, baseline, { ...coordinate, instanceId: first.id, recipeId: first.recipeId });
+    if (removed.status !== 'ready') throw new Error('Expected removal');
+    const savedEmpty = await adapter.save(removed.plan, current);
+    if (savedEmpty.status !== 'saved') throw new Error('Expected saved removal');
+    const edited = await adapter.load();
+    if (edited.status !== 'loaded') throw new Error('Expected reloaded removal');
+    expect(edited.bundle.plan).toEqual(removed.plan);
+    const projection = edited.bundle.projections.find(row => row.variantId === variant.id)!;
+    const added = addMeal(edited.bundle.plan, projection, { ...coordinate, kind: 'empty' }, first.recipeId, `added/${plan.inputs.catalogVersion}`);
+    if (added.status !== 'ready') throw new Error('Expected refill');
+    expect((await adapter.save(added.plan, current)).status).toBe('saved');
+    const afterRaw = store.map.get(ACTIVE_PLAN_KEY)!;
+    const loaded = await createActivePlanAdapter(() => store).load();
+    if (loaded.status !== 'loaded') throw new Error('Expected edited plan to reload');
+    expect(loaded.bundle.plan).toEqual(added.plan);
+    expect(loaded.bundle.plan.inputs).toEqual(plan.inputs);
+    expect(loaded.bundle.plan.variants.map(row => row.id)).toEqual(plan.variants.map(row => row.id));
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(afterRaw);
+    expect(new TextEncoder().encode(afterRaw).byteLength).toBeLessThan(ACTIVE_PLAN_MAX_BYTES);
+  }, 25_000);
+
+describe('Phase2 legacy and all-alternative persistence', () => {
+  // Real producer1789eea, captured before production changes on2026-11-04.
+  // Exact UTF8 SHA256: f8aed6836ac1d28a27dcc9a187ec5e49a0b3ca7f928b45b550406532bc855b73.
+  it('loads actual Phase2 schema1 bytes without rewrite, regenerated IDs or catalog migration', async () => {
+    const store = storage(); store.map.set(ACTIVE_PLAN_KEY, legacyRaw);
+    const setItem = vi.fn(store.setItem), port = createActivePlanAdapter(() => ({ ...store, setItem }));
+    for (let read = 0; read < 2; read++) {
+      const loaded = await port.load(); expect(loaded.status).toBe('loaded');
+      if (loaded.status !== 'loaded') throw new Error('Legacy load failed');
+      const { plan } = loaded.bundle;
+      expect(plan.activeVariantId).toBe('generated-1'); expect(plan.variants).toHaveLength(1);
+      expect(plan.inputs.catalogVersion).toBe('mealplan-2026-10-28-1');
+      expect(plan.inputs.seed).toBe('22cf714e-f1e2-4166-afaf-a853ba63b716');
+      expect(plan.inputs.dates).toEqual(['2026-11-04', '2026-11-05', '2026-11-06', '2026-11-07', '2026-11-08', '2026-11-09', '2026-11-10']);
+      expect(plan.variants[0].instances.map(row => row.id)).toEqual(plan.inputs.dates.flatMap(date => mealSlots.map(slot => `${date}/${slot}`)));
+      expect(encodePlanEnvelope(plan)).toEqual(JSON.parse(legacyRaw).plan);
+      expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(legacyRaw);
+    }
+    expect(setItem).not.toHaveBeenCalled();
+  });
+  function alternatives() {
+    const first = fixture();
+    return buildActivePlanEnvelope(first.inputs, ['1', '1.5', '2'].map((servings, index) => ({ id: `alternative-${index}`,
+      instances: first.variants[0].instances.map(row => ({ ...row, id: `alternative-${index}/${row.id}`, selectedServings: decimal(servings) })) })), 'alternative-0');
+  }
+  const registry = createTrustedCatalogRegistry([fixture().inputs.catalog]);
+  it('reloads every alternative in original order with independent exact projections', async () => {
+    const store = storage(), plan = alternatives(), port = createActivePlanAdapter(() => store, registry);
+    await port.load();
+    for (const variant of plan.variants) {
+      expect((await port.save({ ...plan, activeVariantId: variant.id }, current)).status).toBe('saved');
+      const loaded = await createActivePlanAdapter(() => store, registry).load();
+      expect(loaded.status).toBe('loaded');
+      if (loaded.status !== 'loaded') throw new Error('Load failed');
+      expect(loaded.bundle.plan).toEqual({ ...plan, activeVariantId: variant.id });
+      expect(loaded.bundle.projections.map(row => row.variantId)).toEqual(['alternative-0', 'alternative-1', 'alternative-2']);
+      expect(loaded.bundle.projections.map(row => row.costs.exact.purchase)).toEqual([decimal('400'), decimal('600'), decimal('800')]);
+      expect(loaded.bundle.projections.map(row => row.familyNutrition.calories)).toEqual([decimal('480'), decimal('720'), decimal('960')]);
+    }
+  });
+  it.each(['budget', 'snapshot', 'active', 'catalog'] as const)('rejects tampered inactive %s without changing bytes', async kind => {
+    const encoded = JSON.parse(rawPlan(alternatives()));
+    if (kind === 'budget') encoded.plan.variants[2].instances.forEach((row: { selectedServings: unknown }) => { row.selectedServings = { numerator: '3', denominator: '1' }; });
+    if (kind === 'snapshot') encoded.plan.variants[2].instances[0].recipeSnapshot.steps = ['forged'];
+    if (kind === 'active') encoded.plan.activeVariantId = 'absent';
+    if (kind === 'catalog') encoded.plan.inputs.catalog.foods[0].nutrition.values.calories = '0';
+    const raw = JSON.stringify(encoded), store = storage(); store.map.set(ACTIVE_PLAN_KEY, raw);
+    const port = createActivePlanAdapter(() => store, registry);
+    expect((await port.load()).status).toBe('corrupt');
+    expect((await port.save(alternatives(), current)).status).toBe('blocked');
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+  });
+  it.each(['', 'null'])('preserves invalid empty envelope bytes %j', async raw => {
+    const store = storage(); store.map.set(ACTIVE_PLAN_KEY, raw);
+    expect((await createActivePlanAdapter(() => store, registry).load()).status).toBe('corrupt');
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+  });
+});
+
+function sourcePlan(catalog: Catalog = bundledCatalog, restrictions: string[] = []) {
+  const applied = buildAppliedSettings({ ...createDraft(), days: '1', people: '1', budget: '1000', restrictions });
+  if (applied.status !== 'applied') throw new Error('settings');
+  const inputs = createPlanInputs(applied.settings, catalog, { seed: 'source-trust', now: () => new Date(2026, 9, 28) });
+  const ids = mealSlots.map(slot => catalog.recipes.find(recipe => recipe.slots.includes(slot))!.id);
+  return buildActivePlanEnvelope(inputs, [{ id: 'source', instances: createRecipeInstances(inputs, ids, (date, slot) => `${date}-${slot}`) }], 'source');
+}
+
+describe('source-backed persistence trust', () => {
+  it('accepts the reviewed fish-and-seafood ingredient restriction without requiring allergen certification', () => {
+    expect(validateActiveBundle(sourcePlan(bundledCatalog, ['no-fish'])).status).toBe('valid');
+  });
+  it.each([false, undefined])('rejects trusted no-fish suitability %s instead of assuming ingredient safety', suitable => {
+    const original = fixture().inputs.catalog, food = original.foods[0];
+    const catalog: Catalog = { ...original, foods: [{ ...food, safety: { status: 'known', facts: suitable === undefined ? [{
+      kind: 'restriction', key: 'vegetarian', suitable: true, evidence: [original.recipes[0].source],
+    }] : [{
+      kind: 'restriction', key: 'no-fish', suitable, evidence: [original.recipes[0].source],
+    }] } }] };
+    const registry = createTrustedCatalogRegistry([catalog]);
+    expect(validateActiveBundle(sourcePlan(catalog, ['no-fish']), registry).status).toBe('invalid');
+  });
+  it('rejects an unregistered synthetic version by default', () => {
+    expect(validateActiveBundle(fixture()).status).toBe('invalid');
+  });
+
+  it('keeps explicitly trusted historical versions reproducible, including legitimate zero nutrients', async () => {
+    const original = fixture().inputs.catalog, food = original.foods[0];
+    if (food.nutrition.status !== 'known' || food.price.status !== 'known') throw new Error('fixture');
+    const historical = { ...original, version: 'trusted-historical', foods: [{ ...food,
+      nutrition: { ...food.nutrition, values: { ...food.nutrition.values, calories: '0' } }, price: { ...food.price, amount: '2' } }] };
+    const registry = createTrustedCatalogRegistry([bundledCatalog, historical]);
+    const plan = sourcePlan(historical), store = storage(), port = createActivePlanAdapter(() => store, registry);
+    await port.load(); expect((await port.save(plan, current)).status).toBe('saved');
+    const loaded = await createActivePlanAdapter(() => store, registry).load();
+    expect(loaded.status).toBe('loaded');
+    if (loaded.status !== 'loaded') throw new Error('not loaded');
+    expect(loaded.bundle.projections[0].costs.exact.purchase).toEqual(decimal('800'));
+    expect(loaded.bundle.projections[0].familyNutrition.calories).toEqual(decimal('0'));
+    expect((await createActivePlanAdapter(() => store).load()).status).toBe('corrupt');
+  });
+
+  it('detaches trusted facts so later caller mutations cannot authorize altered food', () => {
+    const original = fixture().inputs.catalog, food = original.foods[0];
+    if (food.nutrition.status !== 'known') throw new Error('fixture');
+    const values = { ...food.nutrition.values }, catalog = { ...original, foods: [{ ...food, nutrition: { ...food.nutrition, values } }] };
+    const registry = createTrustedCatalogRegistry([catalog]);
+    values.calories = '0';
+    expect(validateActiveBundle(sourcePlan(catalog), registry).status).toBe('invalid');
+    expect(validateActiveBundle(fixture(), registry).status).toBe('valid');
+    expect(() => createTrustedCatalogRegistry([original, original])).toThrow('DUPLICATE_TRUSTED_CATALOG_VERSION');
+  });
+  it('saves and reloads the bundled source-backed catalog without changing exact totals', async () => {
+    const store = storage(), port = createActivePlanAdapter(() => store);
+    await port.load();
+    expect((await port.save(sourcePlan(), current)).status).toBe('saved');
+    const result = await createActivePlanAdapter(() => store).load();
+    expect(result.status).toBe('loaded');
+    if (result.status !== 'loaded') throw new Error('not loaded');
+    expect(result.bundle.projections[0].costs.exact.purchase).toEqual(decimal('46.7527011203703637'));
+  });
+
+  it.each(['nutrition', 'price', 'safety', 'source', 'recipe', 'conversion', 'unknown-version', 'unused-food'] as const)(
+    'rejects self-consistent altered %s before projection/presence/save and preserves corrupt bytes', async kind => {
+      const baseline = sourcePlan(), used = baseline.variants[0].instances[0].recipeSnapshot.ingredients[0].profileId;
+      const target = kind === 'unused-food' ? bundledCatalog.foods.find(food => !baseline.variants[0].instances.some(instance => instance.recipeSnapshot.ingredients.some(ingredient => ingredient.profileId === food.profileId)))!.profileId : used;
+      const foods = bundledCatalog.foods.map(food => {
+        if (food.profileId !== target) return food;
+        if ((kind === 'nutrition' || kind === 'unused-food') && food.nutrition.status === 'known') return { ...food, nutrition: { ...food.nutrition, values: { ...food.nutrition.values, calories: '0' } } };
+        if (kind === 'price' && food.price.status === 'known') return { ...food, price: { ...food.price, amount: '0.0000001' } };
+        if (kind === 'safety' && food.safety.status === 'known') return { ...food, safety: { ...food.safety, facts: food.safety.facts.map((fact, index) => index ? fact : { ...fact, suitable: !fact.suitable }) } };
+        if (kind === 'source' && food.nutrition.status === 'known') return { ...food, nutrition: { ...food.nutrition, source: { ...food.nutrition.source, recordId: 'forged' } } };
+        if (kind === 'conversion') return { ...food, conversions: [{ productId: food.productId, profileId: food.profileId, from: { amount: decimal('1'), unit: 'ml' as const }, to: { amount: decimal('10'), unit: 'g' as const }, evidence: { sourceId: 'forged', recordId: 'forged', url: 'https://example.org/forged' } }] };
+        return food;
+      });
+      const catalog = { ...bundledCatalog, version: kind === 'unknown-version' ? 'unknown-self-consistent' : bundledCatalog.version, foods,
+        recipes: bundledCatalog.recipes.map((recipe, index) => kind === 'recipe' && index === 0 ? { ...recipe, steps: ['forged'] } : recipe) };
+      const forged = sourcePlan(catalog), raw = rawPlan(forged), store = storage(); store.map.set(ACTIVE_PLAN_KEY, raw);
+      expect(validateActiveBundle(forged).status).toBe('invalid');
+      const port = createActivePlanAdapter(() => store);
+      expect((await port.load()).status).toBe('corrupt');
+      expect(await createActivePlanPresencePort(port).load()).toEqual({ status: 'error' });
+      expect((await port.save(baseline, current)).status).toBe('blocked');
+      expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+      const clean = createActivePlanAdapter(() => storage()); await clean.load();
+      expect((await clean.save(forged, current)).status).toBe('error');
+    });
+});
+describe('validated active persistence', () => {
+  // This suite exercises persistence mechanics with explicit synthetic trust.
+  const registry = createTrustedCatalogRegistry([fixture().inputs.catalog]);
+  const createSyntheticAdapter = (getStorage: Parameters<typeof createActivePlanAdapter>[0]) => createActivePlanAdapter(getStorage, registry);
+  it('round-trips a complete exact bundle with recomputed projection and valid presence', async () => {
+    const store = storage(), port = createSyntheticAdapter(() => store);
+    expect((await port.load()).status).toBe('missing');
+    expect((await port.save(fixture(), current)).status).toBe('saved');
+    const result = await createSyntheticAdapter(() => store).load();
+    expect(result.status).toBe('loaded');
+    if (result.status !== 'loaded') throw new Error('not loaded');
+    expect(result.bundle.plan).toEqual(fixture());
+    expect(result.bundle.projections[0].costs.exact.purchase).toEqual(decimal('400'));
+    expect(result.bundle.projections[0].familyNutrition.calories).toEqual(decimal('480'));
+    expect([...store.map].filter(([key]) => key !== ACTIVE_PLAN_KEY)).toEqual([['sentinel', 'safe'], ['mealplan:guest:draft:v1', 'draft'], ['pantry', 'stock']]);
+  });
+  it.each(['{', '{}', '{"schemaVersion":2}', 'x'.repeat(ACTIVE_PLAN_MAX_BYTES + 1)])('preserves corrupt bytes and blocks writes', async raw => {
+    const store = storage(); store.map.set(ACTIVE_PLAN_KEY, raw); const port = createSyntheticAdapter(() => store);
+    expect((await port.load()).status).toBe('corrupt');
+    expect((await port.save(fixture(), current)).status).toBe('blocked');
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+  });
+  it.each(['source', 'slot', 'version', 'budget', 'price', 'restriction', 'excluded', 'time'])('rejects invalid %s and keeps previous bytes', async kind => {
+    const store = storage(); const encoded = JSON.parse(rawPlan(fixture(kind === 'restriction' ? { restrictions: ['no-fish'] } : kind === 'excluded' ? { exclusionIds: ['rice'] } : kind === 'time' ? { cookingTime: '15' } : {})));
+    if (kind === 'source') encoded.plan.inputs.sourceSnapshots = [];
+    if (kind === 'slot') encoded.plan.variants[0].instances.pop();
+    if (kind === 'version') encoded.plan.inputs.catalogVersion = 'other';
+    if (kind === 'budget') { encoded.plan.variants[0].instances.forEach((item: { selectedServings: unknown }) => { item.selectedServings = { numerator: '10', denominator: '1' }; }); }
+    if (kind === 'price') encoded.plan.inputs.catalog.foods[0].price = { status: 'unknown', reason: 'test' };
+    if (kind === 'time') { encoded.plan.inputs.catalog.recipes[0].cookingMinutes = 60; encoded.plan.variants[0].instances.forEach((item: { recipeSnapshot: { cookingMinutes: number } }) => { item.recipeSnapshot.cookingMinutes = 60; }); }
+    const raw = JSON.stringify(encoded); store.map.set(ACTIVE_PLAN_KEY, raw);
+    const port = createSyntheticAdapter(() => store);
+    expect((await port.load()).status).toBe('corrupt');
+    expect((await port.save(fixture(), current)).status).toBe('blocked');
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+  });
+  it('blocks uninspected storage and makes access/read/write failures explicit', async () => {
+    const store = storage(), port = createSyntheticAdapter(() => store);
+    expect((await port.save(fixture(), current)).status).toBe('blocked');
+    expect((await createSyntheticAdapter(() => { throw new Error('access'); }).load()).status).toBe('error');
+    expect((await createSyntheticAdapter(() => ({ ...store, getItem() { throw new Error('read'); } })).load()).status).toBe('error');
+    const broken = createSyntheticAdapter(() => ({ ...store, setItem() { throw new Error('quota'); } }));
+    await broken.load(); expect((await broken.save(fixture(), current)).status).toBe('error');
+  });
+  it('checks ownership at the final synchronous write after storage access', async () => {
+    const store = storage(); let owned = true;
+    const port = createSyntheticAdapter(() => { owned = false; return store; });
+    await port.load(); owned = true;
+    expect((await port.save(fixture(), { isCurrent: () => owned })).status).toBe('cancelled');
+    expect(store.map.has(ACTIVE_PLAN_KEY)).toBe(false);
+  });
+  it('produces presence only after full validation, not from a truthy object', async () => {
+    const store = storage(); const port = createSyntheticAdapter(() => store), presence = createActivePlanPresencePort(port);
+    expect(await presence.load()).toEqual({ status: 'absent' });
+    store.map.set(ACTIVE_PLAN_KEY, '{}'); expect(await presence.load()).toEqual({ status: 'error' });
+    store.map.set(ACTIVE_PLAN_KEY, rawPlan()); expect(await presence.load()).toEqual({ status: 'valid', planId: 'v' });
+  });
+  it('phase04-edit does not overwrite concurrent changed bytes and needs a successful inspection to recover', async () => {
+    const store = storage(), port = createSyntheticAdapter(() => store); await port.load();
+    store.map.set(ACTIVE_PLAN_KEY, 'foreign');
+    expect((await port.save(fixture(), current)).status).toBe('blocked');
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe('foreign');
+    store.map.set(ACTIVE_PLAN_KEY, rawPlan());
+    expect((await port.save(fixture(), current)).status).toBe('blocked');
+    expect((await port.load()).status).toBe('loaded');
+    expect((await port.save(fixture(), current)).status).toBe('saved');
+  });
+  it('rejects unsafe and overbudget candidates before any write, preserving the loaded plan', async () => {
+    const store = storage(); store.map.set(ACTIVE_PLAN_KEY, rawPlan()); const port = createSyntheticAdapter(() => store); await port.load();
+    const old = store.map.get(ACTIVE_PLAN_KEY), plan = fixture();
+    const over = buildActivePlanEnvelope(plan.inputs, [{ id: 'over', instances: plan.variants[0].instances.map(item => ({ ...item, selectedServings: decimal('10') })) }], 'over');
+    expect((await port.save(over, current)).status).toBe('error');
+    expect((await port.save(fixture({ restrictions: ['no-fish'] }), current)).status).toBe('error');
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(old);
+  });
+});

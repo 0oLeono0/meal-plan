@@ -1,11 +1,12 @@
-import { popularProductIds, productNames, type ProductCatalogPort } from '../../adapters/products';
+import { pantryProductCatalog, pantryProductNames, popularProductIds, type ProductCatalogPort } from '../../adapters/products';
+import { ediblePantryProducts, needsPantryWeightConfirmation } from '../../domain/pantry';
 import { dietaryRestrictions, parseHomeQuantity, validateHomeRow, type DraftAction, type HomeDraftRow, type SettingsDraft, type StepErrors, type Unit } from '../../domain/settings';
 import { ProductCombobox, useRemovalUndo } from '../../shared/ProductCombobox';
 import { Button, Field } from '../../shared/ui';
 import { goalLabels } from './copy';
 
 const unitLabels: Record<Unit, string> = { g: 'г', kg: 'кг', ml: 'мл', l: 'л', pcs: 'шт' };
-const nameFor = (id: string) => productNames.find(product => product.id === id)?.name ?? `Продукт из сохранённого черновика (${id})`;
+const nameFor = (id: string) => pantryProductNames.find(product => product.id === id)?.name ?? `Продукт из сохранённого черновика (${id})`;
 
 export function HomeProductsStep({ draft, onChange, errors, disabled = false, productPort }: { draft: SettingsDraft; onChange(action: DraftAction): void; errors: StepErrors; disabled?: boolean; productPort?: ProductCatalogPort }) {
   const { removed, setRemoved, undoRef } = useRemovalUndo<HomeDraftRow>('home-search');
@@ -19,7 +20,7 @@ export function HomeProductsStep({ draft, onChange, errors, disabled = false, pr
   }
   return <>
     <p>Укажите, что есть дома. Количество можно оставить пустым; это не означает ноль.</p>
-    <div className="card min-w-0"><ProductCombobox id="home-search" label="Найти продукт" disabled={disabled} port={productPort} onSelect={product => add(product.id)} />
+    <div className="card min-w-0"><ProductCombobox id="home-search" label="Найти продукт" disabled={disabled} port={productPort ?? pantryProductCatalog} onSelect={product => add(product.id)} />
       <div role="group" aria-label="Популярные продукты" className="flex flex-wrap gap-2 mt-4">{popularProductIds.map(id => <Button disabled={disabled} key={id} onClick={() => add(id)}>{nameFor(id)}</Button>)}</div>
     </div>
     <div id="home" tabIndex={-1}>
@@ -27,7 +28,11 @@ export function HomeProductsStep({ draft, onChange, errors, disabled = false, pr
       {errors.home && <p className="field-error">{errors.home}</p>}
       {draft.home.map((row, index) => {
         const label = nameFor(row.productId);
-        const product = productNames.find(product => product.id === row.productId);
+        const product = pantryProductNames.find(product => product.id === row.productId);
+        const unconfirmedWeight = needsPantryWeightConfirmation(row.productId, row.unit);
+        const edible = ediblePantryProducts.find(product => product.productId === row.productId && (row.productId === 'chicken' || unconfirmedWeight));
+        const confirmedRowExists = edible && draft.home.some(other => other.productId === edible.pantryId);
+        const units = row.productId === 'egg' && !unconfirmedWeight ? ['pcs' as const] : product?.allowedUnits;
         const rowErrors = validateHomeRow(row);
         const quantityId = `quantity-${row.productId}` as const;
         const unitId = `unit-${row.productId}` as const;
@@ -41,11 +46,20 @@ export function HomeProductsStep({ draft, onChange, errors, disabled = false, pr
             </Field>
             <Field id={unitId} label={`Единица ${label}`} error={unitError}>
               <select id={unitId} className="w-full min-h-[44px]" disabled={disabled} value={row.unit ?? ''} aria-invalid={!!unitError} aria-describedby={unitError ? `${unitId}-error` : undefined} onChange={event => edit(row.productId, { unit: event.target.value ? event.target.value as Unit : undefined })}>
-                <option value="">Не выбрана</option>{product?.allowedUnits.map(unit => <option value={unit} key={unit}>{unitLabels[unit]}</option>)}
+                <option value="">Не выбрана</option>{units?.map(unit => <option value={unit} key={unit}>{unitLabels[unit]}</option>)}
               </select>
             </Field>
           </div>
           {parseHomeQuantity(row.quantity).status === 'unknown' && <p className="hint">Количество не указано</p>}
+          {edible && <div>
+            <p className="hint">{unconfirmedWeight ? 'Уточните вид продукта, чтобы учесть этот вес в покупках.' : 'Для учёта веса в покупках укажите куриное филе без кожи и костей.'}</p>
+            {confirmedRowExists
+              ? <p className="hint">Уточнённая позиция уже есть. При необходимости обновите её количество.</p>
+              : <Button disabled={disabled} onClick={() => {
+                edit(row.productId, { productId: edible.pantryId });
+                focusRow(edible.pantryId);
+              }}>Указать {nameFor(edible.pantryId).toLocaleLowerCase('ru')}</Button>}
+          </div>}
           <label className="flex items-center gap-2 min-h-[44px] mt-4"><input type="checkbox" className="!w-6 shrink-0 accent-[var(--color-accent)]" disabled={disabled} aria-label={`Скоро испортится ${label}`} checked={row.expiresSoon} onChange={event => edit(row.productId, { expiresSoon: event.target.checked })} />Скоро испортится</label>
           <Button disabled={disabled} aria-label={`Удалить продукт ${label}`} onClick={() => {
             setRemoved({ value: { ...row }, index }); onChange({ type: 'home', value: draft.home.filter(value => value.productId !== row.productId) });
@@ -61,14 +75,14 @@ export function HomeProductsStep({ draft, onChange, errors, disabled = false, pr
       }
       focusRow(removed.value.productId); setRemoved(null);
     }}>Отменить</button></div>}
-    <p className="hint">Это черновик. Глобальные запасы не изменяются; покупки пока не рассчитываются.</p>
+    <p className="hint">Это черновик следующего меню. При запуске используем снимок указанных количеств для расчёта покупок. Глобальные запасы не изменяются и не списываются.</p>
   </>;
 }
 
 export function DraftReview({ draft }: { draft: SettingsDraft }) {
   return <section className="notice" aria-labelledby="review-title">
     <h2 id="review-title" tabIndex={-1}>Настройки подготовлены</h2>
-    <p>Запуск меню будет доступен на следующем этапе</p>
+    <p>При запуске эти настройки станут снимком нового меню. До успешного сохранения текущее меню не изменится.</p>
     <dl className="grid gap-2 [overflow-wrap:anywhere]">
       <dt>Люди и период</dt><dd className="m-0">{draft.people} чел. · {draft.days} дн.</dd>
       <dt>Бюджет на весь период</dt><dd className="m-0">{draft.budget.trim()} ₽</dd>
@@ -77,7 +91,7 @@ export function DraftReview({ draft }: { draft: SettingsDraft }) {
       <dt>Цель КБЖУ на человека в день</dt><dd className="m-0">{draft.manualNutrition.calories.trim() ? `${draft.manualNutrition.calories} ккал; Б ${draft.manualNutrition.protein} г / Ж ${draft.manualNutrition.fat} г / У ${draft.manualNutrition.carbohydrates} г · ${draft.targetSource.kind === 'manual' ? 'Введено вручную' : 'Сохранённая норма из расчёта'}` : 'Цель КБЖУ не указана'}</dd>
       <dt>Ограничения</dt><dd className="m-0">{draft.restrictions.map(id => dietaryRestrictions.find(option => option.id === id)?.label).join(', ') || 'Не выбраны'}</dd>
       <dt>Не люблю</dt><dd className="m-0">{draft.exclusionIds.map(nameFor).join(', ') || 'Исключений нет'}</dd>
-      <dt>Продукты дома</dt><dd className="m-0">{!draft.home.length ? 'Не указаны' : <ul className="pl-4">{draft.home.map(row => <li key={row.productId}>{nameFor(row.productId)}: <span>{parseHomeQuantity(row.quantity).status === 'unknown' ? 'Количество не указано' : `${row.quantity} ${row.unit ? unitLabels[row.unit] : ''}`}</span>{row.expiresSoon && ' · Скоро испортится'}</li>)}</ul>}</dd>
+      <dt>Продукты дома</dt><dd className="m-0">{!draft.home.length ? 'Не указаны' : <ul className="pl-4">{draft.home.map(row => <li key={row.productId}>{nameFor(row.productId)}: <span>{parseHomeQuantity(row.quantity).status === 'unknown' ? 'Количество не указано' : `${row.quantity} ${row.unit ? unitLabels[row.unit] : ''}`}</span>{needsPantryWeightConfirmation(row.productId, row.unit) && row.quantity.trim() && ' · Вес не учтён без уточнения вида'}{row.expiresSoon && ' · Скоро испортится'}</li>)}</ul>}</dd>
     </dl>
   </section>;
 }

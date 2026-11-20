@@ -1,0 +1,114 @@
+{
+  "items": [
+    {
+      "requirement_id": "DATA-04",
+      "category": "transparency",
+      "statement": "MUST NOT представлять рассчитанный, но не сохранённый candidate как сохранённое меню на устройстве.",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Auto fallback: flagged-unverified; отдельная оценка при приёмке, wired descriptor не авторизован протоколом.",
+      "projected": {
+        "statement": "MUST NOT представлять рассчитанный, но не сохранённый candidate как сохранённое меню на устройстве.",
+        "status": "unresolved",
+        "reason": "Auto fallback: flagged-unverified; отдельная оценка при приёмке, wired descriptor не авторизован протоколом."
+      },
+      "plan": "01",
+      "flagged": true,
+      "disposition": "unverified"
+    },
+    {
+      "requirement_id": "GEN-06",
+      "category": "transparency",
+      "statement": "MUST NOT выдавать ограниченный поиск или1–2 найденных варианта за доказательство отсутствия иных допустимых меню.",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Auto fallback: flagged-unverified; отдельная оценка при приёмке, wired descriptor не авторизован протоколом.",
+      "projected": {
+        "statement": "MUST NOT выдавать ограниченный поиск или1–2 найденных варианта за доказательство отсутствия иных допустимых меню.",
+        "status": "unresolved",
+        "reason": "Auto fallback: flagged-unverified; отдельная оценка при приёмке, wired descriptor не авторизован протоколом."
+      },
+      "plan": "01",
+      "flagged": true,
+      "disposition": "unverified"
+    },
+    {
+      "requirement_id": "GEN-07",
+      "category": "values",
+      "statement": "MUST NOT скрывать от пользователя потерю прежних вариантов или заменять их без явного подтверждения соответствующего действия.",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Auto fallback: flagged-unverified; отдельная оценка при приёмке, wired descriptor не авторизован протоколом.",
+      "projected": {
+        "statement": "MUST NOT скрывать от пользователя потерю прежних вариантов или заменять их без явного подтверждения соответствующего действия.",
+        "status": "unresolved",
+        "reason": "Auto fallback: flagged-unverified; отдельная оценка при приёмке, wired descriptor не авторизован протоколом."
+      },
+      "plan": "02",
+      "flagged": true,
+      "disposition": "unverified"
+    },
+    {
+      "requirement_id": "MENU-03",
+      "category": "transparency",
+      "statement": "MUST NOT выдавать созданную ИИ иллюстрацию за фотографию реально приготовленного блюда или за источник пищевых фактов.",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Auto fallback: flagged-unverified; отдельная оценка при приёмке, wired descriptor не авторизован протоколом.",
+      "projected": {
+        "statement": "MUST NOT выдавать созданную ИИ иллюстрацию за фотографию реально приготовленного блюда или за источник пищевых фактов.",
+        "status": "unresolved",
+        "reason": "Auto fallback: flagged-unverified; отдельная оценка при приёмке, wired descriptor не авторизован протоколом."
+      },
+      "plan": "10",
+      "flagged": true,
+      "disposition": "unverified"
+    },
+    {
+      "requirement_id": "REC-01",
+      "category": "transparency",
+      "statement": "MUST NOT приписывать generated изображению стороннюю CC0-лицензию, исключительность либо непроверенное происхождение.",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Auto fallback: flagged-unverified; отдельная оценка при приёмке, wired descriptor не авторизован протоколом.",
+      "projected": {
+        "statement": "MUST NOT приписывать generated изображению стороннюю CC0-лицензию, исключительность либо непроверенное происхождение.",
+        "status": "unresolved",
+        "reason": "Auto fallback: flagged-unverified; отдельная оценка при приёмке, wired descriptor не авторизован протоколом."
+      },
+      "plan": "03",
+      "flagged": true,
+      "disposition": "unverified"
+    },
+    {
+      "requirement_id": "REC-02",
+      "category": "safety",
+      "statement": "MUST NOT представлять расчёт КБЖУ ограниченного растительного каталога как медицинскую рекомендацию или доказательство полноценности рациона.",
+      "status": "unresolved",
+      "verification": null,
+      "resolution": null,
+      "reason": "Auto fallback: flagged-unverified; отдельная оценка при приёмке, wired descriptor не авторизован протоколом.",
+      "projected": {
+        "statement": "MUST NOT представлять расчёт КБЖУ ограниченного растительного каталога как медицинскую рекомендацию или доказательство полноценности рациона.",
+        "status": "unresolved",
+        "reason": "Auto fallback: flagged-unverified; отдельная оценка при приёмке, wired descriptor не авторизован протоколом."
+      },
+      "plan": "03",
+      "flagged": true,
+      "disposition": "unverified"
+    }
+  ],
+  "coverage": {
+    "requirements_reviewed": 8,
+    "kept": 6,
+    "flagged_unverified": 6,
+    "check_descriptors": 0
+  },
+  "notes": "projectProhibitions from installed probe-core.cjs; no check_* descriptors authored. MENU-02/REC-04 kept0 after precision, routine behavior in edge probes; generic OWASP constraints canon-referred to ASVS threat models."
+}
+

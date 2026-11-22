@@ -6,11 +6,11 @@ current_phase: 5
 current_phase_name: Домашние запасы и меню из остатков
 current_plan: Not started
 status: planning
-stopped_at: Фаза 4 принята. Следующая фаза 5 — домашние запасы и меню из остатков.
-last_updated: "2026-11-22T11:02:46.862Z"
+stopped_at: "Фаза 5: зафиксировано поведение холодильника, пересчёта и меню из остатков."
+last_updated: "2026-11-22T11:04:49.353Z"
 last_activity: 2026-11-22
 last_activity_desc: Phase 4 complete, transitioned to Phase 5
-state_head: 93601a7f20e41ed307e39e0ec075bb3832efa428
+state_head: f8e0b0957ed717baa48e86967395aadc50e39ebf
 progress:
   total_phases: 8
   completed_phases: 5
@@ -177,6 +177,6 @@ Progress: [██████░░░░] 63%
 
 ## Session Continuity
 
-Last session: 2026-11-22T11:02:43.140Z
-Stopped at: Фаза 4 принята. Следующая фаза 5 — домашние запасы и меню из остатков.
-Resume file: .planning/ROADMAP.md
+Last session: 2026-11-22T11:04:45.024Z
+Stopped at: Фаза 5: зафиксировано поведение холодильника, пересчёта и меню из остатков.
+Resume file: .planning/phases/05-domashnie-zapasy-i-menyu-iz-ostatkov/05-CONTEXT.md

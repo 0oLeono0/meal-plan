@@ -146,7 +146,7 @@ function MenuDays({ projection, catalogVersion, selected, onChange, days, today,
               event.preventDefault(); setOpenActions(null); event.currentTarget.querySelector('button')?.focus();
             }
           }}>
-            <Button className="!px-2" aria-label={`Действия для блюда ${recipeName} · ${day.date} · ${mealSlotNames[instance.slot]}`} aria-expanded={expanded} aria-controls={actionsId} disabled={editingDisabled} onClick={() => setOpenActions(expanded ? null : instance.id)}>⋯</Button>
+            <Button className="!min-w-[44px] !px-2" aria-label={`Действия для блюда ${recipeName} · ${day.date} · ${mealSlotNames[instance.slot]}`} aria-expanded={expanded} aria-controls={actionsId} disabled={editingDisabled} onClick={() => setOpenActions(expanded ? null : instance.id)}>⋯</Button>
             <div id={actionsId} hidden={!expanded}>
               {onReplace && <Button className="!px-2" aria-label="Заменить блюдо" onClick={event => onReplace(target, recipeName, event.currentTarget)}>Заменить</Button>}
               {onRemove && <Button className="!px-2 text-[var(--color-danger)]" onClick={event => onRemove(target, event.currentTarget)}>Убрать из меню</Button>}

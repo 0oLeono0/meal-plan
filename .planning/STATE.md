@@ -2,18 +2,18 @@
 gsd_state_version: "1.0"
 milestone: v1.0
 milestone_name: P0 MVP
-current_phase: 4
-current_phase_name: Изменение блюд и порций
-current_plan: 5
-status: verifying
-stopped_at: "Фаза 4: независимая проверка завершена, ожидается пользовательская приёмка"
-last_updated: "2026-11-22T10:56:22.995Z"
-last_activity: 2026-11-18
-last_activity_desc: Phase 03.1 complete, transitioned to Phase 4
-state_head: b643b4334210ca39ffcf19773d9bfe5b2607c496
+current_phase: 5
+current_phase_name: Домашние запасы и меню из остатков
+current_plan: Not started
+status: planning
+stopped_at: Фаза 4 принята. Следующая фаза 5 — домашние запасы и меню из остатков.
+last_updated: "2026-11-22T11:02:46.862Z"
+last_activity: 2026-11-22
+last_activity_desc: Phase 4 complete, transitioned to Phase 5
+state_head: 93601a7f20e41ed307e39e0ec075bb3832efa428
 progress:
   total_phases: 8
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 43
   completed_plans: 43
 ---
@@ -22,22 +22,22 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-11-18)
+See: .planning/PROJECT.md (updated 2026-11-22)
 
 **Core value:** Допустимое меню с прозрачным бюджетом и согласованные покупки с количественным учётом домашних запасов.
-**Current focus:** Фаза 4 — изменение блюд и порций
+**Current focus:** Фаза 5 — домашние запасы и меню из остатков
 
 ## Current Position
 
-Phase: 4 — Изменение блюд и порций
-Current Plan: 5
-Total Plans in Phase: 5
-Status: Verifying
-Last activity: 2026-11-18 — Phase 03.1 complete, transitioned to Phase 4
+Phase: 5 — Домашние запасы и меню из остатков
+Current Plan: Not started
+Total Plans in Phase: TBD
+Status: Ready to plan
+Last activity: 2026-11-22 — Phase 4 complete, transitioned to Phase 5
 
-Last Activity Description: Phase 03.1 complete, transitioned to Phase 4
+Last Activity Description: Phase 4 complete, transitioned to Phase 5
 
-Progress: [█████░░░░░] 50%
+Progress: [██████░░░░] 63%
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Progress: [█████░░░░░] 50%
 | 2 | 10 | - | - |
 | 03 | 12 | - | - |
 | 03.1 | 8 | - | - |
+| 4 | 5 | - | - |
 
 **Recent Trend:**
 - Last plan: 02-10; Phase2 выполнена 10/10 и принята после пользовательской UAT 6/6.
@@ -176,6 +177,6 @@ Progress: [█████░░░░░] 50%
 
 ## Session Continuity
 
-Last session: 2026-11-22T10:56:14.530Z
-Stopped at: Фаза 4: независимая проверка завершена, ожидается пользовательская приёмка
-Resume file: .planning/phases/04-izmenenie-blyud-i-portsiy/04-UAT.md
+Last session: 2026-11-22T11:02:43.140Z
+Stopped at: Фаза 4 принята. Следующая фаза 5 — домашние запасы и меню из остатков.
+Resume file: .planning/ROADMAP.md

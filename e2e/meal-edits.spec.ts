@@ -498,6 +498,9 @@ test('keyboard-responsive selects a weekly replacement and keeps the dialog usab
     await page.setViewportSize({ width, height });
     const entireWeek = page.getByRole('button', { name: 'Вся неделя', exact: true });
     if (await entireWeek.isVisible() && await entireWeek.getAttribute('aria-pressed') === 'false') await entireWeek.click();
+    const actionTarget = (await tools.boundingBox())!;
+    expect(actionTarget.width).toBeGreaterThanOrEqual(44);
+    expect(actionTarget.height).toBeGreaterThanOrEqual(44);
     await tools.focus();
     await page.keyboard.press('Enter');
     await page.keyboard.press('Tab');

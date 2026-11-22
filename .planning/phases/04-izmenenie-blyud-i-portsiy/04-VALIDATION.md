@@ -1,9 +1,9 @@
 ---
 phase: 4
 slug: izmenenie-blyud-i-portsiy
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-11-19
 ---
 
@@ -27,22 +27,22 @@ created: 2026-11-19
 
 | Задача | План | Волна | Требования | Угрозы | Тип | Команда | Статус |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 04-01-01 | 01 | 1 | MEAL-01, MEAL-03 | T-04-01/02 | e2e | `npm run test:e2e -- e2e/meal-edits.spec.ts --grep tracer --project=chromium --workers=1` | pending |
-| 04-01-02 | 01 | 1 | MEAL-01, MEAL-03 | T-04-01/02/03 | unit + e2e | `npm run test:unit -- run src/domain/mealEdits.test.ts`; `npm run test:e2e -- e2e/meal-edits.spec.ts --grep alternatives --project=chromium --workers=1` | pending |
-| 04-02-01 | 02 | 2 | MEAL-02, MEAL-03 | T-04-04/05/06 | unit + e2e | `npm run test:unit -- run src/domain/plan.test.ts src/domain/menuView.test.ts`; `npm run test:unit -- run src/adapters/activePlan.test.ts src/features/generation/controller.test.ts -t phase04-remove`; `npm run test:e2e -- e2e/meal-edits.spec.ts --grep remove-slot --project=chromium --workers=1` | pending |
-| 04-02-02 | 02 | 2 | MEAL-02, MEAL-03 | T-04-04/05/06 | unit + e2e | `npm run test:unit -- run src/domain/mealEdits.test.ts`; `npm run test:unit -- run src/adapters/activePlan.test.ts src/features/generation/controller.test.ts -t phase04-add`; `npm run test:e2e -- e2e/meal-edits.spec.ts --grep add-slot --project=chromium --workers=1` | pending |
-| 04-03-01 | 03 | 3 | CALC-02, REC-03, MEAL-03 | T-04-07/08 | e2e | `npm run test:e2e -- e2e/meal-edits.spec.ts --grep portions-cycle --project=chromium --workers=1` | pending |
-| 04-03-02 | 03 | 3 | CALC-02, REC-03, MEAL-03 | T-04-07/08 | unit + e2e | `npm run test:unit -- run src/domain/mealEdits.test.ts src/domain/recipeView.test.ts`; `npm run test:e2e -- e2e/meal-edits.spec.ts --grep portions-guards --project=chromium --workers=1` | pending |
-| 04-04-01 | 04 | 4 | REC-03, MEAL-01, MEAL-03 | T-04-09/10 | e2e | `npm run test:e2e -- e2e/meal-edits.spec.ts --grep recipe-replace --project=chromium --workers=1` | pending |
-| 04-04-02 | 04 | 4 | REC-03, MEAL-03 | T-04-09/10/11 | unit + e2e | `npm run test:unit -- run src/domain/recipeView.test.ts src/features/generation/controller.test.ts src/adapters/activePlan.test.ts -t phase04-edit`; `npm run test:e2e -- e2e/meal-edits.spec.ts --grep rollback --project=chromium --workers=1` | pending |
-| 04-05-01 | 05 | 5 | MEAL-01, MEAL-02, REC-03 | T-04-12 | e2e | `npm run test:e2e -- e2e/meal-edits.spec.ts --grep keyboard-responsive --project=chromium --workers=1` | pending |
-| 04-05-02 | 05 | 5 | все пять | T-04-12/13 | build + full | `npm run typecheck`, `npm run lint`, `npm run build`, `npm run test:unit -- --run`, полный `e2e/meal-edits.spec.ts` отдельно в chromium/firefox/webkit | pending |
+| 04-01-01 | 01 | 1 | MEAL-01, MEAL-03 | T-04-01/02 | e2e | `npm run test:e2e -- e2e/meal-edits.spec.ts --grep tracer --project=chromium --workers=1` | pass — 04-01-QA.md |
+| 04-01-02 | 01 | 1 | MEAL-01, MEAL-03 | T-04-01/02/03 | unit + e2e | `npm run test:unit -- run src/domain/mealEdits.test.ts`; `npm run test:e2e -- e2e/meal-edits.spec.ts --grep alternatives --project=chromium --workers=1` | pass — 04-01-QA.md |
+| 04-02-01 | 02 | 2 | MEAL-02, MEAL-03 | T-04-04/05/06 | unit + e2e | `npm run test:unit -- run src/domain/plan.test.ts src/domain/menuView.test.ts`; `npm run test:unit -- run src/adapters/activePlan.test.ts src/features/generation/controller.test.ts -t phase04-remove`; `npm run test:e2e -- e2e/meal-edits.spec.ts --grep remove-slot --project=chromium --workers=1` | pass — 04-02-QA.md |
+| 04-02-02 | 02 | 2 | MEAL-02, MEAL-03 | T-04-04/05/06 | unit + e2e | `npm run test:unit -- run src/domain/mealEdits.test.ts`; `npm run test:unit -- run src/adapters/activePlan.test.ts src/features/generation/controller.test.ts -t phase04-add`; `npm run test:e2e -- e2e/meal-edits.spec.ts --grep add-slot --project=chromium --workers=1` | pass — 04-02-QA.md |
+| 04-03-01 | 03 | 3 | CALC-02, REC-03, MEAL-03 | T-04-07/08 | e2e | `npm run test:e2e -- e2e/meal-edits.spec.ts --grep portions-cycle --project=chromium --workers=1` | pass — 04-03-QA.md |
+| 04-03-02 | 03 | 3 | CALC-02, REC-03, MEAL-03 | T-04-07/08 | unit + e2e | `npm run test:unit -- run src/domain/mealEdits.test.ts src/domain/recipeView.test.ts`; `npm run test:e2e -- e2e/meal-edits.spec.ts --grep portions-guards --project=chromium --workers=1` | pass — 04-03-QA.md |
+| 04-04-01 | 04 | 4 | REC-03, MEAL-01, MEAL-03 | T-04-09/10 | e2e | `npm run test:e2e -- e2e/meal-edits.spec.ts --grep recipe-replace --project=chromium --workers=1` | pass — 04-04-QA.md |
+| 04-04-02 | 04 | 4 | REC-03, MEAL-03 | T-04-09/10/11 | unit + e2e | `npm run test:unit -- run src/domain/recipeView.test.ts src/features/generation/controller.test.ts src/adapters/activePlan.test.ts -t phase04-edit`; `npm run test:e2e -- e2e/meal-edits.spec.ts --grep rollback --project=chromium --workers=1` | pass — 04-04-QA.md |
+| 04-05-01 | 05 | 5 | MEAL-01, MEAL-02, REC-03 | T-04-12 | e2e | `npm run test:e2e -- e2e/meal-edits.spec.ts --grep keyboard-responsive --project=chromium --workers=1` | pass — docs/qa/phase04-meal-edits.md |
+| 04-05-02 | 05 | 5 | все пять | T-04-12/13 | build + full | `npm run typecheck`, `npm run lint`, `npm run build`, `npm run test:unit -- --run`, полный `e2e/meal-edits.spec.ts` отдельно в chromium/firefox/webkit | pass — docs/qa/phase04-meal-edits.md |
 
 ## Wave 0 Requirements
 
-- [ ] Новый `e2e/meal-edits.spec.ts` с действующим мастером/генерацией и реальным локальным адаптером создаётся первым действием 04-01-01. До изменения кода браузерная проверка должна дойти до отсутствующего действия.
-- [ ] Новый `src/domain/mealEdits.test.ts` создаётся при первой дополнительной проверке вариантов. Контрольные количества, нутриенты и покупки рассчитываются отдельно от функций приложения.
-- [ ] Для отказов и гонок дополнить действующие механизмы `e2e/generation-fixtures.ts`. Серийные отложенные тесты используют настоящие порты и меняют только проверяемую инъекцию задержки или отказа.
+- [x] Новый `e2e/meal-edits.spec.ts` с действующим мастером/генерацией и реальным локальным адаптером создаётся первым действием 04-01-01. До изменения кода браузерная проверка должна дойти до отсутствующего действия.
+- [x] Новый `src/domain/mealEdits.test.ts` создаётся при первой дополнительной проверке вариантов. Контрольные количества, нутриенты и покупки рассчитываются отдельно от функций приложения.
+- [x] Для отказов и гонок дополнить действующие механизмы `e2e/generation-fixtures.ts`. Серийные отложенные тесты используют настоящие порты и меняют только проверяемую инъекцию задержки или отказа.
 
 ## Manual-Only Verifications
 
@@ -75,5 +75,13 @@ created: 2026-11-19
 
 - [x] Все пять требований перечислены в планах.
 - [x] Для каждой задачи указан локальный исполняемый тест или команда проверки, отсутствующие тесты входят в соответствующие задачи.
-- [ ] Фактические проверки и доказательства записаны.
-- [ ] Независимая проверка готовности и пользовательская приёмка.
+- [x] Фактические проверки и доказательства записаны.
+- [ ] Пользовательская приёмка проводится отдельным сценарием.
+
+## Validation Audit 2026-11-22
+
+| Metric | Count |
+|---|---|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |

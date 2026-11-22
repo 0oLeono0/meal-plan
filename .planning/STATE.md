@@ -6,11 +6,11 @@ current_phase: 4
 current_phase_name: Изменение блюд и порций
 current_plan: 5
 status: verifying
-stopped_at: "Фаза 4: 5 из 5 планов выполнены, завершаются проверки исправлений после ревью."
-last_updated: "2026-11-20T07:55:03.960Z"
+stopped_at: "Фаза 4: независимая проверка завершена, ожидается пользовательская приёмка"
+last_updated: "2026-11-22T10:56:22.995Z"
 last_activity: 2026-11-18
 last_activity_desc: Phase 03.1 complete, transitioned to Phase 4
-state_head: 96e20a97dc4d53b202e75a10d283e59b78843c3c
+state_head: b643b4334210ca39ffcf19773d9bfe5b2607c496
 progress:
   total_phases: 8
   completed_phases: 4
@@ -176,6 +176,6 @@ Progress: [█████░░░░░] 50%
 
 ## Session Continuity
 
-Last session: 2026-11-20T07:54:59.456Z
-Stopped at: Фаза 4: 5 из 5 планов выполнены, завершаются проверки исправлений после ревью.
-Resume file: .planning/phases/04-izmenenie-blyud-i-portsiy/04-REVIEW.md
+Last session: 2026-11-22T10:56:14.530Z
+Stopped at: Фаза 4: независимая проверка завершена, ожидается пользовательская приёмка
+Resume file: .planning/phases/04-izmenenie-blyud-i-portsiy/04-UAT.md

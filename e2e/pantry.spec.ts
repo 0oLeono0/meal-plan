@@ -233,9 +233,9 @@ test('pantry-recovery follows storage events and preserves the last confirmed ca
   expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(initialPlan);
 });
 
-async function openBudgetPlan(page: Page) {
+async function openBudgetPlan(page: Page, codServings = '2.131811237915170') {
   await page.goto('/plan/new');
-  const raw = await page.evaluate(async key => {
+  const raw = await page.evaluate(async ({ key, codServings }) => {
     const catalogPath = '/src/data/catalog.ts';
     const planPath = '/src/domain/plan.ts';
     const settingsPath = '/src/domain/settings.ts';
@@ -255,7 +255,7 @@ async function openBudgetPlan(page: Page) {
     // These portions independently yield rounded purchases of 460 and 540 RUB before stock.
     const variants = [
       ['stock-a', 'familiar-turkey-potato-cabbage', '3.178866307087745'],
-      ['stock-b', 'familiar-cod-rice-soup', '2.131811237915170'],
+      ['stock-b', 'familiar-cod-rice-soup', codServings],
     ].map(([id, recipeId, servings]) => {
       const recipe = bundledCatalog.recipes.find(item => item.id === recipeId);
       if (!recipe) throw new Error(`Missing fixture recipe: ${recipeId}`);
@@ -267,7 +267,7 @@ async function openBudgetPlan(page: Page) {
     const saved = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
     localStorage.setItem(key, saved);
     return saved;
-  }, activeKey);
+  }, { key: activeKey, codServings });
   await page.goto('/menu');
   await expect(page.getByRole('heading', { name: 'Вариант 1 из 2' })).toBeVisible();
   return raw;
@@ -296,11 +296,30 @@ test('pantry-budget keeps saved variants available when present-day purchases ex
   await page.getByRole('link', { name: 'Покупки', exact: true }).click();
   await expect(budget.getByRole('heading')).toContainText(/540,00.*500,00/);
   await expect(budget.getByText(/превышение.*40,00/i)).toBeVisible();
-  await expect(budget.getByRole('button', { name: 'Пересчитать меню' })).toBeVisible();
+  await budget.getByRole('button', { name: 'Пересчитать меню' }).click();
+  await expect(page.getByRole('dialog', { name: 'Создать новый набор меню?' })).toBeVisible();
+  await page.getByRole('button', { name: 'Оставить варианты' }).click();
   await page.getByRole('link', { name: 'Меню', exact: true }).click();
   await page.getByRole('button', { name: /Вариант 1 · Купить: ≈ 460,00/ }).click();
   await expect(budget.getByRole('heading')).toContainText(/460,00.*500,00/);
   await page.reload();
   await expect(page.getByRole('button', { name: /Вариант 1.*Выбран/ })).toBeVisible();
   await expect(budget.getByText(/Осталось 40,00/)).toBeVisible();
+});
+
+for (const [servings, explanation] of [
+  ['1.973903242164488', 'меньше одной копейки по точному расчёту'],
+  ['1.973898899586040', 'Превышение после округления строк: 0,01'],
+]) test(`pantry-budget explains the exact or rounded limit for ${servings} portions`, async ({ page }) => {
+  await openBudgetPlan(page, servings);
+  await removeCodStock(page);
+  await page.getByRole('link', { name: 'Меню', exact: true }).click();
+  await page.getByRole('button', { name: /Вариант 2 · Купить: ≈ 500,01/ }).click();
+  const budget = page.getByRole('region', { name: 'Бюджет меню' });
+  await expect(budget.getByText(new RegExp(explanation))).toBeVisible();
+  const other = await page.context().newPage();
+  await other.goto('/pantry');
+  await other.evaluate(() => localStorage.setItem('mealplan:guest:pantry:v1', '{ damaged'));
+  await expect(page.getByRole('alert').getByText(/Не удалось проверить актуальные запасы/)).toBeVisible();
+  await expect(budget.getByRole('button', { name: 'Пересчитать меню' })).toHaveCount(0);
 });

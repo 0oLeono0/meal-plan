@@ -169,7 +169,7 @@ function NutritionSummary({ values, target }: { values: ReturnType<typeof format
     </dd></div>;
   })}</dl>;
 }
-export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, onCancel, onAppend, onRetryGeneration, onRecreate, mealAlternatives, onRemove }: { snapshot: GenerationSnapshot; onRetryLoad(): void; onSelectVariant?(id: string): void; onRetrySave?(): void; onCancel?(): void; onAppend?(): void; onRetryGeneration?(): void; onRecreate?(focusAnchor: string): void; mealAlternatives?: MealAlternativesActions; onRemove?(target: MealEditTarget, expectedPlan: ActivePlanEnvelope): void }) {
+export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, onCancel, onAppend, onRetryGeneration, onRecreate, onRecalculate, mealAlternatives, onRemove }: { snapshot: GenerationSnapshot; onRetryLoad(): void; onSelectVariant?(id: string): void; onRetrySave?(): void; onCancel?(): void; onAppend?(): void; onRetryGeneration?(): void; onRecreate?(focusAnchor: string): void; onRecalculate?(trigger: HTMLElement): void; mealAlternatives?: MealAlternativesActions; onRemove?(target: MealEditTarget, expectedPlan: ActivePlanEnvelope): void }) {
   const [replacementTrigger, setReplacementTrigger] = useState<HTMLElement | null>(null);
   const [mealChoice, setMealChoice] = useState<{ target: MealSelectionTarget; recipeName?: string; trigger: HTMLElement } | null>(null);
   const [removal, setRemoval] = useState<{ target: MealEditTarget; trigger: HTMLElement; plan: ActivePlanEnvelope } | null>(null);
@@ -235,7 +235,7 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
       {snapshot.status === 'idle' && snapshot.origin && (snapshot.intent === 'append' || snapshot.intent === 'replace') && <p role="status">Подбор отменён. Прежнее меню не изменено</p>}
       {snapshot.status === 'error' && !editing && <div role="alert"><p>{snapshot.error?.message}. Предыдущее меню не изменено</p><Button onClick={onRetryGeneration}>Повторить</Button><Link className="action-link" to="/plan/new">Изменить настройки</Link></div>}
     </section>
-    <PlanSummary bundle={bundle} projection={projection} />
+    <PlanSummary bundle={bundle} projection={projection} onRecalculate={onRecalculate} />
     <section className="card"><h2>Среднее на человека в день</h2><NutritionSummary values={view.averagePersonDayNutrition} target={view.targetComparison} />
       <p>{settings.target.status === 'absent' ? 'Ручная цель КБЖУ не задана' : settings.target.source.kind === 'manual' ? 'Цель введена вручную · на человека в день' : 'Цель из сохранённого расчёта · на человека в день'}</p>
       <p className="hint">КБЖУ рассчитаны по составу продуктов и не являются медицинской рекомендацией</p>

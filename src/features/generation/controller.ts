@@ -342,8 +342,9 @@ export function createGenerationController({ generation, activePlan, pantryInven
   }
   async function recreateSet(origin: GenerationOrigin) {
     const base = snapshot.active;
-    if (disposed || !base || (snapshot.intent === 'edit' && mealEditingUnavailable(snapshot))) return;
-    await run(base.plan.inputs, origin, 'replace', base, revision);
+    if (disposed || !base || mealEditingUnavailable(snapshot)) return;
+    const inventory = snapshot.pantry?.confirmed;
+    await run(inventory ? inputsWithInventory(base.plan.inputs, inventory.rows) : base.plan.inputs, origin, 'replace', base, revision);
   }
   function cancel() {
     if (disposed) return;

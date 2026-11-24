@@ -15,7 +15,7 @@ import release2Raw from '../test/fixtures/phase031-release2-active-plan.json?raw
 import release3Raw from '../test/fixtures/phase031-release3-active-plan.json?raw';
 
 // Synthetic test data, never a production catalog or factual food claim.
-function fixture(change = {}): ActivePlanEnvelope {
+function fixture(change = {}) {
   const source = { sourceId: 'synthetic', recordId: 'test', release: 'v1', license: 'CC0-1.0', url: 'https://example.org/test' };
   const catalog: Catalog = { version: 'test-v1', foods: [{ productId: 'rice', profileId: 'raw', name: 'test', identity: 'test', state: 'raw', category: 'test',
     nutrition: { status: 'known', reference: { amount: '100', unit: 'g', basis: 'edible' }, values: { calories: '120', protein: '10', fat: '4', carbohydrates: '11' }, source },
@@ -46,7 +46,7 @@ describe('pantry-admission storage', () => {
     store.map.set(ACTIVE_PLAN_KEY, rawPlan(original));
     expect((await adapter.load()).status).toBe('loaded');
     expect(validateActiveBundle(changed, registry)).toMatchObject({ status: 'invalid', diagnostics: [{ code: 'PLAN_OVER_BUDGET' }] });
-    expect((await adapter.save(changed, { ...current, ...{ admissionPantries: [{ variantId: 'v', rows: [rice] }] } })).status).toBe('saved');
+    expect((await adapter.save(changed, { ...current, admissionPantries: [{ variantId: 'v', rows: [rice] }] })).status).toBe('saved');
     const raw = store.map.get(ACTIVE_PLAN_KEY);
     expect(JSON.parse(raw!)).toMatchObject({ schemaVersion: 2, admissionPantries: [{ variantId: 'v', rows: [rice] }] });
     const loaded = await createActivePlanAdapter(() => store, registry).load();
@@ -66,6 +66,19 @@ describe('pantry-admission storage', () => {
     expect((await adapter.load()).status).toBe('corrupt');
     expect((await adapter.save(original, current)).status).toBe('blocked');
     expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+  });
+
+  it('rejects oversized version-two UTF-8 bytes before parsing', async () => {
+    const store = storage();
+    const raw = JSON.stringify({ schemaVersion: 2, plan: encodePlanEnvelope(changed),
+      admissionPantries: [{ variantId: 'v', rows: [{ ...rice, quantity: 'я'.repeat(ACTIVE_PLAN_MAX_BYTES / 2) }] }] });
+    store.map.set(ACTIVE_PLAN_KEY, raw);
+    const parse = vi.spyOn(JSON, 'parse');
+    try {
+      expect((await createActivePlanAdapter(() => store, registry).load()).status).toBe('corrupt');
+      expect(parse).not.toHaveBeenCalled();
+      expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+    } finally { parse.mockRestore(); }
   });
 });
 

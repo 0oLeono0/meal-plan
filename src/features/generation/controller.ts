@@ -1,4 +1,4 @@
-import { validateActiveBundle } from '../../adapters/activePlan';
+import { applicableAdmissionRows, validateActiveBundle } from '../../adapters/activePlan';
 import type { ActiveBundle, ActivePlanPort, ActivePlanSaveResult } from '../../adapters/activePlan';
 import type { ActivePlanEnvelope, GenerationError, GenerationPort, PlanInputs } from '../../domain/plan';
 import { EDITED_PLAN_SCHEMA_VERSION, PLAN_SCHEMA_VERSION, validatePlanInputs } from '../../domain/plan';
@@ -51,14 +51,35 @@ function inputsWithInventory(inputs: PlanInputs, rows: readonly PantryInventoryR
 
 function projectInventory(bundle: ActiveBundle, rows: readonly PantryInventoryRow[]): ActiveBundle | null {
   const inputs = inputsWithInventory(bundle.plan.inputs, rows);
-  if (sameSnapshot(inputs.pantrySnapshot, bundle.plan.inputs.pantrySnapshot)) return bundle;
+  if (!bundle.admissionPantries && sameSnapshot(inputs.pantrySnapshot, bundle.plan.inputs.pantrySnapshot)) return bundle;
   const projections = [];
   for (const variant of bundle.plan.variants) {
     const result = projectPlan(inputs, variant);
     if (result.status === 'invalid') return null;
     projections.push(result.projection);
   }
-  return Object.freeze({ plan: bundle.plan, projections: Object.freeze(projections) });
+  return Object.freeze({ ...bundle, projections: Object.freeze(projections) });
+}
+
+function validateChangedVariant(plan: ActivePlanEnvelope, base: ActiveBundle, variantId: string, registry: TrustedCatalogRegistry, currentRows?: readonly PantryInventoryRow[]) {
+  const variant = plan.variants.find(variant => variant.id === variantId);
+  if (!variant) return validateActiveBundle(plan, registry, base.admissionPantries);
+  const retained = base.admissionPantries?.filter(entry => entry.variantId !== variantId) ?? [];
+  const previous = base.admissionPantries?.find(entry => entry.variantId === variantId);
+  const previousInputs = previous ? inputsWithInventory(plan.inputs, previous.rows) : plan.inputs;
+  const historical = projectPlan(previousInputs, variant);
+  if (historical.status === 'projected' && historical.projection.budget.check.accepted) {
+    const rows = previous ? applicableAdmissionRows(previousInputs, historical.projection, previous.rows) : [];
+    if (rows.length) retained.push({ variantId, rows });
+  } else if (currentRows) {
+    const liveInputs = inputsWithInventory(plan.inputs, currentRows);
+    const live = projectPlan(liveInputs, variant);
+    if (live.status === 'projected' && live.projection.budget.check.accepted) {
+      const rows = applicableAdmissionRows(liveInputs, live.projection, currentRows);
+      if (rows.length) retained.push({ variantId, rows });
+    }
+  }
+  return validateActiveBundle(plan, registry, retained.length ? retained : undefined);
 }
 
 const liveProjections = new WeakMap<ActiveBundle, { inventory: PantryInventory; bundle: ActiveBundle | null }>();
@@ -232,7 +253,7 @@ export function createGenerationController({ generation, activePlan, pantryInven
       const result = await activePlan.load();
       if (disposed || token !== loadSequence || atRevision !== revision) return;
       if (result.status === 'loaded') {
-        const checked = validateActiveBundle(result.bundle.plan, trustedCatalogs);
+        const checked = validateActiveBundle(result.bundle.plan, trustedCatalogs, result.bundle.admissionPantries);
         if (checked.status !== 'valid') { writeAllowed = false; publish({ loadStatus: 'corrupt', presence: snapshot.active ? snapshot.presence : { status: 'error' } }); return; }
         // A selection belongs to the revision it inspected. Reload replaces that base;
         // release its pending UI and timers as well as rejecting its final write.
@@ -261,7 +282,8 @@ export function createGenerationController({ generation, activePlan, pantryInven
     const queued = writes.then(async (): Promise<ActivePlanSaveResult> => {
       if (!owned(op) || rejectExpired(op)) return { status: 'cancelled' };
       if (!writeAllowed) return { status: 'blocked' };
-      return activePlan.save(candidate.plan, { isCurrent: () => owned(op) && writeAllowed && clock.now() < op.deadline });
+      return activePlan.save(candidate.plan, { isCurrent: () => owned(op) && writeAllowed && clock.now() < op.deadline,
+        ...(candidate.admissionPantries ? { admissionPantries: candidate.admissionPantries } : {}) });
     });
     writes = queued.catch(() => undefined);
     let result: ActivePlanSaveResult | typeof cancelled;
@@ -321,7 +343,7 @@ export function createGenerationController({ generation, activePlan, pantryInven
         const nextPlan = base.plan.schemaVersion === EDITED_PLAN_SCHEMA_VERSION
           ? { ...base.plan, variants: [...base.plan.variants, { ...added, emptySlots: [] }], activeVariantId: id }
           : { ...base.plan, variants: [...base.plan.variants, added], activeVariantId: id };
-        const merged = validateActiveBundle(nextPlan, trustedCatalogs);
+        const merged = validateChangedVariant(nextPlan, base, id, trustedCatalogs, snapshot.pantry?.confirmed?.rows);
         if (merged.status !== 'valid') { stopTimers(op); publish({ status: 'error', error: failure('GENERATION_DATA_INCOMPLETE', 'Не удалось проверить новый вариант') }); return; }
         await save(op, merged.bundle);
       } else {
@@ -337,8 +359,9 @@ export function createGenerationController({ generation, activePlan, pantryInven
   async function appendVariant(origin: GenerationOrigin) {
     const base = snapshot.active;
     if (disposed || !base || base.plan.variants.length >= 12 || snapshot.status === 'pending' || snapshot.status === 'saving' || snapshot.status === 'memory-only'
-      || (snapshot.intent === 'edit' && mealEditingUnavailable(snapshot))) return;
-    await run(base.plan.inputs, origin, 'append', base, revision);
+      || mealEditingUnavailable(snapshot)) return;
+    const inventory = snapshot.pantry?.confirmed;
+    await run(inventory ? inputsWithInventory(base.plan.inputs, inventory.rows) : base.plan.inputs, origin, 'append', base, revision);
   }
   async function recreateSet(origin: GenerationOrigin) {
     const base = snapshot.active;
@@ -366,7 +389,7 @@ export function createGenerationController({ generation, activePlan, pantryInven
     if (disposed || !active || snapshot.pantry?.writeStatus === 'saving' || (snapshot.intent === 'edit' && mealEditingUnavailable(snapshot))
       || variantId === active.plan.activeVariantId || !active.plan.variants.some(variant => variant.id === variantId)) return;
     invalidate();
-    const candidate = validateActiveBundle({ ...active.plan, activeVariantId: variantId }, trustedCatalogs);
+    const candidate = validateActiveBundle({ ...active.plan, activeVariantId: variantId }, trustedCatalogs, active.admissionPantries);
     if (candidate.status !== 'valid') {
       publish({ status: 'error', error: failure('GENERATION_DATA_INCOMPLETE', 'Не удалось проверить выбранный вариант') }); return;
     }
@@ -407,8 +430,7 @@ export function createGenerationController({ generation, activePlan, pantryInven
         : next.status === 'over-budget' ? budgetMessage : 'Не удалось изменить блюдо';
       invalidate(); publish({ intent: 'edit', origin, status: 'error', error: failure('FAILED', message), candidate: null, saveError: null, requestId: null }); return;
     }
-    // Until each variant can retain its own admission basis, the saved composition must still be valid on the original basis.
-    const candidate = validateActiveBundle({ ...next.plan, inputs: base.plan.inputs }, trustedCatalogs);
+    const candidate = validateChangedVariant({ ...next.plan, inputs: base.plan.inputs }, base, target.variantId, trustedCatalogs, snapshot.pantry?.confirmed?.rows);
     if (candidate.status !== 'valid') {
       invalidate(); publish({ intent: 'edit', origin, status: 'error', error: failure('FAILED', 'Не удалось проверить изменения меню'), candidate: null, saveError: null, requestId: null }); return;
     }

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import type { EditedPlanEnvelope, MealCoordinate, RecipeInstance } from '../src/domain/plan';
-import { activeKey } from './generation-fixtures';
+import { activeKey, count, mountGeneration, release } from './generation-fixtures';
 
 async function openCarrotPlan(page: Page, withHistoricStock = false) {
   await page.goto('/plan/new');
@@ -331,6 +331,39 @@ test('pantry-admission accepts budget relief and edits covered by current stock 
   await cod();
   await expect(portion(2)).toHaveAttribute('aria-pressed', 'true');
   expect(await savedPlan()).toEqual(after);
+});
+
+test('pantry-edit-race withdraws the old offer and rejects a delayed save after another tab changes stock', async ({ page }) => {
+  const raw = await openCarrotPlan(page);
+  await mountGeneration(page, { activeRaw: raw, route: '/menu', deferSave: true });
+  await page.getByRole('link', { name: /Куриное филе с рисом и морковью/ }).first().click();
+  await page.getByRole('button', { name: 'Заменить в меню' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Заменить блюдо' });
+  const offers = dialog.getByRole('button', { name: /Покупки за период/ });
+  await expect(offers.first()).toBeVisible();
+  const other = await page.context().newPage();
+  await other.goto('/pantry');
+  const change = (quantity: string) => other.evaluate(quantity => {
+    localStorage.setItem('mealplan:guest:pantry:v1', JSON.stringify({ schemaVersion: 1, token: quantity.padStart(32, '0'),
+      rows: [{ productId: 'carrot', quantity, unit: 'g', expiresSoon: false }] }));
+  }, quantity);
+  await change('200');
+  await expect(dialog.getByRole('alert')).toContainText('Меню изменилось');
+  await expect(offers).toHaveCount(0);
+  await dialog.getByRole('button', { name: 'Закрыть подбор' }).click();
+
+  const portion = page.getByRole('button', { name: '×2 от исходных порций для семьи' });
+  await portion.click();
+  await expect.poll(() => count(page, 'save-calls')).toBe(1);
+  await expect(portion).toHaveAttribute('aria-pressed', 'true');
+  await change('300');
+  await expect(portion).toHaveAttribute('aria-pressed', 'false');
+  await release(page, 'save-1');
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem('save-result-1'))).toBe('cancelled');
+  await expect(page.getByText('Изменения сохранены', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Повторить сохранение' })).toHaveCount(0);
+  expect(await count(page, 'final-writes')).toBe(0);
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(raw);
 });
 
 test('pantry-budget keeps saved variants available when present-day purchases exceed the limit', async ({ page }) => {

@@ -148,6 +148,56 @@ it('pantry-recovery keeps the newer confirmation when an older read resolves out
   } finally { controller.dispose(); }
 });
 
+it.each(['before-event', 'unreadable', 'already-committed'] as const)('pantry-edit-race honors the actual final write boundary for %s inventory', async timing => {
+  const { plan } = fixture('stock-write-race');
+  const initial = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
+  const values = new Map([[ACTIVE_PLAN_KEY, initial]]);
+  const store = { getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => { values.set(key, value); } };
+  const active = createActivePlanAdapter(() => store, trustedCatalogs);
+  const inventory = createPantryInventoryAdapter(() => store);
+  const other = createPantryInventoryAdapter(() => store);
+  const entered = deferred<void>(), release = deferred<void>();
+  const save = vi.fn<ActivePlanPort['save']>(async (...args) => {
+    if (timing === 'already-committed') {
+      const result = await active.save(...args);
+      entered.resolve();
+      await release.promise;
+      return result;
+    }
+    entered.resolve();
+    await release.promise;
+    return active.save(...args);
+  });
+  const controller = createGenerationController({ generation: { generate: vi.fn() }, activePlan: { ...active, save }, pantryInventory: inventory });
+  try {
+    await Promise.all([controller.load(), controller.loadPantry(), other.load()]);
+    const base = controller.getSnapshot().active!.plan;
+    const instance = base.variants[0].instances[0];
+    const target = { variantId: base.activeVariantId, instanceId: instance.id, recipeId: instance.recipeId, date: instance.date, slot: instance.slot };
+    const saving = controller.changePortions(target, '2', base, origin);
+    await entered.promise;
+    if (timing === 'unreadable') values.set(PANTRY_INVENTORY_KEY, '{ bad');
+    else expect((await other.save([{ productId: 'rice', quantity: '200', unit: 'g', expiresSoon: false }], { isCurrent: () => true })).status).toBe('saved');
+    if (timing !== 'before-event') {
+      await controller.loadPantry();
+      expect(controller.getSnapshot().candidate).toBeNull();
+    }
+    release.resolve();
+    await saving;
+    await controller.retrySave();
+    expect(save).toHaveBeenCalledTimes(1);
+    const displayed = visiblePlanSnapshot(controller.getSnapshot());
+    expect(displayed.candidate).toBeNull();
+    expect(displayed.status).toBe(timing === 'already-committed' ? 'succeeded' : 'idle');
+    expect(displayed.active?.plan.variants[0].instances[0].selectedServings).toEqual(decimal(timing === 'already-committed' ? '2' : '1'));
+    if (timing === 'already-committed') {
+      expect(values.get(ACTIVE_PLAN_KEY)).not.toBe(initial);
+      expect(displayed.active?.projections[0].costs.exact.purchase).toEqual(decimal('300'));
+    } else expect(values.get(ACTIVE_PLAN_KEY)).toBe(initial);
+  } finally { release.resolve(); controller.dispose(); }
+});
+
 it('phase04-remove rejects a valid edited envelope as a generation response and retains stored bytes', async () => {
   const base = fixture('empty-response');
   const initial = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(base.plan) });

@@ -6,16 +6,16 @@ current_phase: 5
 current_phase_name: Домашние запасы и меню из остатков
 current_plan: Not started
 status: planning
-stopped_at: "Фаза 5: подтверждён первый сквозной сценарий, дальше удаление и синхронизация запасов."
-last_updated: "2026-11-24T09:12:02.350Z"
+stopped_at: "Фаза 5: проверены правки и синхронизация запасов, дальше бюджет и сохранённые варианты."
+last_updated: "2026-11-24T09:23:46.215Z"
 last_activity: 2026-11-22
 last_activity_desc: Phase 4 complete, transitioned to Phase 5
-state_head: f7456e6e5a9989f99ed97edb830ce7930d48e61d
+state_head: 182f4e9dc66b0896087d2ad69200bf549ed53085
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 49
-  completed_plans: 44
+  completed_plans: 45
 ---
 
 # Project State
@@ -177,6 +177,6 @@ Progress: [██████░░░░] 63%
 
 ## Session Continuity
 
-Last session: 2026-11-24T09:11:55.593Z
-Stopped at: Фаза 5: подтверждён первый сквозной сценарий, дальше удаление и синхронизация запасов.
-Resume file: .planning/phases/05-domashnie-zapasy-i-menyu-iz-ostatkov/05-02-PLAN.md
+Last session: 2026-11-24T09:23:41.929Z
+Stopped at: Фаза 5: проверены правки и синхронизация запасов, дальше бюджет и сохранённые варианты.
+Resume file: .planning/phases/05-domashnie-zapasy-i-menyu-iz-ostatkov/05-03-PLAN.md

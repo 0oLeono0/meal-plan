@@ -53,7 +53,7 @@ export function ShoppingPage({ snapshot, onRetryLoad }: { snapshot: GenerationSn
     </section>)}
     {issues.length > 0 && <section className="card" aria-label="Запасы без количественного покрытия"><h2>Запасы без количественного покрытия</h2>{issues.map(issue => <p key={issue.key}>{issue.name}: {issue.reason}</p>)}</section>}
     <details className="card"><summary className="min-h-[44px] py-2 cursor-pointer">Уже есть дома · ≈ {view.costs.covered}</summary>
-      <p className="hint">Покрытие рассчитано по снимку продуктов для этого меню. Запасы не списываются</p>
+      <p className="hint">{snapshot.pantry?.confirmed ? 'Покрытие рассчитано по последним подтверждённым запасам.' : 'Покрытие рассчитано по снимку продуктов для этого меню.'} Запасы не списываются</p>
       {view.covered.length === 0 ? <p>Нет количественного покрытия запасами</p> : <ul className="pl-4">{view.covered.map(row => <li className="my-4 tabular-nums" key={JSON.stringify([row.productId, row.profileId])}>{row.name} · {row.covered} · ≈ {row.coveredCost}</li>)}</ul>}
     </details>
   </section>;

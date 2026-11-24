@@ -9,6 +9,9 @@ import type { TrustedCatalogRegistry } from '../../adapters/trustedCatalogs';
 import { addMeal as addToPlan, changeMealServings, freeMealId, listMealAlternatives, removeMeal as removeFromPlan, replaceMeal } from '../../domain/mealEdits';
 import type { EmptyMealTarget, MealAlternativesResult, MealEditTarget, MealPortionMultiplier, MealSelectionTarget } from '../../domain/mealEdits';
 import type { PlanProjection } from '../../domain/planProjection';
+import { projectPlan } from '../../domain/planProjection';
+import { inventoryPantrySnapshot, validateInventoryRows } from '../../adapters/pantryInventory';
+import type { PantryInventory, PantryInventoryPort, PantryInventoryRow } from '../../adapters/pantryInventory';
 
 export interface GenerationOrigin {
   readonly returnRoute: string;
@@ -31,44 +34,91 @@ export interface GenerationSnapshot {
   readonly startedAt: number | null;
   readonly origin: GenerationOrigin | null;
   readonly initialSearchCount: number | null;
+  readonly pantry?: PantryInventoryState;
+}
+
+export interface PantryInventoryState {
+  readonly status: 'pending' | 'missing' | 'loaded' | 'corrupt' | 'error';
+  readonly confirmed: PantryInventory | null;
+  readonly writeStatus: 'idle' | 'saving' | 'saved' | 'error' | 'conflict';
 }
 export type MealAlternativesRequest = Extract<MealAlternativesResult, { status: 'ready' }> & { revision: number }
   | Exclude<MealAlternativesResult, { status: 'ready' }>;
 
+function inputsWithInventory(inputs: PlanInputs, rows: readonly PantryInventoryRow[]): PlanInputs {
+  return { ...inputs, pantrySnapshot: inventoryPantrySnapshot(rows) };
+}
+
+function projectInventory(bundle: ActiveBundle, rows: readonly PantryInventoryRow[]): ActiveBundle | null {
+  const inputs = inputsWithInventory(bundle.plan.inputs, rows);
+  if (sameSnapshot(inputs.pantrySnapshot, bundle.plan.inputs.pantrySnapshot)) return bundle;
+  const projections = [];
+  for (const variant of bundle.plan.variants) {
+    const result = projectPlan(inputs, variant);
+    if (result.status === 'invalid') return null;
+    projections.push(result.projection);
+  }
+  return Object.freeze({ plan: bundle.plan, projections: Object.freeze(projections) });
+}
+
+const liveProjections = new WeakMap<ActiveBundle, { inventory: PantryInventory; bundle: ActiveBundle | null }>();
+function projectedInventory(bundle: ActiveBundle, inventory: PantryInventory): ActiveBundle | null {
+  const cached = liveProjections.get(bundle);
+  if (cached?.inventory === inventory) return cached.bundle;
+  const projected = projectInventory(bundle, inventory.rows);
+  liveProjections.set(bundle, { inventory, bundle: projected });
+  return projected;
+}
+
 export function visiblePlanSnapshot(snapshot: GenerationSnapshot): GenerationSnapshot {
-  return snapshot.intent === 'edit' && snapshot.status === 'saving' && snapshot.candidate
-    ? { ...snapshot, active: snapshot.candidate } : snapshot;
+  const bundle = snapshot.intent === 'edit' && snapshot.status === 'saving' && snapshot.candidate ? snapshot.candidate : snapshot.active;
+  const inventory = snapshot.pantry?.confirmed;
+  const active = inventory && bundle ? projectedInventory(bundle, inventory) : bundle;
+  if (active === null && bundle && snapshot.pantry) {
+    return { ...snapshot, active: bundle, pantry: { ...snapshot.pantry, status: 'error' } };
+  }
+  return active === snapshot.active ? snapshot : { ...snapshot, active };
 }
 export function mealEditingUnavailable(snapshot: GenerationSnapshot): boolean {
   return snapshot.loadStatus !== 'loaded' || snapshot.status === 'saving' || snapshot.status === 'pending'
-    || (snapshot.intent === 'edit' && snapshot.saveError === 'blocked');
+    || (snapshot.intent === 'edit' && snapshot.saveError === 'blocked') || pantryBlocksMealEdit(snapshot);
+}
+function pantryBlocksMealEdit(snapshot: GenerationSnapshot): boolean {
+  const pantry = snapshot.pantry;
+  if (!pantry) return false;
+  return (pantry.status !== 'loaded' && pantry.status !== 'missing') || pantry.writeStatus === 'saving' || pantry.writeStatus === 'conflict';
 }
 export interface GenerationScheduler { setTimeout(callback: () => void, milliseconds: number): unknown; clearTimeout(handle: unknown): void }
 export interface GenerationControllerOptions {
   readonly generation: GenerationPort; readonly activePlan: ActivePlanPort;
+  readonly pantryInventory?: PantryInventoryPort;
   readonly trustedCatalogs?: TrustedCatalogRegistry;
   readonly clock?: { now(): number }; readonly scheduler?: GenerationScheduler;
 }
-export function createGenerationController({ generation, activePlan, trustedCatalogs = defaultTrustedCatalogs, clock = { now: () => Date.now() }, scheduler = {
+export function createGenerationController({ generation, activePlan, pantryInventory, trustedCatalogs = defaultTrustedCatalogs, clock = { now: () => Date.now() }, scheduler = {
   setTimeout: (callback, milliseconds) => globalThis.setTimeout(callback, milliseconds),
   clearTimeout: handle => globalThis.clearTimeout(handle as ReturnType<typeof setTimeout>),
 } }: GenerationControllerOptions) {
   let snapshot: GenerationSnapshot = immutableSnapshot({ status: 'idle', loadStatus: 'unloaded', active: null, candidate: null, lastApplied: null,
-    presence: { status: 'absent' }, error: null, saveError: null, requestId: null, pendingTextIndex: 0, startedAt: null, origin: null, initialSearchCount: null });
+    presence: { status: 'absent' }, error: null, saveError: null, requestId: null, pendingTextIndex: 0, startedAt: null, origin: null, initialSearchCount: null,
+    ...(pantryInventory ? { pantry: { status: 'pending' as const, confirmed: null, writeStatus: 'idle' as const } } : {}) });
   interface Operation { readonly id: string; readonly abort: AbortController; readonly inputs: PlanInputs; readonly origin: GenerationOrigin; readonly deadline: number; readonly baseRevision?: number; readonly intent?: GenerationSnapshot['intent']; readonly base?: ActiveBundle; initialSearchCount?: number; timeout?: unknown; rotation?: unknown }
   let operation: Operation | null = null, sequence = 0, disposed = false, revision = 0, loadSequence = 0, writeAllowed = false;
   let lastRequest: { inputs: PlanInputs; origin: GenerationOrigin; intent: 'append' | 'replace'; base?: ActiveBundle; baseRevision?: number }
     | { intent: 'select'; variantId: string; origin: GenerationOrigin; baseRevision: number } | null = null;
   let writes: Promise<unknown> = Promise.resolve();
+  let pantrySequence = 0;
+  let pantryRetryRows: readonly PantryInventoryRow[] | null = null;
   const listeners = new Set<() => void>();
   const cancelled = Symbol('cancelled');
   const publish = (patch: Partial<GenerationSnapshot>) => {
     if (disposed) return;
     // Bundles are already detached/frozen by validateActiveBundle. Copying both old
     // and candidate together would exceed the trust-boundary node budget at cap12.
-    const { active, candidate, ...metadata } = patch;
+    const { active, candidate, pantry, ...metadata } = patch;
     snapshot = Object.freeze({ ...snapshot, ...immutableSnapshot(metadata),
-      ...(active !== undefined ? { active } : {}), ...(candidate !== undefined ? { candidate } : {}) });
+      ...(active !== undefined ? { active } : {}), ...(candidate !== undefined ? { candidate } : {}),
+      ...(pantry ? { pantry: Object.freeze(pantry) } : {}) });
     for (const listener of [...listeners]) listener();
   };
   const owned = (op: Operation) => !disposed && operation === op && !op.abort.signal.aborted && (op.baseRevision === undefined || op.baseRevision === revision);
@@ -111,6 +161,50 @@ export function createGenerationController({ generation, activePlan, trustedCata
       if (owned(op) && snapshot.status === 'pending') rotate(op);
     }, 2_000);
   };
+
+  async function loadPantry() {
+    if (!pantryInventory || !snapshot.pantry || disposed || snapshot.pantry.writeStatus === 'saving') return;
+    const attempt = ++pantrySequence;
+    pantryRetryRows = null;
+    publish({ pantry: { ...snapshot.pantry, status: 'pending', writeStatus: 'idle' } });
+    const result = await pantryInventory.load().catch(() => ({ status: 'error' as const }));
+    if (disposed || attempt !== pantrySequence || !snapshot.pantry) return;
+    const confirmed = result.status === 'loaded' ? result.inventory : result.status === 'missing' ? null : snapshot.pantry.confirmed;
+    const changed = confirmed?.token !== snapshot.pantry.confirmed?.token;
+    const revoke = changed && (snapshot.status === 'saving' || snapshot.status === 'pending'
+      || (snapshot.status === 'memory-only' && snapshot.intent === 'edit'));
+    if (changed) { invalidate(); revision++; }
+    publish({ pantry: { status: result.status, confirmed, writeStatus: 'idle' },
+      ...(revoke ? { status: 'idle' as const, candidate: null, error: null, saveError: null, requestId: null, origin: null } : {}) });
+  }
+
+  async function savePantry(input: readonly PantryInventoryRow[]): Promise<boolean> {
+    const pantry = snapshot.pantry;
+    if (!pantryInventory || !pantry || disposed || pantryBlocksMealEdit(snapshot)
+      || snapshot.status === 'saving' || snapshot.status === 'pending') return false;
+    const rows = validateInventoryRows(input);
+    if (!rows || (snapshot.active && !projectInventory(snapshot.active, rows))) {
+      publish({ pantry: { ...pantry, writeStatus: 'error' } });
+      return false;
+    }
+    const attempt = ++pantrySequence;
+    const isCurrent = () => !disposed && attempt === pantrySequence;
+    pantryRetryRows = rows;
+    publish({ pantry: { ...pantry, writeStatus: 'saving' } });
+    const result = await pantryInventory.save(rows, { isCurrent }).catch(() => ({ status: 'error' as const }));
+    if (!isCurrent()) return false;
+    if (result.status === 'saved') {
+      pantryRetryRows = null;
+      invalidate(); revision++;
+      const rollback = snapshot.intent === 'edit' && snapshot.status === 'memory-only';
+      publish({ pantry: { status: 'loaded', confirmed: result.inventory, writeStatus: 'saved' },
+        ...(rollback ? { status: 'idle' as const, candidate: null, error: null, saveError: null, requestId: null, origin: null } : {}) });
+      return true;
+    }
+    if (result.status === 'blocked') pantryRetryRows = null;
+    publish({ pantry: { ...pantry, writeStatus: result.status === 'blocked' ? 'conflict' : result.status === 'error' ? 'error' : 'idle' } });
+    return false;
+  }
   async function load() {
     if (disposed) return;
     const refreshingEdit = snapshot.intent === 'edit';
@@ -269,15 +363,16 @@ export function createGenerationController({ generation, activePlan, trustedCata
     await save(op, candidate.bundle);
   }
   async function mealAlternatives(target: MealSelectionTarget, signal: AbortSignal): Promise<MealAlternativesRequest> {
-    const base = snapshot.active, atRevision = revision, atLoad = loadSequence;
-    const current = () => !disposed && !mealEditingUnavailable(snapshot) && snapshot.active === base && revision === atRevision && loadSequence === atLoad;
+    const stored = snapshot.active, base = visiblePlanSnapshot(snapshot).active, atRevision = revision, atLoad = loadSequence;
+    const current = () => !disposed && !mealEditingUnavailable(snapshot) && snapshot.active === stored && revision === atRevision && loadSequence === atLoad;
     const projection = base?.projections.find(row => row.variantId === target.variantId);
     if (!base || !projection || !current()) return { status: 'stale' };
+    const plan = snapshot.pantry?.confirmed ? { ...base.plan, inputs: inputsWithInventory(base.plan.inputs, snapshot.pantry.confirmed.rows) } : base.plan;
     // Let the panel render its loading state before the first projection.
     await new Promise<void>(resolve => globalThis.setTimeout(resolve, 0));
     if (signal.aborted) return { status: 'cancelled' };
     if (!current()) return { status: 'stale' };
-    const result = await listMealAlternatives(base.plan, projection, target, { signal, isCurrent: current });
+    const result = await listMealAlternatives(plan, projection, target, { signal, isCurrent: current });
     if (signal.aborted) return { status: 'cancelled' };
     if (!current()) return { status: 'stale' };
     return result.status === 'ready' ? { ...result, revision: atRevision } : result;
@@ -287,16 +382,20 @@ export function createGenerationController({ generation, activePlan, trustedCata
     budgetMessage = 'Изменение превышает бюджет покупок') {
     const base = snapshot.active;
     if (!base || disposed || mealEditingUnavailable(snapshot)) return;
-    const projection = base.projections.find(row => row.variantId === target.variantId);
+    const visible = visiblePlanSnapshot(snapshot);
+    if (mealEditingUnavailable(visible)) return;
+    const projection = visible.active?.projections.find(row => row.variantId === target.variantId);
+    const plan = snapshot.pantry?.confirmed ? { ...base.plan, inputs: inputsWithInventory(base.plan.inputs, snapshot.pantry.confirmed.rows) } : base.plan;
     const next = isExpected(base) && projection
-      ? edit(base.plan, projection, target) : { status: 'stale' as const };
+      ? edit(plan, projection, target) : { status: 'stale' as const };
     if (next.status === 'unchanged') return;
     if (next.status !== 'ready') {
       const message = next.status === 'stale' ? 'Меню изменилось. Обновите его перед новой правкой'
         : next.status === 'over-budget' ? budgetMessage : 'Не удалось изменить блюдо';
       invalidate(); publish({ intent: 'edit', origin, status: 'error', error: failure('FAILED', message), candidate: null, saveError: null, requestId: null }); return;
     }
-    const candidate = validateActiveBundle(next.plan, trustedCatalogs);
+    // Until each variant can retain its own admission basis, the saved composition must still be valid on the original basis.
+    const candidate = validateActiveBundle({ ...next.plan, inputs: base.plan.inputs }, trustedCatalogs);
     if (candidate.status !== 'valid') {
       invalidate(); publish({ intent: 'edit', origin, status: 'error', error: failure('FAILED', 'Не удалось проверить изменения меню'), candidate: null, saveError: null, requestId: null }); return;
     }
@@ -332,12 +431,14 @@ export function createGenerationController({ generation, activePlan, trustedCata
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { if (!disposed) listeners.add(listener); return () => { listeners.delete(listener); }; },
     load, retryLoad: load, start, cancel, retrySave, selectVariant, appendVariant, recreateSet, mealAlternatives, editMeal, removeMeal, addMeal, changePortions,
+    loadPantry, savePantry,
+    retryPantrySave: () => pantryRetryRows && snapshot.pantry?.writeStatus === 'error' ? savePantry(pantryRetryRows) : Promise.resolve(false),
     async retryGeneration() {
       if (!lastRequest || (snapshot.status !== 'error' && snapshot.status !== 'no-new-result')
         || (lastRequest.baseRevision !== undefined && lastRequest.baseRevision !== revision)) return;
       if (lastRequest.intent === 'select') await selectVariant(lastRequest.variantId, lastRequest.origin);
       else await run(lastRequest.inputs, lastRequest.origin, lastRequest.intent, lastRequest.base, lastRequest.baseRevision);
     },
-    dispose() { if (disposed) return; cancel(); disposed = true; ++loadSequence; listeners.clear(); },
+    dispose() { if (disposed) return; cancel(); disposed = true; ++loadSequence; ++pantrySequence; listeners.clear(); },
   };
 }

@@ -201,7 +201,7 @@ test('presentation manual absence and partial correction preserve optional contr
 
 for (const width of widths) test(`presentation ${width}px truthful route states reflow under 200 percent text`, async ({ page }, info) => {
   await page.setViewportSize({ width, height: 800 });
-  for (const [path, title] of [['/menu', 'Меню пока нет'], ['/shopping', 'Сначала составьте меню'], ['/pantry', 'Добавьте, что есть дома, и мы не купим лишнего'], ['/recipe/missing', 'Такого рецепта нет'], ['/missing', 'Страница не найдена'], ['/plan/generating', 'Генерация прервана или не запущена']]) {
+  for (const [path, title] of [['/menu', 'Меню пока нет'], ['/shopping', 'Сначала составьте меню'], ['/pantry', 'Продукты дома'], ['/recipe/missing', 'Такого рецепта нет'], ['/missing', 'Страница не найдена'], ['/plan/generating', 'Генерация прервана или не запущена']]) {
     await page.goto(path);
     await page.evaluate(() => document.documentElement.style.fontSize = '200%');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(title);

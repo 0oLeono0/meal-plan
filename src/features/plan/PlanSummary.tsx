@@ -10,7 +10,8 @@ export function PlanSummary({ bundle, projection }: { bundle: ActiveBundle; proj
   return <>
     <section className="card" aria-label="Бюджет меню">
       <h2 className="!text-[length:var(--text-display)] tabular-nums">Покупки: ≈ {view.costs.purchase} / {view.costs.limit}</h2>
-      <p>Лимит дополнительных покупок для всей семьи на {view.period}</p><p>Осталось {view.costs.remaining}</p>
+      <p>Лимит дополнительных покупок для всей семьи на {view.period}</p>
+      {view.budgetCheck.accepted ? <p>Осталось {view.costs.remaining}</p> : <p className="field-error">Покупки превышают бюджет</p>}
       <p className="tabular-nums">Использовано бюджета: {percent}%</p>
       <progress className="w-full accent-[var(--color-accent)]" aria-label="Использовано бюджета" max={100} value={percent} />
       <dl className="plan-costs tabular-nums"><dt>Все ингредиенты</dt><dd>{view.costs.ingredient}</dd><dt>Покрыто запасами</dt><dd>{view.costs.covered}</dd><dt>Нужно купить</dt><dd>{view.costs.purchase}</dd></dl>

@@ -7,6 +7,7 @@ import { Wizard } from '../features/wizard/Wizard';
 import { Button, ConfirmDialog, Status } from '../shared/ui';
 import { createGenerationController, visiblePlanSnapshot } from '../features/generation/controller';
 import { createActivePlanAdapter, type ActivePlanPort } from '../adapters/activePlan';
+import { createPantryInventoryAdapter, suggestedInventoryRows, type PantryInventoryPort } from '../adapters/pantryInventory';
 import { createVersionedGeneration } from '../adapters/generation';
 import { bundledCatalogPort, sourceApprovedCatalogPorts } from '../data/catalog';
 import { trustedCatalogs as defaultTrustedCatalogs, type TrustedCatalogRegistry } from '../adapters/trustedCatalogs';
@@ -18,6 +19,7 @@ import { MenuPage } from '../features/menu/MenuPage';
 import { ShoppingPage } from '../features/shopping/ShoppingPage';
 import { RecipePage } from '../features/recipe/RecipePage';
 import { PlanLoading } from '../features/plan/PlanLoading';
+import { PantryPage } from '../features/pantry/PantryPage';
 import { createGenerationSeed } from './generationSeed';
 import '../shared/styles/tokens.css';
 
@@ -27,6 +29,7 @@ export type PlanPresence = { status: 'absent' } | { status: 'valid'; planId: str
 export interface PlanPresencePort { load(): Promise<unknown> }
 const guestDraft = createGuestDraftAdapter();
 const activePlan = createActivePlanAdapter();
+const pantryInventory = createPantryInventoryAdapter();
 const localGeneration = createVersionedGeneration(sourceApprovedCatalogPorts);
 
 function parsePresence(value: unknown): PlanPresence {
@@ -55,14 +58,15 @@ interface AppProps {
   brand?: string;
   generationPort?: GenerationPort;
   activePlanPort?: ActivePlanPort;
+  pantryInventoryPort?: PantryInventoryPort;
   catalogPort?: CatalogPort;
   trustedCatalogs?: TrustedCatalogRegistry;
 }
 type LoadState = 'loading' | 'ready' | 'corrupt' | 'error';
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
-export function App({ draftPort = guestDraft, planPresencePort, brand = appConfig.brand, generationPort = localGeneration, activePlanPort = activePlan, catalogPort = bundledCatalogPort, trustedCatalogs = defaultTrustedCatalogs }: AppProps) {
-  const controller = useMemo(() => createGenerationController({ generation: generationPort, activePlan: activePlanPort, trustedCatalogs }), [generationPort, activePlanPort, trustedCatalogs]);
+export function App({ draftPort = guestDraft, planPresencePort, brand = appConfig.brand, generationPort = localGeneration, activePlanPort = activePlan, pantryInventoryPort = pantryInventory, catalogPort = bundledCatalogPort, trustedCatalogs = defaultTrustedCatalogs }: AppProps) {
+  const controller = useMemo(() => createGenerationController({ generation: generationPort, activePlan: activePlanPort, pantryInventory: pantryInventoryPort, trustedCatalogs }), [generationPort, activePlanPort, pantryInventoryPort, trustedCatalogs]);
   const operation = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const [catalog, setCatalog] = useState<CatalogLoadResult | null>(null);
   const [draft, setDraft] = useState(createDraft);
@@ -76,7 +80,7 @@ export function App({ draftPort = guestDraft, planPresencePort, brand = appConfi
   const mounted = useRef(false);
   const resetting = useRef(false);
 
-  useEffect(() => { void controller.load(); return () => controller.dispose(); }, [controller]);
+  useEffect(() => { void controller.load(); void controller.loadPantry(); return () => controller.dispose(); }, [controller]);
   useEffect(() => {
     let current = true;
     void catalogPort.load().then(value => { if (current) setCatalog(value); }, () => { if (current) setCatalog({ status: 'invalid', diagnostics: [] }); });
@@ -274,10 +278,19 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
   const basis = operation.lastApplied ? 'Используем последние применённые настройки' : sameSnapshot(draft, createDraft())
     ? '2 человека · 7 дней · 3 000 ₽ · до 30 минут · среднее разнообразие · без ограничений' : 'Используем настройки из черновика';
   const visible = visiblePlanSnapshot(operation);
+  const pantry = operation.pantry;
+  const pantryRows = pantry?.confirmed?.rows ?? (operation.active ? suggestedInventoryRows(operation.active.plan.inputs.pantrySnapshot) : []);
   const planOverview = pathname === '/menu' || pathname === '/shopping';
+  const pantryPresentation = planOverview || (pathname.startsWith('/recipe/') && !!operation.active);
+  const pantryReadStatus = visible.pantry?.status;
+  const stalePantry = pantryReadStatus === 'corrupt' || pantryReadStatus === 'error' || visible.pantry?.writeStatus === 'conflict';
   const editFeedback = operation.intent === 'edit' && planOverview;
   const retainedAfterRead = planOverview && operation.active && ['missing', 'corrupt', 'error'].includes(operation.loadStatus);
-  return <>{retainedAfterRead && <div className="plan-read-model" role="alert">
+  return <>{pantryPresentation && !!operation.active && (pantryReadStatus === 'pending' || stalePantry) && <div className="plan-read-model notice">
+    {pantryReadStatus === 'pending' && !stalePantry
+      ? <Status>Проверяем запасы. Пока показан последний подтверждённый расчёт.</Status>
+      : <div role="alert"><p>Не удалось проверить актуальные запасы. Показан последний подтверждённый расчёт.</p><Button onClick={() => void controller.loadPantry()}>Повторить загрузку запасов</Button></div>}
+  </div>}{retainedAfterRead && <div className="plan-read-model" role="alert">
     <p>{operation.loadStatus === 'missing' ? 'Сохранённое меню отсутствует. Показан последний загруженный вариант' : 'Не удалось прочитать сохранённое меню. Показан последний загруженный вариант'}</p>
     <Button onClick={() => void controller.retryLoad()}>Обновить меню</Button>
   </div>}{editFeedback && <div className="plan-read-model" aria-label="Изменение меню">
@@ -300,7 +313,9 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
       onRemove={(target, expectedPlan) => void controller.removeMeal(target, expectedPlan, { returnRoute: '/menu', focusAnchor: 'menu-title' })}
       onRetryLoad={() => void controller.retryLoad()} onSelectVariant={id => void controller.selectVariant(id, { returnRoute: '/menu', focusAnchor: 'variants' })} onRetrySave={() => void controller.retrySave()} onCancel={controller.cancel} onAppend={() => void controller.appendVariant({ returnRoute: '/menu', focusAnchor: 'append-variant' })} onRetryGeneration={() => void controller.retryGeneration()} onRecreate={focusAnchor => void controller.recreateSet({ returnRoute: '/menu', focusAnchor })} />} />
     <Route path="/shopping" element={<ShoppingPage snapshot={visible} onRetryLoad={() => void controller.retryLoad()} />} />
-    <Route path="/pantry" element={<GuestSectionPage section="pantry" />} />
+    <Route path="/pantry" element={pantry && <PantryPage state={pantry} rows={pantryRows}
+      savingMenu={operation.status === 'saving' || operation.status === 'pending'} onSave={controller.savePantry}
+      onRetryLoad={() => void controller.loadPantry()} onRetrySave={controller.retryPantrySave} />} />
     <Route path="/recipe/:id?" element={<RecipePage snapshot={visible} catalog={catalog}
       onRetry={source => source === 'plan' ? controller.retryLoad() : reloadCatalog()}
       onChangePortions={(target, multiplier, expectedPlan, returnRoute) =>
@@ -319,10 +334,6 @@ export function RouteStatePage({ title, description, to, action }: { title: stri
   return <section className="route-state"><h1 tabIndex={-1}>{title}</h1><p>{description}</p><Link className="primary action-link" to={to}>{action}</Link></section>;
 }
 
-export function GuestSectionPage({ section }: { section: 'menu' | 'shopping' | 'pantry' }) {
-  const title = section === 'menu' ? 'Меню пока нет' : section === 'shopping' ? 'Сначала составьте меню' : 'Добавьте, что есть дома, и мы не купим лишнего';
-  return <RouteStatePage title={title} description={section === 'pantry' ? 'Продукты можно указать при настройке меню. Складские запасы пока не ведутся.' : 'Начните с настроек питания'} to="/plan/new" action={section === 'pantry' ? 'Указать продукты в мастере' : 'Составить меню'} />;
-}
 
 const navItems = [{ to: '/menu', label: 'Меню', path: 'M4 3v18M8 3v7H4m4-7v7m5-7v18m0-18c7 1 7 9 0 10' }, { to: '/shopping', label: 'Покупки', path: 'M3 3h2l3 12h10l3-9H6m3 14h.01M18 20h.01' }, { to: '/pantry', label: 'Дома', path: 'm3 10 9-7 9 7M5 9v12h14V9m-10 12v-7h6v7' }];
 function NavIcon({ path }: { path: string }) {

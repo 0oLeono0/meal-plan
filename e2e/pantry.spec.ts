@@ -280,6 +280,59 @@ async function removeCodStock(page: Page) {
   await expect(page.getByText('Запасы сохранены', { exact: true })).toBeVisible();
 }
 
+test('pantry-admission accepts budget relief and edits covered by current stock without rebasing other variants', async ({ page }) => {
+  const raw = await openBudgetPlan(page);
+  const savedPlan = () => page.evaluate(key => JSON.parse(localStorage.getItem(key)!), activeKey);
+  const menu = () => page.getByRole('link', { name: 'Меню', exact: true }).click();
+  const select = (index: number) => page.getByRole('button', { name: new RegExp(`Вариант ${index} · Купить`) }).click();
+  const portion = (value: number) => page.getByRole('button', { name: `×${value} от исходных порций для семьи` });
+  const cod = () => page.getByRole('link', { name: /Рыбный суп с рисом и овощами/ }).click();
+  await removeCodStock(page);
+  await menu();
+  await select(2);
+  await cod();
+  await portion(1).click();
+  await expect(portion(1)).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByText('Изменения сохранены', { exact: true })).toBeVisible();
+  await menu();
+  await expect(page.getByRole('region', { name: 'Бюджет меню' }).getByText(/превышение/i)).toBeVisible();
+
+  await select(1);
+  await page.getByRole('link', { name: /индейк/i }).click();
+  const beforeRejection = await savedPlan();
+  await portion(2).click();
+  await expect(page.getByRole('alert')).toContainText(/бюджет/i);
+  expect(await savedPlan()).toEqual(beforeRejection);
+  await portion(1).click();
+  await expect(page.getByText('Изменения сохранены', { exact: true })).toBeVisible();
+
+  await page.getByRole('link', { name: 'Дома', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Найти продукт' }).fill('треска');
+  await page.getByRole('option', { name: /^Треска/ }).click();
+  await page.getByRole('button', { name: 'Добавить выбранный продукт' }).click();
+  await page.getByRole('button', { name: /Указать количество.*треск/i }).click();
+  await page.getByLabel('Количество', { exact: true }).fill('600');
+  await page.getByLabel('Единица', { exact: true }).selectOption('g');
+  await page.getByRole('button', { name: 'Сохранить количество' }).click();
+  await expect(page.getByText('Запасы сохранены', { exact: true })).toBeVisible();
+  await menu();
+  await select(2);
+  await cod();
+  await portion(2).click();
+  await expect(page.getByText('Изменения сохранены', { exact: true })).toBeVisible();
+  const after = await savedPlan();
+  expect(after.admissionPantries).toEqual([{ variantId: 'stock-b', rows: [{ productId: 'cod', quantity: '600', unit: 'g', expiresSoon: false }] }]);
+  expect(after.plan.inputs).toEqual(JSON.parse(raw).plan.inputs);
+  expect(after.plan.variants[0].instances[0].selectedServings).toEqual({ numerator: '2', denominator: '1' });
+  await menu();
+  await select(1);
+  await select(2);
+  await page.reload();
+  await cod();
+  await expect(portion(2)).toHaveAttribute('aria-pressed', 'true');
+  expect(await savedPlan()).toEqual(after);
+});
+
 test('pantry-budget keeps saved variants available when present-day purchases exceed the limit', async ({ page }) => {
   const before = await openBudgetPlan(page);
   await expect(page.getByRole('button', { name: /Вариант 1 · Купить: ≈ 460,00/ })).toBeVisible();

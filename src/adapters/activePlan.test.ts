@@ -33,6 +33,42 @@ function storage() {
 const current = { isCurrent: () => true };
 const rawPlan = (plan = fixture()) => JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
 
+describe('pantry-admission storage', () => {
+  const original = fixture({ budget: '500' });
+  const variant = original.variants[0];
+  const changed: ActivePlanEnvelope = { ...original, variants: [{ ...variant, instances: variant.instances.map((meal, index) =>
+    index === 0 ? { ...meal, selectedServings: decimal('3') } : meal) }] };
+  const registry = createTrustedCatalogRegistry([original.inputs.catalog]);
+  const rice = { productId: 'rice', quantity: '150', unit: 'g' as const, expiresSoon: false };
+
+  it('recomputes a saved edit from a strictly variant-scoped basis instead of changing its original inputs', async () => {
+    const store = storage(), adapter = createActivePlanAdapter(() => store, registry);
+    store.map.set(ACTIVE_PLAN_KEY, rawPlan(original));
+    expect((await adapter.load()).status).toBe('loaded');
+    expect(validateActiveBundle(changed, registry)).toMatchObject({ status: 'invalid', diagnostics: [{ code: 'PLAN_OVER_BUDGET' }] });
+    expect((await adapter.save(changed, { ...current, ...{ admissionPantries: [{ variantId: 'v', rows: [rice] }] } })).status).toBe('saved');
+    const raw = store.map.get(ACTIVE_PLAN_KEY);
+    expect(JSON.parse(raw!)).toMatchObject({ schemaVersion: 2, admissionPantries: [{ variantId: 'v', rows: [rice] }] });
+    const loaded = await createActivePlanAdapter(() => store, registry).load();
+    expect(loaded).toMatchObject({ status: 'loaded', bundle: { plan: changed, projections: [{ costs: { exact: { purchase: decimal('450') } } }] } });
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+  });
+
+  it.each([
+    [], [{ variantId: 'unknown', rows: [rice] }], [{ variantId: 'v', rows: [rice, rice] }],
+    [{ variantId: 'v', rows: [rice] }, { variantId: 'v', rows: [rice] }], [{ variantId: 'v', rows: [{ ...rice, productId: 'carrot' }] }],
+    [{ variantId: 'v', rows: [{ ...rice, quantity: '' }] }], [{ variantId: 'v', rows: [{ ...rice, unit: 'l' }] }],
+    [{ variantId: 'v', rows: [{ ...rice, quantity: '90' }] }], [{ variantId: 'v', rows: [rice], purchase: '450' }],
+  ].map((value, index) => [index, value] as const))('rejects malformed or inadequate per-variant basis %i and preserves its bytes', async (_, admissionPantries) => {
+    const store = storage(), adapter = createActivePlanAdapter(() => store, registry);
+    const raw = JSON.stringify({ schemaVersion: 2, plan: encodePlanEnvelope(changed), admissionPantries });
+    store.map.set(ACTIVE_PLAN_KEY, raw);
+    expect((await adapter.load()).status).toBe('corrupt');
+    expect((await adapter.save(original, current)).status).toBe('blocked');
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+  });
+});
+
 it('phase04-remove loads a deliberately empty menu with zero totals and preserves truncated schema1 bytes', async () => {
   const original = fixture(), store = storage(), registry = createTrustedCatalogRegistry([original.inputs.catalog]);
   const adapter = createActivePlanAdapter(() => store, registry);

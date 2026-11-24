@@ -163,24 +163,29 @@ export function createGenerationController({ generation, activePlan, pantryInven
   };
 
   async function loadPantry() {
-    if (!pantryInventory || !snapshot.pantry || disposed || snapshot.pantry.writeStatus === 'saving') return;
+    if (!pantryInventory || !snapshot.pantry || disposed) return;
+    // A new read owns the storage inspection. A queued write must not acquire
+    // the inspection for newer bytes as permission to save its old draft.
     const attempt = ++pantrySequence;
     pantryRetryRows = null;
     publish({ pantry: { ...snapshot.pantry, status: 'pending', writeStatus: 'idle' } });
-    const result = await pantryInventory.load().catch(() => ({ status: 'error' as const }));
+    let result: Awaited<ReturnType<PantryInventoryPort['load']>>;
+    try { result = await pantryInventory.load(); } catch { result = { status: 'error' }; }
     if (disposed || attempt !== pantrySequence || !snapshot.pantry) return;
-    const confirmed = result.status === 'loaded' ? result.inventory : result.status === 'missing' ? null : snapshot.pantry.confirmed;
-    const changed = confirmed?.token !== snapshot.pantry.confirmed?.token;
+    const previous = snapshot.pantry.confirmed;
+    const changed = result.status === 'loaded' && !sameSnapshot(previous, result.inventory);
+    const confirmed = changed && result.status === 'loaded' ? result.inventory : previous;
+    const status = result.status === 'missing' && previous ? 'error' : result.status;
     const revoke = changed && (snapshot.status === 'saving' || snapshot.status === 'pending'
       || (snapshot.status === 'memory-only' && snapshot.intent === 'edit'));
     if (changed) { invalidate(); revision++; }
-    publish({ pantry: { status: result.status, confirmed, writeStatus: 'idle' },
+    publish({ pantry: { status, confirmed, writeStatus: 'idle' },
       ...(revoke ? { status: 'idle' as const, candidate: null, error: null, saveError: null, requestId: null, origin: null } : {}) });
   }
 
-  async function savePantry(input: readonly PantryInventoryRow[]): Promise<boolean> {
+  async function savePantry(input: readonly PantryInventoryRow[], expected?: PantryInventoryState): Promise<boolean> {
     const pantry = snapshot.pantry;
-    if (!pantryInventory || !pantry || disposed || pantryBlocksMealEdit(snapshot)
+    if (!pantryInventory || !pantry || disposed || (expected && expected !== pantry) || pantryBlocksMealEdit(snapshot)
       || snapshot.status === 'saving' || snapshot.status === 'pending') return false;
     const rows = validateInventoryRows(input);
     if (!rows || (snapshot.active && !projectInventory(snapshot.active, rows))) {

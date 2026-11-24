@@ -16,13 +16,13 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
   state: PantryInventoryState;
   rows: readonly PantryInventoryRow[];
   savingMenu: boolean;
-  onSave(rows: readonly PantryInventoryRow[]): Promise<boolean>;
+  onSave(rows: readonly PantryInventoryRow[], expected: PantryInventoryState): Promise<boolean>;
   onRetryLoad(): void;
   onRetrySave(): Promise<boolean>;
   onDiscardSave(): void;
 }) {
   const [selected, setSelected] = useState<ProductName | null>(null);
-  const [editor, setEditor] = useState<{ row: PantryInventoryRow; error?: string } | null>(null);
+  const [editor, setEditor] = useState<{ row: PantryInventoryRow; source: PantryInventoryState['confirmed']; error?: string } | null>(null);
   const [removal, setRemoval] = useState<{ productId: string; name: string; trigger: HTMLElement } | null>(null);
   const retryTarget = useRef<{ focus: string } | 'quantity' | null>(null);
   const editorTrigger = useRef<HTMLElement | null>(null);
@@ -37,7 +37,7 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
     onDiscardSave();
     retryTarget.current = null;
     editorTrigger.current = trigger ?? null;
-    setEditor({ row });
+    setEditor({ row, source: state.confirmed });
     requestAnimationFrame(() => quantityField.current?.focus());
   }
   function closeEditor(restoreTrigger = false) {
@@ -58,7 +58,7 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
   }
   async function saveRows(nextRows: readonly PantryInventoryRow[], focusId: string) {
     retryTarget.current = { focus: focusId };
-    if (!await onSave(nextRows)) return false;
+    if (!await onSave(nextRows, state)) return false;
     retryTarget.current = null;
     focus(focusId);
     return true;
@@ -66,17 +66,17 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
   function updateEditor(quantity: string, unit: Unit | undefined) {
     if (!editor) return;
     const { productId, expiresSoon } = editor.row;
-    setEditor({ row: { productId, expiresSoon, quantity, ...(unit ? { unit } : {}) } });
+    setEditor({ source: editor.source, row: { productId, expiresSoon, quantity, ...(unit ? { unit } : {}) } });
   }
   async function saveQuantity() {
-    if (!editor) return;
+    if (!editor || !rows.some(row => row.productId === editor.row.productId)) return;
     if (!validateInventoryRows([editor.row])) {
       setEditor({ ...editor, error: 'Введите количество больше 0 и выберите подходящую единицу или оставьте количество пустым' });
       quantityField.current?.focus();
       return;
     }
     retryTarget.current = 'quantity';
-    if (await onSave(rows.map(row => row.productId === editor.row.productId ? { ...editor.row, expiresSoon: row.expiresSoon } : row))) {
+    if (await onSave(rows.map(row => row.productId === editor.row.productId ? { ...editor.row, expiresSoon: row.expiresSoon } : row), state)) {
       retryTarget.current = null;
       closeEditor();
     }
@@ -96,7 +96,6 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
   function refresh() {
     retryTarget.current = null;
     setSelected(null);
-    setEditor(null);
     onRetryLoad();
   }
   function toggleExpiry(productId: string, expiresSoon: boolean) {
@@ -116,7 +115,9 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
   return <section className="plan-read-model [overflow-wrap:anywhere]" aria-labelledby="pantry-title">
     <h1 id="pantry-title" tabIndex={-1}>Продукты дома</h1>
     {state.status === 'pending' && <Status>Загружаем запасы…</Status>}
-    {impaired && <div className="notice" role="alert"><p>Не удалось загрузить запасы. Изменения пока недоступны.</p><Button onClick={refresh}>Повторить загрузку</Button></div>}
+    {impaired && <div className="notice" role="alert"><p>Не удалось загрузить запасы. Изменения пока недоступны.</p>
+      {state.confirmed && <p>Показаны последние подтверждённые запасы.</p>}
+      <Button onClick={refresh}>Повторить загрузку</Button></div>}
     {state.writeStatus === 'conflict' && <div className="notice" role="alert"><p>Запасы изменились в другой вкладке. Обновите их перед сохранением.</p><Button onClick={refresh}>Обновить запасы</Button></div>}
     <div className="card grid gap-4 min-w-0">
       <ProductCombobox id="pantry-search" label="Найти продукт" onSelect={setSelected} onQueryChange={searchChanged} port={pantryProductCatalog} disabled={disabled} />
@@ -134,6 +135,10 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
     </div>}
     {rows.length > 0 && <p className="hint">При расчёте покупок учитывается только известное совместимое количество. Запасы не списываются.</p>}
     {state.status === 'missing' && rows.length > 0 && <p className="hint">Исходные запасы из сохранённого меню.</p>}
+    {editor && state.status === 'loaded' && !rows.some(row => row.productId === editor.row.productId) && <div className="notice">
+      <p>Этой позиции больше нет в запасах. Выберите продукт заново.</p>
+      <Button onClick={() => { setEditor(null); focus('pantry-search'); }}>Закрыть правку количества</Button>
+    </div>}
     {rows.map(row => {
       const product = pantryProductNames.find(item => item.id === row.productId);
       if (!product) return null;
@@ -158,6 +163,9 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
             }}>Уточнить продукт</Button>)}
         </div>}
         {open && <form className="grid gap-4 mt-4" onSubmit={event => { event.preventDefault(); if (!disabled) void saveQuantity(); }}>
+          {state.status === 'loaded' && state.confirmed !== open.source && <Status>
+            Список запасов изменился. Проверьте введённое количество перед сохранением.
+          </Status>}
           <div className="grid gap-4 sm:grid-cols-2">
             <Field id="pantry-quantity" label="Количество" hint="Дробь через точку или запятую." error={open.error}>
               <input ref={quantityField} id="pantry-quantity" type="text" inputMode="decimal" autoComplete="off" value={open.row.quantity}

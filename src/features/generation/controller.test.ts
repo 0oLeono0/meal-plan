@@ -112,12 +112,40 @@ it('pantry-recovery revokes an in-flight save when a newer stock record is read'
     expect(await saving).toBe(false);
     expect(values.get(PANTRY_INVENTORY_KEY)).toBe(newerRaw);
 
+    const previousView = controller.getSnapshot().pantry;
+    await other.save([], { isCurrent: () => true });
+    const emptyRaw = values.get(PANTRY_INVENTORY_KEY);
+    await controller.loadPantry();
+    expect(controller.getSnapshot().pantry).toMatchObject({ status: 'loaded', confirmed: { rows: [] } });
+    expect(await controller.savePantry([row], previousView)).toBe(false);
+    expect(values.get(PANTRY_INVENTORY_KEY)).toBe(emptyRaw);
+
     values.delete(PANTRY_INVENTORY_KEY);
     await controller.loadPantry();
-    expect(controller.getSnapshot().pantry).toMatchObject({ status: 'error', confirmed: { rows: [newer] } });
+    expect(controller.getSnapshot().pantry).toMatchObject({ status: 'error', confirmed: { rows: [] } });
     expect(await controller.savePantry([row])).toBe(false);
     expect(values.has(PANTRY_INVENTORY_KEY)).toBe(false);
   } finally { writeGate.resolve(); controller.dispose(); }
+});
+
+it('pantry-recovery keeps the newer confirmation when an older read resolves out of order', async () => {
+  const initial = deferred<{ status: 'corrupt' }>();
+  const row = { productId: 'rice', quantity: '300', unit: 'g', expiresSoon: false } as const;
+  const store = { getItem: () => null, setItem: vi.fn() };
+  const inventory = { schemaVersion: 1, token: 'a'.repeat(32), rows: [row] } as const;
+  const load = vi.fn<NonNullable<GenerationControllerOptions['pantryInventory']>['load']>()
+    .mockImplementationOnce(() => initial.promise)
+    .mockResolvedValueOnce({ status: 'loaded', inventory });
+  const controller = createGenerationController({ generation: { async generate() { throw new Error('No generation expected'); } },
+    activePlan: createActivePlanAdapter(() => store, trustedCatalogs),
+    pantryInventory: { load, save: async () => ({ status: 'blocked' }) } });
+  try {
+    const olderRead = controller.loadPantry();
+    await controller.loadPantry();
+    initial.resolve({ status: 'corrupt' });
+    await olderRead;
+    expect(controller.getSnapshot().pantry).toMatchObject({ status: 'loaded', confirmed: inventory, writeStatus: 'idle' });
+  } finally { controller.dispose(); }
 });
 
 it('phase04-remove rejects a valid edited envelope as a generation response and retains stored bytes', async () => {

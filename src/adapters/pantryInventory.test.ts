@@ -92,3 +92,18 @@ it('pantry-inventory reports a write error and leaves the inspected bytes availa
   expect(values.get(PANTRY_INVENTORY_KEY)).toBe(raw);
   expect(await adapter.save([carrot], guard)).toMatchObject({ status: 'saved', inventory: { rows: [carrot] } });
 });
+
+it('pantry-recovery closes a previously valid write inspection on incompatible units', async () => {
+  const { adapter, store, values } = storageFixture();
+  await adapter.load();
+  await adapter.save([carrot], guard);
+  const validRaw = values.get(PANTRY_INVENTORY_KEY)!;
+  const corruptRaw = validRaw.replace('"unit":"kg"', '"unit":"ml"');
+  values.set(PANTRY_INVENTORY_KEY, corruptRaw);
+  expect(await adapter.load()).toEqual({ status: 'corrupt' });
+  expect(await adapter.save([], guard)).toEqual({ status: 'blocked' });
+  expect(values.get(PANTRY_INVENTORY_KEY)).toBe(corruptRaw);
+  values.set(PANTRY_INVENTORY_KEY, validRaw);
+  expect(await adapter.load()).toMatchObject({ status: 'loaded', inventory: { rows: [carrot] } });
+  expect(store.setItem).toHaveBeenCalledTimes(1);
+});

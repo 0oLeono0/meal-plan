@@ -7,7 +7,7 @@ import { Wizard } from '../features/wizard/Wizard';
 import { Button, ConfirmDialog, Status } from '../shared/ui';
 import { createGenerationController, visiblePlanSnapshot } from '../features/generation/controller';
 import { createActivePlanAdapter, type ActivePlanPort } from '../adapters/activePlan';
-import { createPantryInventoryAdapter, suggestedInventoryRows, type PantryInventoryPort } from '../adapters/pantryInventory';
+import { createPantryInventoryAdapter, PANTRY_INVENTORY_KEY, suggestedInventoryRows, type PantryInventoryPort } from '../adapters/pantryInventory';
 import { createVersionedGeneration } from '../adapters/generation';
 import { bundledCatalogPort, sourceApprovedCatalogPorts } from '../data/catalog';
 import { trustedCatalogs as defaultTrustedCatalogs, type TrustedCatalogRegistry } from '../adapters/trustedCatalogs';
@@ -81,6 +81,15 @@ export function App({ draftPort = guestDraft, planPresencePort, brand = appConfi
   const resetting = useRef(false);
 
   useEffect(() => { void controller.load(); void controller.loadPantry(); return () => controller.dispose(); }, [controller]);
+  useEffect(() => {
+    function refreshPantry(event: StorageEvent) {
+      if (event.key !== PANTRY_INVENTORY_KEY && event.key !== null) return;
+      try { if (event.storageArea !== window.localStorage) return; } catch { return; }
+      void controller.loadPantry();
+    }
+    window.addEventListener('storage', refreshPantry);
+    return () => window.removeEventListener('storage', refreshPantry);
+  }, [controller]);
   useEffect(() => {
     let current = true;
     void catalogPort.load().then(value => { if (current) setCatalog(value); }, () => { if (current) setCatalog({ status: 'invalid', diagnostics: [] }); });
@@ -279,7 +288,8 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
     ? '2 человека · 7 дней · 3 000 ₽ · до 30 минут · среднее разнообразие · без ограничений' : 'Используем настройки из черновика';
   const visible = visiblePlanSnapshot(operation);
   const pantry = operation.pantry;
-  const pantryRows = pantry?.confirmed?.rows ?? (pathname === '/pantry' && operation.active ? suggestedInventoryRows(operation.active.plan.inputs.pantrySnapshot) : []);
+  const pantryRows = pantry?.confirmed?.rows ?? (pathname === '/pantry' && pantry?.status === 'missing' && operation.active
+    ? suggestedInventoryRows(operation.active.plan.inputs.pantrySnapshot) : []);
   const planOverview = pathname === '/menu' || pathname === '/shopping';
   const pantryPresentation = planOverview || (pathname.startsWith('/recipe/') && !!operation.active);
   const pantryReadStatus = visible.pantry?.status;

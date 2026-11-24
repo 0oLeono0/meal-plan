@@ -209,7 +209,7 @@ test('pantry-recovery follows storage events and preserves the last confirmed ca
   await openAmount(other);
   await amount(other).fill('260');
   await save(other);
-  await expect(page.getByText('Запасы обновились в другой вкладке. Проверьте введённое количество перед сохранением.')).toBeVisible();
+  await expect(page.getByText('Список запасов изменился. Проверьте введённое количество перед сохранением.')).toBeVisible();
   await expect(amount(page)).toHaveValue('210');
   await save(page);
   await expect(row(other).getByRole('button', { name: /Изменить количество.*морковь/i })).toHaveText('210 г');

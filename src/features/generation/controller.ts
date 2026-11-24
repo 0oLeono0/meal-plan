@@ -184,6 +184,7 @@ export function createGenerationController({ generation, activePlan, pantryInven
       || snapshot.status === 'saving' || snapshot.status === 'pending') return false;
     const rows = validateInventoryRows(input);
     if (!rows || (snapshot.active && !projectInventory(snapshot.active, rows))) {
+      pantryRetryRows = null;
       publish({ pantry: { ...pantry, writeStatus: 'error' } });
       return false;
     }
@@ -204,6 +205,12 @@ export function createGenerationController({ generation, activePlan, pantryInven
     if (result.status === 'blocked') pantryRetryRows = null;
     publish({ pantry: { ...pantry, writeStatus: result.status === 'blocked' ? 'conflict' : result.status === 'error' ? 'error' : 'idle' } });
     return false;
+  }
+  function discardPantrySave() {
+    const pantry = snapshot.pantry;
+    if (pantry?.writeStatus !== 'error') return;
+    pantryRetryRows = null;
+    publish({ pantry: { ...pantry, writeStatus: 'idle' } });
   }
   async function load() {
     if (disposed) return;
@@ -339,7 +346,7 @@ export function createGenerationController({ generation, activePlan, pantryInven
   }
   async function retrySave() {
     const candidate = snapshot.candidate, previous = operation;
-    if (disposed || snapshot.status !== 'memory-only' || !candidate || !previous) return;
+    if (disposed || snapshot.status !== 'memory-only' || !candidate || !previous || snapshot.pantry?.writeStatus === 'saving') return;
     if (previous.intent === 'edit' && (snapshot.saveError !== 'error' || snapshot.loadStatus !== 'loaded')) return;
     invalidate();
     if (previous.baseRevision !== undefined && previous.baseRevision !== revision) return;
@@ -350,7 +357,7 @@ export function createGenerationController({ generation, activePlan, pantryInven
   }
   async function selectVariant(variantId: string, origin: GenerationOrigin) {
     const active = snapshot.active;
-    if (disposed || !active || (snapshot.intent === 'edit' && mealEditingUnavailable(snapshot))
+    if (disposed || !active || snapshot.pantry?.writeStatus === 'saving' || (snapshot.intent === 'edit' && mealEditingUnavailable(snapshot))
       || variantId === active.plan.activeVariantId || !active.plan.variants.some(variant => variant.id === variantId)) return;
     invalidate();
     const candidate = validateActiveBundle({ ...active.plan, activeVariantId: variantId }, trustedCatalogs);
@@ -431,7 +438,7 @@ export function createGenerationController({ generation, activePlan, pantryInven
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { if (!disposed) listeners.add(listener); return () => { listeners.delete(listener); }; },
     load, retryLoad: load, start, cancel, retrySave, selectVariant, appendVariant, recreateSet, mealAlternatives, editMeal, removeMeal, addMeal, changePortions,
-    loadPantry, savePantry,
+    loadPantry, savePantry, discardPantrySave,
     retryPantrySave: () => pantryRetryRows && snapshot.pantry?.writeStatus === 'error' ? savePantry(pantryRetryRows) : Promise.resolve(false),
     async retryGeneration() {
       if (!lastRequest || (snapshot.status !== 'error' && snapshot.status !== 'no-new-result')

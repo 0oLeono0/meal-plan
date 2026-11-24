@@ -279,7 +279,7 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
     ? '2 человека · 7 дней · 3 000 ₽ · до 30 минут · среднее разнообразие · без ограничений' : 'Используем настройки из черновика';
   const visible = visiblePlanSnapshot(operation);
   const pantry = operation.pantry;
-  const pantryRows = pantry?.confirmed?.rows ?? (operation.active ? suggestedInventoryRows(operation.active.plan.inputs.pantrySnapshot) : []);
+  const pantryRows = pantry?.confirmed?.rows ?? (pathname === '/pantry' && operation.active ? suggestedInventoryRows(operation.active.plan.inputs.pantrySnapshot) : []);
   const planOverview = pathname === '/menu' || pathname === '/shopping';
   const pantryPresentation = planOverview || (pathname.startsWith('/recipe/') && !!operation.active);
   const pantryReadStatus = visible.pantry?.status;
@@ -315,7 +315,7 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
     <Route path="/shopping" element={<ShoppingPage snapshot={visible} onRetryLoad={() => void controller.retryLoad()} />} />
     <Route path="/pantry" element={pantry && <PantryPage state={pantry} rows={pantryRows}
       savingMenu={operation.status === 'saving' || operation.status === 'pending'} onSave={controller.savePantry}
-      onRetryLoad={() => void controller.loadPantry()} onRetrySave={controller.retryPantrySave} />} />
+      onRetryLoad={() => void controller.loadPantry()} onRetrySave={controller.retryPantrySave} onDiscardSave={controller.discardPantrySave} />} />
     <Route path="/recipe/:id?" element={<RecipePage snapshot={visible} catalog={catalog}
       onRetry={source => source === 'plan' ? controller.retryLoad() : reloadCatalog()}
       onChangePortions={(target, multiplier, expectedPlan, returnRoute) =>

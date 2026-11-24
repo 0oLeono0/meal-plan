@@ -12,13 +12,14 @@ import type { PantryInventoryState } from '../generation/controller';
 
 const unitNames: Record<Unit, string> = { g: 'г', kg: 'кг', ml: 'мл', l: 'л', pcs: 'шт.' };
 
-export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRetrySave }: {
+export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRetrySave, onDiscardSave }: {
   state: PantryInventoryState;
   rows: readonly PantryInventoryRow[];
   savingMenu: boolean;
   onSave(rows: readonly PantryInventoryRow[]): Promise<boolean>;
   onRetryLoad(): void;
   onRetrySave(): Promise<boolean>;
+  onDiscardSave(): void;
 }) {
   const [selected, setSelected] = useState<ProductName | null>(null);
   const [editor, setEditor] = useState<{ row: PantryInventoryRow; error?: string } | null>(null);
@@ -30,6 +31,7 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
     requestAnimationFrame(() => document.getElementById(id)?.focus());
   }
   function edit(row: PantryInventoryRow) {
+    onDiscardSave();
     setEditor({ row });
     requestAnimationFrame(() => quantityField.current?.focus());
   }
@@ -40,6 +42,7 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
   async function add(productId: string) {
     const current = rows.find(row => row.productId === productId);
     if (current) { setSelected(null); edit(current); return; }
+    setEditor(null);
     if (await onSave([...rows, { productId, quantity: '', expiresSoon: false }])) {
       setSelected(null);
       focus(`pantry-edit-${productId}`);
@@ -60,18 +63,27 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
     if (await onSave(rows.map(row => row.productId === editor.row.productId ? editor.row : row))) closeEditor();
   }
   async function retry() {
+    if (editor) { await saveQuantity(); return; }
     if (!await onRetrySave()) return;
-    if (editor) closeEditor();
-    else if (selected) { focus(`pantry-edit-${selected.id}`); setSelected(null); }
+    if (selected) { focus(`pantry-edit-${selected.id}`); setSelected(null); }
+  }
+  function searchChanged() {
+    if (!editor) onDiscardSave();
+    setSelected(null);
+  }
+  function refresh() {
+    setSelected(null);
+    setEditor(null);
+    onRetryLoad();
   }
 
   return <section className="plan-read-model [overflow-wrap:anywhere]" aria-labelledby="pantry-title">
     <h1 id="pantry-title" tabIndex={-1}>Продукты дома</h1>
     {state.status === 'pending' && <Status>Загружаем запасы…</Status>}
-    {impaired && <div className="notice" role="alert"><p>Не удалось загрузить запасы. Изменения пока недоступны.</p><Button onClick={onRetryLoad}>Повторить загрузку</Button></div>}
-    {state.writeStatus === 'conflict' && <div className="notice" role="alert"><p>Запасы изменились в другой вкладке. Обновите их перед сохранением.</p><Button onClick={onRetryLoad}>Обновить запасы</Button></div>}
+    {impaired && <div className="notice" role="alert"><p>Не удалось загрузить запасы. Изменения пока недоступны.</p><Button onClick={refresh}>Повторить загрузку</Button></div>}
+    {state.writeStatus === 'conflict' && <div className="notice" role="alert"><p>Запасы изменились в другой вкладке. Обновите их перед сохранением.</p><Button onClick={refresh}>Обновить запасы</Button></div>}
     <div className="card grid gap-4 min-w-0">
-      <ProductCombobox id="pantry-search" label="Найти продукт" onSelect={setSelected} onQueryChange={() => setSelected(null)} port={pantryProductCatalog} disabled={disabled} />
+      <ProductCombobox id="pantry-search" label="Найти продукт" onSelect={setSelected} onQueryChange={searchChanged} port={pantryProductCatalog} disabled={disabled} />
       {selected && <p>Выбран продукт: {selected.name}</p>}
       <Button aria-label="Добавить выбранный продукт" disabled={!selected || disabled} onClick={() => { if (selected) void add(selected.id); }}>Добавить</Button>
       <div role="group" aria-label="Популярные продукты" className="flex flex-wrap gap-2">
@@ -110,7 +122,7 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
               </select>
             </Field>
           </div>
-          <div className="flex flex-wrap gap-2"><Button type="submit" variant="primary" disabled={disabled}>Сохранить количество</Button><Button disabled={saving} onClick={closeEditor}>Отменить правку количества</Button></div>
+          <div className="flex flex-wrap gap-2"><Button type="submit" variant="primary" disabled={disabled}>Сохранить количество</Button><Button disabled={saving} onClick={() => { onDiscardSave(); closeEditor(); }}>Отменить правку количества</Button></div>
         </form>}
       </section>;
     })}

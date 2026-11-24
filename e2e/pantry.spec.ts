@@ -1,0 +1,68 @@
+import { expect, test, type Page } from '@playwright/test';
+import type { EditedPlanEnvelope, MealCoordinate, RecipeInstance } from '../src/domain/plan';
+import { activeKey } from './generation-fixtures';
+
+async function openCarrotPlan(page: Page) {
+  await page.goto('/plan/new');
+  const raw = await page.evaluate(async key => {
+    const catalogPath = '/src/data/catalog.ts';
+    const planPath = '/src/domain/plan.ts';
+    const settingsPath = '/src/domain/settings.ts';
+    const appliedPath = '/src/domain/appliedSettings.ts';
+    const quantitiesPath = '/src/domain/quantities.ts';
+    const { bundledCatalog } = await import(catalogPath) as typeof import('../src/data/catalog');
+    const { createPlanInputs, encodePlanEnvelope, mealSlots } = await import(planPath) as typeof import('../src/domain/plan');
+    const { createDraft } = await import(settingsPath) as typeof import('../src/domain/settings');
+    const { buildAppliedSettings } = await import(appliedPath) as typeof import('../src/domain/appliedSettings');
+    const { decimal } = await import(quantitiesPath) as typeof import('../src/domain/quantities');
+    const applied = buildAppliedSettings({ ...createDraft(), days: '2', budget: '5000', cookingTime: 'any' });
+    if (applied.status !== 'applied') throw new Error('Carrot fixture settings are invalid');
+    const inputs = createPlanInputs(applied.settings, bundledCatalog, { seed: 'pantry-carrot-fixture', now: () => new Date(2026, 10, 20) });
+    const portions = [
+      { date: inputs.dates[0], slot: 'lunch', recipeId: 'familiar-chicken-rice-carrot', servings: '2' },
+      { date: inputs.dates[0], slot: 'dinner', recipeId: 'familiar-pollock-yogurt-buckwheat', servings: '2' },
+      { date: inputs.dates[1], slot: 'lunch', recipeId: 'familiar-chicken-rice-carrot', servings: '1' },
+    ] as const;
+    const instances = portions.map(({ date, slot, recipeId, servings }): RecipeInstance => {
+      const recipe = bundledCatalog.recipes.find(item => item.id === recipeId);
+      if (!recipe) throw new Error(`Missing fixture recipe: ${recipeId}`);
+      return { id: `carrot-${date}-${slot}`, date, slot, recipeId, catalogVersion: bundledCatalog.version, recipeSnapshot: recipe, selectedServings: decimal(servings) };
+    });
+    const emptySlots: MealCoordinate[] = inputs.dates.flatMap(date => mealSlots
+      .filter(slot => !instances.some(row => row.date === date && row.slot === slot))
+      .map(slot => ({ date, slot })));
+    const plan: EditedPlanEnvelope = { schemaVersion: 2, inputs, activeVariantId: 'carrot-active', variants: [{ id: 'carrot-active', instances, emptySlots }] };
+    const saved = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
+    localStorage.setItem(key, saved);
+    return saved;
+  }, activeKey);
+  await page.goto('/shopping');
+  await expect(page.getByRole('heading', { level: 1, name: 'Список покупок' })).toBeVisible();
+  return raw;
+}
+
+test('pantry-tracer saves 200 g of the 500 g requirement and buys 300 g after reload', async ({ page }) => {
+  const initial = await openCarrotPlan(page);
+  const carrot = page.locator('article[data-product-id="carrot"]');
+  await expect(carrot.getByText(/Купить 500 г/)).toBeVisible();
+  await page.getByRole('link', { name: 'Дома', exact: true }).click();
+  await expect(page).toHaveURL(/\/pantry$/);
+  const search = page.getByRole('combobox', { name: 'Найти продукт' });
+  await expect(search).toBeVisible();
+  await search.fill('морковь');
+  await page.getByRole('option', { name: /^Морковь/ }).click();
+  await page.getByRole('button', { name: 'Добавить выбранный продукт' }).click();
+  await page.getByRole('button', { name: /Указать количество.*морковь/i }).click();
+  await page.getByLabel('Количество', { exact: true }).fill('200');
+  await page.getByLabel('Единица', { exact: true }).selectOption('g');
+  await page.getByRole('button', { name: 'Сохранить количество' }).click();
+  await expect(page.getByText('Запасы сохранены', { exact: true })).toBeVisible();
+
+  await page.getByRole('link', { name: 'Покупки', exact: true }).click();
+  for (const reload of [false, true]) {
+    if (reload) await page.reload();
+    await expect(carrot.getByText(/Купить 300 г/)).toBeVisible();
+    await expect(carrot.getByText(/Нужно 500 г · Из запасов 200 г/)).toBeVisible();
+    expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(initial);
+  }
+});

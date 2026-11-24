@@ -180,3 +180,55 @@ test('pantry-write-failure preserves confirmed stock and retries the visible qua
   expect(await page.evaluate(key => localStorage.getItem(key), pantryKey)).toContain('"quantity":"0,25"');
   expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(initialPlan);
 });
+
+test('pantry-recovery follows storage events and preserves the last confirmed calculation during recovery', async ({ page }) => {
+  const pantryKey = 'mealplan:guest:pantry:v1';
+  const initialPlan = await openCarrotPlan(page, true);
+  await page.getByRole('link', { name: 'Дома', exact: true }).click();
+  const row = (tab: Page) => tab.getByRole('region', { name: /Домашний продукт Морковь/ });
+  const openAmount = (tab: Page) => row(tab).getByRole('button', { name: /Изменить количество.*морковь/i }).click();
+  const amount = (tab: Page) => row(tab).getByLabel('Количество', { exact: true });
+  const save = (tab: Page) => row(tab).getByRole('button', { name: 'Сохранить количество' }).click();
+  await openAmount(page);
+  await amount(page).fill('200');
+  await save(page);
+  await expect(page.getByText('Запасы сохранены', { exact: true })).toBeVisible();
+
+  const other = await page.context().newPage();
+  await other.goto('/shopping');
+  const purchase = (tab: Page) => tab.locator('article[data-product-id="carrot"]');
+  await expect(purchase(other).getByText(/Купить 300 г/)).toBeVisible();
+  await openAmount(page);
+  await amount(page).fill('250');
+  await save(page);
+  await expect(purchase(other).getByText(/Купить 250 г/)).toBeVisible();
+
+  await other.getByRole('link', { name: 'Дома', exact: true }).click();
+  await openAmount(page);
+  await amount(page).fill('210');
+  await openAmount(other);
+  await amount(other).fill('260');
+  await save(other);
+  await expect(page.getByText('Запасы обновились в другой вкладке. Проверьте введённое количество перед сохранением.')).toBeVisible();
+  await expect(amount(page)).toHaveValue('210');
+  await save(page);
+  await expect(row(other).getByRole('button', { name: /Изменить количество.*морковь/i })).toHaveText('210 г');
+
+  await page.getByRole('link', { name: 'Покупки', exact: true }).click();
+  await expect(purchase(page).getByText(/Купить 290 г/)).toBeVisible();
+  const previous = await other.evaluate(key => localStorage.getItem(key)!, pantryKey);
+  await other.evaluate(key => localStorage.setItem(key, '{ damaged'), pantryKey);
+  const alert = page.getByRole('alert').getByText('Не удалось проверить актуальные запасы. Показан последний подтверждённый расчёт.');
+  await expect(alert).toBeVisible();
+  await expect(purchase(page).getByText(/Купить 290 г/)).toBeVisible();
+  await page.getByRole('button', { name: 'Повторить загрузку запасов' }).click();
+  await expect(alert).toBeVisible();
+  expect(await page.evaluate(key => localStorage.getItem(key), pantryKey)).toBe('{ damaged');
+  await other.evaluate(key => localStorage.removeItem(key), pantryKey);
+  await expect(alert).toBeVisible();
+  await expect(purchase(page).getByText(/Купить 290 г/)).toBeVisible();
+  await other.evaluate(({ key, previous }) => localStorage.setItem(key, previous), { key: pantryKey, previous });
+  await expect(alert).toHaveCount(0);
+  await expect(purchase(page).getByText(/Купить 290 г/)).toBeVisible();
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(initialPlan);
+});

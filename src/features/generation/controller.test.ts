@@ -84,6 +84,42 @@ it('pantry-inventory projects every variant independently and keeps the last con
   } finally { controller.dispose(); }
 });
 
+it('pantry-recovery revokes an in-flight save when a newer stock record is read', async () => {
+  const values = new Map<string, string>();
+  const store = { getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => { values.set(key, value); } };
+  const pantry = createPantryInventoryAdapter(() => store);
+  const other = createPantryInventoryAdapter(() => store);
+  const writeGate = deferred<void>();
+  const write = vi.fn(async (...args: Parameters<typeof pantry.save>) => {
+    await writeGate.promise;
+    return pantry.save(...args);
+  });
+  const controller = createGenerationController({ generation: { async generate() { throw new Error('No generation expected'); } },
+    activePlan: createActivePlanAdapter(() => store, trustedCatalogs), pantryInventory: { ...pantry, save: write } });
+  const row = { productId: 'rice', quantity: '200', unit: 'g', expiresSoon: false } as const;
+  const newer = { ...row, quantity: '300' };
+  try {
+    await other.load();
+    await controller.loadPantry();
+    const saving = controller.savePantry([row]);
+    expect(write).toHaveBeenCalledTimes(1);
+    await other.save([newer], { isCurrent: () => true });
+    const newerRaw = values.get(PANTRY_INVENTORY_KEY);
+    await controller.loadPantry();
+    expect(controller.getSnapshot().pantry).toMatchObject({ status: 'loaded', confirmed: { rows: [newer] }, writeStatus: 'idle' });
+    writeGate.resolve();
+    expect(await saving).toBe(false);
+    expect(values.get(PANTRY_INVENTORY_KEY)).toBe(newerRaw);
+
+    values.delete(PANTRY_INVENTORY_KEY);
+    await controller.loadPantry();
+    expect(controller.getSnapshot().pantry).toMatchObject({ status: 'error', confirmed: { rows: [newer] } });
+    expect(await controller.savePantry([row])).toBe(false);
+    expect(values.has(PANTRY_INVENTORY_KEY)).toBe(false);
+  } finally { writeGate.resolve(); controller.dispose(); }
+});
+
 it('phase04-remove rejects a valid edited envelope as a generation response and retains stored bytes', async () => {
   const base = fixture('empty-response');
   const initial = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(base.plan) });

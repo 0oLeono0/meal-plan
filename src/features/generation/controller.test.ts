@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createActivePlanAdapter, ACTIVE_PLAN_KEY } from '../../adapters/activePlan';
 import type { ActivePlanLoadResult, ActivePlanPort } from '../../adapters/activePlan';
+import { createPantryInventoryAdapter, PANTRY_INVENTORY_KEY } from '../../adapters/pantryInventory';
 import { buildAppliedSettings } from '../../domain/appliedSettings';
 import type { Catalog } from '../../domain/catalog';
 import { buildActivePlanEnvelope, createPlanInputs, createRecipeInstances, mealSlots, planCoordinates } from '../../domain/plan';
@@ -36,6 +37,52 @@ function fixture(seed = 'one') {
 function deferred<T>() { let resolve!: (value: T) => void; let reject!: (reason: unknown) => void; const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; }
 const trustedCatalogs = createTrustedCatalogRegistry([fixture().inputs.catalog]);
 const createGenerationController = (options: GenerationControllerOptions) => productionController({ trustedCatalogs, ...options });
+
+it('pantry-inventory projects every variant independently and keeps the last confirmation when reading fails', async () => {
+  const base = fixture('live-stock');
+  const second = { id: 'second', instances: base.plan.variants[0].instances.map(row => ({ ...row, id: `${row.id}-second`, selectedServings: decimal('2') })) };
+  const plan = buildActivePlanEnvelope(base.inputs, [...base.plan.variants, second], base.plan.activeVariantId);
+  const original = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
+  const values = new Map([[ACTIVE_PLAN_KEY, original]]);
+  let failRead = false;
+  const store = { getItem(key: string) {
+    if (failRead && key === PANTRY_INVENTORY_KEY) throw new Error('Read denied');
+    return values.get(key) ?? null;
+  }, setItem(key: string, value: string) { values.set(key, value); } };
+  const active = createActivePlanAdapter(() => store, trustedCatalogs);
+  const pantry = createPantryInventoryAdapter(() => store);
+  const controller = createGenerationController({ generation: { async generate() { throw new Error('Inventory must not generate a menu'); } }, activePlan: active, pantryInventory: pantry });
+  const quantities = () => visiblePlanSnapshot(controller.getSnapshot()).active?.projections.map(projection =>
+    projection.rows.map(row => [row.required.amount, row.covered.amount, row.purchase.amount]));
+  const expected = [[[decimal('400'), decimal('200'), decimal('200')]], [[decimal('800'), decimal('200'), decimal('600')]]];
+  try {
+    await Promise.all([controller.load(), controller.loadPantry()]);
+    const row = { productId: 'rice', quantity: '0,2', unit: 'kg', expiresSoon: false } as const;
+    expect(await controller.savePantry([row])).toBe(true);
+    expect(values.get(ACTIVE_PLAN_KEY)).toBe(original);
+    expect(quantities()).toEqual(expected);
+
+    await controller.selectVariant(second.id, origin);
+    expect(controller.getSnapshot().active?.plan.activeVariantId).toBe(second.id);
+    expect(quantities()).toEqual(expected);
+
+    const external = createPantryInventoryAdapter(() => store);
+    await external.load();
+    expect(await external.save([], { isCurrent: () => true })).toMatchObject({ status: 'saved' });
+    expect(await controller.savePantry([{ ...row, quantity: '0,3' }])).toBe(false);
+    expect(controller.getSnapshot().pantry?.writeStatus).toBe('conflict');
+    expect(quantities()).toEqual(expected);
+    failRead = true;
+    await controller.loadPantry();
+    expect(controller.getSnapshot().pantry).toMatchObject({ status: 'error', confirmed: { rows: [row] } });
+    expect(quantities()).toEqual(expected);
+    expect(await controller.retryPantrySave()).toBe(false);
+    failRead = false;
+    await controller.loadPantry();
+    expect(controller.getSnapshot().pantry).toMatchObject({ status: 'loaded', confirmed: { rows: [] } });
+    expect(quantities()).toEqual([[[decimal('400'), decimal('0'), decimal('400')]], [[decimal('800'), decimal('0'), decimal('800')]]]);
+  } finally { controller.dispose(); }
+});
 
 it('phase04-remove rejects a valid edited envelope as a generation response and retains stored bytes', async () => {
   const base = fixture('empty-response');

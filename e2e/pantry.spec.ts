@@ -66,3 +66,53 @@ test('pantry-tracer saves 200 g of the 500 g requirement and buys 300 g after re
     expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(initial);
   }
 });
+
+test('pantry-write-failure preserves confirmed stock and retries the visible quantity', async ({ page }) => {
+  const pantryKey = 'mealplan:guest:pantry:v1';
+  await page.addInitScript(key => {
+    const write = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (storageKey, value) {
+      if (this === localStorage && storageKey === key && sessionStorage.getItem('deny-pantry-write')) {
+        throw new DOMException('Simulated quota reached', 'QuotaExceededError');
+      }
+      write.call(this, storageKey, value);
+    };
+  }, pantryKey);
+
+  const initialPlan = await openCarrotPlan(page);
+  await page.getByRole('link', { name: 'Дома', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Найти продукт' }).fill('морковь');
+  await page.getByRole('option', { name: /^Морковь/ }).click();
+  await page.getByRole('button', { name: 'Добавить выбранный продукт' }).click();
+  await expect(page.getByText('Запасы сохранены', { exact: true })).toBeVisible();
+  const initialPantry = await page.evaluate(key => {
+    sessionStorage.setItem('deny-pantry-write', '1');
+    return localStorage.getItem(key);
+  }, pantryKey);
+  expect(initialPantry).toContain('"productId":"carrot","quantity":""');
+
+  await page.getByRole('button', { name: /Указать количество.*морковь/i }).click();
+  const quantity = page.getByLabel('Количество', { exact: true });
+  const unit = page.getByLabel('Единица', { exact: true });
+  await quantity.fill('200');
+  await unit.selectOption('g');
+  await page.getByRole('button', { name: 'Сохранить количество' }).click();
+  await expect(page.getByRole('alert').getByText('Не удалось сохранить изменения')).toBeVisible();
+  expect(await page.evaluate(key => localStorage.getItem(key), pantryKey)).toBe(initialPantry);
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(initialPlan);
+
+  const shopping = await page.context().newPage();
+  await shopping.goto('/shopping');
+  const carrot = shopping.locator('article[data-product-id="carrot"]');
+  await expect(carrot.getByText(/Купить 500 г/)).toBeVisible();
+  await page.evaluate(() => sessionStorage.removeItem('deny-pantry-write'));
+  await quantity.fill('0,25');
+  await unit.selectOption('kg');
+  await page.getByRole('button', { name: 'Повторить сохранение' }).click();
+  await expect(page.getByText('Запасы сохранены', { exact: true })).toBeVisible();
+  await shopping.reload();
+  await expect(carrot.getByText(/Купить 250 г/)).toBeVisible();
+  await expect(carrot.getByText(/Нужно 500 г · Из запасов 250 г/)).toBeVisible();
+  expect(await page.evaluate(key => localStorage.getItem(key), pantryKey)).toContain('"quantity":"0,25"');
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(initialPlan);
+});

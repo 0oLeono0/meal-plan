@@ -72,6 +72,7 @@ export function App({ draftPort = guestDraft, planPresencePort, brand = appConfi
   const [draft, setDraft] = useState(createDraft);
   const currentDraft = useRef(draft);
   const memoryEdited = useRef(false);
+  const homeEdited = useRef(false);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [presence, setPresence] = useState<PlanPresence>({ status: 'pending' });
@@ -109,6 +110,7 @@ export function App({ draftPort = guestDraft, planPresencePort, brand = appConfi
         if (!active) return;
         if (result.status === 'loaded' || result.status === 'missing') {
           currentDraft.current = result.draft;
+          homeEdited.current = result.status === 'loaded' && (result.homeEdited ?? true);
           setDraft(result.draft);
           setLoadState('ready');
           if (result.status === 'loaded') setSaveState('saved');
@@ -127,11 +129,12 @@ export function App({ draftPort = guestDraft, planPresencePort, brand = appConfi
 
   function persist(next: SettingsDraft) {
     const request = ++revision.current;
+    const authoredHome = homeEdited.current;
     setSaveState('saving');
     saveQueue.current = saveQueue.current.catch(() => undefined).then(async () => {
       if (!mounted.current || resetting.current || request !== revision.current) return;
       try {
-        const result = await draftPort.save(next);
+        const result = await draftPort.save(next, authoredHome);
         if (mounted.current && revision.current === request) setSaveState(result.status === 'saved' ? 'saved' : 'error');
       } catch { if (mounted.current && revision.current === request) setSaveState('error'); }
     });
@@ -141,6 +144,7 @@ export function App({ draftPort = guestDraft, planPresencePort, brand = appConfi
     if (resetting.current || loadState === 'loading') return;
     const next = draftReducer(currentDraft.current, action);
     memoryEdited.current = true;
+    if (action.type === 'home') homeEdited.current = true;
     currentDraft.current = next;
     setDraft(next);
     if (loadState === 'ready') persist(next);
@@ -163,6 +167,7 @@ export function App({ draftPort = guestDraft, planPresencePort, brand = appConfi
         // Check after the await: edits made while reading also take precedence.
         if (!memoryEdited.current) {
           currentDraft.current = result.draft;
+          homeEdited.current = result.status === 'loaded' && (result.homeEdited ?? true);
           setDraft(result.draft);
           setSaveState(result.status === 'loaded' ? 'saved' : 'idle');
           return;
@@ -185,6 +190,7 @@ export function App({ draftPort = guestDraft, planPresencePort, brand = appConfi
       const next = createDraft();
       currentDraft.current = next;
       memoryEdited.current = false;
+      homeEdited.current = false;
       setDraft(next);
       setLoadState('ready');
       setSaveState('idle');
@@ -204,7 +210,7 @@ export function App({ draftPort = guestDraft, planPresencePort, brand = appConfi
           {(loadState === 'error' || saveState === 'error') && <button type="button" disabled={saveState === 'saving'} onClick={() => void retry()}>Повторить сохранение</button>}
         </div>}
         {actualPresence.status === 'error' && <p className="notice">Не удалось проверить наличие меню. Настройки доступны.</p>}
-        <ApplicationRoutes brand={brand} draft={draft} change={change} controller={controller} catalog={catalog!} reloadCatalog={async () => { try { const value = await catalogPort.load(); setCatalog(value); return value; } catch { return { status: 'invalid', diagnostics: [] }; } }} presence={actualPresence} recovery={loadState === 'corrupt' || loadState === 'error'} saved={loadState === 'ready' && saveState === 'saved'} resetDraft={resetDraft} />
+        <ApplicationRoutes brand={brand} draft={draft} homeEdited={homeEdited.current} change={change} controller={controller} catalog={catalog!} reloadCatalog={async () => { try { const value = await catalogPort.load(); setCatalog(value); return value; } catch { return { status: 'invalid', diagnostics: [] }; } }} presence={actualPresence} recovery={loadState === 'corrupt' || loadState === 'error'} saved={loadState === 'ready' && saveState === 'saved'} resetDraft={resetDraft} />
       </>}
     </AppLayout>
   </BrowserRouter>;
@@ -217,8 +223,8 @@ function InitialLoadStatus() {
   return <Status>Восстанавливаем настройки…</Status>;
 }
 
-function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCatalog, presence, recovery, saved, resetDraft }: {
-  brand: string; draft: SettingsDraft; change(action: DraftAction): void; controller: ReturnType<typeof createGenerationController>;
+function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catalog, reloadCatalog, presence, recovery, saved, resetDraft }: {
+  brand: string; draft: SettingsDraft; homeEdited: boolean; change(action: DraftAction): void; controller: ReturnType<typeof createGenerationController>;
   catalog: CatalogLoadResult; reloadCatalog(): Promise<CatalogLoadResult>; presence: PlanPresence; recovery: boolean; saved: boolean; resetDraft(): Promise<boolean>;
 }) {
   const operation = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
@@ -232,6 +238,12 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
   const previousRoute = useRef(pathname);
   const launch = useRef<{ settings: AppliedSettings; origin: { returnRoute: string; focusAnchor: string } } | null>(null);
   const catalogAttempt = useRef(0);
+  const pantry = operation.pantry;
+  const historicalRows = pantry?.status === 'missing' && operation.active
+    ? suggestedInventoryRows(operation.active.plan.inputs.pantrySnapshot) : undefined;
+  const proposedRows = homeEdited ? undefined : pantry?.status === 'loaded' ? pantry.confirmed?.rows : historicalRows;
+  const wizardDraft = proposedRows ? { ...draft, home: [...proposedRows] } : draft;
+  const homeSource = homeEdited ? 'draft' : proposedRows ? (historicalRows ? 'previous' : 'inventory') : undefined;
   useEffect(() => {
     if ((previousRoute.current === '/plan/generating' && pathname !== '/plan/generating' && operation.status !== 'succeeded')
       || (previousRoute.current === '/menu' && pathname !== '/menu' && pathname !== '/plan/generating' && operation.intent !== 'edit' && (operation.status === 'pending' || operation.status === 'saving'))) { catalogAttempt.current++; controller.cancel(); }
@@ -248,7 +260,7 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
   }, [operation.status, pathname, navigate]);
   function start(quick = false, focusAnchor = 'generate-menu') {
     if (operation.status === 'pending' || operation.status === 'saving') return;
-    const applied = quick ? selectQuickStartInput(draft, operation.lastApplied) : buildAppliedSettings(draft);
+    const applied = quick ? selectQuickStartInput(draft, operation.lastApplied) : buildAppliedSettings(wizardDraft);
     setLaunchErrors(applied);
     if (applied.status === 'invalid') { change({ type: 'step', value: applied.step }); navigate('/plan/new'); return; }
     setCatalogError(catalog.status !== 'loaded');
@@ -288,9 +300,7 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
   const basis = operation.lastApplied ? 'Используем последние применённые настройки' : sameSnapshot(draft, createDraft())
     ? '2 человека · 7 дней · 3 000 ₽ · до 30 минут · среднее разнообразие · без ограничений' : 'Используем настройки из черновика';
   const visible = visiblePlanSnapshot(operation);
-  const pantry = operation.pantry;
-  const pantryRows = pantry?.confirmed?.rows ?? (pathname === '/pantry' && pantry?.status === 'missing' && operation.active
-    ? suggestedInventoryRows(operation.active.plan.inputs.pantrySnapshot) : []);
+  const pantryRows = pantry?.confirmed?.rows ?? historicalRows ?? [];
   const planOverview = pathname === '/menu' || pathname === '/shopping';
   const pantryPresentation = planOverview || (pathname.startsWith('/recipe/') && !!operation.active);
   const pantryReadStatus = visible.pantry?.status;
@@ -315,7 +325,7 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
     {operation.status === 'error' && <div role="alert" className="notice"><p>{operation.error?.message}</p></div>}
   </div>}<Routes>
     <Route path="/" element={presence.status === 'valid' ? <Navigate replace to="/menu" /> : <WelcomePage brand={brand} onStart={() => navigate('/plan/new')} onQuickStart={() => start(true)} quickStartBasis={basis} />} />
-    <Route path="/plan/new" element={<Wizard draft={draft} onChange={change} recovery={recovery} saved={saved} onReset={resetDraft} onStart={anchor => start(false, anchor)} launchErrors={launchErrors?.status === 'invalid' ? launchErrors.errors : undefined} editingNext={!!operation.lastApplied && !sameSnapshot(draft, operation.lastApplied.raw)} />} />
+    <Route path="/plan/new" element={<Wizard draft={wizardDraft} homeSource={homeSource} onChange={change} recovery={recovery} saved={saved} onReset={resetDraft} onStart={anchor => start(false, anchor)} launchErrors={launchErrors?.status === 'invalid' ? launchErrors.errors : undefined} editingNext={!!operation.lastApplied && !sameSnapshot(draft, operation.lastApplied.raw)} />} />
     <Route path="/plan/generating" element={<GenerationPage snapshot={operation} requestedSettings={launch.current?.settings} catalog={catalog} catalogError={catalogError} draftSaved={saved} onCancel={cancel} onRetry={() => void retryGeneration()} onSettings={settings} onRetrySave={() => void controller.retrySave()} onRetryLoad={() => void controller.retryLoad()} />} />
     <Route path="/menu" element={<MenuPage snapshot={visible} onRecalculate={offerBudgetRecalculation} mealAlternatives={{ request: controller.mealAlternatives, select: (target, recipeId, revision) => {
       const origin = { returnRoute: '/menu', focusAnchor: 'menu-title' };

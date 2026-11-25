@@ -5,9 +5,12 @@ import { Button, ConfirmDialog } from '../../shared/ui';
 import { PeopleStep } from './PeopleStep';
 import { BudgetStep } from './BudgetStep';
 import { ExclusionsStep } from './ExclusionsStep';
-import { HomeProductsStep } from './HomeProductsStep';
+import { HomeProductsStep, type WizardHomeSource } from './HomeProductsStep';
 
-export function Wizard({ draft, onChange, recovery = false, saved = false, onReset, onStart, launchErrors, editingNext = false }: { draft: SettingsDraft; onChange(action: DraftAction): void; recovery?: boolean; saved?: boolean; onReset?(): Promise<boolean>; onStart?(focusAnchor?: string): void; launchErrors?: StepErrors; editingNext?: boolean }) {
+export function Wizard({ draft, onChange, recovery = false, saved = false, onReset, onStart, launchErrors, editingNext = false, homeSource }: {
+  draft: SettingsDraft; onChange(action: DraftAction): void; recovery?: boolean; saved?: boolean; onReset?(): Promise<boolean>;
+  onStart?(focusAnchor?: string): void; launchErrors?: StepErrors; editingNext?: boolean; homeSource?: WizardHomeSource;
+}) {
   const [resetOpen, setResetOpen] = useState(false);
   const [resetPending, setResetPending] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
@@ -94,7 +97,7 @@ export function Wizard({ draft, onChange, recovery = false, saved = false, onRes
       {draft.step === 1 && <PeopleStep draft={draft} onChange={change} errors={errors} disabled={resetPending} />}
       {draft.step === 2 && <BudgetStep draft={draft} onChange={change} errors={errors} disabled={resetPending} />}
       {draft.step === 3 && <ExclusionsStep draft={draft} onChange={change} errors={errors} disabled={resetPending} />}
-      {draft.step === 4 && <HomeProductsStep draft={draft} onChange={change} errors={errors} disabled={resetPending} />}
+      {draft.step === 4 && <HomeProductsStep draft={draft} onChange={change} errors={errors} disabled={resetPending} homeSource={homeSource} />}
       {(draft.step === 3 || draft.step === 4) && <div className="mt-4">
         <p id="skip-hint" className="hint">{draft.step === 3 ? 'Пропуск сохранит выбранные ограничения и исключения' : 'Пропуск сохранит добавленные продукты. Запасы не списываются'}</p>
         <Button id="skip-step" aria-describedby="skip-hint" disabled={resetPending} onClick={() => draft.step === 3 ? change({ type: 'step', value: 4 }) : review('skip-step')}>Пропустить</Button>

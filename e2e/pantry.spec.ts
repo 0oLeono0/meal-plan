@@ -2,6 +2,73 @@ import { expect, test, type Page } from '@playwright/test';
 import type { EditedPlanEnvelope, MealCoordinate, RecipeInstance } from '../src/domain/plan';
 import { activeKey, count, mountGeneration, release } from './generation-fixtures';
 
+async function seedPantry(page: Page, quantity?: string) {
+  return page.evaluate(quantity => {
+    const raw = JSON.stringify({ schemaVersion: 1, token: 'a'.repeat(32),
+      rows: quantity ? [{ productId: 'carrot', quantity, unit: 'g', expiresSoon: false }] : [] });
+    localStorage.setItem('mealplan:guest:pantry:v1', raw);
+    return raw;
+  }, quantity);
+}
+
+test('pantry-wizard proposes household stock and keeps edited quantities in its own draft', async ({ page }) => {
+  test.setTimeout(55_000);
+  await page.goto('/plan/new');
+  const household = await seedPantry(page, '200');
+  await page.reload();
+  await page.getByLabel('Число дней', { exact: true }).fill('1');
+  const next = page.getByRole('button', { name: 'Далее', exact: true });
+  await next.click();
+  await expect(page.getByText('Шаг 2 из 4')).toBeVisible();
+  await expect(async () => {
+    if (await page.getByText('Шаг 2 из 4').isVisible()) await next.click();
+    await expect(page.getByText('Шаг 3 из 4')).toBeVisible({ timeout: 600 });
+  }).toPass({ timeout: 4_000 });
+  await page.getByRole('button', { name: 'Пропустить', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Продукты дома' })).toBeVisible();
+  const row = page.getByRole('region', { name: /^Домашний продукт Морковь/ });
+  const quantity = row.getByRole('textbox', { name: /^Количество Морковь/ });
+  await expect(quantity).toHaveValue('200');
+  await expect(page.getByText('Предложение из холодильника', { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('mealplan:guest:draft:v1')!).draft.home)).toEqual([]);
+  await quantity.fill('250');
+  await expect(page.getByText('Эти запасы относятся только к новому меню', { exact: true })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('mealplan:guest:draft:v1')!).draft.home[0]?.quantity)).toBe('250');
+  expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:pantry:v1'))).toBe(household);
+
+  await page.goto('/pantry');
+  await page.getByRole('button', { name: /Изменить количество.*морковь/i }).click();
+  await page.getByRole('textbox', { name: 'Количество', exact: true }).fill('350');
+  await page.getByRole('button', { name: 'Сохранить количество', exact: true }).click();
+  await expect(page.getByText('Запасы сохранены', { exact: true })).toBeVisible();
+  const changed = await page.evaluate(() => localStorage.getItem('mealplan:guest:pantry:v1'));
+  await page.goto('/plan/new');
+  await expect(quantity).toHaveValue('250');
+  await page.getByRole('button', { name: 'Пропустить', exact: true }).click();
+  await expect(page).toHaveURL(/\/menu$/, { timeout: 35_000 });
+  expect(await page.evaluate(key => ({
+    home: JSON.parse(localStorage.getItem(key)!).plan.inputs.appliedSettings.raw.home,
+    inventory: localStorage.getItem('mealplan:guest:pantry:v1'),
+  }), activeKey)).toEqual({ home: [{ productId: 'carrot', quantity: '250', unit: 'g', expiresSoon: false }], inventory: changed });
+});
+
+test('pantry-wizard leaves a legacy empty draft intact even with current household stock', async ({ page }) => {
+  await page.goto('/plan/new');
+  await seedPantry(page, '200');
+  const raw = await page.evaluate(async () => {
+    const path = '/src/domain/settings.ts';
+    const { createDraft } = await import(path) as typeof import('../src/domain/settings');
+    const raw = JSON.stringify({ schemaVersion: 1, draft: { ...createDraft(), step: 4 } });
+    localStorage.setItem('mealplan:guest:draft:v1', raw);
+    return raw;
+  });
+  await page.reload();
+  await expect(page.getByRole('heading', { level: 1, name: 'Продукты дома' })).toBeVisible();
+  await expect(page.getByText('Эти запасы относятся только к новому меню', { exact: true })).toBeVisible();
+  await expect(page.getByText('Домашних продуктов пока нет', { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:draft:v1'))).toBe(raw);
+});
+
 async function openCarrotPlan(page: Page, withHistoricStock = false) {
   await page.goto('/plan/new');
   const raw = await page.evaluate(async ({ key, withHistoricStock }) => {

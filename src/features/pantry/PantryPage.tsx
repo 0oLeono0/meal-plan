@@ -12,7 +12,7 @@ import type { PantryInventoryState } from '../generation/controller';
 
 const unitNames: Record<Unit, string> = { g: 'г', kg: 'кг', ml: 'мл', l: 'л', pcs: 'шт.' };
 
-export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRetrySave, onDiscardSave, onStartLeftovers }: {
+export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRetrySave, onDiscardSave, onStartLeftovers, onRecalculate, onPostponeRecalculation }: {
   state: PantryInventoryState;
   rows: readonly PantryInventoryRow[];
   savingMenu: boolean;
@@ -21,6 +21,8 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
   onRetrySave(): Promise<boolean>;
   onDiscardSave(): void;
   onStartLeftovers(trigger: HTMLElement): void;
+  onRecalculate?(trigger: HTMLElement): void;
+  onPostponeRecalculation(): void;
 }) {
   const [selected, setSelected] = useState<ProductName | null>(null);
   const [editor, setEditor] = useState<{ row: PantryInventoryRow; source: PantryInventoryState['confirmed']; error?: string } | null>(null);
@@ -131,6 +133,17 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
     {state.writeStatus === 'saving' && <Status>Сохраняем запасы…</Status>}
     {state.writeStatus === 'saved' && <Status>Запасы сохранены</Status>}
     {state.writeStatus === 'error' && <div className="notice" role="alert"><p>Не удалось сохранить изменения</p><Button disabled={disabled} onClick={() => void retry()}>Повторить сохранение</Button></div>}
+    {onRecalculate && <section className="notice" aria-labelledby="pantry-recalculate-title">
+      <h2 id="pantry-recalculate-title">Пересчитать меню и список?</h2>
+      <p>Покупки уже обновлены по запасам. Можно подобрать новые блюда</p>
+      <div className="flex flex-wrap gap-2">
+        <Button id="pantry-recalculate" aria-label="Пересчитать меню" onClick={event => onRecalculate(event.currentTarget)}>Пересчитать</Button>
+        <Button aria-label="Отложить пересчёт меню" onClick={() => {
+          onPostponeRecalculation();
+          focus(state.confirmed?.rows.length ? 'pantry-leftovers' : 'pantry-title');
+        }}>Позже</Button>
+      </div>
+    </section>}
     {!rows.length && (state.status === 'missing' || state.status === 'loaded') && <div className="card">
       <h2>Добавьте, что есть дома, и мы не купим лишнего</h2><p>Найдите продукт или выберите популярный.</p>
     </div>}

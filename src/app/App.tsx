@@ -233,6 +233,7 @@ interface LaunchRequest {
   readonly pantrySnapshot?: PlanInputs['pantrySnapshot'];
   readonly wizardPantryToken?: string | null;
   readonly mode?: GenerationMode;
+  readonly recalculate?: true;
   readonly confirmedMenuRevision?: number;
 }
 
@@ -247,10 +248,11 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
   const [catalogError, setCatalogError] = useState(false);
   const [launchPantryIssue, setLaunchPantryIssue] = useState<'unavailable' | 'changed' | 'menu-changed' | null>(null);
   const [launchConfirmation, setLaunchConfirmation] = useState<{ request: LaunchRequest; trigger: HTMLElement | null } | null>(null);
-  const [budgetTrigger, setBudgetTrigger] = useState<HTMLElement | null>(null);
+  const [postponedRecalculation, setPostponedRecalculation] = useState<string | null>(null);
   const returningFocus = useRef<{ route: string; anchor: string } | null>(null);
   const previousRoute = useRef(pathname);
   const launch = useRef<LaunchRequest | null>(null);
+  const pantryGenerationStarted = useRef(false);
   const catalogAttempt = useRef(0);
   const pantry = operation.pantry;
   const historicalRows = pantry?.status === 'missing' && operation.active
@@ -272,6 +274,16 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
   useEffect(() => {
     if (operation.status === 'succeeded' && pathname === '/plan/generating') navigate('/menu', { replace: true });
   }, [operation.status, pathname, navigate]);
+  useEffect(() => {
+    const request = launch.current;
+    if (pathname !== '/plan/generating' || request?.origin.returnRoute !== '/pantry') return;
+    if (operation.status === 'pending' || operation.status === 'saving') pantryGenerationStarted.current = true;
+    if (operation.status !== 'idle' || !pantryGenerationStarted.current || pantry?.status === 'pending') return;
+    pantryGenerationStarted.current = false;
+    launch.current = null;
+    returningFocus.current = { route: request.origin.returnRoute, anchor: request.origin.focusAnchor };
+    navigate(request.origin.returnRoute, { replace: true });
+  }, [pathname, operation.status, pantry?.status, navigate]);
   function start(quick = false, focusAnchor = 'generate-menu') {
     if (operation.status === 'pending' || operation.status === 'saving') return;
     const applied = quick ? selectQuickStartInput(draft, operation.lastApplied) : buildAppliedSettings(wizardDraft);
@@ -304,19 +316,31 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
     if (operation.active) setLaunchConfirmation({ request, trigger });
     else performStart(request);
   }
+  function requestRecalculation(trigger: HTMLElement) {
+    const current = controller.getSnapshot();
+    if (!current.active || mealEditingUnavailable(current)) return;
+    const request: LaunchRequest = { settings: current.active.plan.inputs.appliedSettings,
+      origin: { returnRoute: pathname, focusAnchor: trigger.id }, pantry: current.pantry,
+      confirmedMenuRevision: current.editRevision, recalculate: true };
+    setLaunchPantryIssue(null);
+    setLaunchConfirmation({ request, trigger });
+  }
   function runLaunch(request: LaunchRequest, readyCatalog: Catalog) {
     return controller.start(createPlanInputs(request.settings, readyCatalog, { seed: createGenerationSeed(), pantrySnapshot: request.pantrySnapshot }),
       request.origin, request);
   }
   function performStart(request: LaunchRequest) {
-    if (request.mode && request.confirmedMenuRevision !== controller.getSnapshot().editRevision) {
+    if (!controller.canStartWithPantry(request.pantry)) { setLaunchPantryIssue('changed'); return; }
+    if ((request.mode || request.recalculate) && request.confirmedMenuRevision !== controller.getSnapshot().editRevision) {
       setLaunchPantryIssue('menu-changed'); return;
     }
-    if (!controller.canStartWithPantry(request.pantry)) { setLaunchPantryIssue('changed'); return; }
+    if (request.recalculate && mealEditingUnavailable(controller.getSnapshot())) return;
     launch.current = request;
-    setCatalogError(catalog.status !== 'loaded');
+    pantryGenerationStarted.current = false;
+    setCatalogError(!request.recalculate && catalog.status !== 'loaded');
     navigate('/plan/generating');
-    if (catalog.status === 'loaded') void runLaunch(request, catalog.catalog);
+    if (request.recalculate) void controller.recreateSet(request.origin, { pantry: request.pantry, editRevision: request.confirmedMenuRevision });
+    else if (catalog.status === 'loaded') void runLaunch(request, catalog.catalog);
   }
   async function retryLaunchPantry() {
     await controller.loadPantry();
@@ -349,6 +373,10 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
         navigate(request.origin.returnRoute);
         return;
       }
+      if (request.mode && request.confirmedMenuRevision !== controller.getSnapshot().editRevision) {
+        setLaunchPantryIssue('menu-changed');
+        cancel(); return;
+      }
       await runLaunch(request, loaded.catalog);
     }
   }
@@ -365,8 +393,15 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
   const stalePantry = pantryReadStatus === 'corrupt' || pantryReadStatus === 'error' || visible.pantry?.writeStatus === 'conflict';
   const editFeedback = operation.intent === 'edit' && planOverview;
   const retainedAfterRead = planOverview && operation.active && ['missing', 'corrupt', 'error'].includes(operation.loadStatus);
-  const offerBudgetRecalculation = mealEditingUnavailable(visible) ? undefined : setBudgetTrigger;
-  const confirmLeftovers = launchConfirmation?.request.mode === 'leftovers';
+  const offerBudgetRecalculation = mealEditingUnavailable(visible) ? undefined : requestRecalculation;
+  const confirmedInventory = pantry?.confirmed;
+  const active = operation.active;
+  const recalculationKey = pathname === '/pantry' && active && confirmedInventory && pantry?.status === 'loaded'
+      && active.wizardPantryToken !== confirmedInventory.token
+      && (operation.changedPantryToken === confirmedInventory.token
+        || !sameSnapshot(active.plan.inputs.pantrySnapshot, inventoryPantrySnapshot(confirmedInventory.rows)))
+    ? JSON.stringify([active.plan.variants[0].id, confirmedInventory.token]) : null;
+  const confirmNewSet = launchConfirmation?.request.mode === 'leftovers' || launchConfirmation?.request.recalculate;
   return <>{pantryPresentation && !!operation.active && (pantryReadStatus === 'pending' || stalePantry) && <div className="plan-read-model notice">
     {pantryReadStatus === 'pending' && !stalePantry
       ? <Status>Проверяем запасы. Пока показан последний подтверждённый расчёт.</Status>
@@ -382,14 +417,14 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
         : <><p>Не удалось сохранить изменения. Восстановлено прежнее меню</p><Button onClick={() => void controller.retrySave()}>Повторить сохранение</Button></>}
     </div>}
     {operation.status === 'error' && <div role="alert" className="notice"><p>{operation.error?.message}</p></div>}
-  </div>}{launchPantryIssue && (pathname === '/' || pathname === '/plan/new' || pathname === '/pantry') && <div className="notice" role="alert">
+  </div>}{launchPantryIssue && (pathname === '/' || pathname === '/plan/new' || pathname === '/pantry' || planOverview) && <div className="notice" role="alert">
     <p>{launchPantryIssue === 'menu-changed' ? 'Текущее меню изменилось. Запустите подбор снова'
       : launchPantryIssue === 'changed' ? 'Запасы изменились. Проверьте их и запустите подбор снова' : 'Не удалось проверить запасы для нового меню'}</p>
     {launchPantryIssue !== 'menu-changed' && <Button disabled={pantry?.status === 'pending'} onClick={() => void retryLaunchPantry()}>Повторить загрузку запасов</Button>}
   </div>}<Routes>
     <Route path="/" element={presence.status === 'valid' ? <Navigate replace to="/menu" /> : <WelcomePage brand={brand} onStart={() => navigate('/plan/new')} onQuickStart={() => start(true)} quickStartBasis={basis} quickStartStock={quickStartStock} />} />
     <Route path="/plan/new" element={<Wizard draft={wizardDraft} homeSource={homeSource} onChange={change} recovery={recovery} saved={saved} onReset={resetDraft} onStart={anchor => start(false, anchor)} launchErrors={launchErrors?.status === 'invalid' ? launchErrors.errors : undefined} editingNext={!!operation.lastApplied && !sameSnapshot(draft, operation.lastApplied.raw)} />} />
-    <Route path="/plan/generating" element={<GenerationPage snapshot={operation} requestedSettings={launch.current?.settings} mode={launch.current?.mode} catalog={catalog} catalogError={catalogError} draftSaved={saved} onCancel={cancel} onRetry={() => void retryGeneration()} onSettings={settings} onRetrySave={() => void controller.retrySave()} onRetryLoad={() => void controller.retryLoad()} />} />
+    <Route path="/plan/generating" element={<GenerationPage snapshot={operation} requestedSettings={launch.current?.settings} mode={launch.current?.mode} fromPantry={launch.current?.origin.returnRoute === '/pantry'} catalog={catalog} catalogError={catalogError} draftSaved={saved} onCancel={cancel} onRetry={() => void retryGeneration()} onSettings={settings} onRetrySave={() => void controller.retrySave()} onRetryLoad={() => void controller.retryLoad()} />} />
     <Route path="/menu" element={<MenuPage snapshot={visible} onRecalculate={offerBudgetRecalculation} mealAlternatives={{ request: controller.mealAlternatives, select: (target, recipeId, revision) => {
       const origin = { returnRoute: '/menu', focusAnchor: 'menu-title' };
       if ('kind' in target) void controller.addMeal(target, recipeId, revision, origin);
@@ -401,7 +436,9 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
     <Route path="/pantry" element={pantry && <PantryPage state={pantry} rows={pantryRows}
       savingMenu={operation.status === 'saving' || operation.status === 'pending'} onSave={controller.savePantry}
       onRetryLoad={() => void controller.loadPantry()} onRetrySave={controller.retryPantrySave} onDiscardSave={controller.discardPantrySave}
-      onStartLeftovers={startLeftovers} />} />
+      onStartLeftovers={startLeftovers}
+      onRecalculate={recalculationKey && recalculationKey !== postponedRecalculation ? offerBudgetRecalculation : undefined}
+      onPostponeRecalculation={() => setPostponedRecalculation(recalculationKey)} />} />
     <Route path="/recipe/:id?" element={<RecipePage snapshot={visible} catalog={catalog}
       onRetry={source => source === 'plan' ? controller.retryLoad() : reloadCatalog()}
       onChangePortions={(target, multiplier, expectedPlan, returnRoute, expectedRevision) =>
@@ -411,17 +448,12 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
         void controller.editMeal(target, recipeId, revision, { returnRoute, focusAnchor: 'recipe-replace', recipeReplacement: { locationKey, target, recipeId } })}
       onRetrySave={() => void controller.retrySave()} />} />
     <Route path="*" element={<RouteStatePage title="Страница не найдена" description="Проверьте адрес или начните с главной страницы." to="/" action="На главную" />} />
-  </Routes>{launchConfirmation && <ConfirmDialog title={confirmLeftovers ? 'Создать новый набор меню?' : 'Составить меню с новыми настройками?'} description={`После успешного сохранения новое меню заменит прежний набор вариантов.${saved ? ' Черновик настроек сохранится' : ''}`} cancelLabel="Оставить варианты" confirmLabel={confirmLeftovers ? 'Создать новый набор' : 'Составить меню'} returnFocus={launchConfirmation.trigger} fallbackFocusId={confirmLeftovers ? 'pantry-title' : 'wizard-title'} onCancel={() => setLaunchConfirmation(null)} onConfirm={() => {
+  </Routes>{launchConfirmation && <ConfirmDialog title={confirmNewSet ? 'Создать новый набор меню?' : 'Составить меню с новыми настройками?'}
+    description={launchConfirmation.request.recalculate ? 'Покупки уже рассчитаны по запасам. Прежние варианты будут заменены после успешного сохранения нового набора.'
+      : `После успешного сохранения новое меню заменит прежний набор вариантов.${saved ? ' Черновик настроек сохранится' : ''}`}
+    cancelLabel="Оставить варианты" confirmLabel={confirmNewSet ? 'Создать новый набор' : 'Составить меню'}
+    returnFocus={launchConfirmation.trigger} fallbackFocusId={confirmNewSet ? `${pathname.slice(1)}-title` : 'wizard-title'} onCancel={() => setLaunchConfirmation(null)} onConfirm={() => {
     const confirmed = launchConfirmation; setLaunchConfirmation(null); performStart(confirmed.request);
-  }} />}{budgetTrigger && <ConfirmDialog title="Создать новый набор меню?" description="Покупки уже рассчитаны по запасам. Прежние варианты будут заменены после успешного сохранения нового набора." cancelLabel="Оставить варианты" confirmLabel="Создать новый набор" returnFocus={budgetTrigger} fallbackFocusId={pathname === '/shopping' ? 'shopping-title' : 'menu-title'} onCancel={() => setBudgetTrigger(null)} onConfirm={() => {
-    const current = controller.getSnapshot();
-    setBudgetTrigger(null);
-    if (!current.active || mealEditingUnavailable(current)) return;
-    const origin = { returnRoute: pathname, focusAnchor: budgetTrigger.id };
-    launch.current = { settings: current.active.plan.inputs.appliedSettings, origin, pantry: current.pantry };
-    setCatalogError(false);
-    navigate('/plan/generating');
-    void controller.recreateSet(origin);
   }} />}</>;
 }
 

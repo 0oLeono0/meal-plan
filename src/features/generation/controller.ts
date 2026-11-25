@@ -35,6 +35,7 @@ export interface GenerationSnapshot {
   readonly origin: GenerationOrigin | null;
   readonly initialSearchCount: number | null;
   readonly pantry?: PantryInventoryState;
+  readonly changedPantryToken?: string;
   readonly editRevision?: number;
 }
 
@@ -223,7 +224,8 @@ export function createGenerationController({ generation, activePlan, pantryInven
     const changed = result.status === 'loaded' && !sameSnapshot(previous, result.inventory);
     const confirmed = changed && result.status === 'loaded' ? result.inventory : previous;
     const status = result.status === 'missing' && previous ? 'error' : result.status;
-    publish({ pantry: { status, confirmed, writeStatus: 'idle' } });
+    publish({ pantry: { status, confirmed, writeStatus: 'idle' },
+      ...(changed && previous && confirmed && snapshot.active ? { changedPantryToken: confirmed.token } : {}) });
   }
 
   async function savePantry(input: readonly PantryInventoryRow[], expected?: PantryInventoryState): Promise<boolean> {
@@ -244,7 +246,8 @@ export function createGenerationController({ generation, activePlan, pantryInven
     if (!isCurrent()) return false;
     if (result.status === 'saved') {
       pantryRetryRows = null;
-      publish({ pantry: { status: 'loaded', confirmed: result.inventory, writeStatus: 'saved' } });
+      publish({ pantry: { status: 'loaded', confirmed: result.inventory, writeStatus: 'saved' },
+        ...(snapshot.active && !sameSnapshot(pantry.confirmed?.rows, result.inventory.rows) ? { changedPantryToken: result.inventory.token } : {}) });
       return true;
     }
     if (result.status === 'blocked') pantryRetryRows = null;
@@ -315,6 +318,7 @@ export function createGenerationController({ generation, activePlan, pantryInven
       revision++; writeAllowed = true;
       publish({ status: 'succeeded', active: candidate, candidate: null, lastApplied: candidate.plan.inputs.appliedSettings,
         loadStatus: 'loaded', presence: { status: 'valid', planId: candidate.plan.activeVariantId }, saveError: null,
+        ...(op.intent === 'replace' && stockCurrent(op.stockAttempt) ? { changedPantryToken: undefined } : {}),
         ...(op.initialSearchCount !== undefined ? { initialSearchCount: op.initialSearchCount } : {}) });
     } else if (result.status === 'cancelled' || !stockCurrent(op.stockAttempt)) {
       invalidate(); publish({ status: 'idle', candidate: null, requestId: null });
@@ -392,9 +396,10 @@ export function createGenerationController({ generation, activePlan, pantryInven
     const inventory = effectiveInventory(snapshot, base);
     await run(inventory ? inputsWithInventory(base.plan.inputs, inventory.rows) : base.plan.inputs, origin, 'append', base, revision, pantryInventory ? pantrySequence : undefined);
   }
-  async function recreateSet(origin: GenerationOrigin) {
+  async function recreateSet(origin: GenerationOrigin, expected?: Pick<GenerationSnapshot, 'pantry' | 'editRevision'>) {
     const base = snapshot.active;
     if (disposed || !base || snapshot.loadStatus !== 'loaded' || pantryBlocksMealEdit(snapshot)
+      || (expected && (expected.editRevision !== snapshot.editRevision || !canStartWithPantry(expected.pantry)))
       || snapshot.status === 'saving' || (snapshot.intent === 'edit' && mealEditingUnavailable(snapshot))) return;
     const inventory = effectiveInventory(snapshot, base);
     await run(inventory ? inputsWithInventory(base.plan.inputs, inventory.rows) : base.plan.inputs, origin, 'replace', base, revision,

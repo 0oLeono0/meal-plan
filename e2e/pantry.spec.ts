@@ -172,6 +172,49 @@ async function openCarrotPlan(page: Page, withHistoricStock = false, wizardPantr
   return raw;
 }
 
+test('pantry-leftovers uses confirmed expiring stock and preserves the active menu until confirmation', async ({ page }) => {
+  test.setTimeout(55_000);
+  const original = await openCarrotPlan(page, true);
+  await page.getByRole('link', { name: 'Дома', exact: true }).click();
+  const compose = page.getByRole('link', { name: 'Составить меню', exact: true });
+  await expect(compose).toHaveAttribute('href', '/plan/new');
+  await page.getByRole('button', { name: /Изменить количество.*морковь/i }).click();
+  await page.getByLabel('Количество', { exact: true }).fill('200');
+  await page.getByRole('button', { name: 'Сохранить количество' }).click();
+  const expiry = page.getByRole('checkbox', { name: /Скоро испортится.*морковь/i });
+  await expiry.check();
+  await expect(expiry).toBeChecked();
+  const pantryKey = 'mealplan:guest:pantry:v1';
+  const stock = await page.evaluate(key => localStorage.getItem(key), pantryKey);
+  expect(JSON.parse(stock!).rows).toEqual([{ productId: 'carrot', quantity: '200', unit: 'g', expiresSoon: true }]);
+
+  const start = page.getByRole('button', { name: 'Составить меню из остатков' });
+  await expect(start).toBeVisible();
+  const confirmation = page.getByRole('dialog', { name: 'Создать новый набор меню?' });
+  await start.click();
+  await confirmation.getByRole('button', { name: 'Оставить варианты' }).click();
+  await expect(start).toBeFocused();
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(original);
+
+  await start.click();
+  await confirmation.getByRole('button', { name: 'Создать новый набор' }).click();
+  await expect(page).toHaveURL(/\/plan\/generating$/);
+  await expect(page.getByText('Используем запасы из холодильника', { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/menu$/, { timeout: 35_000 });
+  const updated = await page.evaluate(key => localStorage.getItem(key), activeKey);
+  const { plan } = JSON.parse(updated!);
+  expect(updated).not.toBe(original);
+  expect(plan.inputs.appliedSettings).toEqual(JSON.parse(original).plan.inputs.appliedSettings);
+  expect(plan.inputs.pantrySnapshot).toEqual([{ productId: 'carrot', expiresSoon: true, quantity: {
+    status: 'known', unit: 'g', amount: { numerator: '200', denominator: '1' },
+  } }]);
+  const variant = plan.variants.find((item: { id: string }) => item.id === plan.activeVariantId);
+  const early = variant.instances.filter((meal: { date: string }) => plan.inputs.dates.slice(0, 2).includes(meal.date));
+  expect(early.some((meal: { recipeSnapshot: { ingredients: { productId: string }[] } }) =>
+    meal.recipeSnapshot.ingredients.some(ingredient => ingredient.productId === 'carrot'))).toBe(true);
+  expect(await page.evaluate(key => localStorage.getItem(key), pantryKey)).toBe(stock);
+});
+
 test('pantry-source recalculates every variant only after a new confirmed fridge revision', async ({ page }) => {
   await page.goto('/');
   await seedPantry(page);

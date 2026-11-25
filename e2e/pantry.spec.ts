@@ -403,6 +403,17 @@ test('pantry-tracer saves 200 g of the 500 g requirement and buys 300 g after re
   }
 });
 
+test('pantry-keyboard explains the early priority of flagged products beside the leftovers action', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 525 });
+  await page.goto('/plan/new');
+  await seedPantry(page, '200');
+  await page.goto('/pantry');
+  const start = page.getByRole('button', { name: 'Составить меню из остатков' });
+  await expect(start).toBeVisible();
+  await expect(page.getByText('При подборе постараемся использовать отмеченные продукты в первые 1–2 дня', { exact: true })).toBeVisible();
+  await expect(start).toHaveAccessibleDescription('При подборе постараемся использовать отмеченные продукты в первые 1–2 дня');
+});
+
 test('pantry-crud edits a stock flag and quantity and removes the last confirmed row', async ({ page }) => {
   const pantryKey = 'mealplan:guest:pantry:v1';
   const initialPlan = await openCarrotPlan(page, true);

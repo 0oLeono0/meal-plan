@@ -9,6 +9,7 @@ import { createDraft } from '../domain/settings';
 import { ACTIVE_PLAN_KEY, ACTIVE_PLAN_MAX_BYTES, createActivePlanAdapter, createActivePlanPresencePort, validateActiveBundle } from './activePlan';
 import { bundledCatalog } from '../data/catalog';
 import { createTrustedCatalogRegistry } from './trustedCatalogs';
+import { createGenerationController } from '../features/generation/controller';
 import legacyRaw from '../test/fixtures/phase02-active-plan-v1.json?raw';
 import release1Raw from '../test/fixtures/phase031-release1-active-plan.json?raw';
 import release2Raw from '../test/fixtures/phase031-release2-active-plan.json?raw';
@@ -40,6 +41,39 @@ describe('pantry-admission storage', () => {
     index === 0 ? { ...meal, selectedServings: decimal('3') } : meal) }] };
   const registry = createTrustedCatalogRegistry([original.inputs.catalog]);
   const rice = { productId: 'rice', quantity: '150', unit: 'g' as const, expiresSoon: false };
+
+  it.each(['b'.repeat(32), null])('pantry-metadata-roundtrip retains both storage bases through edit, selection and reload (%s)', async wizardPantryToken => {
+    const store = storage(), adapter = createActivePlanAdapter(() => store, registry);
+    const second = { ...variant, id: 'second', instances: variant.instances.map(meal => ({ ...meal, id: `second-${meal.id}` })) };
+    const plan = { ...changed, variants: [...changed.variants, second] };
+    const metadata = { admissionPantries: [{ variantId: 'v', rows: [rice] }], wizardPantryToken };
+    store.map.set(ACTIVE_PLAN_KEY, JSON.stringify({ schemaVersion: 2, plan: encodePlanEnvelope(plan), ...metadata }));
+
+    const controller = createGenerationController({ activePlan: adapter, trustedCatalogs: registry, generation: { generate: vi.fn() } });
+    await controller.load();
+    expect(controller.getSnapshot().active).toMatchObject(metadata);
+    const origin = { returnRoute: '/menu', focusAnchor: 'menu-title' };
+    await controller.selectVariant('second', origin);
+    const selected = controller.getSnapshot().active;
+    expect(selected).toMatchObject({ ...metadata, plan: { activeVariantId: 'second' } });
+    const meal = second.instances[0];
+    await controller.removeMeal({ variantId: 'second', date: meal.date, slot: meal.slot, instanceId: meal.id, recipeId: meal.recipeId }, selected!.plan, origin);
+    const loaded = await createActivePlanAdapter(() => store, registry).load();
+    expect(loaded).toMatchObject({ status: 'loaded', bundle: {
+      ...metadata, plan: { activeVariantId: 'second', schemaVersion: 2 },
+      projections: [{ costs: { exact: { purchase: decimal('450') } } }, { costs: { exact: { purchase: decimal('300') } } }],
+    } });
+    expect(JSON.parse(store.map.get(ACTIVE_PLAN_KEY)!)).toMatchObject({ schemaVersion: 2, ...metadata });
+  });
+
+  it.each(['z'.repeat(32), 'B'.repeat(32), '', 1, {}, []])('pantry-metadata-roundtrip rejects an invalid wizard token %j', async wizardPantryToken => {
+    const store = storage(), adapter = createActivePlanAdapter(() => store, registry);
+    const raw = JSON.stringify({ schemaVersion: 2, plan: encodePlanEnvelope(original), wizardPantryToken });
+    store.map.set(ACTIVE_PLAN_KEY, raw);
+    expect(await adapter.load()).toMatchObject({ status: 'corrupt', diagnostics: [{ code: 'INVALID_WIZARD_PANTRY_TOKEN' }] });
+    expect(await adapter.save(original, current)).toEqual({ status: 'blocked' });
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+  });
 
   it('recomputes a saved edit from a strictly variant-scoped basis instead of changing its original inputs', async () => {
     const store = storage(), adapter = createActivePlanAdapter(() => store, registry);

@@ -69,9 +69,69 @@ test('pantry-wizard leaves a legacy empty draft intact even with current househo
   expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:draft:v1'))).toBe(raw);
 });
 
-async function openCarrotPlan(page: Page, withHistoricStock = false) {
+async function seedHomeDraft(page: Page) {
+  return page.evaluate(async () => {
+    const path = '/src/domain/settings.ts';
+    const { createDraft } = await import(path) as typeof import('../src/domain/settings');
+    const home = [{ productId: 'carrot', quantity: '200', unit: 'g', expiresSoon: false }];
+    const raw = JSON.stringify({ schemaVersion: 1, draft: { ...createDraft(), days: '1', step: 4, home } });
+    localStorage.setItem('mealplan:guest:draft:v1', raw);
+    return home;
+  });
+}
+
+test('pantry-source uses a confirmed empty fridge for quick start and retains the applied wizard override', async ({ page }) => {
+  test.setTimeout(65_000);
   await page.goto('/plan/new');
-  const raw = await page.evaluate(async ({ key, withHistoricStock }) => {
+  const home = await seedHomeDraft(page);
+  const household = await seedPantry(page);
+  const getPlan = () => page.evaluate(key => JSON.parse(localStorage.getItem(key)!), activeKey);
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Меню за 1 клик' }).click();
+  await expect(page).toHaveURL(/\/menu$/, { timeout: 30_000 });
+  const quick = await getPlan();
+  expect(quick.plan.inputs.appliedSettings.raw.home).toEqual(home);
+  expect(quick.plan.inputs.pantrySnapshot).toEqual([]);
+
+  await page.goto('/plan/new');
+  await page.getByRole('textbox', { name: /^Количество Морковь/ }).fill('250');
+  const start = page.getByRole('button', { name: 'Составить меню', exact: true });
+  const confirmation = page.getByRole('dialog', { name: 'Составить меню с новыми настройками?' });
+  await start.click();
+  await confirmation.getByRole('button', { name: 'Оставить варианты' }).click();
+  expect(await getPlan()).toEqual(quick);
+  await start.click();
+  await confirmation.getByRole('button', { name: 'Составить меню' }).click();
+  await expect(page).toHaveURL(/\/menu$/, { timeout: 30_000 });
+  const applied = await getPlan();
+  expect(applied).toMatchObject({ schemaVersion: 2, wizardPantryToken: 'a'.repeat(32), plan: { inputs: {
+    appliedSettings: { raw: { home: [{ ...home[0], quantity: '250' }] } },
+    pantrySnapshot: [{ productId: 'carrot', quantity: { status: 'known' } }],
+  } } });
+  expect(applied.plan.inputs.pantrySnapshot).not.toEqual(quick.plan.inputs.pantrySnapshot);
+  await page.reload();
+  await expect(page.getByRole('heading', { level: 1, name: 'Меню на 1 день' })).toBeVisible();
+  expect(await getPlan()).toEqual(applied);
+  expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:pantry:v1'))).toBe(household);
+});
+
+test('pantry-source blocks quick start on corrupt stock and keeps the original bytes', async ({ page }) => {
+  await page.goto('/plan/new');
+  await seedHomeDraft(page);
+  await page.evaluate(() => localStorage.setItem('mealplan:guest:pantry:v1', '{bad'));
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Меню за 1 клик' }).click();
+  await expect(page.getByRole('alert').getByText('Не удалось проверить запасы для нового меню')).toBeVisible({ timeout: 6_000 });
+  await expect(page.getByRole('button', { name: 'Повторить загрузку запасов' })).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:pantry:v1'))).toBe('{bad');
+});
+
+async function openCarrotPlan(page: Page, withHistoricStock = false, wizardPantryToken?: string) {
+  await page.goto('/plan/new');
+  const raw = await page.evaluate(async ({ key, withHistoricStock, wizardPantryToken }) => {
     const catalogPath = '/src/data/catalog.ts';
     const planPath = '/src/domain/plan.ts';
     const settingsPath = '/src/domain/settings.ts';
@@ -99,15 +159,48 @@ async function openCarrotPlan(page: Page, withHistoricStock = false) {
     const emptySlots: MealCoordinate[] = inputs.dates.flatMap(date => mealSlots
       .filter(slot => !instances.some(row => row.date === date && row.slot === slot))
       .map(slot => ({ date, slot })));
-    const plan: EditedPlanEnvelope = { schemaVersion: 2, inputs, activeVariantId: 'carrot-active', variants: [{ id: 'carrot-active', instances, emptySlots }] };
-    const saved = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
+    const first = { id: 'carrot-active', instances, emptySlots };
+    const second = { ...first, id: 'carrot-second', instances: instances.map(meal => ({ ...meal, id: `second-${meal.id}` })) };
+    const plan: EditedPlanEnvelope = { schemaVersion: 2, inputs, activeVariantId: first.id, variants: wizardPantryToken ? [first, second] : [first] };
+    const saved = JSON.stringify(wizardPantryToken
+      ? { schemaVersion: 2, plan: encodePlanEnvelope(plan), wizardPantryToken } : { schemaVersion: 1, plan: encodePlanEnvelope(plan) });
     localStorage.setItem(key, saved);
     return saved;
-  }, { key: activeKey, withHistoricStock });
+  }, { key: activeKey, withHistoricStock, wizardPantryToken });
   await page.goto('/shopping');
   await expect(page.getByRole('heading', { level: 1, name: 'Список покупок' })).toBeVisible();
   return raw;
 }
+
+test('pantry-source recalculates every variant only after a new confirmed fridge revision', async ({ page }) => {
+  await page.goto('/');
+  await seedPantry(page);
+  await openCarrotPlan(page, true, 'a'.repeat(32));
+  const carrot = page.locator('article[data-product-id="carrot"]');
+  await expect(carrot.getByText(/Купить 400 г/)).toBeVisible();
+  await page.reload();
+  await expect(carrot.getByText(/Нужно 500 г · Из запасов 100 г/)).toBeVisible();
+  await page.getByRole('link', { name: 'Дома', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Найти продукт' }).fill('морковь');
+  await page.getByRole('option', { name: /^Морковь/ }).click();
+  await page.getByRole('button', { name: 'Добавить выбранный продукт' }).click();
+  await page.getByRole('button', { name: /Указать количество.*морковь/i }).click();
+  await page.getByLabel('Количество', { exact: true }).fill('250');
+  await page.getByLabel('Единица', { exact: true }).selectOption('g');
+  await page.getByRole('button', { name: 'Сохранить количество' }).click();
+  await expect(page.getByText('Запасы сохранены', { exact: true })).toBeVisible();
+  const shopping = page.getByRole('link', { name: 'Покупки', exact: true });
+  await shopping.click();
+  await expect(carrot.getByText(/Купить 250 г/)).toBeVisible();
+  await page.getByRole('link', { name: 'Меню', exact: true }).click();
+  await page.getByRole('button', { name: /Вариант 2 · Купить/ }).click();
+  await expect(page.getByRole('heading', { name: 'Вариант 2 из 2' })).toBeVisible();
+  await shopping.click();
+  await expect(carrot.getByText(/Нужно 500 г · Из запасов 250 г/)).toBeVisible();
+  await page.reload();
+  await expect(carrot.getByText(/Купить 250 г/)).toBeVisible();
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).wizardPantryToken, activeKey)).toBe('a'.repeat(32));
+});
 
 test('pantry-tracer saves 200 g of the 500 g requirement and buys 300 g after reload', async ({ page }) => {
   const initial = await openCarrotPlan(page);

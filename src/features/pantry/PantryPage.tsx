@@ -12,7 +12,7 @@ import type { PantryInventoryState } from '../generation/controller';
 
 const unitNames: Record<Unit, string> = { g: 'г', kg: 'кг', ml: 'мл', l: 'л', pcs: 'шт.' };
 
-export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRetrySave, onDiscardSave }: {
+export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRetrySave, onDiscardSave, onStartLeftovers }: {
   state: PantryInventoryState;
   rows: readonly PantryInventoryRow[];
   savingMenu: boolean;
@@ -20,6 +20,7 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
   onRetryLoad(): void;
   onRetrySave(): Promise<boolean>;
   onDiscardSave(): void;
+  onStartLeftovers(trigger: HTMLElement): void;
 }) {
   const [selected, setSelected] = useState<ProductName | null>(null);
   const [editor, setEditor] = useState<{ row: PantryInventoryRow; source: PantryInventoryState['confirmed']; error?: string } | null>(null);
@@ -189,7 +190,12 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
         </div>
       </section>;
     })}
-    <Link className="action-link" to="/plan/new">Составить меню</Link>
+    {state.status === 'loaded' && !!state.confirmed?.rows.length
+      ? <Button id="pantry-leftovers" variant="primary" disabled={disabled} onClick={event => onStartLeftovers(event.currentTarget)}>Составить меню из остатков</Button>
+      : <>
+        {state.status === 'loaded' && <p>Холодильник пуст. Можно составить меню и получить полный список покупок.</p>}
+        <Link className="action-link" to="/plan/new">Составить меню</Link>
+      </>}
     {removal && <ConfirmDialog title="Удалить продукт из запасов?" description={`«${removal.name}» перестанет учитываться в списке покупок.`}
       cancelLabel="Оставить продукт" confirmLabel="Удалить продукт" returnFocus={removal.trigger} fallbackFocusId="pantry-search"
       onCancel={() => setRemoval(null)} onConfirm={confirmRemoval} />}

@@ -53,7 +53,12 @@ export interface GenerationSelectionOptions {
   /** Canonical assignments already retained by the caller, at most12. */
   readonly excludedFingerprints?: readonly string[];
 }
-export interface GenerationRequest extends GenerationSelectionOptions { readonly requestId: string; readonly inputs: PlanInputs }
+export type GenerationMode = 'leftovers';
+export interface GenerationRequest extends GenerationSelectionOptions {
+  readonly requestId: string;
+  readonly inputs: PlanInputs;
+  readonly mode?: GenerationMode;
+}
 export type GenerationErrorCode = 'GENERATION_DATA_INCOMPLETE' | 'NO_RECIPES' | 'SEARCH_EXHAUSTED' | 'BUDGET_TOO_LOW' | 'TIMEOUT' | 'FAILED';
 export interface BudgetEvidence {
   readonly kind: 'lower-bound' | 'exhaustive-minimum';

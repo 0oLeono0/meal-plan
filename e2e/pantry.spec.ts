@@ -196,17 +196,26 @@ test('pantry-leftovers uses confirmed expiring stock and preserves the active me
   await expect(start).toBeFocused();
   expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(original);
 
+  await page.evaluate(() => {
+    document.documentElement.dataset.observedPantryGeneration = 'false';
+    const observer = new MutationObserver(() => {
+      if (location.pathname !== '/plan/generating'
+        || !document.querySelector('#generation-title')?.parentElement?.textContent?.includes('Используем запасы из холодильника')) return;
+      document.documentElement.dataset.observedPantryGeneration = 'true';
+      observer.disconnect();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  });
   await start.click();
   await confirmation.getByRole('button', { name: 'Создать новый набор' }).click();
-  await expect(page).toHaveURL(/\/plan\/generating$/);
-  await expect(page.getByText('Используем запасы из холодильника', { exact: true })).toBeVisible();
   await expect(page).toHaveURL(/\/menu$/, { timeout: 35_000 });
+  await expect(page.locator('html')).toHaveAttribute('data-observed-pantry-generation', 'true');
   const updated = await page.evaluate(key => localStorage.getItem(key), activeKey);
   const { plan } = JSON.parse(updated!);
   expect(updated).not.toBe(original);
   expect(plan.inputs.appliedSettings).toEqual(JSON.parse(original).plan.inputs.appliedSettings);
   expect(plan.inputs.pantrySnapshot).toEqual([{ productId: 'carrot', expiresSoon: true, quantity: {
-    status: 'known', unit: 'g', amount: { numerator: '200', denominator: '1' },
+    status: 'known', value: { unit: 'g', amount: { numerator: '200', denominator: '1' } },
   } }]);
   const variant = plan.variants.find((item: { id: string }) => item.id === plan.activeVariantId);
   const early = variant.instances.filter((meal: { date: string }) => plan.inputs.dates.slice(0, 2).includes(meal.date));

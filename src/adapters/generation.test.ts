@@ -146,6 +146,17 @@ describe('request options and one common deadline', () => {
 });
 
 describe('local cooperative generation', () => {
+  it('pantry-leftovers cooperatively cancels a real bounded search without publishing a result', async () => {
+    const data = catalog(60), req = request(data, '7'), controller = new AbortController();
+    const inputs = { ...req.inputs, pantrySnapshot: [{ productId: 'rice', expiresSoon: true, quantity: {
+      status: 'known' as const, value: { unit: 'g' as const, amount: decimal('300') },
+    } }] };
+    let yielded = 0;
+    const adapter = createLocalGeneration(createLocalCatalog(data), { yieldTask: async () => { yielded++; controller.abort(); } });
+    expect(await adapter.generate({ ...req, inputs, mode: 'leftovers' }, controller.signal)).toEqual({ status: 'cancelled' });
+    expect(yielded).toBe(1);
+  });
+
   it('loads validated catalog and evaluates a real complete plan without artificial wait', async () => {
     const data = catalog(); let yields = 0;
     const result = await createLocalGeneration(createLocalCatalog(data), { yieldTask: async () => { yields++; } }).generate(request(data), new AbortController().signal);

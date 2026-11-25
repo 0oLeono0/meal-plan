@@ -1,17 +1,19 @@
 import { nutrientKeys } from './catalog';
-import type { CatalogDiagnostic, MealSlot, Recipe } from './catalog';
+import type { CatalogDiagnostic, FoodProfile, MealSlot, Recipe } from './catalog';
+import type { PantrySnapshotRow } from './appliedSettings';
 import { buildActivePlanEnvelope, mealSlots, validatePlanInputs } from './plan';
-import type { BudgetEvidence, EditedPlanVariant, GenerationErrorCode, GenerationResult, GenerationSelectionOptions, PlanInputs, PlanVariant } from './plan';
+import type { BudgetEvidence, EditedPlanVariant, GenerationErrorCode, GenerationMode, GenerationResult, GenerationSelectionOptions, PlanInputs, PlanVariant } from './plan';
 import { projectPlan } from './planProjection';
 import { matchesPantryFood } from './pantry';
 import type { PlanProjection } from './planProjection';
-import { add, compare, convertQuantity, decimal, divide, multiply, rational, subtract } from './quantities';
-import type { Rational } from './quantities';
+import { add, compare, convertQuantity, decimal, divide, multiply, normalizeQuantity, rational, subtract } from './quantities';
+import type { Quantity, Rational } from './quantities';
 import { recipeDiversityFor } from '../data/recipeDiversity';
 import type { RecipeDiversityMap } from '../data/recipeDiversity';
 import { createRecipeEligibility } from './recipeEligibility';
 
 export interface SearchOptions extends GenerationSelectionOptions {
+  readonly mode?: GenerationMode;
   readonly allergenKeys?: readonly string[];
   readonly maxEvaluations?: number;
   readonly maxTransitions?: number;
@@ -30,6 +32,7 @@ export function variantFingerprint(variant: PlanVariant | EditedPlanVariant): st
   return JSON.stringify(coordinates.sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : mealSlots.indexOf(a[1]) - mealSlots.indexOf(b[1])));
 }
 const zero = () => decimal('0');
+const one = decimal('1');
 const diagnostic = (code: string, path: string, message = code): CatalogDiagnostic => ({ code, path, message });
 const absolute = (value: Rational) => value.numerator < 0n ? subtract(zero(), value) : value;
 const minimum = (left: Rational, right: Rational) => compare(left, right) < 0 ? left : right;
@@ -45,6 +48,16 @@ function makeVariant(inputs: PlanInputs, ids: readonly string[]): PlanVariant {
     date: inputs.dates[Math.floor(index / 4)], slot: mealSlots[index % 4], recipeId: id, catalogVersion: inputs.catalogVersion,
     recipeSnapshot: recipes.get(id)!, selectedServings: decimal(String(inputs.appliedSettings.people)) })) };
 }
+function expiringFraction(stock: PantrySnapshotRow, uses: readonly { food: FoodProfile; quantity: Quantity }[]): Rational {
+  if (stock.quantity.status === 'unknown') return uses.length ? one : zero();
+  const available = stock.quantity.value;
+  let used = zero();
+  for (const { food, quantity } of uses) {
+    try { used = add(used, convertQuantity(quantity, available.unit, food, food.conversions).amount); }
+    catch { /* Incompatible stock cannot count as expiring usage. */ }
+  }
+  return minimum(divide(used, available.amount), one);
+}
 /** Ascending lexicographic order: negative early stock usage; optional normalized target
  * deviation; optional compiled food-group/family coverage; variety; exact purchases;
  * seeded hash then recipe-ID sequence.
@@ -54,22 +67,13 @@ function makeVariant(inputs: PlanInputs, ids: readonly string[]): PlanVariant {
  */
 function score(inputs: PlanInputs, projection: PlanProjection, ids: readonly string[], diversity?: RecipeDiversityMap): readonly Rational[] {
   let early = zero();
+  const earlyDates = inputs.dates.slice(0, 2);
   for (const stock of inputs.pantrySnapshot.filter(row => row.expiresSoon)) {
-    const rows = projection.rows.filter(row => matchesPantryFood(stock.productId, row));
-    if (stock.quantity.status === 'unknown') {
-      if (rows.some(row => row.sources.some(source => inputs.dates.slice(0, 2).includes(source.date)))) early = add(early, decimal('1'));
-      continue;
-    }
-    const available = stock.quantity.value;
-    let used = zero();
-    for (const row of rows) {
+    const uses = projection.rows.filter(row => matchesPantryFood(stock.productId, row)).flatMap(row => {
       const food = inputs.catalog.foods.find(food => food.profileId === row.profileId)!;
-      for (const source of row.sources.filter(source => inputs.dates.slice(0, 2).includes(source.date))) {
-        try { used = add(used, convertQuantity(source.quantity, available.unit, food, food.conversions).amount); }
-        catch { /* Incompatible stock cannot count as expiring usage. */ }
-      }
-    }
-    early = add(early, minimum(divide(used, available.amount), decimal('1')));
+      return row.sources.filter(source => earlyDates.includes(source.date)).map(({ quantity }) => ({ food, quantity }));
+    });
+    early = add(early, expiringFraction(stock, uses));
   }
   const values = [subtract(zero(), early)];
   const target = inputs.appliedSettings.target;
@@ -84,6 +88,49 @@ function score(inputs: PlanInputs, projection: PlanProjection, ids: readonly str
   const repeats = ids.reduce((count, id, index) => count + (index >= 4 && id === ids[index - 4] ? 1 : 0), 0);
   values.push(decimal(String(variety === 'medium' ? repeats : new Set(ids).size * (variety === 'max' ? -1 : 1))), projection.costs.exact.purchase);
   return values;
+}
+
+/** Only creates starting assignments. The shared projector and ranker decide
+ * affordability and final order. Yields after each recipe inspection so a
+ * large eligible catalog cannot bypass the transition or cancellation budget. */
+function* leftoversStart(inputs: PlanInputs, slots: readonly (readonly Candidate[])[], familyServings: Rational): Generator<void, readonly string[][]> {
+  const stock = inputs.pantrySnapshot.filter(row => row.expiresSoon);
+  if (!stock.length) return [];
+  const foods = new Map(inputs.catalog.foods.map(food => [food.profileId, food]));
+  const fractions = new Map<string, readonly Rational[]>();
+  const remaining = stock.map(() => one);
+  const dense = slots.map(rows => rows[0].recipe.id);
+  const sparse = [...dense];
+  let changed = false;
+  for (let index = 0; index < Math.min(slots.length, 2 * mealSlots.length) && remaining.some(value => value.numerator > 0n); index++) {
+    let selected: { id: string; use: readonly Rational[]; benefit: Rational } | undefined;
+    for (const { recipe } of slots[index]) {
+      let use = fractions.get(recipe.id);
+      if (!use) {
+        const scale = divide(familyServings, recipe.baseServings);
+        const ingredients = recipe.ingredients.map(ingredient => {
+          const food = foods.get(ingredient.profileId)!;
+          // Admission already checked nutrition evidence and the ingredient conversion.
+          if (food.nutrition.status !== 'known') throw new Error('NUTRITION_UNKNOWN');
+          const quantity = { ...ingredient.quantity, amount: multiply(ingredient.quantity.amount, scale) };
+          return { food, quantity: normalizeQuantity(convertQuantity(quantity, food.nutrition.reference.unit, food, food.conversions)) };
+        });
+        use = stock.map(row => expiringFraction(row, ingredients.filter(ingredient => matchesPantryFood(row.productId, ingredient.food))));
+        fractions.set(recipe.id, use);
+      }
+      const benefit = use.reduce((sum, value, stockIndex) => add(sum, minimum(remaining[stockIndex], value)), zero());
+      if (!selected || compare(benefit, selected.benefit) > 0) selected = { id: recipe.id, use, benefit };
+      yield;
+    }
+    if (!selected) continue;
+    selected.use.forEach((value, stockIndex) => { remaining[stockIndex] = subtract(remaining[stockIndex], minimum(remaining[stockIndex], value)); });
+    if (selected.id !== dense[index]) {
+      dense[index] = selected.id;
+      if (!changed) sparse[index] = selected.id;
+      changed = true;
+    }
+  }
+  return changed ? [dense, sparse] : [];
 }
 
 /** Full assignments offer affordable mixed starts at four densities. Every start
@@ -147,6 +194,7 @@ export function* createPlanSearch(rawInputs: PlanInputs, options: SearchOptions 
     if (!Number.isSafeInteger(maxEvaluations) || maxEvaluations < 1 || maxEvaluations > SEARCH_LIMITS.evaluationCeiling
       || !Number.isSafeInteger(maxTransitions) || maxTransitions < 1 || maxTransitions > SEARCH_LIMITS.maxTransitions
       || allergens.some(key => typeof key !== 'string' || !key.trim() || key.length > 256)
+      || (options.mode !== undefined && options.mode !== 'leftovers')
       || !Number.isSafeInteger(targetCount) || targetCount < 1 || targetCount > 3
       || !Array.isArray(excludedFingerprints) || excludedFingerprints.length > 12
       || excludedFingerprints.some(key => typeof key !== 'string' || !key.trim() || key.length > 32768)) {
@@ -236,6 +284,22 @@ export function* createPlanSearch(rawInputs: PlanInputs, options: SearchOptions 
       const baseline = evaluate(slots.map(rows => rows[0].recipe.id));
       transitions++; yield progress();
       let beam = baseline ? [baseline] : [];
+      if (options.mode === 'leftovers' && evaluatedCandidates < maxEvaluations) {
+        const starter = leftoversStart(inputs, slots, familyServings);
+        while (transitions < maxTransitions) {
+          const step = starter.next();
+          if (step.done) {
+            for (const ids of step.value) {
+              if (transitions >= maxTransitions || evaluatedCandidates >= maxEvaluations) break;
+              const ranked = evaluate(ids);
+              if (ranked) beam.push(ranked);
+              transitions++; yield progress();
+            }
+            break;
+          }
+          transitions++; yield progress();
+        }
+      }
       if (diversity) {
         for (const ids of balancedStarts(inputs, slots, diversity)) {
           if (transitions >= maxTransitions || evaluatedCandidates >= maxEvaluations) break;
@@ -243,8 +307,8 @@ export function* createPlanSearch(rawInputs: PlanInputs, options: SearchOptions 
           if (ranked) beam.push(ranked);
           transitions++; yield progress();
         }
-        beam.sort(compareRank);
       }
+      beam.sort(compareRank);
       outer: for (let round = 0; round < 2; round++) {
         const next = [...beam];
         for (const current of beam) for (let index = 0; index < slots.length; index++) for (const candidate of slots[index]) {

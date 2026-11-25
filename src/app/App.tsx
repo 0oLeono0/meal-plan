@@ -322,7 +322,7 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
       if ('kind' in target) void controller.addMeal(target, recipeId, revision, origin);
       else void controller.editMeal(target, recipeId, revision, origin);
     } }}
-      onRemove={(target, expectedPlan) => void controller.removeMeal(target, expectedPlan, { returnRoute: '/menu', focusAnchor: 'menu-title' })}
+      onRemove={(target, expectedPlan, expectedRevision) => void controller.removeMeal(target, expectedPlan, { returnRoute: '/menu', focusAnchor: 'menu-title' }, expectedRevision)}
       onRetryLoad={() => void controller.retryLoad()} onSelectVariant={id => void controller.selectVariant(id, { returnRoute: '/menu', focusAnchor: 'variants' })} onRetrySave={() => void controller.retrySave()} onCancel={controller.cancel} onAppend={() => void controller.appendVariant({ returnRoute: '/menu', focusAnchor: 'append-variant' })} onRetryGeneration={() => void controller.retryGeneration()} onRecreate={focusAnchor => void controller.recreateSet({ returnRoute: '/menu', focusAnchor })} />} />
     <Route path="/shopping" element={<ShoppingPage snapshot={visible} onRecalculate={offerBudgetRecalculation} onRetryLoad={() => void controller.retryLoad()} />} />
     <Route path="/pantry" element={pantry && <PantryPage state={pantry} rows={pantryRows}
@@ -330,8 +330,8 @@ function ApplicationRoutes({ brand, draft, change, controller, catalog, reloadCa
       onRetryLoad={() => void controller.loadPantry()} onRetrySave={controller.retryPantrySave} onDiscardSave={controller.discardPantrySave} />} />
     <Route path="/recipe/:id?" element={<RecipePage snapshot={visible} catalog={catalog}
       onRetry={source => source === 'plan' ? controller.retryLoad() : reloadCatalog()}
-      onChangePortions={(target, multiplier, expectedPlan, returnRoute) =>
-        void controller.changePortions(target, multiplier, expectedPlan, { returnRoute, focusAnchor: 'recipe-portions' })}
+      onChangePortions={(target, multiplier, expectedPlan, returnRoute, expectedRevision) =>
+        void controller.changePortions(target, multiplier, expectedPlan, { returnRoute, focusAnchor: 'recipe-portions' }, expectedRevision)}
       requestAlternatives={controller.mealAlternatives}
       onReplaceMeal={(target, recipeId, revision, returnRoute, locationKey) =>
         void controller.editMeal(target, recipeId, revision, { returnRoute, focusAnchor: 'recipe-replace', recipeReplacement: { locationKey, target, recipeId } })}

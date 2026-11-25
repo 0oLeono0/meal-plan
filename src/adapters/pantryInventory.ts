@@ -20,6 +20,7 @@ type PantryInventorySaveResult = { readonly status: 'saved'; readonly inventory:
 export interface PantryInventoryPort {
   load(): Promise<PantryInventoryLoadResult>;
   save(rows: readonly PantryInventoryRow[], guard: { readonly isCurrent: () => boolean }): Promise<PantryInventorySaveResult>;
+  isCurrent?(): boolean;
 }
 
 type PantryStorage = Pick<Storage, 'getItem' | 'setItem'>;
@@ -75,6 +76,10 @@ function fitsInventory(raw: string) {
 export function createPantryInventoryAdapter(getStorage: () => PantryStorage = () => window.localStorage): PantryInventoryPort {
   let inspected: string | null | undefined;
   return {
+    isCurrent() {
+      if (inspected === undefined) return false;
+      try { return getStorage().getItem(PANTRY_INVENTORY_KEY) === inspected; } catch { return false; }
+    },
     async load() {
       inspected = undefined;
       let raw: string | null;

@@ -55,7 +55,7 @@ export function RecipePage({ snapshot, catalog, onRetry, onChangePortions, onRet
   snapshot: GenerationSnapshot;
   catalog: CatalogLoadResult | null;
   onRetry(source: 'plan' | 'catalog'): Promise<unknown>;
-  onChangePortions(target: MealEditTarget, multiplier: MealPortionMultiplier, expectedPlan: ActivePlanEnvelope, returnRoute: string): void;
+  onChangePortions(target: MealEditTarget, multiplier: MealPortionMultiplier, expectedPlan: ActivePlanEnvelope, returnRoute: string, expectedRevision?: number): void;
   onRetrySave(): void;
   requestAlternatives: MealAlternativesActions['request'];
   onReplaceMeal(target: MealEditTarget, recipeId: string, revision: number, returnRoute: string, locationKey: string): void;
@@ -118,7 +118,7 @@ export function RecipePage({ snapshot, catalog, onRetry, onChangePortions, onRet
               if (busy) return;
               event.currentTarget.focus();
               onChangePortions({ variantId: plan.activeVariantId, date: context.date, slot: context.slot, instanceId: context.id, recipeId: context.recipeId },
-                multiplier, plan, route);
+                multiplier, plan, route, snapshot.editRevision);
             }}>{label}</Button>;
         })}
       </div>
@@ -142,7 +142,7 @@ export function RecipePage({ snapshot, catalog, onRetry, onChangePortions, onRet
       </div>}
     </>}
     </header></div>
-    {choice?.location === location && <MealAlternatives {...choice} fallbackFocusId="recipe-title" request={requestAlternatives} onClose={() => setChoice(null)} onChoose={(recipeId, revision) => {
+    {choice?.location === location && <MealAlternatives {...choice} fallbackFocusId="recipe-title" revision={snapshot.editRevision} request={requestAlternatives} onClose={() => setChoice(null)} onChoose={(recipeId, revision) => {
       setChoice(null);
       setReplacementVisit(location);
       onReplaceMeal(choice.target, recipeId, revision, route + hash, key);

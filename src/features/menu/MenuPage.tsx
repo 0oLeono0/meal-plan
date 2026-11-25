@@ -169,10 +169,10 @@ function NutritionSummary({ values, target }: { values: ReturnType<typeof format
     </dd></div>;
   })}</dl>;
 }
-export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, onCancel, onAppend, onRetryGeneration, onRecreate, onRecalculate, mealAlternatives, onRemove }: { snapshot: GenerationSnapshot; onRetryLoad(): void; onSelectVariant?(id: string): void; onRetrySave?(): void; onCancel?(): void; onAppend?(): void; onRetryGeneration?(): void; onRecreate?(focusAnchor: string): void; onRecalculate?(trigger: HTMLElement): void; mealAlternatives?: MealAlternativesActions; onRemove?(target: MealEditTarget, expectedPlan: ActivePlanEnvelope): void }) {
+export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, onCancel, onAppend, onRetryGeneration, onRecreate, onRecalculate, mealAlternatives, onRemove }: { snapshot: GenerationSnapshot; onRetryLoad(): void; onSelectVariant?(id: string): void; onRetrySave?(): void; onCancel?(): void; onAppend?(): void; onRetryGeneration?(): void; onRecreate?(focusAnchor: string): void; onRecalculate?(trigger: HTMLElement): void; mealAlternatives?: MealAlternativesActions; onRemove?(target: MealEditTarget, expectedPlan: ActivePlanEnvelope, expectedRevision?: number): void }) {
   const [replacementTrigger, setReplacementTrigger] = useState<HTMLElement | null>(null);
   const [mealChoice, setMealChoice] = useState<{ target: MealSelectionTarget; recipeName?: string; trigger: HTMLElement } | null>(null);
-  const [removal, setRemoval] = useState<{ target: MealEditTarget; trigger: HTMLElement; plan: ActivePlanEnvelope } | null>(null);
+  const [removal, setRemoval] = useState<{ target: MealEditTarget; trigger: HTMLElement; plan: ActivePlanEnvelope; revision?: number } | null>(null);
   const editedFocus = useRef<MealSelectionTarget | null>(null);
   const [params, setParams] = useSearchParams();
   useEffect(() => {
@@ -241,15 +241,15 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
       <p className="hint">КБЖУ рассчитаны по составу продуктов и не являются медицинской рекомендацией</p>
       <p className="hint">Расчёт не подтверждает полноценность рациона.</p>
     </section>
-    <MenuDays projection={projection} catalogVersion={plan.inputs.catalogVersion} selected={selected} onChange={next => setParams(menuSearch(next))} days={view.days} today={today} editingDisabled={editingDisabled} onReplace={mealAlternatives ? (target, recipeName, trigger) => setMealChoice({ target, recipeName, trigger }) : undefined} onRemove={onRemove ? (target, trigger) => setRemoval({ target, trigger, plan }) : undefined} onAdd={mealAlternatives ? (target, trigger) => setMealChoice({ target, trigger }) : undefined} />
-    {mealChoice && mealAlternatives && <MealAlternatives {...mealChoice} request={mealAlternatives.request} onClose={() => setMealChoice(null)} onChoose={(recipeId, revision) => {
+    <MenuDays projection={projection} catalogVersion={plan.inputs.catalogVersion} selected={selected} onChange={next => setParams(menuSearch(next))} days={view.days} today={today} editingDisabled={editingDisabled} onReplace={mealAlternatives ? (target, recipeName, trigger) => setMealChoice({ target, recipeName, trigger }) : undefined} onRemove={onRemove ? (target, trigger) => setRemoval({ target, trigger, plan, revision: snapshot.editRevision }) : undefined} onAdd={mealAlternatives ? (target, trigger) => setMealChoice({ target, trigger }) : undefined} />
+    {mealChoice && mealAlternatives && <MealAlternatives {...mealChoice} revision={snapshot.editRevision} request={mealAlternatives.request} onClose={() => setMealChoice(null)} onChoose={(recipeId, revision) => {
       editedFocus.current = mealChoice.target;
       setMealChoice(null); mealAlternatives.select(mealChoice.target, recipeId, revision);
     }} />}
     {removal && <ConfirmDialog title="Убрать блюдо из меню?" description="Этот приём пищи останется пустым. Позже сюда можно добавить другое блюдо." cancelLabel="Оставить блюдо" confirmLabel="Убрать из меню" returnFocus={removal.trigger} fallbackFocusId="menu-title" onCancel={() => setRemoval(null)} onConfirm={() => {
       setRemoval(null);
       editedFocus.current = removal.target;
-      onRemove?.(removal.target, removal.plan);
+      onRemove?.(removal.target, removal.plan, removal.revision);
     }} />}
     <ShoppingAction label={view.itemCount} />
     {replacementTrigger && <ConfirmDialog title="Создать новый набор меню?" description={`После успешного сохранения нового набора прежние ${formatCount(plan.variants.length, 'variant')} будут заменены. До этого текущее меню останется доступным`} cancelLabel="Оставить варианты" confirmLabel="Создать новый набор" returnFocus={replacementTrigger} fallbackFocusId="menu-title" onCancel={() => setReplacementTrigger(null)} onConfirm={() => {

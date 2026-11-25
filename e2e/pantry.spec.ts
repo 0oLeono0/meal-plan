@@ -129,7 +129,7 @@ test('pantry-source blocks quick start on corrupt stock and keeps the original b
   expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:pantry:v1'))).toBe('{bad');
 });
 
-async function openCarrotPlan(page: Page, withHistoricStock = false, wizardPantryToken?: string) {
+async function openCarrotPlan(page: Page, withHistoricStock = false, wizardPantryToken?: string | null) {
   await page.goto('/plan/new');
   const raw = await page.evaluate(async ({ key, withHistoricStock, wizardPantryToken }) => {
     const catalogPath = '/src/data/catalog.ts';
@@ -162,7 +162,7 @@ async function openCarrotPlan(page: Page, withHistoricStock = false, wizardPantr
     const first = { id: 'carrot-active', instances, emptySlots };
     const second = { ...first, id: 'carrot-second', instances: instances.map(meal => ({ ...meal, id: `second-${meal.id}` })) };
     const plan: EditedPlanEnvelope = { schemaVersion: 2, inputs, activeVariantId: first.id, variants: wizardPantryToken ? [first, second] : [first] };
-    const saved = JSON.stringify(wizardPantryToken
+    const saved = JSON.stringify(wizardPantryToken !== undefined
       ? { schemaVersion: 2, plan: encodePlanEnvelope(plan), wizardPantryToken } : { schemaVersion: 1, plan: encodePlanEnvelope(plan) });
     localStorage.setItem(key, saved);
     return saved;
@@ -200,6 +200,41 @@ test('pantry-source recalculates every variant only after a new confirmed fridge
   await page.reload();
   await expect(carrot.getByText(/Купить 250 г/)).toBeVisible();
   expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).wizardPantryToken, activeKey)).toBe('a'.repeat(32));
+});
+
+test('pantry-source prefers the first confirmed empty record to the wizard snapshot', async ({ page }) => {
+  const original = await openCarrotPlan(page, true, null);
+  const carrot = page.locator('article[data-product-id="carrot"]');
+  await expect(carrot.getByText(/Купить 400 г/)).toBeVisible();
+  await page.getByRole('link', { name: 'Дома', exact: true }).click();
+  await page.getByRole('button', { name: /Удалить.*морковь/i }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Удалить продукт' }).click();
+  await expect(page.getByText('Запасы сохранены', { exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Покупки', exact: true }).click();
+  await expect(carrot.getByText(/Купить 500 г/)).toBeVisible();
+  await page.reload();
+  await expect(carrot.getByText(/Купить 500 г/)).toBeVisible();
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(original);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('mealplan:guest:pantry:v1')!).rows)).toEqual([]);
+});
+
+test('pantry-source refuses a menu confirmation after the fridge changes', async ({ page }) => {
+  const original = await openCarrotPlan(page, true);
+  await seedHomeDraft(page);
+  await page.goto('/plan/new');
+  const start = page.getByRole('button', { name: 'Составить меню', exact: true });
+  await start.click();
+  const dialog = page.getByRole('dialog', { name: 'Составить меню с новыми настройками?' });
+  await expect(dialog).toBeVisible();
+  await seedPantry(page);
+  await dialog.getByRole('button', { name: 'Составить меню' }).click();
+  const alert = page.getByRole('alert');
+  await expect(alert.getByText('Запасы изменились. Проверьте их и запустите подбор снова')).toBeVisible();
+  await expect(page).toHaveURL(/\/plan\/new$/);
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(original);
+  await alert.getByRole('button', { name: 'Повторить загрузку запасов' }).click();
+  await expect(alert).toBeHidden();
+  await expect(page.getByRole('textbox', { name: /^Количество Морковь/ })).toHaveValue('200');
 });
 
 test('pantry-tracer saves 200 g of the 500 g requirement and buys 300 g after reload', async ({ page }) => {

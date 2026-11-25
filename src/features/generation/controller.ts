@@ -35,7 +35,7 @@ export interface GenerationSnapshot {
   readonly origin: GenerationOrigin | null;
   readonly initialSearchCount: number | null;
   readonly pantry?: PantryInventoryState;
-  readonly changedPantryToken?: string;
+  readonly changedPantryToken?: string | null;
   readonly editRevision?: number;
 }
 
@@ -318,7 +318,7 @@ export function createGenerationController({ generation, activePlan, pantryInven
       revision++; writeAllowed = true;
       publish({ status: 'succeeded', active: candidate, candidate: null, lastApplied: candidate.plan.inputs.appliedSettings,
         loadStatus: 'loaded', presence: { status: 'valid', planId: candidate.plan.activeVariantId }, saveError: null,
-        ...(op.intent === 'replace' && stockCurrent(op.stockAttempt) ? { changedPantryToken: undefined } : {}),
+        ...(op.intent === 'replace' && stockCurrent(op.stockAttempt) ? { changedPantryToken: null } : {}),
         ...(op.initialSearchCount !== undefined ? { initialSearchCount: op.initialSearchCount } : {}) });
     } else if (result.status === 'cancelled' || !stockCurrent(op.stockAttempt)) {
       invalidate(); publish({ status: 'idle', candidate: null, requestId: null });
@@ -386,6 +386,11 @@ export function createGenerationController({ generation, activePlan, pantryInven
   }
   async function start(rawInputs: PlanInputs, origin: GenerationOrigin, guard?: PantryLaunchGuard) {
     if (guard && !canStartWithPantry(guard.pantry)) return;
+    if (guard?.mode === 'leftovers') {
+      const rows = snapshot.pantry?.confirmed?.rows;
+      if (!rows?.length || (snapshot.loadStatus !== 'loaded' && snapshot.loadStatus !== 'missing')
+        || !sameSnapshot(inventoryPantrySnapshot(rows), rawInputs?.pantrySnapshot)) return;
+    }
     await run(rawInputs, origin, 'replace', snapshot.active ?? undefined, snapshot.active ? revision : undefined,
       guard && pantryInventory ? pantrySequence : undefined, guard?.wizardPantryToken, guard?.mode);
   }

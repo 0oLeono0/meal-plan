@@ -246,7 +246,7 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
   const { pathname } = useLocation();
   const [launchErrors, setLaunchErrors] = useState<ReturnType<typeof buildAppliedSettings> | null>(null);
   const [catalogError, setCatalogError] = useState(false);
-  const [launchPantryIssue, setLaunchPantryIssue] = useState<'unavailable' | 'changed' | 'menu-changed' | null>(null);
+  const [launchPantryIssue, setLaunchPantryIssue] = useState<'unavailable' | 'changed' | 'menu-changed' | 'menu-unavailable' | null>(null);
   const [launchConfirmation, setLaunchConfirmation] = useState<{ request: LaunchRequest; trigger: HTMLElement | null } | null>(null);
   const [postponedRecalculation, setPostponedRecalculation] = useState<string | null>(null);
   const returningFocus = useRef<{ route: string; anchor: string } | null>(null);
@@ -304,6 +304,9 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
   }
   function startLeftovers(trigger: HTMLElement) {
     if (operation.status === 'pending' || operation.status === 'saving') return;
+    if (operation.loadStatus !== 'loaded' && operation.loadStatus !== 'missing') {
+      setLaunchPantryIssue('menu-unavailable'); return;
+    }
     if (!pantry?.confirmed?.rows.length || !controller.canStartWithPantry(pantry)) {
       setLaunchPantryIssue('unavailable'); return;
     }
@@ -331,10 +334,14 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
   }
   function performStart(request: LaunchRequest) {
     if (!controller.canStartWithPantry(request.pantry)) { setLaunchPantryIssue('changed'); return; }
-    if ((request.mode || request.recalculate) && request.confirmedMenuRevision !== controller.getSnapshot().editRevision) {
+    const current = controller.getSnapshot();
+    if ((request.mode || request.recalculate) && request.confirmedMenuRevision !== current.editRevision) {
       setLaunchPantryIssue('menu-changed'); return;
     }
-    if (request.recalculate && mealEditingUnavailable(controller.getSnapshot())) return;
+    if (request.mode && current.loadStatus !== 'loaded' && current.loadStatus !== 'missing') {
+      setLaunchPantryIssue('menu-unavailable'); return;
+    }
+    if (request.recalculate && mealEditingUnavailable(current)) return;
     launch.current = request;
     pantryGenerationStarted.current = false;
     setCatalogError(!request.recalculate && catalog.status !== 'loaded');
@@ -419,8 +426,15 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
     {operation.status === 'error' && <div role="alert" className="notice"><p>{operation.error?.message}</p></div>}
   </div>}{launchPantryIssue && (pathname === '/' || pathname === '/plan/new' || pathname === '/pantry' || planOverview) && <div className="notice" role="alert">
     <p>{launchPantryIssue === 'menu-changed' ? 'Текущее меню изменилось. Запустите подбор снова'
-      : launchPantryIssue === 'changed' ? 'Запасы изменились. Проверьте их и запустите подбор снова' : 'Не удалось проверить запасы для нового меню'}</p>
-    {launchPantryIssue !== 'menu-changed' && <Button disabled={pantry?.status === 'pending'} onClick={() => void retryLaunchPantry()}>Повторить загрузку запасов</Button>}
+      : launchPantryIssue === 'menu-unavailable' ? 'Не удалось проверить сохранённое меню перед подбором'
+        : launchPantryIssue === 'changed' ? 'Запасы изменились. Проверьте их и запустите подбор снова' : 'Не удалось проверить запасы для нового меню'}</p>
+    {launchPantryIssue === 'menu-unavailable' && <Button disabled={operation.loadStatus === 'pending'} onClick={() => {
+      void controller.retryLoad().then(() => {
+        const { loadStatus } = controller.getSnapshot();
+        if (loadStatus === 'loaded' || loadStatus === 'missing') setLaunchPantryIssue(null);
+      });
+    }}>Обновить меню</Button>}
+    {(launchPantryIssue === 'changed' || launchPantryIssue === 'unavailable') && <Button disabled={pantry?.status === 'pending'} onClick={() => void retryLaunchPantry()}>Повторить загрузку запасов</Button>}
   </div>}<Routes>
     <Route path="/" element={presence.status === 'valid' ? <Navigate replace to="/menu" /> : <WelcomePage brand={brand} onStart={() => navigate('/plan/new')} onQuickStart={() => start(true)} quickStartBasis={basis} quickStartStock={quickStartStock} />} />
     <Route path="/plan/new" element={<Wizard draft={wizardDraft} homeSource={homeSource} onChange={change} recovery={recovery} saved={saved} onReset={resetDraft} onStart={anchor => start(false, anchor)} launchErrors={launchErrors?.status === 'invalid' ? launchErrors.errors : undefined} editingNext={!!operation.lastApplied && !sameSnapshot(draft, operation.lastApplied.raw)} />} />

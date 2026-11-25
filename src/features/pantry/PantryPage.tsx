@@ -204,7 +204,11 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
       </section>;
     })}
     {state.status === 'loaded' && !!state.confirmed?.rows.length
-      ? <Button id="pantry-leftovers" variant="primary" disabled={disabled} onClick={event => onStartLeftovers(event.currentTarget)}>Составить меню из остатков</Button>
+      ? <div>
+        <Button id="pantry-leftovers" variant="primary" disabled={disabled} aria-describedby="pantry-leftovers-priority"
+          onClick={event => onStartLeftovers(event.currentTarget)}>Составить меню из остатков</Button>
+        <p id="pantry-leftovers-priority" className="hint">При подборе постараемся использовать отмеченные продукты в первые 1–2 дня</p>
+      </div>
       : <>
         {state.status === 'loaded' && <p>Холодильник пуст. Можно составить меню и получить полный список покупок.</p>}
         <Link className="action-link" to="/plan/new">Составить меню</Link>

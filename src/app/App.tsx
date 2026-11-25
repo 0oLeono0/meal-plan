@@ -5,15 +5,15 @@ import { createDraft, draftReducer, type DraftAction, type SettingsDraft } from 
 import { createGuestDraftAdapter, type GuestDraftPort } from '../adapters/guestDraft';
 import { Wizard } from '../features/wizard/Wizard';
 import { Button, ConfirmDialog, Status } from '../shared/ui';
-import { createGenerationController, mealEditingUnavailable, visiblePlanSnapshot } from '../features/generation/controller';
+import { createGenerationController, mealEditingUnavailable, visiblePlanSnapshot, type GenerationOrigin, type PantryInventoryState } from '../features/generation/controller';
 import { createActivePlanAdapter, type ActivePlanPort } from '../adapters/activePlan';
-import { createPantryInventoryAdapter, PANTRY_INVENTORY_KEY, suggestedInventoryRows, type PantryInventoryPort } from '../adapters/pantryInventory';
+import { createPantryInventoryAdapter, inventoryPantrySnapshot, PANTRY_INVENTORY_KEY, suggestedInventoryRows, type PantryInventoryPort } from '../adapters/pantryInventory';
 import { createVersionedGeneration } from '../adapters/generation';
 import { bundledCatalogPort, sourceApprovedCatalogPorts } from '../data/catalog';
 import { trustedCatalogs as defaultTrustedCatalogs, type TrustedCatalogRegistry } from '../adapters/trustedCatalogs';
-import type { CatalogLoadResult, CatalogPort } from '../domain/catalog';
+import type { Catalog, CatalogLoadResult, CatalogPort } from '../domain/catalog';
 import { buildAppliedSettings, sameSnapshot, selectQuickStartInput, type AppliedSettings } from '../domain/appliedSettings';
-import { createPlanInputs, type GenerationPort } from '../domain/plan';
+import { createPlanInputs, type GenerationPort, type PlanInputs } from '../domain/plan';
 import { GenerationPage } from '../features/generation/GenerationPage';
 import { MenuPage } from '../features/menu/MenuPage';
 import { ShoppingPage } from '../features/shopping/ShoppingPage';
@@ -39,7 +39,9 @@ function parsePresence(value: unknown): PlanPresence {
   return { status: 'absent' };
 }
 
-export function WelcomePage({ brand = appConfig.brand, onStart, onQuickStart, quickStartBasis }: { brand?: string; onStart(): void; onQuickStart?(): void; quickStartBasis?: string }) {
+export function WelcomePage({ brand = appConfig.brand, onStart, onQuickStart, quickStartBasis, quickStartStock }: {
+  brand?: string; onStart(): void; onQuickStart?(): void; quickStartBasis?: string; quickStartStock?: string;
+}) {
   return <section className="welcome" aria-labelledby="welcome-title">
     <p className="brand" translate="no">{brand}</p>
     <p className="eyebrow">Питание в вашем ритме</p>
@@ -47,7 +49,8 @@ export function WelcomePage({ brand = appConfig.brand, onStart, onQuickStart, qu
     <p>Выберите бюджет, ограничения и продукты дома</p>
     <p className="journey">Настройки → Меню → Покупки</p>
     <Button variant="primary" onClick={onStart}>Составить меню</Button>
-    {onQuickStart && <><Button id="quick-start" onClick={onQuickStart}>Меню за 1 клик</Button><p className="hint">{quickStartBasis}</p></>}
+    {onQuickStart && <><Button id="quick-start" onClick={onQuickStart}>Меню за 1 клик</Button><p className="hint">{quickStartBasis}</p>
+      {quickStartStock && <p className="hint">{quickStartStock}</p>}</>}
     <p className="hint">Без регистрации. Черновик хранится на этом устройстве.</p>
   </section>;
 }
@@ -223,6 +226,14 @@ function InitialLoadStatus() {
   return <Status>Восстанавливаем настройки…</Status>;
 }
 
+interface LaunchRequest {
+  readonly settings: AppliedSettings;
+  readonly origin: GenerationOrigin;
+  readonly pantry: PantryInventoryState | undefined;
+  readonly pantrySnapshot?: PlanInputs['pantrySnapshot'];
+  readonly wizardPantryToken?: string | null;
+}
+
 function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catalog, reloadCatalog, presence, recovery, saved, resetDraft }: {
   brand: string; draft: SettingsDraft; homeEdited: boolean; change(action: DraftAction): void; controller: ReturnType<typeof createGenerationController>;
   catalog: CatalogLoadResult; reloadCatalog(): Promise<CatalogLoadResult>; presence: PlanPresence; recovery: boolean; saved: boolean; resetDraft(): Promise<boolean>;
@@ -232,11 +243,12 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
   const { pathname } = useLocation();
   const [launchErrors, setLaunchErrors] = useState<ReturnType<typeof buildAppliedSettings> | null>(null);
   const [catalogError, setCatalogError] = useState(false);
-  const [launchConfirmation, setLaunchConfirmation] = useState<{ settings: AppliedSettings; origin: { returnRoute: string; focusAnchor: string }; trigger: HTMLElement | null } | null>(null);
+  const [launchPantryIssue, setLaunchPantryIssue] = useState<'unavailable' | 'changed' | null>(null);
+  const [launchConfirmation, setLaunchConfirmation] = useState<{ request: LaunchRequest; trigger: HTMLElement | null } | null>(null);
   const [budgetTrigger, setBudgetTrigger] = useState<HTMLElement | null>(null);
   const returningFocus = useRef<{ route: string; anchor: string } | null>(null);
   const previousRoute = useRef(pathname);
-  const launch = useRef<{ settings: AppliedSettings; origin: { returnRoute: string; focusAnchor: string } } | null>(null);
+  const launch = useRef<LaunchRequest | null>(null);
   const catalogAttempt = useRef(0);
   const pantry = operation.pantry;
   const historicalRows = pantry?.status === 'missing' && operation.active
@@ -263,17 +275,33 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
     const applied = quick ? selectQuickStartInput(draft, operation.lastApplied) : buildAppliedSettings(wizardDraft);
     setLaunchErrors(applied);
     if (applied.status === 'invalid') { change({ type: 'step', value: applied.step }); navigate('/plan/new'); return; }
-    setCatalogError(catalog.status !== 'loaded');
+    if (!controller.canStartWithPantry(pantry)) { setLaunchPantryIssue('unavailable'); return; }
+    setLaunchPantryIssue(null);
     const origin = { returnRoute: pathname, focusAnchor: quick ? 'quick-start' : focusAnchor };
+    const authored = !quick && homeEdited;
+    const pantrySnapshot = authored ? undefined : pantry?.confirmed
+      ? inventoryPantrySnapshot(pantry.confirmed.rows) : quick ? operation.active?.plan.inputs.pantrySnapshot : undefined;
+    const request: LaunchRequest = { settings: applied.settings, origin, pantry, pantrySnapshot,
+      ...(authored ? { wizardPantryToken: pantry?.confirmed?.token ?? null } : {}) };
     if (operation.active) {
-      setLaunchConfirmation({ settings: applied.settings, origin, trigger: document.getElementById(origin.focusAnchor) }); return;
+      setLaunchConfirmation({ request, trigger: document.getElementById(origin.focusAnchor) }); return;
     }
-    performStart(applied.settings, origin);
+    performStart(request);
   }
-  function performStart(settings: AppliedSettings, origin: { returnRoute: string; focusAnchor: string }) {
-    launch.current = { settings, origin };
+  function runLaunch(request: LaunchRequest, readyCatalog: Catalog) {
+    return controller.start(createPlanInputs(request.settings, readyCatalog, { seed: createGenerationSeed(), pantrySnapshot: request.pantrySnapshot }),
+      request.origin, request);
+  }
+  function performStart(request: LaunchRequest) {
+    if (!controller.canStartWithPantry(request.pantry)) { setLaunchPantryIssue('changed'); return; }
+    launch.current = request;
+    setCatalogError(catalog.status !== 'loaded');
     navigate('/plan/generating');
-    if (catalog.status === 'loaded') void controller.start(createPlanInputs(settings, catalog.catalog, { seed: createGenerationSeed() }), origin);
+    if (catalog.status === 'loaded') void runLaunch(request, catalog.catalog);
+  }
+  async function retryLaunchPantry() {
+    await controller.loadPantry();
+    if (controller.canStartWithPantry(controller.getSnapshot().pantry)) setLaunchPantryIssue(null);
   }
   function settings(budget = false) {
     catalogAttempt.current++; controller.cancel(); setCatalogError(false);
@@ -294,11 +322,21 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
     if (atAttempt !== catalogAttempt.current || previousRoute.current !== '/plan/generating' || !launch.current) return;
     if (loaded.status === 'loaded') {
       setCatalogError(false);
-      await controller.start(createPlanInputs(launch.current.settings, loaded.catalog, { seed: createGenerationSeed() }), launch.current.origin);
+      const request = launch.current;
+      if (!controller.canStartWithPantry(request.pantry)) {
+        setLaunchPantryIssue('changed');
+        returningFocus.current = { route: request.origin.returnRoute, anchor: request.origin.focusAnchor };
+        navigate(request.origin.returnRoute);
+        return;
+      }
+      await runLaunch(request, loaded.catalog);
     }
   }
   const basis = operation.lastApplied ? 'Используем последние применённые настройки' : sameSnapshot(draft, createDraft())
     ? '2 человека · 7 дней · 3 000 ₽ · до 30 минут · среднее разнообразие · без ограничений' : 'Используем настройки из черновика';
+  const quickStartStock = pantry?.status === 'loaded' && pantry.confirmed
+    ? pantry.confirmed.rows.length ? 'Для подбора используем запасы из холодильника' : 'Холодильник пуст. В списке покупок будут все продукты для меню'
+    : pantry?.status === 'missing' && draft.home.length ? 'Для подбора используем домашние продукты из черновика' : undefined;
   const visible = visiblePlanSnapshot(operation);
   const pantryRows = pantry?.confirmed?.rows ?? historicalRows ?? [];
   const planOverview = pathname === '/menu' || pathname === '/shopping';
@@ -323,8 +361,11 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
         : <><p>Не удалось сохранить изменения. Восстановлено прежнее меню</p><Button onClick={() => void controller.retrySave()}>Повторить сохранение</Button></>}
     </div>}
     {operation.status === 'error' && <div role="alert" className="notice"><p>{operation.error?.message}</p></div>}
+  </div>}{launchPantryIssue && (pathname === '/' || pathname === '/plan/new') && <div className="notice" role="alert">
+    <p>{launchPantryIssue === 'changed' ? 'Запасы изменились. Проверьте их и запустите подбор снова' : 'Не удалось проверить запасы для нового меню'}</p>
+    <Button disabled={pantry?.status === 'pending'} onClick={() => void retryLaunchPantry()}>Повторить загрузку запасов</Button>
   </div>}<Routes>
-    <Route path="/" element={presence.status === 'valid' ? <Navigate replace to="/menu" /> : <WelcomePage brand={brand} onStart={() => navigate('/plan/new')} onQuickStart={() => start(true)} quickStartBasis={basis} />} />
+    <Route path="/" element={presence.status === 'valid' ? <Navigate replace to="/menu" /> : <WelcomePage brand={brand} onStart={() => navigate('/plan/new')} onQuickStart={() => start(true)} quickStartBasis={basis} quickStartStock={quickStartStock} />} />
     <Route path="/plan/new" element={<Wizard draft={wizardDraft} homeSource={homeSource} onChange={change} recovery={recovery} saved={saved} onReset={resetDraft} onStart={anchor => start(false, anchor)} launchErrors={launchErrors?.status === 'invalid' ? launchErrors.errors : undefined} editingNext={!!operation.lastApplied && !sameSnapshot(draft, operation.lastApplied.raw)} />} />
     <Route path="/plan/generating" element={<GenerationPage snapshot={operation} requestedSettings={launch.current?.settings} catalog={catalog} catalogError={catalogError} draftSaved={saved} onCancel={cancel} onRetry={() => void retryGeneration()} onSettings={settings} onRetrySave={() => void controller.retrySave()} onRetryLoad={() => void controller.retryLoad()} />} />
     <Route path="/menu" element={<MenuPage snapshot={visible} onRecalculate={offerBudgetRecalculation} mealAlternatives={{ request: controller.mealAlternatives, select: (target, recipeId, revision) => {
@@ -348,13 +389,13 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
       onRetrySave={() => void controller.retrySave()} />} />
     <Route path="*" element={<RouteStatePage title="Страница не найдена" description="Проверьте адрес или начните с главной страницы." to="/" action="На главную" />} />
   </Routes>{launchConfirmation && <ConfirmDialog title="Составить меню с новыми настройками?" description={`После успешного сохранения новое меню заменит прежний набор вариантов.${saved ? ' Черновик настроек сохранится' : ''}`} cancelLabel="Оставить варианты" confirmLabel="Составить меню" returnFocus={launchConfirmation.trigger} fallbackFocusId="wizard-title" onCancel={() => setLaunchConfirmation(null)} onConfirm={() => {
-    const confirmed = launchConfirmation; setLaunchConfirmation(null); performStart(confirmed.settings, confirmed.origin);
+    const confirmed = launchConfirmation; setLaunchConfirmation(null); performStart(confirmed.request);
   }} />}{budgetTrigger && <ConfirmDialog title="Создать новый набор меню?" description="Покупки уже рассчитаны по запасам. Прежние варианты будут заменены после успешного сохранения нового набора." cancelLabel="Оставить варианты" confirmLabel="Создать новый набор" returnFocus={budgetTrigger} fallbackFocusId={pathname === '/shopping' ? 'shopping-title' : 'menu-title'} onCancel={() => setBudgetTrigger(null)} onConfirm={() => {
     const current = controller.getSnapshot();
     setBudgetTrigger(null);
     if (!current.active || mealEditingUnavailable(current)) return;
     const origin = { returnRoute: pathname, focusAnchor: budgetTrigger.id };
-    launch.current = { settings: current.active.plan.inputs.appliedSettings, origin };
+    launch.current = { settings: current.active.plan.inputs.appliedSettings, origin, pantry: current.pantry };
     setCatalogError(false);
     navigate('/plan/generating');
     void controller.recreateSet(origin);

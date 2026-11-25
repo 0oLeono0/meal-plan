@@ -14,7 +14,9 @@ const categoryAliases = new Map<string, Category>([
   ['Крупы', 'Бакалея'], ['Крупы и мука', 'Бакалея'], ['Крупы и макароны', 'Бакалея'], ['Бобовые', 'Бакалея'], ['Бакалея', 'Бакалея'], ['Хлеб', 'Хлеб'],
 ]);
 const sourceLabel = (count: string) => `Из ${count.replace(/блюдо$|блюда$/, ending => ending === 'блюдо' ? 'блюда' : 'блюд')}`;
-export function ShoppingPage({ snapshot, onRetryLoad }: { snapshot: GenerationSnapshot; onRetryLoad(): void }) {
+export function ShoppingPage({ snapshot, onRetryLoad, onRecalculate }: {
+  snapshot: GenerationSnapshot; onRetryLoad(): void; onRecalculate?(trigger: HTMLElement): void;
+}) {
   const bundle = snapshot.active;
   if (!bundle) {
     if (snapshot.loadStatus === 'pending' || snapshot.loadStatus === 'unloaded') return <PlanLoading kind="shopping" />;
@@ -32,11 +34,11 @@ export function ShoppingPage({ snapshot, onRetryLoad }: { snapshot: GenerationSn
     reason: issue.code === 'UNKNOWN_PANTRY_QUANTITY' ? 'количество не указано — запас не вычтен' : 'единицы запаса и потребности несовместимы — запас не вычтен',
   }));
   return <section data-plan-id={plan.activeVariantId} className="plan-read-model [overflow-wrap:anywhere]">
-    <h1 tabIndex={-1}>Список покупок</h1>
+    <h1 id="shopping-title" tabIndex={-1}>Список покупок</h1>
     <p>{formatDateOnly(plan.inputs.dates[0])} — {formatDateOnly(plan.inputs.dates[plan.inputs.dates.length - 1])} · На {view.people}</p>
     <p className="tabular-nums">{view.itemCount} · ≈ {view.costs.purchase}</p>
     <Link className="action-link" to="/menu">К меню</Link>
-    <PlanSummary bundle={bundle} projection={projection} />
+    <PlanSummary bundle={bundle} projection={projection} onRecalculate={onRecalculate} />
     {projection.instances.length === 0
       ? <section className="card"><h2>В меню пока нет блюд</h2><p>Добавьте блюда в меню, чтобы получить список покупок</p></section>
       : view.purchases.length === 0 && <section className="card"><h2>Всё необходимое уже есть дома</h2><p>Покупать ничего не нужно: требуемые количества покрыты запасами</p></section>}
@@ -53,7 +55,7 @@ export function ShoppingPage({ snapshot, onRetryLoad }: { snapshot: GenerationSn
     </section>)}
     {issues.length > 0 && <section className="card" aria-label="Запасы без количественного покрытия"><h2>Запасы без количественного покрытия</h2>{issues.map(issue => <p key={issue.key}>{issue.name}: {issue.reason}</p>)}</section>}
     <details className="card"><summary className="min-h-[44px] py-2 cursor-pointer">Уже есть дома · ≈ {view.costs.covered}</summary>
-      <p className="hint">Покрытие рассчитано по снимку продуктов для этого меню. Запасы не списываются</p>
+      <p className="hint">{snapshot.pantry?.confirmed ? 'Покрытие рассчитано по последним подтверждённым запасам.' : 'Покрытие рассчитано по снимку продуктов для этого меню.'} Запасы не списываются</p>
       {view.covered.length === 0 ? <p>Нет количественного покрытия запасами</p> : <ul className="pl-4">{view.covered.map(row => <li className="my-4 tabular-nums" key={JSON.stringify([row.productId, row.profileId])}>{row.name} · {row.covered} · ≈ {row.coveredCost}</li>)}</ul>}
     </details>
   </section>;

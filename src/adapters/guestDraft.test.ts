@@ -11,6 +11,32 @@ function storage(raw: string | null = null) {
 }
 
 describe('guest draft storage', () => {
+  it('pantry-source preserves legacy uncertainty and stores an explicitly emptied home draft', async () => {
+    const legacy = { ...createDraft(), step: 4 as const, restrictions: ['no-gluten' as const] };
+    const originalBytes = JSON.stringify({ schemaVersion: 1, draft: legacy });
+    const backing = storage(originalBytes);
+    const port = createGuestDraftAdapter(() => backing);
+    expect(await port.load()).toEqual({ status: 'loaded', draft: legacy });
+    expect(backing.data.get(DRAFT_KEY)).toBe(originalBytes);
+    expect(await port.save(legacy, false)).toEqual({ status: 'saved' });
+    expect(await port.load()).toEqual({ status: 'loaded', draft: legacy, homeEdited: false });
+    const filled = { ...legacy, home: [{ productId: 'pantry-chicken-fillet', quantity: '0,125', unit: 'kg' as const, expiresSoon: true }] };
+    expect(await port.save(filled, true)).toEqual({ status: 'saved' });
+    expect(await port.load()).toEqual({ status: 'loaded', draft: filled, homeEdited: true });
+    expect(await port.save(legacy, true)).toEqual({ status: 'saved' });
+    expect(await createGuestDraftAdapter(() => backing).load()).toEqual({ status: 'loaded', draft: legacy, homeEdited: true });
+    expect(await port.save(filled, false)).toEqual({ status: 'blocked' });
+    expect(backing.data.get(DRAFT_KEY)).toBe(JSON.stringify({ schemaVersion: 2, draft: legacy, homeEdited: true }));
+    expect(backing.data.get('mealplan:pantry')).toBe('pantry');
+  });
+  it.each([null, 1, 'true'])('pantry-source rejects malformed home metadata %s', async homeEdited => {
+    const raw = JSON.stringify({ schemaVersion: 2, draft: createDraft(), homeEdited });
+    const backing = storage(raw);
+    const port = createGuestDraftAdapter(() => backing);
+    expect(await port.load()).toEqual({ status: 'corrupt' });
+    expect(await port.save(createDraft(), false)).toEqual({ status: 'blocked' });
+    expect(backing.data.get(DRAFT_KEY)).toBe(raw);
+  });
   it('does not write defaults before hydration', async () => {
     const backing = storage();
     expect(await createGuestDraftAdapter(() => backing).save(createDraft())).toEqual({ status: 'blocked' });

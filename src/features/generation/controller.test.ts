@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createActivePlanAdapter, ACTIVE_PLAN_KEY } from '../../adapters/activePlan';
 import type { ActivePlanLoadResult, ActivePlanPort } from '../../adapters/activePlan';
+import { createPantryInventoryAdapter, PANTRY_INVENTORY_KEY } from '../../adapters/pantryInventory';
 import { buildAppliedSettings } from '../../domain/appliedSettings';
 import type { Catalog } from '../../domain/catalog';
 import { buildActivePlanEnvelope, createPlanInputs, createRecipeInstances, mealSlots, planCoordinates } from '../../domain/plan';
@@ -36,6 +37,265 @@ function fixture(seed = 'one') {
 function deferred<T>() { let resolve!: (value: T) => void; let reject!: (reason: unknown) => void; const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; }
 const trustedCatalogs = createTrustedCatalogRegistry([fixture().inputs.catalog]);
 const createGenerationController = (options: GenerationControllerOptions) => productionController({ trustedCatalogs, ...options });
+
+it('pantry-leftovers rejects a launch whose submitted stock differs from the confirmed fridge', async () => {
+  const { inputs } = fixture('leftovers-guard');
+  const values = new Map<string, string>();
+  const store = { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); } };
+  const generate = vi.fn<GenerationPort['generate']>(async () => ({ status: 'cancelled' }));
+  const controller = createGenerationController({ generation: { generate }, activePlan: createActivePlanAdapter(() => store, trustedCatalogs),
+    pantryInventory: createPantryInventoryAdapter(() => store) });
+  try {
+    await Promise.all([controller.load(), controller.loadPantry()]);
+    expect(await controller.savePantry([{ productId: 'rice', quantity: '200', unit: 'g', expiresSoon: true }])).toBe(true);
+    const guard = { pantry: controller.getSnapshot().pantry, mode: 'leftovers' } as const;
+    await controller.start(inputs, origin, guard);
+    expect(generate).not.toHaveBeenCalled();
+    expect(values.get(ACTIVE_PLAN_KEY)).toBeUndefined();
+    await controller.start({ ...inputs, pantrySnapshot: [{ productId: 'rice', expiresSoon: true, quantity: {
+      status: 'known', value: { unit: 'g', amount: decimal('200') },
+    } }] }, origin, guard);
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(generate.mock.calls[0][0].mode).toBe('leftovers');
+  } finally { controller.dispose(); }
+});
+
+it('pantry-recalculate stale confirmation cannot silently acquire the latest stock revision', async () => {
+  const { plan } = fixture('recalculate');
+  const original = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
+  const values = new Map([[ACTIVE_PLAN_KEY, original]]);
+  const store = { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); } };
+  const generate = vi.fn<GenerationPort['generate']>(async () => ({ status: 'error', error: { code: 'FAILED', message: 'Test refusal', diagnostics: [] } }));
+  const controller = createGenerationController({ generation: { generate }, activePlan: createActivePlanAdapter(() => store, trustedCatalogs),
+    pantryInventory: createPantryInventoryAdapter(() => store) });
+  try {
+    await Promise.all([controller.load(), controller.loadPantry()]);
+    const row = { productId: 'rice', quantity: '200', unit: 'g', expiresSoon: false } as const;
+    expect(await controller.savePantry([row])).toBe(true);
+    const captured = controller.getSnapshot();
+    expect(await controller.savePantry([{ ...row, quantity: '300' }])).toBe(true);
+    const pantryOrigin = { returnRoute: '/pantry', focusAnchor: 'pantry-recalculate' };
+    await controller.recreateSet(pantryOrigin, captured);
+    expect(generate).not.toHaveBeenCalled();
+    expect(values.get(ACTIVE_PLAN_KEY)).toBe(original);
+    expect(visiblePlanSnapshot(controller.getSnapshot()).active?.projections[0].costs.exact.purchase).toEqual(decimal('100'));
+
+    await controller.recreateSet(pantryOrigin, controller.getSnapshot());
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(generate.mock.calls[0][0].inputs.pantrySnapshot).toEqual([{ productId: 'rice', expiresSoon: false,
+      quantity: { status: 'known', value: { unit: 'g', amount: decimal('300') } } }]);
+    expect(controller.getSnapshot()).toMatchObject({ status: 'error', active: { plan } });
+    expect(values.get(ACTIVE_PLAN_KEY)).toBe(original);
+  } finally { controller.dispose(); }
+});
+
+it('pantry-recalculate append validates the live request and preserves the old variant proofs', async () => {
+  const base = fixture('append-stock');
+  const applied = buildAppliedSettings({ ...base.inputs.appliedSettings.raw, budget: '500' });
+  if (applied.status !== 'applied') throw new Error('fixture');
+  const inputs = { ...base.inputs, appliedSettings: applied.settings };
+  const servings = (id: string, count: string) => ({ id, instances: base.plan.variants[0].instances.map(row => ({ ...row, id: `${id}-${row.slot}`, selectedServings: decimal(count) })) });
+  const originalVariants = [servings('base', '1'), servings('older', '2')];
+  const plan = buildActivePlanEnvelope(inputs, originalVariants, 'base');
+  const row = { productId: 'rice', quantity: '350', unit: 'g', expiresSoon: false } as const;
+  const proof = { variantId: 'older', rows: [row] };
+  const original = JSON.stringify({ schemaVersion: 2, plan: encodePlanEnvelope(plan), admissionPantries: [proof] });
+  const values = new Map([[ACTIVE_PLAN_KEY, original]]);
+  const store = { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); } };
+  let response: 'stale' | 'incomplete' | 'valid' = 'stale';
+  const generate = vi.fn<GenerationPort['generate']>(async request => {
+    const candidate = servings('generated', '2.25');
+    if (response === 'incomplete') candidate.instances.pop();
+    const resultInputs = response === 'stale' ? { ...request.inputs, pantrySnapshot: [{ productId: 'rice', expiresSoon: false,
+      quantity: { status: 'known' as const, value: { unit: 'g' as const, amount: decimal('999') } } }] } : request.inputs;
+    return { status: 'success', plan: { schemaVersion: 1, inputs: resultInputs, activeVariantId: candidate.id, variants: [candidate] } };
+  });
+  const adapter = createActivePlanAdapter(() => store, trustedCatalogs);
+  const controller = createGenerationController({ generation: { generate }, activePlan: adapter, pantryInventory: createPantryInventoryAdapter(() => store) });
+  try {
+    await Promise.all([controller.load(), controller.loadPantry()]);
+    const current = { ...row, quantity: '450' };
+    expect(await controller.savePantry([current])).toBe(true);
+    const pantryBytes = values.get(PANTRY_INVENTORY_KEY);
+    for (const failure of ['stale', 'incomplete'] as const) {
+      response = failure;
+      await controller.appendVariant(origin);
+      expect(controller.getSnapshot()).toMatchObject({ status: 'error', error: { code: 'GENERATION_DATA_INCOMPLETE' } });
+      expect(values.get(ACTIVE_PLAN_KEY)).toBe(original);
+    }
+    response = 'valid';
+    await controller.appendVariant(origin);
+    expect(controller.getSnapshot().status).toBe('succeeded');
+    expect(generate.mock.calls.every(([request]) => request.targetCount === 1 && request.inputs.pantrySnapshot[0]?.quantity.status === 'known')).toBe(true);
+    expect(generate.mock.calls[2][0].inputs.pantrySnapshot[0]?.quantity).toEqual({ status: 'known', value: { unit: 'g', amount: decimal('450') } });
+    const stored = await adapter.load();
+    if (stored.status !== 'loaded') throw new Error('Append did not persist');
+    expect(stored.bundle.plan.inputs).toEqual(inputs);
+    expect(stored.bundle.plan.variants.slice(0, 2)).toEqual(originalVariants);
+    expect(stored.bundle.admissionPantries).toEqual([proof, { variantId: 'append-3', rows: [current] }]);
+    expect(values.get(PANTRY_INVENTORY_KEY)).toBe(pantryBytes);
+  } finally { controller.dispose(); }
+});
+
+it('pantry-inventory projects every variant independently and keeps the last confirmation when reading fails', async () => {
+  const base = fixture('live-stock');
+  const second = { id: 'second', instances: base.plan.variants[0].instances.map(row => ({ ...row, id: `${row.id}-second`, selectedServings: decimal('2') })) };
+  const plan = buildActivePlanEnvelope(base.inputs, [...base.plan.variants, second], base.plan.activeVariantId);
+  const original = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
+  const values = new Map([[ACTIVE_PLAN_KEY, original]]);
+  let failRead = false;
+  const store = { getItem(key: string) {
+    if (failRead && key === PANTRY_INVENTORY_KEY) throw new Error('Read denied');
+    return values.get(key) ?? null;
+  }, setItem(key: string, value: string) { values.set(key, value); } };
+  const active = createActivePlanAdapter(() => store, trustedCatalogs);
+  const pantry = createPantryInventoryAdapter(() => store);
+  const controller = createGenerationController({ generation: { async generate() { throw new Error('Inventory must not generate a menu'); } }, activePlan: active, pantryInventory: pantry });
+  const quantities = () => visiblePlanSnapshot(controller.getSnapshot()).active?.projections.map(projection =>
+    projection.rows.map(row => [row.required.amount, row.covered.amount, row.purchase.amount]));
+  const expected = [[[decimal('400'), decimal('200'), decimal('200')]], [[decimal('800'), decimal('200'), decimal('600')]]];
+  try {
+    await Promise.all([controller.load(), controller.loadPantry()]);
+    const row = { productId: 'rice', quantity: '0,2', unit: 'kg', expiresSoon: false } as const;
+    expect(await controller.savePantry([row])).toBe(true);
+    expect(values.get(ACTIVE_PLAN_KEY)).toBe(original);
+    expect(quantities()).toEqual(expected);
+
+    await controller.selectVariant(second.id, origin);
+    expect(controller.getSnapshot().active?.plan.activeVariantId).toBe(second.id);
+    expect(quantities()).toEqual(expected);
+
+    const external = createPantryInventoryAdapter(() => store);
+    await external.load();
+    expect(await external.save([], { isCurrent: () => true })).toMatchObject({ status: 'saved' });
+    expect(await controller.savePantry([{ ...row, quantity: '0,3' }])).toBe(false);
+    expect(controller.getSnapshot().pantry?.writeStatus).toBe('conflict');
+    expect(quantities()).toEqual(expected);
+    failRead = true;
+    await controller.loadPantry();
+    expect(controller.getSnapshot().pantry).toMatchObject({ status: 'error', confirmed: { rows: [row] } });
+    expect(quantities()).toEqual(expected);
+    expect(await controller.retryPantrySave()).toBe(false);
+    failRead = false;
+    await controller.loadPantry();
+    expect(controller.getSnapshot().pantry).toMatchObject({ status: 'loaded', confirmed: { rows: [] } });
+    expect(quantities()).toEqual([[[decimal('400'), decimal('0'), decimal('400')]], [[decimal('800'), decimal('0'), decimal('800')]]]);
+  } finally { controller.dispose(); }
+});
+
+it('pantry-recovery revokes an in-flight save when a newer stock record is read', async () => {
+  const values = new Map<string, string>();
+  const store = { getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => { values.set(key, value); } };
+  const pantry = createPantryInventoryAdapter(() => store);
+  const other = createPantryInventoryAdapter(() => store);
+  const writeGate = deferred<void>();
+  const write = vi.fn(async (...args: Parameters<typeof pantry.save>) => {
+    await writeGate.promise;
+    return pantry.save(...args);
+  });
+  const controller = createGenerationController({ generation: { async generate() { throw new Error('No generation expected'); } },
+    activePlan: createActivePlanAdapter(() => store, trustedCatalogs), pantryInventory: { ...pantry, save: write } });
+  const row = { productId: 'rice', quantity: '200', unit: 'g', expiresSoon: false } as const;
+  const newer = { ...row, quantity: '300' };
+  try {
+    await other.load();
+    await controller.loadPantry();
+    const saving = controller.savePantry([row]);
+    expect(write).toHaveBeenCalledTimes(1);
+    await other.save([newer], { isCurrent: () => true });
+    const newerRaw = values.get(PANTRY_INVENTORY_KEY);
+    await controller.loadPantry();
+    expect(controller.getSnapshot().pantry).toMatchObject({ status: 'loaded', confirmed: { rows: [newer] }, writeStatus: 'idle' });
+    writeGate.resolve();
+    expect(await saving).toBe(false);
+    expect(values.get(PANTRY_INVENTORY_KEY)).toBe(newerRaw);
+
+    const previousView = controller.getSnapshot().pantry;
+    await other.save([], { isCurrent: () => true });
+    const emptyRaw = values.get(PANTRY_INVENTORY_KEY);
+    await controller.loadPantry();
+    expect(controller.getSnapshot().pantry).toMatchObject({ status: 'loaded', confirmed: { rows: [] } });
+    expect(await controller.savePantry([row], previousView)).toBe(false);
+    expect(values.get(PANTRY_INVENTORY_KEY)).toBe(emptyRaw);
+
+    values.delete(PANTRY_INVENTORY_KEY);
+    await controller.loadPantry();
+    expect(controller.getSnapshot().pantry).toMatchObject({ status: 'error', confirmed: { rows: [] } });
+    expect(await controller.savePantry([row])).toBe(false);
+    expect(values.has(PANTRY_INVENTORY_KEY)).toBe(false);
+  } finally { writeGate.resolve(); controller.dispose(); }
+});
+
+it('pantry-recovery keeps the newer confirmation when an older read resolves out of order', async () => {
+  const initial = deferred<{ status: 'corrupt' }>();
+  const row = { productId: 'rice', quantity: '300', unit: 'g', expiresSoon: false } as const;
+  const store = { getItem: () => null, setItem: vi.fn() };
+  const inventory = { schemaVersion: 1, token: 'a'.repeat(32), rows: [row] } as const;
+  const load = vi.fn<NonNullable<GenerationControllerOptions['pantryInventory']>['load']>()
+    .mockImplementationOnce(() => initial.promise)
+    .mockResolvedValueOnce({ status: 'loaded', inventory });
+  const controller = createGenerationController({ generation: { async generate() { throw new Error('No generation expected'); } },
+    activePlan: createActivePlanAdapter(() => store, trustedCatalogs),
+    pantryInventory: { load, save: async () => ({ status: 'blocked' }) } });
+  try {
+    const olderRead = controller.loadPantry();
+    await controller.loadPantry();
+    initial.resolve({ status: 'corrupt' });
+    await olderRead;
+    expect(controller.getSnapshot().pantry).toMatchObject({ status: 'loaded', confirmed: inventory, writeStatus: 'idle' });
+  } finally { controller.dispose(); }
+});
+
+it.each(['before-event', 'unreadable', 'already-committed'] as const)('pantry-edit-race honors the actual final write boundary for %s inventory', async timing => {
+  const { plan } = fixture('stock-write-race');
+  const initial = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
+  const values = new Map([[ACTIVE_PLAN_KEY, initial]]);
+  const store = { getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => { values.set(key, value); } };
+  const active = createActivePlanAdapter(() => store, trustedCatalogs);
+  const inventory = createPantryInventoryAdapter(() => store);
+  const other = createPantryInventoryAdapter(() => store);
+  const entered = deferred<void>(), release = deferred<void>();
+  const save = vi.fn<ActivePlanPort['save']>(async (...args) => {
+    if (timing === 'already-committed') {
+      const result = await active.save(...args);
+      entered.resolve();
+      await release.promise;
+      return result;
+    }
+    entered.resolve();
+    await release.promise;
+    return active.save(...args);
+  });
+  const controller = createGenerationController({ generation: { generate: vi.fn() }, activePlan: { ...active, save }, pantryInventory: inventory });
+  try {
+    await Promise.all([controller.load(), controller.loadPantry(), other.load()]);
+    const base = controller.getSnapshot().active!.plan;
+    const instance = base.variants[0].instances[0];
+    const target = { variantId: base.activeVariantId, instanceId: instance.id, recipeId: instance.recipeId, date: instance.date, slot: instance.slot };
+    const saving = controller.changePortions(target, '2', base, origin);
+    await entered.promise;
+    if (timing === 'unreadable') values.set(PANTRY_INVENTORY_KEY, '{ bad');
+    else expect((await other.save([{ productId: 'rice', quantity: '200', unit: 'g', expiresSoon: false }], { isCurrent: () => true })).status).toBe('saved');
+    if (timing !== 'before-event') {
+      await controller.loadPantry();
+      expect(controller.getSnapshot().candidate).toBeNull();
+    }
+    release.resolve();
+    await saving;
+    await controller.retrySave();
+    expect(save).toHaveBeenCalledTimes(1);
+    const displayed = visiblePlanSnapshot(controller.getSnapshot());
+    expect(displayed.candidate).toBeNull();
+    expect(displayed.status).toBe(timing === 'already-committed' ? 'succeeded' : 'idle');
+    expect(displayed.active?.plan.variants[0].instances[0].selectedServings).toEqual(decimal(timing === 'already-committed' ? '2' : '1'));
+    if (timing === 'already-committed') {
+      expect(values.get(ACTIVE_PLAN_KEY)).not.toBe(initial);
+      expect(displayed.active?.projections[0].costs.exact.purchase).toEqual(decimal('300'));
+    } else expect(values.get(ACTIVE_PLAN_KEY)).toBe(initial);
+  } finally { release.resolve(); controller.dispose(); }
+});
 
 it('phase04-remove rejects a valid edited envelope as a generation response and retains stored bytes', async () => {
   const base = fixture('empty-response');

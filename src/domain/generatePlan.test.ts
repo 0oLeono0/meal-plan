@@ -49,6 +49,60 @@ function success(result: GenerationResult) {
 function error(result: GenerationResult) { expect(result.status).toBe('error'); if (result.status !== 'error') throw new Error('Expected error'); return result.error; }
 const stock = (amount: string, unit: 'g' | 'ml' = 'g'): readonly PantrySnapshotRow[] => [{ productId: 'rice', expiresSoon: true, quantity: { status: 'known', value: { amount: decimal(amount), unit } } }];
 
+describe('pantry-leftovers', () => {
+  const base = (id: string) => recipe(id, 'barley');
+  const usingRice = recipe('rice-lunch', 'rice', '100', ['lunch']);
+  const catalog: Catalog = { version: 'leftovers-priority', foods: [food('barley'), food('rice', '2')],
+    recipes: [base('barley-a'), base('barley-b'), base('barley-c'), usingRice] };
+  const mode = { mode: 'leftovers' } as const;
+  const input = (data = catalog, changes: Partial<SettingsDraft> = {}, pantry = stock('200')) =>
+    fixture({ days: '3', budget: '1200', ...changes }, data, pantry);
+
+  it('uses an attainable early menu within two full evaluations, preserving the standard seeded path', () => {
+    const inputs = input();
+    const ordinary = run(inputs, { maxEvaluations: 2 });
+    expect(run(inputs, { maxEvaluations: 2 })).toEqual(ordinary);
+    expect(success(ordinary.result).ids.every(id => id.startsWith('barley-'))).toBe(true);
+
+    const result = run(inputs, { ...mode, maxEvaluations: 2 });
+    const { plan, projection } = success(result.result);
+    // Each of the two 100 g rice lunches replaces a 100 ₽ barley meal and
+    // needs no purchases from the 200 g stock. Days 1+2 and 2+3 both cost 1000 ₽.
+    const variant = plan.variants[0];
+    const oracle = (days: readonly string[]) => days.filter(day => inputs.dates.slice(0, 2).includes(day)).length * 100 / 200;
+    const actual = variant.instances.filter(meal => meal.recipeId === usingRice.id).map(meal => meal.date);
+    expect(actual).toHaveLength(2);
+    expect(oracle(actual)).toBe(1);
+    expect(oracle(inputs.dates.slice(1))).toBe(0.5);
+    expect(projection.costs.exact).toMatchObject({ purchase: decimal('1000'), covered: decimal('400') });
+    expect(result.progress.evaluatedCandidates).toBe(2);
+  });
+
+  it('keeps the cheap baseline with the minimum work budget', () => {
+    const inputs = input({ ...catalog, foods: [food('barley', '0.8'), food('rice', '2')] });
+    const result = run(inputs, { ...mode, maxEvaluations: 1, maxTransitions: catalog.recipes.length + 1 });
+    expect(success(result.result).ids).toEqual(Array(12).fill('barley-a'));
+    expect(result.progress).toEqual({ transitions: catalog.recipes.length + 1, evaluatedCandidates: 1 });
+  });
+
+  it('admits only eligible choices and exact affordable purchases even when the pantry favors them', () => {
+    const rice = { ...catalog.foods[1], safety: { status: 'known' as const, facts: [fact('milk', false, 'allergen')] } };
+    const incomplete = { ...catalog.foods[1], price: { status: 'unknown' as const, reason: 'Нет проверенной цены' } };
+    const guard = { ...mode, maxEvaluations: 8 };
+    function expectBarley(inputs: PlanInputs, options: SearchOptions = guard) {
+      const { plan } = success(run(inputs, options).result);
+      expect(plan.variants.every(variant => variant.instances.every(meal => meal.recipeId.startsWith('barley-')))).toBe(true);
+    }
+    const baseFoods = [food('barley', '0.8'), catalog.foods[1]];
+    expectBarley(input({ ...catalog, foods: [baseFoods[0], rice] }), { ...guard, allergenKeys: ['milk'] });
+    expectBarley(input({ ...catalog, foods: [baseFoods[0], incomplete] }));
+    expectBarley(input({ ...catalog, foods: baseFoods }, { exclusionIds: ['rice'] }));
+    expectBarley(input({ ...catalog, foods: baseFoods, recipes: [...catalog.recipes.slice(0, -1), { ...usingRice, cookingMinutes: 31 }] }, { cookingTime: '30' }));
+    expectBarley(input({ ...catalog, foods: [baseFoods[0], food('rice', '100')] }, { budget: '1000' }, stock('98.7999')));
+    expectBarley(input({ ...catalog, foods: [baseFoods[0], food('rice', '100')] }, {}, stock('200', 'ml')));
+  });
+});
+
 it('uses confirmed edible stock consistently for budget bounds, expiry preference and exclusions', () => {
   const profileId = 'usda-171077-raw';
   const chicken = { ...food('chicken', '2'), profileId };

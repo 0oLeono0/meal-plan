@@ -7,8 +7,14 @@ import { goalLabels } from './copy';
 
 const unitLabels: Record<Unit, string> = { g: 'г', kg: 'кг', ml: 'мл', l: 'л', pcs: 'шт' };
 const nameFor = (id: string) => pantryProductNames.find(product => product.id === id)?.name ?? `Продукт из сохранённого черновика (${id})`;
+const homeSourceLabels = {
+  inventory: 'Предложение из холодильника',
+  previous: 'Предложение из предыдущего меню',
+  draft: 'Эти запасы относятся только к новому меню',
+};
+export type WizardHomeSource = keyof typeof homeSourceLabels;
 
-export function HomeProductsStep({ draft, onChange, errors, disabled = false, productPort }: { draft: SettingsDraft; onChange(action: DraftAction): void; errors: StepErrors; disabled?: boolean; productPort?: ProductCatalogPort }) {
+export function HomeProductsStep({ draft, onChange, errors, disabled = false, productPort, homeSource }: { draft: SettingsDraft; onChange(action: DraftAction): void; errors: StepErrors; disabled?: boolean; productPort?: ProductCatalogPort; homeSource?: WizardHomeSource }) {
   const { removed, setRemoved, undoRef } = useRemovalUndo<HomeDraftRow>('home-search');
   const focusRow = (id: string) => requestAnimationFrame(() => document.getElementById(`quantity-${id}`)?.focus());
   function add(productId: string) {
@@ -19,6 +25,7 @@ export function HomeProductsStep({ draft, onChange, errors, disabled = false, pr
     onChange({ type: 'home', value: draft.home.map(row => row.productId === productId ? { ...row, ...patch } : row) });
   }
   return <>
+    {homeSource && <p className="hint">{homeSourceLabels[homeSource]}</p>}
     <p>Укажите, что есть дома. Количество можно оставить пустым; это не означает ноль.</p>
     <div className="card min-w-0"><ProductCombobox id="home-search" label="Найти продукт" disabled={disabled} port={productPort ?? pantryProductCatalog} onSelect={product => add(product.id)} />
       <div role="group" aria-label="Популярные продукты" className="flex flex-wrap gap-2 mt-4">{popularProductIds.map(id => <Button disabled={disabled} key={id} onClick={() => add(id)}>{nameFor(id)}</Button>)}</div>

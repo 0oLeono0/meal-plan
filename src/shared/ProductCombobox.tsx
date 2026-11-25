@@ -2,8 +2,8 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { localProductCatalog, type ProductCatalogPort, type ProductName } from '../adapters/products';
 import { Button } from './ui';
 
-export function ProductCombobox({ label, onSelect, port = localProductCatalog, id, disabled = false }: {
-  label: string; onSelect(product: ProductName): void; port?: ProductCatalogPort; id?: string; disabled?: boolean;
+export function ProductCombobox({ label, onSelect, onQueryChange, port = localProductCatalog, id, disabled = false }: {
+  label: string; onSelect(product: ProductName): void; onQueryChange?(): void; port?: ProductCatalogPort; id?: string; disabled?: boolean;
 }) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
@@ -46,7 +46,7 @@ export function ProductCombobox({ label, onSelect, port = localProductCatalog, i
       aria-activedescendant={expanded && !pending && items[highlight] ? `${listId}-option-${highlight}` : undefined}
       aria-describedby={`${inputId}-status`} className="!text-left"
       onFocus={() => setOpen(true)} onBlur={event => { if (!event.currentTarget.parentElement?.contains(event.relatedTarget)) setOpen(false); }}
-      onChange={event => { request.current++; setQuery(event.target.value); setHighlight(0); setOpen(true); }}
+      onChange={event => { request.current++; setQuery(event.target.value); setHighlight(0); setOpen(true); onQueryChange?.(); }}
       onKeyDown={event => {
         if (event.nativeEvent.isComposing) return;
         if (event.key === 'Escape') { event.preventDefault(); setOpen(false); }

@@ -86,13 +86,19 @@ export function freeMealId(plan: ActivePlanEnvelope, seed: string): string {
 type ReplacementProjection = { status: 'ready'; variant: PlanVariant; projection: PlanProjection; meal: InstanceProjection }
   | { status: 'over-budget' | 'incomplete' };
 
-function projectInstance(plan: ActivePlanEnvelope, variant: PlanVariant, index: number, selected: RecipeInstance, insert = false): ReplacementProjection {
+function budgetImproves(next: PlanProjection, baseline: PlanProjection): boolean {
+  const exact = compare(next.costs.exact.purchase, baseline.costs.exact.purchase);
+  const displayed = next.costs.kopecks.purchase - baseline.costs.kopecks.purchase;
+  return exact <= 0 && displayed <= 0n && (exact < 0 || displayed < 0n);
+}
+
+function projectInstance(plan: ActivePlanEnvelope, variant: PlanVariant, index: number, selected: RecipeInstance, insert = false, reliefBaseline?: PlanProjection): ReplacementProjection {
   const instances = [...variant.instances];
   instances.splice(index, insert ? 0 : 1, selected);
   const next = { ...variant, instances };
   const result = projectPlan(plan.inputs, next);
   if (result.status === 'invalid') return { status: 'incomplete' };
-  if (!result.projection.budget.check.accepted) return { status: 'over-budget' };
+  if (!result.projection.budget.check.accepted && !(reliefBaseline && budgetImproves(result.projection, reliefBaseline))) return { status: 'over-budget' };
   const meal = result.projection.instances.find(row => row.instance.id === selected.id);
   return meal ? { status: 'ready', variant: next, projection: result.projection, meal } : { status: 'incomplete' };
 }
@@ -114,8 +120,9 @@ export function changeMealServings(plan: ActivePlanEnvelope, baseline: PlanProje
   if (!mealPortionMultipliers.includes(multiplier)) return { status: 'incompatible' };
   const selectedServings = familyServings(plan.inputs.appliedSettings.people, multiplier);
   const instance = current.variant.instances[current.index];
-  if (compare(instance.selectedServings, selectedServings) === 0) return { status: 'unchanged' };
-  const next = projectInstance(plan, current.variant, current.index, { ...instance, selectedServings });
+  const change = compare(selectedServings, instance.selectedServings);
+  if (change === 0) return { status: 'unchanged' };
+  const next = projectInstance(plan, current.variant, current.index, { ...instance, selectedServings }, false, change < 0 ? baseline : undefined);
   return next.status === 'ready' ? installInstances(plan, next.variant) : next;
 }
 function newInstance(plan: ActivePlanEnvelope, target: EmptyMealTarget, recipe: Recipe, id: string): RecipeInstance {
@@ -154,6 +161,9 @@ export function removeMeal(plan: ActivePlanEnvelope, baseline: PlanProjection, t
   const current = resolveTarget(plan, baseline, target);
   if (!current) return { status: 'stale' };
   const remaining = current.variant.instances.filter((_, index) => index !== current.index);
+  const result = projectPlan(plan.inputs, { ...current.variant, instances: remaining });
+  if (result.status === 'invalid') return { status: 'incomplete' };
+  if (!result.projection.budget.check.accepted && !budgetImproves(result.projection, baseline)) return { status: 'over-budget' };
   const emptySlots = planCoordinates(plan.inputs.dates).filter(({ date, slot }) =>
     !remaining.some(instance => instance.date === date && instance.slot === slot));
   const variants = plan.schemaVersion === EDITED_PLAN_SCHEMA_VERSION ? plan.variants

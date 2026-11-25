@@ -16,7 +16,7 @@ test('all guest sections are reachable without a plan and preserve browser histo
   await page.goForward();
   await expect(page).toHaveURL('/pantry');
   await expect(page.getByRole('link', { name: 'Новое меню', exact: true })).toBeVisible();
-  await page.getByRole('link', { name: 'Указать продукты в мастере' }).click();
+  await page.getByRole('link', { name: 'Составить меню', exact: true }).click();
   await expect(page).toHaveURL('/plan/new');
   await expect(nav).toHaveCount(0);
 });

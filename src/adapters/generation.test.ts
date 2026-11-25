@@ -90,6 +90,14 @@ describe('compiled version dispatch', () => {
 
 describe('request options and one common deadline', () => {
   beforeEach(() => vi.useFakeTimers()); afterEach(() => vi.useRealTimers());
+  it.each([null, 'normal', {}])('pantry-leftovers rejects invalid mode %s before reading the catalog', async mode => {
+    const data = catalog(), load = vi.fn(() => createLocalCatalog(data).load());
+    const result = await createLocalGeneration({ ...createLocalCatalog(data), load })
+      .generate({ ...request(data), mode } as unknown as GenerationRequest, new AbortController().signal);
+    expectError(result, 'GENERATION_DATA_INCOMPLETE');
+    expect(load).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
   it.each([0, 4, 1.5, NaN, null])('rejects malformed target %s before catalog load', async targetCount => {
     const load = vi.fn(async () => ({ status: 'loaded' as const, catalog: catalog() }));
     const adapter = createLocalGeneration({ ...createLocalCatalog(catalog()), load });
@@ -138,6 +146,17 @@ describe('request options and one common deadline', () => {
 });
 
 describe('local cooperative generation', () => {
+  it('pantry-leftovers cooperatively cancels a real bounded search without publishing a result', async () => {
+    const data = catalog(60), req = request(data, '7'), controller = new AbortController();
+    const inputs = { ...req.inputs, pantrySnapshot: [{ productId: 'rice', expiresSoon: true, quantity: {
+      status: 'known' as const, value: { unit: 'g' as const, amount: decimal('300') },
+    } }] };
+    let yielded = 0;
+    const adapter = createLocalGeneration(createLocalCatalog(data), { yieldTask: async () => { yielded++; controller.abort(); } });
+    expect(await adapter.generate({ ...req, inputs, mode: 'leftovers' }, controller.signal)).toEqual({ status: 'cancelled' });
+    expect(yielded).toBe(1);
+  });
+
   it('loads validated catalog and evaluates a real complete plan without artificial wait', async () => {
     const data = catalog(); let yields = 0;
     const result = await createLocalGeneration(createLocalCatalog(data), { yieldTask: async () => { yields++; } }).generate(request(data), new AbortController().signal);

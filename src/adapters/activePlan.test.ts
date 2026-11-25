@@ -9,13 +9,14 @@ import { createDraft } from '../domain/settings';
 import { ACTIVE_PLAN_KEY, ACTIVE_PLAN_MAX_BYTES, createActivePlanAdapter, createActivePlanPresencePort, validateActiveBundle } from './activePlan';
 import { bundledCatalog } from '../data/catalog';
 import { createTrustedCatalogRegistry } from './trustedCatalogs';
+import { createGenerationController } from '../features/generation/controller';
 import legacyRaw from '../test/fixtures/phase02-active-plan-v1.json?raw';
 import release1Raw from '../test/fixtures/phase031-release1-active-plan.json?raw';
 import release2Raw from '../test/fixtures/phase031-release2-active-plan.json?raw';
 import release3Raw from '../test/fixtures/phase031-release3-active-plan.json?raw';
 
 // Synthetic test data, never a production catalog or factual food claim.
-function fixture(change = {}): ActivePlanEnvelope {
+function fixture(change = {}) {
   const source = { sourceId: 'synthetic', recordId: 'test', release: 'v1', license: 'CC0-1.0', url: 'https://example.org/test' };
   const catalog: Catalog = { version: 'test-v1', foods: [{ productId: 'rice', profileId: 'raw', name: 'test', identity: 'test', state: 'raw', category: 'test',
     nutrition: { status: 'known', reference: { amount: '100', unit: 'g', basis: 'edible' }, values: { calories: '120', protein: '10', fat: '4', carbohydrates: '11' }, source },
@@ -32,6 +33,88 @@ function storage() {
 }
 const current = { isCurrent: () => true };
 const rawPlan = (plan = fixture()) => JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
+
+describe('pantry-admission storage', () => {
+  const original = fixture({ budget: '500' });
+  const variant = original.variants[0];
+  const changed: ActivePlanEnvelope = { ...original, variants: [{ ...variant, instances: variant.instances.map((meal, index) =>
+    index === 0 ? { ...meal, selectedServings: decimal('3') } : meal) }] };
+  const registry = createTrustedCatalogRegistry([original.inputs.catalog]);
+  const rice = { productId: 'rice', quantity: '150', unit: 'g' as const, expiresSoon: false };
+
+  it.each(['b'.repeat(32), null])('pantry-metadata-roundtrip retains both storage bases through edit, selection and reload (%s)', async wizardPantryToken => {
+    const store = storage(), adapter = createActivePlanAdapter(() => store, registry);
+    const second = { ...variant, id: 'second', instances: variant.instances.map(meal => ({ ...meal, id: `second-${meal.id}` })) };
+    const plan = { ...changed, variants: [...changed.variants, second] };
+    const metadata = { admissionPantries: [{ variantId: 'v', rows: [rice] }], wizardPantryToken };
+    store.map.set(ACTIVE_PLAN_KEY, JSON.stringify({ schemaVersion: 2, plan: encodePlanEnvelope(plan), ...metadata }));
+
+    const controller = createGenerationController({ activePlan: adapter, trustedCatalogs: registry, generation: { generate: vi.fn() } });
+    await controller.load();
+    expect(controller.getSnapshot().active).toMatchObject(metadata);
+    const origin = { returnRoute: '/menu', focusAnchor: 'menu-title' };
+    await controller.selectVariant('second', origin);
+    const selected = controller.getSnapshot().active;
+    expect(selected).toMatchObject({ ...metadata, plan: { activeVariantId: 'second' } });
+    const meal = second.instances[0];
+    await controller.removeMeal({ variantId: 'second', date: meal.date, slot: meal.slot, instanceId: meal.id, recipeId: meal.recipeId }, selected!.plan, origin);
+    const loaded = await createActivePlanAdapter(() => store, registry).load();
+    expect(loaded).toMatchObject({ status: 'loaded', bundle: {
+      ...metadata, plan: { activeVariantId: 'second', schemaVersion: 2 },
+      projections: [{ costs: { exact: { purchase: decimal('450') } } }, { costs: { exact: { purchase: decimal('300') } } }],
+    } });
+    expect(JSON.parse(store.map.get(ACTIVE_PLAN_KEY)!)).toMatchObject({ schemaVersion: 2, ...metadata });
+  });
+
+  it.each(['z'.repeat(32), 'B'.repeat(32), '', 1, {}, []])('pantry-metadata-roundtrip rejects an invalid wizard token %j', async wizardPantryToken => {
+    const store = storage(), adapter = createActivePlanAdapter(() => store, registry);
+    const raw = JSON.stringify({ schemaVersion: 2, plan: encodePlanEnvelope(original), wizardPantryToken });
+    store.map.set(ACTIVE_PLAN_KEY, raw);
+    expect(await adapter.load()).toMatchObject({ status: 'corrupt', diagnostics: [{ code: 'INVALID_WIZARD_PANTRY_TOKEN' }] });
+    expect(await adapter.save(original, current)).toEqual({ status: 'blocked' });
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+  });
+
+  it('recomputes a saved edit from a strictly variant-scoped basis instead of changing its original inputs', async () => {
+    const store = storage(), adapter = createActivePlanAdapter(() => store, registry);
+    store.map.set(ACTIVE_PLAN_KEY, rawPlan(original));
+    expect((await adapter.load()).status).toBe('loaded');
+    expect(validateActiveBundle(changed, registry)).toMatchObject({ status: 'invalid', diagnostics: [{ code: 'PLAN_OVER_BUDGET' }] });
+    expect((await adapter.save(changed, { ...current, admissionPantries: [{ variantId: 'v', rows: [rice] }] })).status).toBe('saved');
+    const raw = store.map.get(ACTIVE_PLAN_KEY);
+    expect(JSON.parse(raw!)).toMatchObject({ schemaVersion: 2, admissionPantries: [{ variantId: 'v', rows: [rice] }] });
+    const loaded = await createActivePlanAdapter(() => store, registry).load();
+    expect(loaded).toMatchObject({ status: 'loaded', bundle: { plan: changed, projections: [{ costs: { exact: { purchase: decimal('450') } } }] } });
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+  });
+
+  it.each([
+    [], [{ variantId: 'unknown', rows: [rice] }], [{ variantId: 'v', rows: [rice, rice] }],
+    [{ variantId: 'v', rows: [rice] }, { variantId: 'v', rows: [rice] }], [{ variantId: 'v', rows: [{ ...rice, productId: 'carrot' }] }],
+    [{ variantId: 'v', rows: [{ ...rice, quantity: '' }] }], [{ variantId: 'v', rows: [{ ...rice, unit: 'l' }] }],
+    [{ variantId: 'v', rows: [{ ...rice, quantity: '90' }] }], [{ variantId: 'v', rows: [rice], purchase: '450' }],
+  ].map((value, index) => [index, value] as const))('rejects malformed or inadequate per-variant basis %i and preserves its bytes', async (_, admissionPantries) => {
+    const store = storage(), adapter = createActivePlanAdapter(() => store, registry);
+    const raw = JSON.stringify({ schemaVersion: 2, plan: encodePlanEnvelope(changed), admissionPantries });
+    store.map.set(ACTIVE_PLAN_KEY, raw);
+    expect((await adapter.load()).status).toBe('corrupt');
+    expect((await adapter.save(original, current)).status).toBe('blocked');
+    expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+  });
+
+  it('rejects oversized version-two UTF-8 bytes before parsing', async () => {
+    const store = storage();
+    const raw = JSON.stringify({ schemaVersion: 2, plan: encodePlanEnvelope(changed),
+      admissionPantries: [{ variantId: 'v', rows: [{ ...rice, quantity: 'я'.repeat(ACTIVE_PLAN_MAX_BYTES / 2) }] }] });
+    store.map.set(ACTIVE_PLAN_KEY, raw);
+    const parse = vi.spyOn(JSON, 'parse');
+    try {
+      expect((await createActivePlanAdapter(() => store, registry).load()).status).toBe('corrupt');
+      expect(parse).not.toHaveBeenCalled();
+      expect(store.map.get(ACTIVE_PLAN_KEY)).toBe(raw);
+    } finally { parse.mockRestore(); }
+  });
+});
 
 it('phase04-remove loads a deliberately empty menu with zero totals and preserves truncated schema1 bytes', async () => {
   const original = fixture(), store = storage(), registry = createTrustedCatalogRegistry([original.inputs.catalog]);

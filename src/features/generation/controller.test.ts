@@ -38,6 +38,28 @@ function deferred<T>() { let resolve!: (value: T) => void; let reject!: (reason:
 const trustedCatalogs = createTrustedCatalogRegistry([fixture().inputs.catalog]);
 const createGenerationController = (options: GenerationControllerOptions) => productionController({ trustedCatalogs, ...options });
 
+it('pantry-leftovers rejects a launch whose submitted stock differs from the confirmed fridge', async () => {
+  const { inputs } = fixture('leftovers-guard');
+  const values = new Map<string, string>();
+  const store = { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); } };
+  const generate = vi.fn<GenerationPort['generate']>(async () => ({ status: 'cancelled' }));
+  const controller = createGenerationController({ generation: { generate }, activePlan: createActivePlanAdapter(() => store, trustedCatalogs),
+    pantryInventory: createPantryInventoryAdapter(() => store) });
+  try {
+    await Promise.all([controller.load(), controller.loadPantry()]);
+    expect(await controller.savePantry([{ productId: 'rice', quantity: '200', unit: 'g', expiresSoon: true }])).toBe(true);
+    const guard = { pantry: controller.getSnapshot().pantry, mode: 'leftovers' } as const;
+    await controller.start(inputs, origin, guard);
+    expect(generate).not.toHaveBeenCalled();
+    expect(values.get(ACTIVE_PLAN_KEY)).toBeUndefined();
+    await controller.start({ ...inputs, pantrySnapshot: [{ productId: 'rice', expiresSoon: true, quantity: {
+      status: 'known', value: { unit: 'g', amount: decimal('200') },
+    } }] }, origin, guard);
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(generate.mock.calls[0][0].mode).toBe('leftovers');
+  } finally { controller.dispose(); }
+});
+
 it('pantry-recalculate stale confirmation cannot silently acquire the latest stock revision', async () => {
   const { plan } = fixture('recalculate');
   const original = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });

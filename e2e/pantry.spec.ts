@@ -296,6 +296,22 @@ test('pantry-recalculate postpones dishes only and restores focus when a confirm
   expect(JSON.parse((await page.evaluate(key => localStorage.getItem(key), pantryKey))!).rows[0].quantity).toBe('300');
 });
 
+test('pantry-recalculate returns from a failed search without restoring old purchases', async ({ page }) => {
+  const original = await openCarrotPlan(page, true);
+  const stock = await seedPantry(page, '225');
+  await mountGeneration(page, { activeRaw: original, route: '/pantry', error: { code: 'FAILED', message: 'Search unavailable', diagnostics: [] } });
+  const recalculate = page.getByRole('region', { name: 'Пересчитать меню и список?' }).getByRole('button', { name: 'Пересчитать меню' });
+  await recalculate.click();
+  await page.getByRole('dialog', { name: 'Создать новый набор меню?' }).getByRole('button', { name: 'Создать новый набор' }).click();
+  await expect(page.getByRole('heading', { name: 'Не получилось составить меню' })).toBeVisible();
+  await page.getByRole('button', { name: 'К холодильнику' }).click();
+  await expect(recalculate).toBeFocused();
+  await page.getByRole('link', { name: 'Покупки', exact: true }).click();
+  await expect(page.locator('article[data-product-id="carrot"]').getByText(/Купить 275 г/)).toBeVisible();
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(original);
+  expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:pantry:v1'))).toBe(stock);
+});
+
 test('pantry-source recalculates every variant only after a new confirmed fridge revision', async ({ page }) => {
   await page.goto('/');
   await seedPantry(page);

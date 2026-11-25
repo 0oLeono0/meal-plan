@@ -224,6 +224,78 @@ test('pantry-leftovers uses confirmed expiring stock and preserves the active me
   expect(await page.evaluate(key => localStorage.getItem(key), pantryKey)).toBe(stock);
 });
 
+test('pantry-recalculate postpones dishes only and restores focus when a confirmed search is cancelled or interrupted', async ({ page }) => {
+  test.setTimeout(70_000);
+  const pantryKey = 'mealplan:guest:pantry:v1';
+  await page.goto('/');
+  await seedPantry(page, '200');
+  const original = await openCarrotPlan(page, true, 'a'.repeat(32));
+  await mountGeneration(page, { activeRaw: original, route: '/pantry', deferGeneration: true });
+  const banner = page.getByRole('region', { name: 'Пересчитать меню и список?' });
+  const recalculate = banner.getByRole('button', { name: 'Пересчитать меню' });
+  const home = page.getByRole('link', { name: 'Дома', exact: true });
+  const shopping = page.getByRole('link', { name: 'Покупки', exact: true });
+  const carrot = page.locator('article[data-product-id="carrot"]');
+  const getMenu = () => page.evaluate(key => localStorage.getItem(key), activeKey);
+  const dialog = page.getByRole('dialog', { name: 'Создать новый набор меню?' });
+  const confirm = () => dialog.getByRole('button', { name: 'Создать новый набор' }).click();
+  async function changeQuantity(value: string) {
+    await page.getByRole('button', { name: /Изменить количество.*морковь/i }).click();
+    await page.getByRole('textbox', { name: 'Количество', exact: true }).fill(value);
+    await page.getByRole('button', { name: 'Сохранить количество', exact: true }).click();
+    await expect(page.getByText('Запасы сохранены', { exact: true })).toBeVisible();
+  }
+
+  await expect(banner).toHaveCount(0);
+  await changeQuantity('250');
+  await expect(banner.getByText('Покупки уже обновлены по запасам. Можно подобрать новые блюда')).toBeVisible();
+  await banner.getByRole('button', { name: 'Отложить пересчёт меню' }).click();
+  await expect(banner).toHaveCount(0);
+  await shopping.click();
+  await expect(carrot.getByText(/Купить 250 г/)).toBeVisible();
+  expect(await getMenu()).toBe(original);
+  await home.click();
+  await expect(banner).toHaveCount(0);
+
+  await changeQuantity('100');
+  await recalculate.click();
+  await dialog.getByRole('button', { name: 'Оставить варианты' }).click();
+  await expect(recalculate).toBeFocused();
+  expect(await count(page, 'generation-calls')).toBe(0);
+  expect(await getMenu()).toBe(original);
+
+  await recalculate.click();
+  await confirm();
+  await expect(page).toHaveURL(/\/plan\/generating$/);
+  await expect.poll(() => count(page, 'generation-calls')).toBe(1);
+  await page.getByRole('button', { name: 'Отмена' }).click();
+  await expect(page).toHaveURL(/\/pantry$/);
+  await expect(recalculate).toBeFocused();
+  await release(page, 'generation-1');
+  expect(await getMenu()).toBe(original);
+
+  await recalculate.click();
+  await confirm();
+  await expect.poll(() => count(page, 'generation-calls')).toBe(2);
+  const other = await page.context().newPage();
+  await other.goto('/pantry');
+  await other.evaluate(key => localStorage.setItem(key, JSON.stringify({ schemaVersion: 1, token: 'b'.repeat(32),
+    rows: [{ productId: 'carrot', quantity: '300', unit: 'g', expiresSoon: false }] })), pantryKey);
+  await expect(page).toHaveURL(/\/pantry$/);
+  await expect(recalculate).toBeFocused();
+  await release(page, 'generation-2');
+  expect(await count(page, 'save-calls')).toBe(0);
+  expect(await getMenu()).toBe(original);
+  await shopping.click();
+  await expect(carrot.getByText(/Купить 200 г/)).toBeVisible();
+  await page.getByRole('link', { name: 'Меню', exact: true }).click();
+  await page.getByRole('button', { name: /Вариант 2 · Купить/ }).click();
+  await expect(page.getByRole('heading', { name: 'Вариант 2 из 2' })).toBeVisible();
+  const afterSelection = JSON.parse((await getMenu())!);
+  expect(afterSelection.plan.variants).toEqual(JSON.parse(original).plan.variants);
+  expect(JSON.parse((await page.evaluate(key => localStorage.getItem(key), pantryKey))!).rows[0].quantity).toBe('300');
+});
+
 test('pantry-source recalculates every variant only after a new confirmed fridge revision', async ({ page }) => {
   await page.goto('/');
   await seedPantry(page);

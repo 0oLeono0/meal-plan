@@ -38,6 +38,83 @@ function deferred<T>() { let resolve!: (value: T) => void; let reject!: (reason:
 const trustedCatalogs = createTrustedCatalogRegistry([fixture().inputs.catalog]);
 const createGenerationController = (options: GenerationControllerOptions) => productionController({ trustedCatalogs, ...options });
 
+it('pantry-recalculate stale confirmation cannot silently acquire the latest stock revision', async () => {
+  const { plan } = fixture('recalculate');
+  const original = JSON.stringify({ schemaVersion: 1, plan: encodePlanEnvelope(plan) });
+  const values = new Map([[ACTIVE_PLAN_KEY, original]]);
+  const store = { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); } };
+  const generate = vi.fn<GenerationPort['generate']>(async () => ({ status: 'error', error: { code: 'FAILED', message: 'Test refusal', diagnostics: [] } }));
+  const controller = createGenerationController({ generation: { generate }, activePlan: createActivePlanAdapter(() => store, trustedCatalogs),
+    pantryInventory: createPantryInventoryAdapter(() => store) });
+  try {
+    await Promise.all([controller.load(), controller.loadPantry()]);
+    const row = { productId: 'rice', quantity: '200', unit: 'g', expiresSoon: false } as const;
+    expect(await controller.savePantry([row])).toBe(true);
+    const captured = controller.getSnapshot();
+    expect(await controller.savePantry([{ ...row, quantity: '300' }])).toBe(true);
+    const pantryOrigin = { returnRoute: '/pantry', focusAnchor: 'pantry-recalculate' };
+    await controller.recreateSet(pantryOrigin, captured);
+    expect(generate).not.toHaveBeenCalled();
+    expect(values.get(ACTIVE_PLAN_KEY)).toBe(original);
+    expect(visiblePlanSnapshot(controller.getSnapshot()).active?.projections[0].costs.exact.purchase).toEqual(decimal('100'));
+
+    await controller.recreateSet(pantryOrigin, controller.getSnapshot());
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(generate.mock.calls[0][0].inputs.pantrySnapshot).toEqual([{ productId: 'rice', expiresSoon: false,
+      quantity: { status: 'known', value: { unit: 'g', amount: decimal('300') } } }]);
+    expect(controller.getSnapshot()).toMatchObject({ status: 'error', active: { plan } });
+    expect(values.get(ACTIVE_PLAN_KEY)).toBe(original);
+  } finally { controller.dispose(); }
+});
+
+it('pantry-recalculate append validates the live request and preserves the old variant proofs', async () => {
+  const base = fixture('append-stock');
+  const applied = buildAppliedSettings({ ...base.inputs.appliedSettings.raw, budget: '500' });
+  if (applied.status !== 'applied') throw new Error('fixture');
+  const inputs = { ...base.inputs, appliedSettings: applied.settings };
+  const servings = (id: string, count: string) => ({ id, instances: base.plan.variants[0].instances.map(row => ({ ...row, id: `${id}-${row.slot}`, selectedServings: decimal(count) })) });
+  const originalVariants = [servings('base', '1'), servings('older', '2')];
+  const plan = buildActivePlanEnvelope(inputs, originalVariants, 'base');
+  const row = { productId: 'rice', quantity: '350', unit: 'g', expiresSoon: false } as const;
+  const proof = { variantId: 'older', rows: [row] };
+  const original = JSON.stringify({ schemaVersion: 2, plan: encodePlanEnvelope(plan), admissionPantries: [proof] });
+  const values = new Map([[ACTIVE_PLAN_KEY, original]]);
+  const store = { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); } };
+  let response: 'stale' | 'incomplete' | 'valid' = 'stale';
+  const generate = vi.fn<GenerationPort['generate']>(async request => {
+    const candidate = servings('generated', '2.25');
+    if (response === 'incomplete') candidate.instances.pop();
+    const resultInputs = response === 'stale' ? { ...request.inputs, pantrySnapshot: [{ productId: 'rice', expiresSoon: false,
+      quantity: { status: 'known' as const, value: { unit: 'g' as const, amount: decimal('999') } } }] } : request.inputs;
+    return { status: 'success', plan: { schemaVersion: 1, inputs: resultInputs, activeVariantId: candidate.id, variants: [candidate] } };
+  });
+  const adapter = createActivePlanAdapter(() => store, trustedCatalogs);
+  const controller = createGenerationController({ generation: { generate }, activePlan: adapter, pantryInventory: createPantryInventoryAdapter(() => store) });
+  try {
+    await Promise.all([controller.load(), controller.loadPantry()]);
+    const current = { ...row, quantity: '450' };
+    expect(await controller.savePantry([current])).toBe(true);
+    const pantryBytes = values.get(PANTRY_INVENTORY_KEY);
+    for (const failure of ['stale', 'incomplete'] as const) {
+      response = failure;
+      await controller.appendVariant(origin);
+      expect(controller.getSnapshot()).toMatchObject({ status: 'error', error: { code: 'GENERATION_DATA_INCOMPLETE' } });
+      expect(values.get(ACTIVE_PLAN_KEY)).toBe(original);
+    }
+    response = 'valid';
+    await controller.appendVariant(origin);
+    expect(controller.getSnapshot().status).toBe('succeeded');
+    expect(generate.mock.calls.every(([request]) => request.targetCount === 1 && request.inputs.pantrySnapshot[0]?.quantity.status === 'known')).toBe(true);
+    expect(generate.mock.calls[2][0].inputs.pantrySnapshot[0]?.quantity).toEqual({ status: 'known', value: { unit: 'g', amount: decimal('450') } });
+    const stored = await adapter.load();
+    if (stored.status !== 'loaded') throw new Error('Append did not persist');
+    expect(stored.bundle.plan.inputs).toEqual(inputs);
+    expect(stored.bundle.plan.variants.slice(0, 2)).toEqual(originalVariants);
+    expect(stored.bundle.admissionPantries).toEqual([proof, { variantId: 'append-3', rows: [current] }]);
+    expect(values.get(PANTRY_INVENTORY_KEY)).toBe(pantryBytes);
+  } finally { controller.dispose(); }
+});
+
 it('pantry-inventory projects every variant independently and keeps the last confirmation when reading fails', async () => {
   const base = fixture('live-stock');
   const second = { id: 'second', instances: base.plan.variants[0].instances.map(row => ({ ...row, id: `${row.id}-second`, selectedServings: decimal('2') })) };

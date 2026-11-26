@@ -129,21 +129,26 @@ test('pantry-source blocks quick start on corrupt stock and keeps the original b
   expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:pantry:v1'))).toBe('{bad');
 });
 
-async function openCarrotPlan(page: Page, withHistoricStock = false, wizardPantryToken?: string | null) {
+async function openCarrotPlan(page: Page, withHistoricStock = false, wizardPantryToken?: string | null, budgetSensitive = false) {
   await page.goto('/plan/new');
-  const raw = await page.evaluate(async ({ key, withHistoricStock, wizardPantryToken }) => {
+  const raw = await page.evaluate(async ({ key, withHistoricStock, wizardPantryToken, budgetSensitive }) => {
     const catalogPath = '/src/data/catalog.ts';
     const planPath = '/src/domain/plan.ts';
     const settingsPath = '/src/domain/settings.ts';
     const appliedPath = '/src/domain/appliedSettings.ts';
     const quantitiesPath = '/src/domain/quantities.ts';
+    const adapterPath = '/src/adapters/activePlan.ts';
     const { bundledCatalog } = await import(catalogPath) as typeof import('../src/data/catalog');
     const { createPlanInputs, encodePlanEnvelope, mealSlots } = await import(planPath) as typeof import('../src/domain/plan');
     const { createDraft } = await import(settingsPath) as typeof import('../src/domain/settings');
     const { buildAppliedSettings } = await import(appliedPath) as typeof import('../src/domain/appliedSettings');
     const { decimal } = await import(quantitiesPath) as typeof import('../src/domain/quantities');
-    const applied = buildAppliedSettings({ ...createDraft(), days: '2', budget: '5000', cookingTime: 'any',
-      home: withHistoricStock ? [{ productId: 'carrot', quantity: '100', unit: 'g', expiresSoon: false }] : [] });
+    const { validateActiveBundle } = await import(adapterPath) as typeof import('../src/adapters/activePlan');
+    const home = budgetSensitive
+      ? Object.entries({ chicken: '1800', pollock: '960', carrot: '1500', rice: '840', onion: '480', buckwheat: '420', yogurt: '480' })
+        .map(([productId, quantity]) => ({ productId, quantity, unit: 'g' as const, expiresSoon: false }))
+      : withHistoricStock ? [{ productId: 'carrot', quantity: '100', unit: 'g' as const, expiresSoon: false }] : [];
+    const applied = buildAppliedSettings({ ...createDraft(), days: '2', budget: budgetSensitive ? '1600' : '5000', cookingTime: 'any', home });
     if (applied.status !== 'applied') throw new Error('Carrot fixture settings are invalid');
     const inputs = createPlanInputs(applied.settings, bundledCatalog, { seed: 'pantry-carrot-fixture', now: () => new Date(2026, 10, 20) });
     const portions = [
@@ -154,7 +159,8 @@ async function openCarrotPlan(page: Page, withHistoricStock = false, wizardPantr
     const instances = portions.map(({ date, slot, recipeId, servings }): RecipeInstance => {
       const recipe = bundledCatalog.recipes.find(item => item.id === recipeId);
       if (!recipe) throw new Error(`Missing fixture recipe: ${recipeId}`);
-      return { id: `carrot-${date}-${slot}`, date, slot, recipeId, catalogVersion: bundledCatalog.version, recipeSnapshot: recipe, selectedServings: decimal(servings) };
+      return { id: `carrot-${date}-${slot}`, date, slot, recipeId, catalogVersion: bundledCatalog.version, recipeSnapshot: recipe,
+        selectedServings: decimal(budgetSensitive ? '6' : servings) };
     });
     const emptySlots: MealCoordinate[] = inputs.dates.flatMap(date => mealSlots
       .filter(slot => !instances.some(row => row.date === date && row.slot === slot))
@@ -162,11 +168,13 @@ async function openCarrotPlan(page: Page, withHistoricStock = false, wizardPantr
     const first = { id: 'carrot-active', instances, emptySlots };
     const second = { ...first, id: 'carrot-second', instances: instances.map(meal => ({ ...meal, id: `second-${meal.id}` })) };
     const plan: EditedPlanEnvelope = { schemaVersion: 2, inputs, activeVariantId: first.id, variants: wizardPantryToken ? [first, second] : [first] };
+    const checked = validateActiveBundle(plan, undefined, undefined, wizardPantryToken);
+    if (checked.status !== 'valid') throw new Error(JSON.stringify(checked));
     const saved = JSON.stringify(wizardPantryToken !== undefined
       ? { schemaVersion: 2, plan: encodePlanEnvelope(plan), wizardPantryToken } : { schemaVersion: 1, plan: encodePlanEnvelope(plan) });
     localStorage.setItem(key, saved);
     return saved;
-  }, { key: activeKey, withHistoricStock, wizardPantryToken });
+  }, { key: activeKey, withHistoricStock, wizardPantryToken, budgetSensitive });
   await page.goto('/shopping');
   await expect(page.getByRole('heading', { level: 1, name: 'Список покупок' })).toBeVisible();
   return raw;
@@ -271,6 +279,8 @@ test('pantry-recalculate postpones dishes only and restores focus when a confirm
   await page.getByRole('button', { name: 'Отмена' }).click();
   await expect(page).toHaveURL(/\/pantry$/);
   await expect(recalculate).toBeFocused();
+  const changedStock = page.getByRole('alert').filter({ hasText: 'Запасы изменились. Проверьте их и запустите подбор снова' });
+  await expect(changedStock).toHaveCount(0);
   await release(page, 'generation-1');
   expect(await getMenu()).toBe(original);
 
@@ -282,6 +292,7 @@ test('pantry-recalculate postpones dishes only and restores focus when a confirm
   await other.evaluate(key => localStorage.setItem(key, JSON.stringify({ schemaVersion: 1, token: 'b'.repeat(32),
     rows: [{ productId: 'carrot', quantity: '300', unit: 'g', expiresSoon: false }] })), pantryKey);
   await expect(page).toHaveURL(/\/pantry$/);
+  await expect(changedStock).toBeVisible();
   await expect(recalculate).toBeFocused();
   await release(page, 'generation-2');
   expect(await count(page, 'save-calls')).toBe(0);
@@ -294,6 +305,88 @@ test('pantry-recalculate postpones dishes only and restores focus when a confirm
   const afterSelection = JSON.parse((await getMenu())!);
   expect(afterSelection.plan.variants).toEqual(JSON.parse(original).plan.variants);
   expect(JSON.parse((await page.evaluate(key => localStorage.getItem(key), pantryKey))!).rows[0].quantity).toBe('300');
+});
+
+for (const route of ['/menu', '/shopping'] as const) {
+  test(`pantry-interruption returns budget recalculation to ${route} when another tab changes stock`, async ({ page }) => {
+    const original = await openCarrotPlan(page, true, null, true);
+    await seedPantry(page, '200');
+    await mountGeneration(page, { activeRaw: original, route, deferGeneration: true });
+    const budget = page.getByRole('region', { name: 'Бюджет меню' });
+    await expect(budget.getByText('Покупки превышают бюджет')).toBeVisible();
+    const recalculate = budget.getByRole('button', { name: 'Пересчитать меню' });
+    await recalculate.click();
+    await page.getByRole('dialog', { name: 'Создать новый набор меню?' }).getByRole('button', { name: 'Создать новый набор' }).click();
+    await expect(page).toHaveURL(/\/plan\/generating$/);
+    await expect.poll(() => count(page, 'generation-calls')).toBe(1);
+
+    const other = await page.context().newPage();
+    await other.goto('/pantry');
+    const stock = route === '/menu' ? await seedPantry(other, '300') : '{bad';
+    const pantryKey = 'mealplan:guest:pantry:v1';
+    if (route === '/shopping') await other.evaluate(key => localStorage.setItem(key, '{bad'), pantryKey);
+
+    await expect(page).toHaveURL(new RegExp(`${route}$`));
+    const message = route === '/menu' ? 'Запасы изменились. Проверьте их и запустите подбор снова' : 'Не удалось проверить запасы для нового меню';
+    await expect(page.getByRole('alert').filter({ hasText: message })).toBeVisible();
+    if (route === '/menu') await expect(recalculate).toBeFocused();
+    else await expect(page.getByRole('heading', { level: 1, name: 'Список покупок' })).toBeFocused();
+    await release(page, 'generation-1');
+    expect(await count(page, 'save-calls')).toBe(0);
+    expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(original);
+    expect(await page.evaluate(key => localStorage.getItem(key), pantryKey)).toBe(stock);
+  });
+}
+
+test('pantry-interruption rejects a delayed menu write after another tab changes stock', async ({ page }) => {
+  test.setTimeout(55_000);
+  const original = await openCarrotPlan(page, true);
+  await seedPantry(page, '200');
+  await mountGeneration(page, { activeRaw: original, route: '/pantry', deferSave: true });
+  const recalculate = page.getByRole('region', { name: 'Пересчитать меню и список?' }).getByRole('button', { name: 'Пересчитать меню' });
+  await recalculate.click();
+  await page.getByRole('dialog', { name: 'Создать новый набор меню?' }).getByRole('button', { name: 'Создать новый набор' }).click();
+  await expect(page.getByText('Сохраняем меню…')).toBeVisible({ timeout: 30_000 });
+  await expect.poll(() => count(page, 'save-calls')).toBe(1);
+  const other = await page.context().newPage();
+  await other.goto('/pantry');
+  const updated = await seedPantry(other, '300');
+  await release(page, 'save-1');
+
+  await expect(page).toHaveURL(/\/pantry$/);
+  await expect(page.getByRole('alert').filter({ hasText: 'Запасы изменились. Проверьте их и запустите подбор снова' })).toBeVisible();
+  await expect(recalculate).toBeFocused();
+  expect(await count(page, 'final-writes')).toBe(0);
+  expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(original);
+  expect(await page.evaluate(() => localStorage.getItem('mealplan:guest:pantry:v1'))).toBe(updated);
+});
+
+test('pantry-stale-removal requires confirmation again after another tab updates the product', async ({ page }) => {
+  const pantryKey = 'mealplan:guest:pantry:v1';
+  await page.goto('/pantry');
+  await seedPantry(page, '200');
+  await page.reload();
+  const carrot = page.getByRole('region', { name: 'Домашний продукт Морковь' });
+  const remove = carrot.getByRole('button', { name: 'Удалить продукт: Морковь' });
+  const dialog = page.getByRole('dialog', { name: 'Удалить продукт из запасов?' });
+  const confirm = dialog.getByRole('button', { name: 'Удалить продукт', exact: true });
+  await remove.click();
+  await expect(dialog).toBeVisible();
+
+  const other = await page.context().newPage();
+  await other.goto('/pantry');
+  const updated = await seedPantry(other, '350');
+  await expect(page.locator('#pantry-edit-carrot')).toHaveText('350 г');
+  await confirm.click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole('alert').filter({ hasText: 'Запасы изменились. Проверьте продукт и подтвердите удаление снова.' })).toBeVisible();
+  await expect(remove).toBeFocused();
+  expect(await page.evaluate(key => localStorage.getItem(key), pantryKey)).toBe(updated);
+
+  await remove.click();
+  await confirm.click();
+  await expect(carrot).toHaveCount(0);
+  await expect(page.getByRole('combobox', { name: 'Найти продукт' })).toBeFocused();
 });
 
 test('pantry-recalculate returns from a failed search without restoring old purchases', async ({ page }) => {

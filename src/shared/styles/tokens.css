@@ -124,7 +124,7 @@ body { margin: 0; min-width: 0; }
 .app-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-sm); padding: var(--space-sm) max(var(--space-sm), env(safe-area-inset-right)) calc(var(--space-sm) + env(safe-area-inset-bottom)) max(var(--space-sm), env(safe-area-inset-left)); background: var(--color-surface); border-top: 1px solid var(--color-border); }
 .app-shell .app-nav a, .app-shell .app-nav button { min-width: 0; min-height: var(--target-size); padding: var(--space-sm) var(--space-xs); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-xs); text-align: center; text-decoration: none; font-size: var(--text-label); line-height: 1.5; overflow-wrap: anywhere; border: 0; border-radius: var(--radius-field); background: transparent; font-weight: 400; }
 .app-nav svg { flex-shrink: 0; }
-.app-shell .app-nav [aria-current=page] { background: var(--color-selected); color: var(--color-accent); font-weight: 600; }
+.app-shell .app-nav [aria-current=page] { background: var(--color-selected); color: var(--color-text); font-weight: 600; }
 .app-shell .app-nav :is(a, button):hover { background: var(--color-selected); }
 .action-link { display: flex; align-items: center; justify-content: center; min-height: var(--primary-height); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-field); text-align: center; text-decoration: none; overflow-wrap: anywhere; font-weight: 600; }
 .dialog-overlay { position: fixed; inset: 0; z-index: 100; background: var(--color-overlay); display: flex; align-items: center; justify-content: center; padding: var(--space-md); overflow-y: auto; }

@@ -26,7 +26,8 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
 }) {
   const [selected, setSelected] = useState<ProductName | null>(null);
   const [editor, setEditor] = useState<{ row: PantryInventoryRow; source: PantryInventoryState['confirmed']; error?: string } | null>(null);
-  const [removal, setRemoval] = useState<{ productId: string; name: string; trigger: HTMLElement } | null>(null);
+  const [removal, setRemoval] = useState<{ productId: string; name: string; trigger: HTMLElement; source: PantryInventoryState['confirmed'] } | null>(null);
+  const [removalChanged, setRemovalChanged] = useState(false);
   const retryTarget = useRef<{ focus: string } | 'quantity' | null>(null);
   const editorTrigger = useRef<HTMLElement | null>(null);
   const quantityField = useRef<HTMLInputElement>(null);
@@ -106,9 +107,10 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
   }
   function confirmRemoval() {
     if (!removal || disabled) return;
+    setRemoval(null);
+    if (state.confirmed !== removal.source) { setRemovalChanged(true); return; }
     const { productId } = removal;
     const index = rows.findIndex(row => row.productId === productId);
-    setRemoval(null);
     if (index === -1) return;
     if (editor?.row.productId === productId) setEditor(null);
     const neighbour = rows[index + 1] ?? rows[index - 1];
@@ -133,6 +135,7 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
     {state.writeStatus === 'saving' && <Status>Сохраняем запасы…</Status>}
     {state.writeStatus === 'saved' && <Status>Запасы сохранены</Status>}
     {state.writeStatus === 'error' && <div className="notice" role="alert"><p>Не удалось сохранить изменения</p><Button disabled={disabled} onClick={() => void retry()}>Повторить сохранение</Button></div>}
+    {removalChanged && <p className="notice" role="alert">Запасы изменились. Проверьте продукт и подтвердите удаление снова.</p>}
     {onRecalculate && <section className="notice" aria-labelledby="pantry-recalculate-title">
       <h2 id="pantry-recalculate-title">Пересчитать меню и список?</h2>
       <p>Покупки уже обновлены по запасам. Можно подобрать новые блюда</p>
@@ -199,7 +202,10 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
             <input id={`pantry-expiry-${row.productId}`} type="checkbox" className="!w-5 !min-h-0 h-5" checked={row.expiresSoon} disabled={disabled}
               aria-label={`Скоро испортится: ${name}`} onChange={event => void toggleExpiry(row.productId, event.target.checked)} />Скоро испортится
           </label>
-          <Button variant="danger" disabled={disabled} aria-label={`Удалить продукт: ${name}`} onClick={event => setRemoval({ productId: row.productId, name, trigger: event.currentTarget })}>Удалить</Button>
+          <Button variant="danger" disabled={disabled} aria-label={`Удалить продукт: ${name}`} onClick={event => {
+            setRemovalChanged(false);
+            setRemoval({ productId: row.productId, name, trigger: event.currentTarget, source: state.confirmed });
+          }}>Удалить</Button>
         </div>
       </section>;
     })}

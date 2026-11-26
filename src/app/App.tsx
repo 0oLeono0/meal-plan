@@ -252,7 +252,7 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
   const returningFocus = useRef<{ route: string; anchor: string } | null>(null);
   const previousRoute = useRef(pathname);
   const launch = useRef<LaunchRequest | null>(null);
-  const pantryGenerationStarted = useRef(false);
+  const generationStarted = useRef(false);
   const catalogAttempt = useRef(0);
   const pantry = operation.pantry;
   const historicalRows = pantry?.status === 'missing' && operation.active
@@ -276,14 +276,16 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
   }, [operation.status, pathname, navigate]);
   useEffect(() => {
     const request = launch.current;
-    if (pathname !== '/plan/generating' || request?.origin.returnRoute !== '/pantry') return;
-    if (operation.status === 'pending' || operation.status === 'saving') pantryGenerationStarted.current = true;
-    if (operation.status !== 'idle' || !pantryGenerationStarted.current || pantry?.status === 'pending') return;
-    pantryGenerationStarted.current = false;
+    if (pathname !== '/plan/generating' || !request) return;
+    if (operation.status === 'pending' || operation.status === 'saving') generationStarted.current = true;
+    if (operation.status !== 'idle' || !generationStarted.current || pantry?.status === 'pending') return;
+    generationStarted.current = false;
     launch.current = null;
+    if (!controller.canStartWithPantry(pantry)) setLaunchPantryIssue('unavailable');
+    else setLaunchPantryIssue(pantry !== request.pantry ? 'changed' : 'menu-changed');
     returningFocus.current = { route: request.origin.returnRoute, anchor: request.origin.focusAnchor };
     navigate(request.origin.returnRoute, { replace: true });
-  }, [pathname, operation.status, pantry?.status, navigate]);
+  }, [pathname, operation.status, pantry, controller, navigate]);
   function start(quick = false, focusAnchor = 'generate-menu') {
     if (operation.status === 'pending' || operation.status === 'saving') return;
     const applied = quick ? selectQuickStartInput(draft, operation.lastApplied) : buildAppliedSettings(wizardDraft);
@@ -343,7 +345,7 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
     }
     if (request.recalculate && mealEditingUnavailable(current)) return;
     launch.current = request;
-    pantryGenerationStarted.current = false;
+    generationStarted.current = false;
     setCatalogError(!request.recalculate && catalog.status !== 'loaded');
     navigate('/plan/generating');
     if (request.recalculate) void controller.recreateSet(request.origin, { pantry: request.pantry, editRevision: request.confirmedMenuRevision });

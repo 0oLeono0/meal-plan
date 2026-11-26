@@ -25,8 +25,9 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
   onPostponeRecalculation(): void;
 }) {
   const [selected, setSelected] = useState<ProductName | null>(null);
-  const [editor, setEditor] = useState<{ row: PantryInventoryRow; source: PantryInventoryState['confirmed']; error?: string } | null>(null);
-  const [removal, setRemoval] = useState<{ productId: string; name: string; trigger: HTMLElement } | null>(null);
+  const [editor, setEditor] = useState<{ row: PantryInventoryRow; source: PantryInventoryState['confirmed']; invalidField?: 'pantry-quantity' | 'pantry-unit' } | null>(null);
+  const [removal, setRemoval] = useState<{ productId: string; name: string; trigger: HTMLElement; source: PantryInventoryState['confirmed'] } | null>(null);
+  const [removalChanged, setRemovalChanged] = useState(false);
   const retryTarget = useRef<{ focus: string } | 'quantity' | null>(null);
   const editorTrigger = useRef<HTMLElement | null>(null);
   const quantityField = useRef<HTMLInputElement>(null);
@@ -74,8 +75,11 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
   async function saveQuantity() {
     if (!editor || !rows.some(row => row.productId === editor.row.productId)) return;
     if (!validateInventoryRows([editor.row])) {
-      setEditor({ ...editor, error: 'Введите количество больше 0 и выберите подходящую единицу или оставьте количество пустым' });
-      quantityField.current?.focus();
+      const firstUnit = pantryProductNames.find(product => product.id === editor.row.productId)?.allowedUnits[0];
+      const validWithUnit = firstUnit && validateInventoryRows([{ ...editor.row, unit: firstUnit }]);
+      const invalidField = validWithUnit ? 'pantry-unit' : 'pantry-quantity';
+      setEditor({ ...editor, invalidField });
+      focus(invalidField);
       return;
     }
     retryTarget.current = 'quantity';
@@ -106,9 +110,10 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
   }
   function confirmRemoval() {
     if (!removal || disabled) return;
+    setRemoval(null);
+    if (state.confirmed !== removal.source) { setRemovalChanged(true); return; }
     const { productId } = removal;
     const index = rows.findIndex(row => row.productId === productId);
-    setRemoval(null);
     if (index === -1) return;
     if (editor?.row.productId === productId) setEditor(null);
     const neighbour = rows[index + 1] ?? rows[index - 1];
@@ -133,6 +138,7 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
     {state.writeStatus === 'saving' && <Status>Сохраняем запасы…</Status>}
     {state.writeStatus === 'saved' && <Status>Запасы сохранены</Status>}
     {state.writeStatus === 'error' && <div className="notice" role="alert"><p>Не удалось сохранить изменения</p><Button disabled={disabled} onClick={() => void retry()}>Повторить сохранение</Button></div>}
+    {removalChanged && <p className="notice" role="alert">Запасы изменились. Проверьте продукт и подтвердите удаление снова.</p>}
     {onRecalculate && <section className="notice" aria-labelledby="pantry-recalculate-title">
       <h2 id="pantry-recalculate-title">Пересчитать меню и список?</h2>
       <p>Покупки уже обновлены по запасам. Можно подобрать новые блюда</p>
@@ -159,6 +165,8 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
       const name = product.name;
       const shownQuantity = row.quantity.trim() && row.unit ? `${row.quantity.trim()} ${unitNames[row.unit]}` : '';
       const open = editor?.row.productId === row.productId ? editor : null;
+      const quantityError = open?.invalidField === 'pantry-quantity' ? 'Введите количество больше 0 или оставьте поле пустым' : undefined;
+      const unitError = open?.invalidField === 'pantry-unit' ? 'Выберите подходящую единицу' : undefined;
       const units = row.productId === 'egg' && !needsPantryWeightConfirmation(row.productId, row.unit) ? ['pcs' as const] : product.allowedUnits;
       const clarification = needsPantryWeightConfirmation(row.productId, open?.row.unit ?? row.unit)
         ? ediblePantryProducts.find(item => item.productId === row.productId) : undefined;
@@ -181,13 +189,14 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
             Список запасов изменился. Проверьте введённое количество перед сохранением.
           </Status>}
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field id="pantry-quantity" label="Количество" hint="Дробь через точку или запятую." error={open.error}>
+            <Field id="pantry-quantity" label="Количество" hint="Дробь через точку или запятую." error={quantityError}>
               <input ref={quantityField} id="pantry-quantity" type="text" inputMode="decimal" autoComplete="off" value={open.row.quantity}
-                disabled={disabled} aria-invalid={!!open.error} aria-describedby={`pantry-quantity-hint${open.error ? ' pantry-quantity-error' : ''}`}
+                disabled={disabled} aria-invalid={!!quantityError} aria-describedby={`pantry-quantity-hint${quantityError ? ' pantry-quantity-error' : ''}`}
                 onChange={event => updateEditor(event.target.value, open.row.unit)} />
             </Field>
-            <Field id="pantry-unit" label="Единица">
-              <select id="pantry-unit" value={open.row.unit ?? ''} disabled={disabled} onChange={event => updateEditor(open.row.quantity, (event.target.value || undefined) as Unit | undefined)}>
+            <Field id="pantry-unit" label="Единица" error={unitError}>
+              <select id="pantry-unit" value={open.row.unit ?? ''} disabled={disabled} aria-invalid={!!unitError}
+                aria-describedby={unitError ? 'pantry-unit-error' : undefined} onChange={event => updateEditor(open.row.quantity, (event.target.value || undefined) as Unit | undefined)}>
                 <option value="">Не выбрана</option>{units.map(unit => <option key={unit} value={unit}>{unitNames[unit]}</option>)}
               </select>
             </Field>
@@ -199,7 +208,10 @@ export function PantryPage({ state, rows, savingMenu, onSave, onRetryLoad, onRet
             <input id={`pantry-expiry-${row.productId}`} type="checkbox" className="!w-5 !min-h-0 h-5" checked={row.expiresSoon} disabled={disabled}
               aria-label={`Скоро испортится: ${name}`} onChange={event => void toggleExpiry(row.productId, event.target.checked)} />Скоро испортится
           </label>
-          <Button variant="danger" disabled={disabled} aria-label={`Удалить продукт: ${name}`} onClick={event => setRemoval({ productId: row.productId, name, trigger: event.currentTarget })}>Удалить</Button>
+          <Button variant="danger" disabled={disabled} aria-label={`Удалить продукт: ${name}`} onClick={event => {
+            setRemovalChanged(false);
+            setRemoval({ productId: row.productId, name, trigger: event.currentTarget, source: state.confirmed });
+          }}>Удалить</Button>
         </div>
       </section>;
     })}

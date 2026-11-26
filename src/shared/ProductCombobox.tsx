@@ -49,7 +49,14 @@ export function ProductCombobox({ label, onSelect, onQueryChange, port = localPr
       onChange={event => { request.current++; setQuery(event.target.value); setHighlight(0); setOpen(true); onQueryChange?.(); }}
       onKeyDown={event => {
         if (event.nativeEvent.isComposing) return;
-        if (event.key === 'Escape') { event.preventDefault(); setOpen(false); }
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          setOpen(false);
+          const input = event.currentTarget;
+          requestAnimationFrame(() => {
+            if (document.activeElement === input) input.scrollIntoView({ block: 'nearest' });
+          });
+        }
         else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
           event.preventDefault(); setOpen(true);
           if (items.length) setHighlight(old => (old + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length);

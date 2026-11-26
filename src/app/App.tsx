@@ -5,7 +5,7 @@ import { createDraft, draftReducer, type DraftAction, type SettingsDraft } from 
 import { createGuestDraftAdapter, type GuestDraftPort } from '../adapters/guestDraft';
 import { Wizard } from '../features/wizard/Wizard';
 import { Button, ConfirmDialog, Status } from '../shared/ui';
-import { createGenerationController, mealEditingUnavailable, visiblePlanSnapshot, type GenerationOrigin, type PantryInventoryState } from '../features/generation/controller';
+import { createGenerationController, mealEditingUnavailable, pantryCalculationUnavailable, visiblePlanSnapshot, type GenerationOrigin, type PantryInventoryState } from '../features/generation/controller';
 import { createActivePlanAdapter, type ActivePlanPort } from '../adapters/activePlan';
 import { createPantryInventoryAdapter, inventoryPantrySnapshot, PANTRY_INVENTORY_KEY, suggestedInventoryRows, type PantryInventoryPort } from '../adapters/pantryInventory';
 import { createVersionedGeneration } from '../adapters/generation';
@@ -252,7 +252,7 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
   const returningFocus = useRef<{ route: string; anchor: string } | null>(null);
   const previousRoute = useRef(pathname);
   const launch = useRef<LaunchRequest | null>(null);
-  const pantryGenerationStarted = useRef(false);
+  const generationStarted = useRef(false);
   const catalogAttempt = useRef(0);
   const pantry = operation.pantry;
   const historicalRows = pantry?.status === 'missing' && operation.active
@@ -276,14 +276,16 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
   }, [operation.status, pathname, navigate]);
   useEffect(() => {
     const request = launch.current;
-    if (pathname !== '/plan/generating' || request?.origin.returnRoute !== '/pantry') return;
-    if (operation.status === 'pending' || operation.status === 'saving') pantryGenerationStarted.current = true;
-    if (operation.status !== 'idle' || !pantryGenerationStarted.current || pantry?.status === 'pending') return;
-    pantryGenerationStarted.current = false;
+    if (pathname !== '/plan/generating' || !request) return;
+    if (operation.status === 'pending' || operation.status === 'saving') generationStarted.current = true;
+    if (operation.status !== 'idle' || !generationStarted.current || pantry?.status === 'pending') return;
+    generationStarted.current = false;
     launch.current = null;
+    if (!controller.canStartWithPantry(pantry)) setLaunchPantryIssue('unavailable');
+    else setLaunchPantryIssue(pantry !== request.pantry ? 'changed' : 'menu-changed');
     returningFocus.current = { route: request.origin.returnRoute, anchor: request.origin.focusAnchor };
     navigate(request.origin.returnRoute, { replace: true });
-  }, [pathname, operation.status, pantry?.status, navigate]);
+  }, [pathname, operation.status, pantry, controller, navigate]);
   function start(quick = false, focusAnchor = 'generate-menu') {
     if (operation.status === 'pending' || operation.status === 'saving') return;
     const applied = quick ? selectQuickStartInput(draft, operation.lastApplied) : buildAppliedSettings(wizardDraft);
@@ -343,7 +345,7 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
     }
     if (request.recalculate && mealEditingUnavailable(current)) return;
     launch.current = request;
-    pantryGenerationStarted.current = false;
+    generationStarted.current = false;
     setCatalogError(!request.recalculate && catalog.status !== 'loaded');
     navigate('/plan/generating');
     if (request.recalculate) void controller.recreateSet(request.origin, { pantry: request.pantry, editRevision: request.confirmedMenuRevision });
@@ -397,6 +399,7 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
   const planOverview = pathname === '/menu' || pathname === '/shopping';
   const pantryPresentation = planOverview || (pathname.startsWith('/recipe/') && !!operation.active);
   const pantryReadStatus = visible.pantry?.status;
+  const noPantryCalculation = pantryCalculationUnavailable(visible);
   const stalePantry = pantryReadStatus === 'corrupt' || pantryReadStatus === 'error' || visible.pantry?.writeStatus === 'conflict';
   const editFeedback = operation.intent === 'edit' && planOverview;
   const retainedAfterRead = planOverview && operation.active && ['missing', 'corrupt', 'error'].includes(operation.loadStatus);
@@ -411,8 +414,8 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
   const confirmNewSet = launchConfirmation?.request.mode === 'leftovers' || launchConfirmation?.request.recalculate;
   return <>{pantryPresentation && !!operation.active && (pantryReadStatus === 'pending' || stalePantry) && <div className="plan-read-model notice">
     {pantryReadStatus === 'pending' && !stalePantry
-      ? <Status>Проверяем запасы. Пока показан последний подтверждённый расчёт.</Status>
-      : <div role="alert"><p>Не удалось проверить актуальные запасы. Показан последний подтверждённый расчёт.</p><Button onClick={() => void controller.loadPantry()}>Повторить загрузку запасов</Button></div>}
+      ? <Status>{noPantryCalculation ? 'Проверяем запасы…' : 'Проверяем запасы. Пока показан последний подтверждённый расчёт.'}</Status>
+      : <div role="alert"><p>{noPantryCalculation ? 'Не удалось проверить актуальные запасы. Расчёт покупок недоступен.' : 'Не удалось проверить актуальные запасы. Показан последний подтверждённый расчёт.'}</p><Button onClick={() => void controller.loadPantry()}>Повторить загрузку запасов</Button></div>}
   </div>}{retainedAfterRead && <div className="plan-read-model" role="alert">
     <p>{operation.loadStatus === 'missing' ? 'Сохранённое меню отсутствует. Показан последний загруженный вариант' : 'Не удалось прочитать сохранённое меню. Показан последний загруженный вариант'}</p>
     <Button onClick={() => void controller.retryLoad()}>Обновить меню</Button>

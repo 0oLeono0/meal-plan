@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import type { GenerationSnapshot } from '../generation/controller';
+import { pantryCalculationUnavailable } from '../generation/controller';
 import { Button } from '../../shared/ui';
 import { formatDateOnly, selectPlanPresentation } from '../../domain/presentation';
 import { PlanSummary } from '../plan/PlanSummary';
@@ -23,7 +24,16 @@ export function ShoppingPage({ snapshot, onRetryLoad, onRecalculate }: {
     if (snapshot.loadStatus === 'error' || snapshot.loadStatus === 'corrupt') return <section><h1 tabIndex={-1}>{snapshot.loadStatus === 'corrupt' ? 'Сохранённое меню повреждено или несовместимо с текущей версией' : 'Не удалось загрузить покупки'}</h1><p>Исходная запись не изменена. Повторите загрузку или составьте новое меню</p><Button onClick={onRetryLoad}>Повторить загрузку</Button><Link className="action-link" to="/plan/new">К настройкам</Link></section>;
     return <section><h1 tabIndex={-1}>Сначала составьте меню</h1><p>Начните с настроек питания</p><Link className="primary action-link" to="/plan/new">Составить меню</Link></section>;
   }
+  if (pantryCalculationUnavailable(snapshot)) return <section className="plan-read-model">
+    <h1 id="shopping-title" tabIndex={-1}>Список покупок</h1>
+    <Link className="action-link" to="/menu">К меню</Link>
+  </section>;
   const { plan } = bundle;
+  const inventory = snapshot.pantry?.confirmed;
+  const coverageSource = inventory && inventory.token === bundle.wizardPantryToken
+    ? 'Покрытие рассчитано по запасам, применённым в мастере.'
+    : inventory ? 'Покрытие рассчитано по последним подтверждённым запасам.'
+      : 'Покрытие рассчитано по снимку продуктов для этого меню.';
   const projection = bundle.projections.find(item => item.variantId === plan.activeVariantId)!;
   const view = selectPlanPresentation(projection, plan.inputs.appliedSettings.target);
   const groups = categoryOrder.map(category => ({ category, rows: view.purchases.filter(row => (categoryAliases.get(row.category) ?? 'Прочее') === category) })).filter(group => group.rows.length > 0);
@@ -55,7 +65,7 @@ export function ShoppingPage({ snapshot, onRetryLoad, onRecalculate }: {
     </section>)}
     {issues.length > 0 && <section className="card" aria-label="Запасы без количественного покрытия"><h2>Запасы без количественного покрытия</h2>{issues.map(issue => <p key={issue.key}>{issue.name}: {issue.reason}</p>)}</section>}
     <details className="card"><summary className="min-h-[44px] py-2 cursor-pointer">Уже есть дома · ≈ {view.costs.covered}</summary>
-      <p className="hint">{snapshot.pantry?.confirmed ? 'Покрытие рассчитано по последним подтверждённым запасам.' : 'Покрытие рассчитано по снимку продуктов для этого меню.'} Запасы не списываются</p>
+      <p className="hint">{coverageSource} Запасы не списываются</p>
       {view.covered.length === 0 ? <p>Нет количественного покрытия запасами</p> : <ul className="pl-4">{view.covered.map(row => <li className="my-4 tabular-nums" key={JSON.stringify([row.productId, row.profileId])}>{row.name} · {row.covered} · ≈ {row.coveredCost}</li>)}</ul>}
     </details>
   </section>;

@@ -5,7 +5,7 @@ import { createDraft, draftReducer, type DraftAction, type SettingsDraft } from 
 import { createGuestDraftAdapter, type GuestDraftPort } from '../adapters/guestDraft';
 import { Wizard } from '../features/wizard/Wizard';
 import { Button, ConfirmDialog, Status } from '../shared/ui';
-import { createGenerationController, mealEditingUnavailable, visiblePlanSnapshot, type GenerationOrigin, type PantryInventoryState } from '../features/generation/controller';
+import { createGenerationController, mealEditingUnavailable, pantryCalculationUnavailable, visiblePlanSnapshot, type GenerationOrigin, type PantryInventoryState } from '../features/generation/controller';
 import { createActivePlanAdapter, type ActivePlanPort } from '../adapters/activePlan';
 import { createPantryInventoryAdapter, inventoryPantrySnapshot, PANTRY_INVENTORY_KEY, suggestedInventoryRows, type PantryInventoryPort } from '../adapters/pantryInventory';
 import { createVersionedGeneration } from '../adapters/generation';
@@ -399,6 +399,7 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
   const planOverview = pathname === '/menu' || pathname === '/shopping';
   const pantryPresentation = planOverview || (pathname.startsWith('/recipe/') && !!operation.active);
   const pantryReadStatus = visible.pantry?.status;
+  const noPantryCalculation = pantryCalculationUnavailable(visible);
   const stalePantry = pantryReadStatus === 'corrupt' || pantryReadStatus === 'error' || visible.pantry?.writeStatus === 'conflict';
   const editFeedback = operation.intent === 'edit' && planOverview;
   const retainedAfterRead = planOverview && operation.active && ['missing', 'corrupt', 'error'].includes(operation.loadStatus);
@@ -413,8 +414,8 @@ function ApplicationRoutes({ brand, draft, homeEdited, change, controller, catal
   const confirmNewSet = launchConfirmation?.request.mode === 'leftovers' || launchConfirmation?.request.recalculate;
   return <>{pantryPresentation && !!operation.active && (pantryReadStatus === 'pending' || stalePantry) && <div className="plan-read-model notice">
     {pantryReadStatus === 'pending' && !stalePantry
-      ? <Status>Проверяем запасы. Пока показан последний подтверждённый расчёт.</Status>
-      : <div role="alert"><p>Не удалось проверить актуальные запасы. Показан последний подтверждённый расчёт.</p><Button onClick={() => void controller.loadPantry()}>Повторить загрузку запасов</Button></div>}
+      ? <Status>{noPantryCalculation ? 'Проверяем запасы…' : 'Проверяем запасы. Пока показан последний подтверждённый расчёт.'}</Status>
+      : <div role="alert"><p>{noPantryCalculation ? 'Не удалось проверить актуальные запасы. Расчёт покупок недоступен.' : 'Не удалось проверить актуальные запасы. Показан последний подтверждённый расчёт.'}</p><Button onClick={() => void controller.loadPantry()}>Повторить загрузку запасов</Button></div>}
   </div>}{retainedAfterRead && <div className="plan-read-model" role="alert">
     <p>{operation.loadStatus === 'missing' ? 'Сохранённое меню отсутствует. Показан последний загруженный вариант' : 'Не удалось прочитать сохранённое меню. Показан последний загруженный вариант'}</p>
     <Button onClick={() => void controller.retryLoad()}>Обновить меню</Button>

@@ -16,7 +16,7 @@ import type { MenuView } from '../../domain/menuView';
 import type { PlanProjection } from '../../domain/planProjection';
 import { MealCard, mealSlotNames } from './MealCard';
 import { MealAlternatives, type MealAlternativesActions } from './MealAlternatives';
-import { mealEditingUnavailable } from '../generation/controller';
+import { mealEditingUnavailable, pantryCalculationUnavailable } from '../generation/controller';
 
 const labels = { calories: 'Калории', protein: 'Белки', fat: 'Жиры', carbohydrates: 'Углеводы' } as const;
 const desktopQuery = '(min-width: 1280px)';
@@ -28,7 +28,7 @@ const subscribeDesktop = (notify: () => void) => {
 let recipeOrigin: { variantId: string; instanceId: string } | null = null;
 const emptySlotId = ({ date, slot }: MealCoordinate) => `empty-slot-${date}-${slot}`;
 
-function ShoppingAction({ label }: { label: string }) {
+function ShoppingAction({ label }: { label?: string }) {
   const bar = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const element = bar.current, main = element?.closest('main');
@@ -45,12 +45,12 @@ function ShoppingAction({ label }: { label: string }) {
     measure();
     return () => { observer.disconnect(); window.removeEventListener('resize', measure); viewport?.removeEventListener('resize', measure); main.style.removeProperty('--shopping-height'); };
   }, []);
-  return <div ref={bar} className="menu-shopping"><Link className="primary action-link" to="/shopping">Список покупок · {label}</Link></div>;
+  return <div ref={bar} className="menu-shopping"><Link className="primary action-link" to="/shopping">Список покупок{label && ` · ${label}`}</Link></div>;
 }
 
-function MenuDays({ projection, catalogVersion, selected, onChange, days, today, editingDisabled, onReplace, onRemove, onAdd }: {
+function MenuDays({ projection, catalogVersion, selected, onChange, days, today, editingDisabled, showPantry, onReplace, onRemove, onAdd }: {
   projection: PlanProjection; catalogVersion: string; selected: MenuView; onChange(value: MenuView): void;
-  days: ReturnType<typeof selectPlanPresentation>['days']; today: string; editingDisabled: boolean;
+  days: ReturnType<typeof selectPlanPresentation>['days']; today: string; editingDisabled: boolean; showPantry: boolean;
   onReplace?: (target: MealEditTarget, recipeName: string, trigger: HTMLElement) => void;
   onRemove?: (target: MealEditTarget, trigger: HTMLElement) => void;
   onAdd?: (target: EmptyMealTarget, trigger: HTMLElement) => void;
@@ -152,7 +152,7 @@ function MenuDays({ projection, catalogVersion, selected, onChange, days, today,
               {onRemove && <Button className="!px-2 text-[var(--color-danger)]" onClick={event => onRemove(target, event.currentTarget)}>Убрать из меню</Button>}
             </div>
           </div>;
-          return <MealCard key={slot} row={row} catalogVersion={catalogVersion} variantId={projection.variantId} view={selected} priority={index === 0 && (desktop ? day.dateOnly === days[0]?.dateOnly : day.dateOnly === selected.day)} actions={actions} onOpen={() => { recipeOrigin = { variantId: projection.variantId, instanceId: instance.id }; }} />;
+          return <MealCard key={slot} row={row} catalogVersion={catalogVersion} variantId={projection.variantId} view={selected} priority={index === 0 && (desktop ? day.dateOnly === days[0]?.dateOnly : day.dateOnly === selected.day)} actions={actions} showPantry={showPantry} onOpen={() => { recipeOrigin = { variantId: projection.variantId, instanceId: instance.id }; }} />;
         })}
         <div className="menu-day-totals"><h3>На человека за день</h3><NutritionSummary values={day.personNutrition} target={day.targetComparison} /><p>{day.costBasis}: {day.ingredientCost}</p><details><summary className="min-h-[44px] py-2">КБЖУ семьи за день</summary><NutritionSummary values={day.familyNutrition} /></details></div>
       </section>)}
@@ -198,6 +198,7 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
   const { plan } = bundle;
   const projection = bundle.projections.find(item => item.variantId === plan.activeVariantId)!;
   const settings = plan.inputs.appliedSettings;
+  const showPantry = !pantryCalculationUnavailable(snapshot);
   const activeIndex = plan.variants.findIndex(variant => variant.id === plan.activeVariantId);
   const saving = snapshot.status === 'saving';
   const editing = snapshot.intent === 'edit';
@@ -222,7 +223,7 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
       <ul className="grid gap-2 p-0 list-none">{plan.variants.map((variant, index) => {
         const costs = selectPlanPresentation(bundle.projections.find(row => row.variantId === variant.id)!, settings.target).costs;
         const selected = variant.id === plan.activeVariantId;
-        return <li key={variant.id}><Button className="w-full text-left" aria-pressed={selected} disabled={editingDisabled} onClick={() => onSelectVariant?.(variant.id)}>Вариант {index + 1} · Купить: ≈ {costs.purchase}{selected ? ' · Выбран' : ''}</Button>{saving && snapshot.intent === 'select' && snapshot.candidate?.plan.activeVariantId === variant.id && <p role="status">Сохраняем выбор… Предыдущее меню остаётся активным</p>}</li>;
+        return <li key={variant.id}><Button className="w-full text-left" aria-pressed={selected} disabled={editingDisabled} onClick={() => onSelectVariant?.(variant.id)}>Вариант {index + 1}{showPantry && ` · Купить: ≈ ${costs.purchase}`}{selected ? ' · Выбран' : ''}</Button>{saving && snapshot.intent === 'select' && snapshot.candidate?.plan.activeVariantId === variant.id && <p role="status">Сохраняем выбор… Предыдущее меню остаётся активным</p>}</li>;
       })}</ul>
       <Button id="append-variant" disabled={editingDisabled || snapshot.status === 'memory-only' || plan.variants.length >= 12} onClick={onAppend}>Пересобрать</Button>
       {plan.variants.length >= 12 && <div><p>В наборе 12 вариантов — это предел хранения на этом устройстве. Чтобы продолжить подбор, создайте новый набор</p><Button id="create-new-set" disabled={editingDisabled} onClick={event => setReplacementTrigger(event.currentTarget)}>Создать новый набор</Button></div>}
@@ -235,13 +236,13 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
       {snapshot.status === 'idle' && snapshot.origin && (snapshot.intent === 'append' || snapshot.intent === 'replace') && <p role="status">Подбор отменён. Прежнее меню не изменено</p>}
       {snapshot.status === 'error' && !editing && <div role="alert"><p>{snapshot.error?.message}. Предыдущее меню не изменено</p><Button onClick={onRetryGeneration}>Повторить</Button><Link className="action-link" to="/plan/new">Изменить настройки</Link></div>}
     </section>
-    <PlanSummary bundle={bundle} projection={projection} onRecalculate={onRecalculate} />
+    {showPantry && <PlanSummary bundle={bundle} projection={projection} onRecalculate={onRecalculate} />}
     <section className="card"><h2>Среднее на человека в день</h2><NutritionSummary values={view.averagePersonDayNutrition} target={view.targetComparison} />
       <p>{settings.target.status === 'absent' ? 'Ручная цель КБЖУ не задана' : settings.target.source.kind === 'manual' ? 'Цель введена вручную · на человека в день' : 'Цель из сохранённого расчёта · на человека в день'}</p>
       <p className="hint">КБЖУ рассчитаны по составу продуктов и не являются медицинской рекомендацией</p>
       <p className="hint">Расчёт не подтверждает полноценность рациона.</p>
     </section>
-    <MenuDays projection={projection} catalogVersion={plan.inputs.catalogVersion} selected={selected} onChange={next => setParams(menuSearch(next))} days={view.days} today={today} editingDisabled={editingDisabled} onReplace={mealAlternatives ? (target, recipeName, trigger) => setMealChoice({ target, recipeName, trigger }) : undefined} onRemove={onRemove ? (target, trigger) => setRemoval({ target, trigger, plan, revision: snapshot.editRevision }) : undefined} onAdd={mealAlternatives ? (target, trigger) => setMealChoice({ target, trigger }) : undefined} />
+    <MenuDays projection={projection} catalogVersion={plan.inputs.catalogVersion} selected={selected} onChange={next => setParams(menuSearch(next))} days={view.days} today={today} editingDisabled={editingDisabled} showPantry={showPantry} onReplace={mealAlternatives ? (target, recipeName, trigger) => setMealChoice({ target, recipeName, trigger }) : undefined} onRemove={onRemove ? (target, trigger) => setRemoval({ target, trigger, plan, revision: snapshot.editRevision }) : undefined} onAdd={mealAlternatives ? (target, trigger) => setMealChoice({ target, trigger }) : undefined} />
     {mealChoice && mealAlternatives && <MealAlternatives {...mealChoice} revision={snapshot.editRevision} request={mealAlternatives.request} onClose={() => setMealChoice(null)} onChoose={(recipeId, revision) => {
       editedFocus.current = mealChoice.target;
       setMealChoice(null); mealAlternatives.select(mealChoice.target, recipeId, revision);
@@ -251,7 +252,7 @@ export function MenuPage({ snapshot, onRetryLoad, onSelectVariant, onRetrySave, 
       editedFocus.current = removal.target;
       onRemove?.(removal.target, removal.plan, removal.revision);
     }} />}
-    <ShoppingAction label={view.itemCount} />
+    <ShoppingAction label={showPantry ? view.itemCount : undefined} />
     {replacementTrigger && <ConfirmDialog title="Создать новый набор меню?" description={`После успешного сохранения нового набора прежние ${formatCount(plan.variants.length, 'variant')} будут заменены. До этого текущее меню останется доступным`} cancelLabel="Оставить варианты" confirmLabel="Создать новый набор" returnFocus={replacementTrigger} fallbackFocusId="menu-title" onCancel={() => setReplacementTrigger(null)} onConfirm={() => {
       const anchor = replacementTrigger.id;
       setReplacementTrigger(null); onRecreate?.(anchor);

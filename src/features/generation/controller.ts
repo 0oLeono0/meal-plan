@@ -118,6 +118,9 @@ export function mealEditingUnavailable(snapshot: GenerationSnapshot): boolean {
   return snapshot.loadStatus !== 'loaded' || snapshot.status === 'saving' || snapshot.status === 'pending'
     || (snapshot.intent === 'edit' && snapshot.saveError === 'blocked') || pantryBlocksMealEdit(snapshot);
 }
+export function pantryCalculationUnavailable({ pantry }: GenerationSnapshot): boolean {
+  return !!pantry && !pantry.confirmed && pantry.status !== 'missing';
+}
 function pantryBlocksMealEdit(snapshot: GenerationSnapshot): boolean {
   const pantry = snapshot.pantry;
   if (!pantry) return false;

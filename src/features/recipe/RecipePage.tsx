@@ -6,7 +6,7 @@ import type { CatalogLoadResult } from '../../domain/catalog';
 import { mealPortionMultipliers } from '../../domain/mealEdits';
 import type { MealEditTarget, MealPortionMultiplier } from '../../domain/mealEdits';
 import type { ActivePlanEnvelope } from '../../domain/plan';
-import { mealEditingUnavailable } from '../generation/controller';
+import { mealEditingUnavailable, pantryCalculationUnavailable } from '../generation/controller';
 import type { GenerationSnapshot } from '../generation/controller';
 import { projectRecipeView, recipeReplacementPath } from '../../domain/recipeView';
 import type { NutritionFact, RecipeView } from '../../domain/recipeView';
@@ -152,7 +152,7 @@ export function RecipePage({ snapshot, catalog, onRetry, onChangePortions, onRet
     <details className="card"><summary className="min-h-[44px] py-2 cursor-pointer">Состав — КБЖУ каждого ингредиента на одну порцию</summary><ul className="space-y-4">{view.ingredients.map(row => <li key={row.index}><h3>{row.food.name}</h3><dl className="grid grid-cols-2 sm:grid-cols-4 gap-4"><NutritionValues fact={row.perPortionNutrition} /></dl></li>)}</ul></details>
     <section className="card"><h2>{view.ingredientBasis}</h2><p>Полная стоимость ингредиентов до вычета запасов</p><ul className="space-y-4">
       {view.ingredients.map(row => <li key={row.index}><h3 className="font-semibold">{row.food.name}</h3><p>{formatQuantity(row.required)} · {row.familyCost === null ? 'Цена неизвестна' : `≈ ${formatCurrency(roundHalfUp(row.familyCost, 2))}`}</p>
-        {row.stock && <div>{row.stock.issue ? <p>{row.stock.issue === 'UNKNOWN_PANTRY_QUANTITY' ? 'Количество запаса не указано — запас не вычтен' : 'Единицы запаса и потребности несовместимы — запас не вычтен'}</p>
+        {row.stock && !pantryCalculationUnavailable(snapshot) && <div>{row.stock.issue ? <p>{row.stock.issue === 'UNKNOWN_PANTRY_QUANTITY' ? 'Количество запаса не указано — запас не вычтен' : 'Единицы запаса и потребности несовместимы — запас не вычтен'}</p>
           : row.stock.covered.amount.numerator > 0n ? row.stock.purchase.amount.numerator === 0n ? <p>Есть дома: {formatQuantity(row.stock.covered)}</p> : <p>Частично из запасов</p> : <p>Нет количественного покрытия запасами</p>}
           <p>Нужно {formatQuantity(row.required)} · Из запасов {formatQuantity(row.stock.covered)} · Докупить {formatQuantity(row.stock.purchase)}</p></div>}
       </li>)}

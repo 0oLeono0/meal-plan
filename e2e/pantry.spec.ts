@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import type { EditedPlanEnvelope, MealCoordinate, RecipeInstance } from '../src/domain/plan';
 import { activeKey, count, mountGeneration, release } from './generation-fixtures';
 
@@ -505,6 +505,199 @@ test('pantry-keyboard explains the early priority of flagged products beside the
   await expect(start).toBeVisible();
   await expect(page.getByText('При подборе постараемся использовать отмеченные продукты в первые 1–2 дня', { exact: true })).toBeVisible();
   await expect(start).toHaveAccessibleDescription('При подборе постараемся использовать отмеченные продукты в первые 1–2 дня');
+});
+
+async function expectPantryKeyboardFocus(control: Locator) {
+  await expect(control).toBeFocused();
+  await expect.poll(() => control.evaluate(element => {
+    const { top, bottom, left, right } = element.getBoundingClientRect();
+    const x = (left + right) / 2;
+    return [top + 2, bottom - 2].every(y => element.contains(document.elementFromPoint(x, y)));
+  })).toBe(true);
+}
+
+async function expectTouchTarget(control: Locator, height = 44) {
+  const box = await control.boundingBox({ timeout: 5_000 });
+  expect(box?.width).toBeGreaterThanOrEqual(44);
+  expect(box?.height).toBeGreaterThanOrEqual(height);
+}
+
+for (const width of [360, 390, 430, 768, 1280]) {
+  test(`pantry-keyboard saves stock, synchronizes purchases and starts leftovers at ${width}px`, async ({ page, browserName }, testInfo) => {
+    test.setTimeout(55_000);
+    const height = width < 768 ? 530 : 800;
+    await page.setViewportSize({ width, height });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    const original = await openCarrotPlan(page);
+    const navigation = page.getByRole('navigation', { name: 'Основные разделы' });
+    const home = navigation.getByRole('link', { name: 'Дома' });
+    const shopping = navigation.getByRole('link', { name: 'Покупки' });
+    const purchase = page.locator('article[data-product-id="carrot"]');
+    const search = page.getByRole('combobox', { name: 'Найти продукт' });
+    const add = page.getByRole('button', { name: 'Добавить выбранный продукт' });
+    const carrot = page.getByRole('region', { name: 'Домашний продукт Морковь' });
+    const rice = page.getByRole('region', { name: 'Домашний продукт Рис' });
+    const remove = carrot.getByRole('button', { name: 'Удалить продукт: Морковь' });
+    const removal = page.getByRole('dialog', { name: 'Удалить продукт из запасов?' });
+    const start = page.getByRole('button', { name: 'Составить меню из остатков' });
+    const confirmation = page.getByRole('dialog', { name: 'Создать новый набор меню?' });
+
+    await expect(purchase.getByText(/Купить 500 г/)).toBeVisible();
+    await home.focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('heading', { level: 1, name: 'Продукты дома' })).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expectPantryKeyboardFocus(search);
+    await page.keyboard.insertText('морковь');
+    await expect(page.getByRole('option', { name: 'Морковь', exact: true })).toBeVisible();
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Tab');
+    await expectPantryKeyboardFocus(add);
+    await expectTouchTarget(add);
+    await page.keyboard.press('Enter');
+
+    const specify = carrot.getByRole('button', { name: 'Указать количество: Морковь' });
+    await expectPantryKeyboardFocus(specify);
+    await expect(carrot.getByText('Количество не указано')).toBeVisible();
+    await page.keyboard.press('Enter');
+    const quantity = carrot.getByRole('textbox', { name: 'Количество' });
+    await expectPantryKeyboardFocus(quantity);
+    await page.keyboard.insertText('200');
+    await page.keyboard.press('Tab');
+    const unit = carrot.getByRole('combobox', { name: 'Единица' });
+    await expectPantryKeyboardFocus(unit);
+    await page.keyboard.press('ArrowDown');
+    await expect(unit).toHaveValue('g');
+    await page.keyboard.press('Tab');
+    const save = carrot.getByRole('button', { name: 'Сохранить количество' });
+    await expectPantryKeyboardFocus(save);
+    await expectTouchTarget(save, 48);
+    await page.keyboard.press('Enter');
+    const savedQuantity = carrot.getByRole('button', { name: 'Изменить количество: Морковь' });
+    await expectPantryKeyboardFocus(savedQuantity);
+    await expect(savedQuantity).toHaveText('200 г');
+
+    await page.keyboard.press('Tab');
+    const expiry = carrot.getByRole('checkbox', { name: 'Скоро испортится: Морковь' });
+    await expectPantryKeyboardFocus(expiry);
+    await expectTouchTarget(carrot.locator('label').filter({ has: page.getByRole('checkbox', { name: 'Скоро испортится: Морковь' }) }));
+    await page.keyboard.press('Space');
+    await expect(expiry).toBeChecked();
+    await expectPantryKeyboardFocus(expiry);
+    await page.keyboard.press('Tab');
+    await expectPantryKeyboardFocus(remove);
+    await expectTouchTarget(remove);
+    await page.keyboard.press('Enter');
+    await expect(removal.getByRole('button', { name: 'Оставить продукт' })).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(removal).toHaveCount(0);
+    await expectPantryKeyboardFocus(remove);
+
+    if (browserName === 'chromium' && [360, 768, 1280].includes(width)) {
+      await page.screenshot({ path: `.tmp/phase05-06/screenshots/pantry-${width}px.png`, fullPage: true });
+    }
+    await shopping.focus();
+    await page.keyboard.press('Enter');
+    await expect(purchase.getByText(/Купить 300 г/)).toBeVisible();
+    await expect(purchase.getByText(/Нужно 500 г · Из запасов 200 г/)).toBeVisible();
+    expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(original);
+
+    await home.focus();
+    await page.keyboard.press('Enter');
+    const addRice = page.getByRole('group', { name: 'Популярные продукты' }).getByRole('button', { name: 'Рис', exact: true });
+    await addRice.focus();
+    await expectTouchTarget(addRice);
+    await page.keyboard.press('Enter');
+    await expectPantryKeyboardFocus(rice.getByRole('button', { name: 'Указать количество: Рис' }));
+    await remove.focus();
+    await page.keyboard.press('Enter');
+    await expect(removal.getByRole('button', { name: 'Оставить продукт' })).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(removal.getByRole('button', { name: 'Удалить продукт', exact: true })).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(carrot).toHaveCount(0);
+    await expect(rice).toBeFocused();
+    await shopping.focus();
+    await page.keyboard.press('Enter');
+    await expect(purchase.getByText(/Купить 500 г/)).toBeVisible();
+    expect(await page.evaluate(key => localStorage.getItem(key), activeKey)).toBe(original);
+
+    await home.focus();
+    await page.keyboard.press('Enter');
+    await rice.getByRole('button', { name: 'Удалить продукт: Рис' }).focus();
+    await page.keyboard.press('Tab');
+    await expectPantryKeyboardFocus(start);
+    await expectTouchTarget(start, 48);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+    await page.keyboard.press('Enter');
+    await expect(confirmation.getByRole('button', { name: 'Оставить варианты' })).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(confirmation.getByRole('button', { name: 'Создать новый набор' })).toBeFocused();
+    const startedAt = Date.now();
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/\/menu$/, { timeout: 35_000 });
+    const elapsedMs = Date.now() - startedAt;
+    const persisted = await page.evaluate(key => localStorage.getItem(key), activeKey);
+    expect(persisted).not.toBe(original);
+    expect(JSON.parse(persisted!).plan.inputs.pantrySnapshot).toEqual([
+      { productId: 'rice', expiresSoon: false, quantity: { status: 'unknown' } },
+    ]);
+    testInfo.annotations.push({ type: 'leftovers-confirm-to-menu', description: `${browserName} ${width}×${height}: ${elapsedMs} ms (2 дня)` });
+  });
+}
+
+test('pantry-keyboard keeps focus through 200% reflow, long names and deleting adjacent rows', async ({ page }) => {
+  await page.setViewportSize({ width: 640, height: 720 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/plan/new');
+  await seedPantry(page, '200');
+  await page.goto('/pantry');
+  const search = page.getByRole('combobox', { name: 'Найти продукт' });
+  const productName = 'Куриное филе без кожи и костей';
+  const matchingOption = page.getByRole('option', { name: productName, exact: true });
+  await search.focus();
+  await page.keyboard.insertText('курица');
+  await expect(matchingOption).toBeVisible();
+  await page.keyboard.press('ArrowDown');
+  await expect(matchingOption).toHaveAttribute('aria-selected', 'true');
+  const activeOption = await matchingOption.getAttribute('id');
+  // Halve the reference viewport to exercise 200% reflow without OS zoom settings.
+  await page.setViewportSize({ width: 320, height: 360 });
+  await expect(search).toBeFocused();
+  await expect(search).toHaveAttribute('aria-activedescendant', activeOption!);
+  await expect(matchingOption).toBeInViewport();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('listbox')).toHaveCount(0);
+  await expectPantryKeyboardFocus(search);
+  await page.keyboard.press('ArrowUp');
+  await expect(page.getByRole('listbox')).toBeVisible();
+  await page.keyboard.press('ArrowDown');
+  await expect(matchingOption).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Tab');
+  await expectPantryKeyboardFocus(page.getByRole('button', { name: 'Добавить выбранный продукт' }));
+  await page.keyboard.press('Enter');
+  const chicken = page.getByRole('region', { name: `Домашний продукт ${productName}` });
+  await expectPantryKeyboardFocus(chicken.getByRole('button', { name: `Указать количество: ${productName}` }));
+  await expect(chicken.getByRole('heading')).toHaveText(productName);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+
+  const carrot = page.getByRole('region', { name: 'Домашний продукт Морковь' });
+  for (const [row, ofName, nextFocus] of [[chicken, productName, carrot], [carrot, 'Морковь', search]] as const) {
+    const remove = row.getByRole('button', { name: `Удалить продукт: ${ofName}` });
+    await remove.focus();
+    await expectPantryKeyboardFocus(remove);
+    await page.keyboard.press('Enter');
+    const dialog = page.getByRole('dialog', { name: 'Удалить продукт из запасов?' });
+    await expect(dialog.getByRole('button', { name: 'Оставить продукт' })).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expectPantryKeyboardFocus(dialog.getByRole('button', { name: 'Удалить продукт', exact: true }));
+    await page.keyboard.press('Enter');
+    await expect(row).toHaveCount(0);
+    await expect(nextFocus).toBeFocused();
+  }
+  await expect(page.getByRole('heading', { name: 'Добавьте, что есть дома, и мы не купим лишнего' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Составить меню', exact: true })).toHaveAttribute('href', '/plan/new');
 });
 
 test('pantry-crud edits a stock flag and quantity and removes the last confirmed row', async ({ page }) => {
